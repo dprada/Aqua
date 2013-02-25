@@ -1,0 +1,225 @@
+#################################################################################
+##########    GENERAL INFO    (cl_set.py, cl_coors.py, fort_general.f90)
+#################################################################################
+
+from aqua import *
+
+### To create a system from a file (pdb,gro):
+
+prot=molecule(input_file=None,download=None,coors=True,verbose=True)
+prot=molecule('AAA.pdb')
+prot=molecule(download='AAA')
+
+### Load coordinates on the system from a file (pdb,gro,bin):
+
+prot.load_coors(input_file,frame=None,begin=None,end=None)
+
+### Delete coordinates:
+
+prot.delete_coors(frame=None,begin=None,end=None)
+prot.delete_coors(begin=1)                          # Delete all frames but prot.frame[0]
+prot.delete_coors(frame=range(1,prot.num_frames))
+prot.delete_coors(frame=19)                         # Delete prot.frame[19]
+prot.delete_coors(frame=[0,3,6,9])                  # Delete prot.frame[0], prot.frame[3], prot.frame[6], prot.frame[9]
+
+### Dealing with coordinates:
+
+prot.num_frames
+prot.last_frame
+
+### Main attributes of a system:
+
+prot.file			  # File used to create the topology
+prot.coors_file	  	       	  # File used to load the coordinates
+prot.num_atoms			  # Number of atoms
+prot.atom[]		       	  # List of atoms    (list of objects) 
+prot.resid[]		       	  # List of residues (list of objects)
+prot.chain[]		       	  # List of chains   (list of objects)
+prot.water[]		       	  # List of waters   (list of objects)
+
+prot.atom[i].name	       	  # name of atom i+1
+prot.atom[i].index	    	  # atom index for aqua
+prot.atom[i].pdb_index	    	  # atom pdb_index
+prot.atom[i].covalent_bonds	  # list of atom indexes bonded
+prot.atom[i].hbonds               # list of atom indexes h-bonded
+
+prot.resid[i].name	    	  # name of residue i+1
+prot.resid[i].index	    	  # residue index for aqua
+prot.resid[i].pdb_index	    	  # residue pdb_index
+prot.resid[i].list_atoms    	  # list of atom indexes from resid i+1
+
+prot.chain[i].name	    	  # name of chain i+1
+prot.chain[i].index	    	  # chain index for aqua
+prot.chain[i].list_atoms    	  # list of atom indexes from chain i+1
+
+prot.water[i].name          	  # name of water i+1
+prot.water[i].index         	  # water index for aqua
+prot.water[i].pdb_index     	  # water pdb_index
+prot.water[i].list_atoms    	  # list of atom indexes from water i+1
+
+
+prot.atom[i].resid.name	    	  # name of residue of atom i+1
+prot.atom[i].resid.index   	  # index of residue of atom i+1
+prot.atom[i].resid.pdb_index   	  # pdb_index of residue of atom i+1 
+
+prot.atom[i].chain.name		  # name of chain of atom i+1
+prot.atom[i].chain.index	  # index of chain of atom i+1
+
+prot.resid[i].chain.name	  # name of chain of residue i+1
+prot.resid[i].chain.index	  # index of chain of residue i+1
+
+prot.frame[i].box		  # box size of frame i+1
+prot.frame[i].coors		  # coordinates of frame i+1
+prot.frame[i].coors[j]		  # coordinates [x,y,z] of atom j+1 in frame i+1
+prot.frame[i].coors[j][0]	  # coordinate x of atom j+1 in frame i+1
+prot.frame[i].step		  # time step in file or trajectory
+prot.frame[i].time		  # time in trajectory (in ps).
+prot.frame[i].precision	  	  # precision of coordinates
+prot.frame[i].file		  # file used to load the coordinates
+
+
+### Other attributes of an atom:
+
+prot.atom[i].alt_loc		  # Alternate location (PDB)
+prot.atom[i].code_ins_res	  # Code of insertion of residues (PDB)
+prot.atom[i].seg_ident		  # Index segment (PDB)
+prot.atom[i].elem_symb		  # Element symbol (PDB)
+prot.atom[i].type_pdb		  # Type of atom for the PDB (ATOM,HETATM)
+prot.atom[i].mass=0.0			# Mass
+prot.atom[i].charge=0.0			# Charge
+prot.atom[i].vdw=0.0			# VdW radius
+prot.atom[i].occup=0.0			# Occupation (PDB)
+prot.atom[i].bfactor=0.0		# B-Factor
+prot.atom[i].acceptor=False		# True or false 
+prot.atom[i].donor=False		# True or false
+prot.atom[i].polar_class='Nothing'	# Acceptor or Donnor or nothing
+
+
+
+### Other attributes of a system:
+
+prot.file_hbonds		 # still not useful -do not remove-
+prot.file_mss   		 # still not useful -do not remove-
+prot.file_shell 		 # still not useful -do not remove-
+prot.parent			 # name of the parent system if prot is a selection
+
+prot.list_atoms			 # list of atom indexes
+prot.water_model                 # water model
+prot.covalent_bonds=[]		 # List of atom pairs covalently bonded. #TODO
+prot.acceptors=[]		 # list of acceptors								
+prot.donors=[]			 # list of donnors									  
+prot.dimensionality=0		 # dimensionality (num_atoms*3)
+
+prot.pdb_header			 # PDB Header (HEAD + TITLE)
+prot.pdb_ss			 # PDB Secondary structure
+
+### Water molecules:
+
+prot.water[i].model
+prot.water[i].name
+prot.water[i].index
+prot.water[i].pdb_index
+prot.water[i].list_atoms
+prot.water[i].O.name
+prot.water[i].O.index
+prot.water[i].O.pdb_index
+prot.water[i].O.covalent_bonds
+prot.water[i].O.hbonds
+prot.water[i].H1.name
+prot.water[i].H1.hbonds
+prot.water[i].H2.name
+prot.water[i].H2.hbonds
+
+
+###
+### Functions of a system
+###
+
+prot.write_pdb(filename)	  # write pdb -selection of frame not available yet-
+prot.write_set_to_file(filename)  # dump the entire system in a file
+prot.read_set_from_file(filename) # load the entire system from a file
+
+# making a selection (pointer... new set not available yet)
+
+subprot=prot.selection(condition='')      
+subprot=prot.selection([0,1,2,3,4])
+CAs=prot.selection('atom_name (CA)')
+
+# rmsd fitting:
+
+prot.rms_fit(set_reference=None,selection=None,new=False)
+prot.rmsd							# value of the rmsd once is fitted.
+prot_fitted=prot.rms_fit(set_reference=prot_ref,selection='atom_name (CA)',new=True)
+
+# displacement vector:
+
+prot.displ_vector(set_reference=None)
+prot.d_vector				# matrix[i][x,y,z] as output of displ_vector
+
+
+
+###
+### External functions
+###
+
+subsystem=make_selection(system,condition)
+
+
+
+#################################################################################
+##########    GAUSSIAN AND ANISOTROPIC NETWORK MODELS   (cl_enm.py, fort_enm.f90) 
+#################################################################################
+
+nm=anm(system=None,cutoff=10.0,contact_map=None)         # General function
+nm_co_9=anm(CAs_subsystem,9.0)                           # analysis with cutoff
+nm_cm=anm(CAs_subsystem,contact_map=cmap_matrix)         # analysis with a contact map
+
+nm.num_nodes		# Number of nodes
+nm.num_modes       	# Number of modes
+nm.contact_map     	# Contact map (real matrix= kij; kij=force constant ij)
+nm.parent	        # System analysed
+nm.eigenvals       	# eigenvalues
+nm.eigenvects      	# eigenvectors as they come from the analysis vector: [x1,y1,z1,x2,y2,z2...]
+nm.eigenvects_3d   	# eigenvectors 3d: Nx3 [[x1,y1,z1],[x2,y2,z2]...]
+nm.freqs	       	# frequencies (eigenvectors dimensionalized -fitting bfactors-)
+nm.inverse	       	# inverse matrix from single value decomposition
+nm.correl	       	# correlation matrix
+nm.bfacts_pdb		# bfactors from pdb
+nm.ic			# involvent coefficient output
+
+# Functions:
+nm.rebuild()		# Remake the analysis if the contact_map has been edited
+nm.fitt_bfacts()	# fit the enm bfactors over the pdb bfactors
+nm.best_cutoff()        # Best cutoff in the range [8.0:16.0] based on the fitt over the pdb bfactors
+nm.involv_coefficient(modes='all',vect=None) # involvent coefficient
+nm.write()		# write output files for PyMOL
+
+# External function:
+build_fluct_anm(system,anm,mode=7,output='movie.pdb')
+build_fluct_anm(system,anm,mode=[6,7,8],amplitude=8.0,steps=60)
+
+
+
+#################################################################################
+##########    WATER ANALYSIS   (cl_water.py, fort_water.f90) 
+#################################################################################
+
+# External function:
+hbonds_water(definition='Skinner',system1=watbox)                            # The function has an output but also updates prot.water[i].H1.hbonds and prot.atom[814].hbonds
+skinner_parameter(system=None,index_wat_o=None,index_wat_h=None,index_h=None)   # Skinner parameter between the O and the Hi of two different waters 
+mss_shell=mss_water(watbox)                                                  # Microstates of the watbox
+mss_shell_ind=mss_water(watbox,ind_waters=True)                              # Water indexes corresponding to the microstates
+net=kinetic_network(system=watbox,file_traj='traj.bin',begin=0,end=100)      # Kinetic network
+
+Ex:
+
+output=hbonds_water(definition='Skinner',system1=watbox)
+prot.water[i].H1.hbonds
+prot.atom[814].hbonds
+
+Nval=skinner_parameter(system=watbox,index_wat_o=810,index_wat_h=10,index_h=1)  # Skinner parameter between watbox.water[810].O and watbox.water[10].H1
+mss_shell=mss_water(watbox)
+mss_shell[10]
+mss_shell_ind=mss_water(watbox,ind_waters=True)
+mss_shell_ind[10]
+
