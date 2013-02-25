@@ -1,0 +1,38 @@
+######################################################################
+# Info:
+
+- The project is documented with sphinx.
+
+http://packages.python.org/an_example_pypi_project/sphinx.html
+
+- Find the source files in 'source'.
+- Add aditional files (data and plots) for tutorials in 'tutorials'.
+
+######################################################################
+# Compiling
+
+Cleaning compilations:
+
+> make clean
+
+Compiling the html version:
+
+> make html
+
+Compiling the pdf version:
+
+> make latexpdf
+
+#####################################################################
+# Updating the html in the github server:
+
+- Compile in this directory the html:
+> make html
+
+- Change to the html branch:
+> git checkout gh-pages
+
+- Run there the command:
+> ./update
+
+####################################################################

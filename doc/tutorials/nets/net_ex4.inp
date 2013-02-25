@@ -1,0 +1,17 @@
+@ directed=True
+# node weight coorx coory coorz
+AA     2.0    0.0   0.0	  0.0
+BB     1.0    1.0   0.0	  0.0
+CC     1.0    0.0   1.0	  0.0
+DD     1.0    0.0   0.0	  1.0
+EE     1.0   -1.0   0.0	  0.0
+FF     1.0    0.0  -1.0	  0.0
+GG     1.0    0.0   0.0	 -1.0
+
+# node node weight
+AA     BB   1.0
+AA     CC   1.0
+AA     DD   1.0
+AA     EE   1.0
+AA     FF   1.0
+AA     GG   1.0
