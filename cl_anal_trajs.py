@@ -1,6 +1,6 @@
-from pyn_fort_anal_trajs import glob as f_trajs
-from pyn_cl_net import *
-import pyn_math as pyn_math
+from libanaltrajs import glob as f_trajs
+from cl_net import *
+import libmath as libmath
 import numpy
 import copy 
 
@@ -97,11 +97,11 @@ class kinetic_1D_analysis():
  
             fff.close()
 
-            self.traj=pyn_math.standard_traj(self.traj,self.particles,self.dimensions)
+            self.traj=libmath.standard_traj(self.traj,self.particles,self.dimensions)
 
         if type(traject) in [list,tuple,numpy.ndarray]:
             
-            self.traj=pyn_math.standard_traj(traject,particles=self.particles,dimensions=self.dimensions)
+            self.traj=libmath.standard_traj(traject,particles=self.particles,dimensions=self.dimensions)
 
         self.frames=self.traj.shape[0]
         self.particles=self.traj.shape[1]
@@ -118,18 +118,18 @@ class kinetic_1D_analysis():
     def histogram(self,dimension=None,node=None,cluster=None,bins=20,segment=None,delta=None,select_dim=0,norm=False,cumul=False):
 
         if cluster==None and node==None:
-            return pyn_math.histogram(self.traj,bins=bins,segment=segment,delta=delta,select_dim=select_dim,norm=norm,cumul=cumul)
+            return libmath.histogram(self.traj,bins=bins,segment=segment,delta=delta,select_dim=select_dim,norm=norm,cumul=cumul)
 
         if cluster!=None:
 
-            xx,yy=pyn_math.histogram_mask(self.traj,bins=bins,segment=segment,delta=delta,select_dim=select_dim,\
+            xx,yy=libmath.histogram_mask(self.traj,bins=bins,segment=segment,delta=delta,select_dim=select_dim,\
                                               traj_mask=self.traj_clusters,select_mask=cluster,offset_mask=self.__offset__,\
                                               norm=norm,cumul=cumul)
             return xx,yy
 
         if node!=None:
 
-            xx,yy=pyn_math.histogram_mask(self.traj,bins=bins,segment=segment,delta=delta,select_dim=select_dim,\
+            xx,yy=libmath.histogram_mask(self.traj,bins=bins,segment=segment,delta=delta,select_dim=select_dim,\
                                               traj_mask=self.traj_nodes,select_mask=node,offset_mask=self.__offset__,\
                                               norm=norm,cumul=cumul)
             return xx,yy
@@ -157,7 +157,7 @@ class kinetic_1D_analysis():
             print '# A readable traj is needed'
             return
 
-        traj_inp=pyn_math.standard_traj(traj_inp,particles=self.particles,dimensions=aux_dims)
+        traj_inp=libmath.standard_traj(traj_inp,particles=self.particles,dimensions=aux_dims)
 
         if type(state) in [int,float]:
             num_states=1
@@ -230,7 +230,7 @@ class kinetic_1D_analysis():
             print '# A readable traj is needed'
             return
 
-        traj_inp=pyn_math.standard_traj(traj_inp,particles=self.particles,dimensions=aux_dims)
+        traj_inp=libmath.standard_traj(traj_inp,particles=self.particles,dimensions=aux_dims)
 
         if type(from_state) in [int,float]:
             from_num_states=1
@@ -304,7 +304,7 @@ class kinetic_1D_analysis():
             print '# A readable traj is needed'
             return
 
-        traj_inp=pyn_math.standard_traj(traj_inp,particles=self.particles,dimensions=aux_dims)
+        traj_inp=libmath.standard_traj(traj_inp,particles=self.particles,dimensions=aux_dims)
 
         if type(states) in [int,float]:
             num_states=1
@@ -396,7 +396,7 @@ class kinetic_1D_analysis():
             print '# A readable traj is needed'
             return
 
-        traj_inp=pyn_math.standard_traj(traj_inp,particles=self.particles,dimensions=aux_dims)
+        traj_inp=libmath.standard_traj(traj_inp,particles=self.particles,dimensions=aux_dims)
 
         if type(from_state) in [int,float]:
             from_num_states=1
@@ -468,7 +468,7 @@ class kinetic_1D_analysis():
             print '# A readable traj is needed'
             return
 
-        traj_inp=pyn_math.standard_traj(traj_inp,particles=self.particles,dimensions=aux_dims)
+        traj_inp=libmath.standard_traj(traj_inp,particles=self.particles,dimensions=aux_dims)
 
         if type(states) in [int,float]:
             num_states=1
@@ -522,11 +522,11 @@ class kinetic_1D_analysis():
             return
 
         else:
-            self.traj=pyn_math.standard_traj(self.traj,particles=self.particles,dimensions=self.dimensions)
+            self.traj=libmath.standard_traj(self.traj,particles=self.particles,dimensions=self.dimensions)
             if ranges==None:
-                ranges=pyn_math.build_ranges(self.traj)
+                ranges=libmath.build_ranges(self.traj)
             else:
-                ranges=pyn_math.standard_ranges(ranges)
+                ranges=libmath.standard_ranges(ranges)
             self.network_nodes,self.traj_nodes=kinetic_network(self.traj,ranges=ranges,traj_out=True,verbose=verbose)                
             return
 
@@ -536,7 +536,7 @@ class kinetic_1D_analysis():
             print '# Method not implemented yet for more than 1D.'
             return
 
-        bins,mmx,mmn,delta=pyn_math.parameters_bins(self.traj,bins,segment,delta)
+        bins,mmx,mmn,delta=libmath.parameters_bins(self.traj,bins,segment,delta)
 
         rv_min=0
         rv_max=0
@@ -556,7 +556,7 @@ class kinetic_1D_analysis():
 
         traj_aux=f_trajs.prada1(ybins,bins,mmn,mmx,delta,rv_min,rv_max,self.traj,window,self.particles,self.frames)
 
-        ranges=pyn_math.build_ranges(traj_aux)
+        ranges=libmath.build_ranges(traj_aux)
 
         self.network,self.traj_nodes=kinetic_network(traj_aux,ranges=ranges,traj_out=True,verbose=False)
          
@@ -603,11 +603,11 @@ class kinetic_1D_analysis():
             delta=1.0 # Its given by gannas function
             opt=2
 
-        bins,mmx,mmn,delta=pyn_math.parameters_bins(opt_range,opt,bins,mmn,mmx,delta)
+        bins,mmx,mmn,delta=libmath.parameters_bins(opt_range,opt,bins,mmn,mmx,delta)
 
         traj_aux=f_trajs.prada2(ybins,sbins,bins,mmn,mmx,delta,self.traj,window,self.particles,self.frames)
 
-        ranges=pyn_math.build_ranges(traj_aux)
+        ranges=libmath.build_ranges(traj_aux)
          
         self.network,self.traj_nodes=kinetic_network(traj_aux,ranges=ranges,traj_out=True,verbose=False)
          

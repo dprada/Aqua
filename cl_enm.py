@@ -1,7 +1,7 @@
 from numpy import *
-import pyn_fort_enm as f_enm
-import pyn_fort_general as f
-from pyn_cl_set import *
+import libenm as f_enm
+import libgeneral as f
+from cl_set import *
 import pylab
 
 

@@ -1,7 +1,7 @@
 from numpy import *
-import pyn_water as f_water
-from pyn_cl_set import *
-from pyn_cl_net import *
+import libwater as f_water
+from cl_set import *
+from cl_net import *
 import copy as ccopy
 import pickle as pic
 

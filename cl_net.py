@@ -1,7 +1,7 @@
-from pyn_fort_net import glob as f_net
-from pyn_fort_kin_anal import glob as f_kin_anal
-from pyn_fort_anal_trajs import glob as f_trajs
-import pyn_math as pyn_math
+from libnet import glob as f_net
+from libkinanal import glob as f_kin_anal
+from libanaltrajs import glob as f_trajs
+import libmath as pyn_math
 import numpy
 import copy
 from os import system
