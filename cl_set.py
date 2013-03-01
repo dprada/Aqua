@@ -1,7 +1,7 @@
 ####################################
 # GENERAL COMMENTS
 
-NAME_VERSION="Pynoramix 0.1"
+NAME_VERSION="Aqua 0.2"
 
 #
 # This module requires:
@@ -21,11 +21,11 @@ except:
 import datetime as datetime
 
 ### pyno libraries:
-from pyn_cl_coors import *
+from cl_coors import *
 import top_par as tp
-import pyn_fort_general as faux
-from pyn_fort_mss import glob as mss_funcs
-import pyn_math as pyn_math
+import libgeneral as faux
+from libmss import glob as mss_funcs
+import libmath as libmath
 
 #
 # Structure of the file:
@@ -991,7 +991,7 @@ class molecule(labels_set):               # The suptra-estructure: System (water
 
         setA,nlist_A,nsys_A,setB,nlist_B,nsys_B,diff_syst,diff_set=__read_sets_opt__(self,setA,None,setB)
 
-        xxx=pyn_math.binning(None,bins,segment,None,None)
+        xxx=libmath.binning(None,bins,segment,None,None)
         rdf_tot=numpy.zeros(shape=(bins),dtype=float,order='Fortran')
         num_frames=0
         for iframe in __read_frame_opt__(self,traj,frame):
