@@ -133,25 +133,22 @@ PWD=$(shell pwd)
 SOUT=1>> $(PWD)/INSTALL.log 2>> $(PWD)/INSTALL.log
 CHECK=0
 
-default: options prexdr io_formats/libxdrfile.so pref90 f90_libraries fin
+default: options pre f90_libraries io_formats/libxdrfile.so fin
 
 options:
 	@ echo "-----------------------------------------------"
-	@ echo "# COMPILING AQUA in" $(PLATF_TYPE)"-"$(MACHINE_TYPE) "WITH:"
+	@ echo "                    AQUA                       "
 	@ echo "-----------------------------------------------"
-	@ echo "Fortran Compiler:" $(FCOMP) "("$(FTYPE)")"
-	@ echo "Fortran 2 Python:" $(F2PY)
-	@ echo "Lapack libraries:" $(LAPACK_LIBS)
-	@ echo "Fortran options :" $(FOPTS)
+	@ echo "# Compiling in" $(PLATF_TYPE)"-"$(MACHINE_TYPE) "with:"
+	@ echo "  Fortran Compiler:" $(FCOMP) "("$(FTYPE)")"
+	@ echo "  Fortran 2 Python:" $(F2PY)
+	@ echo "  Lapack libraries:" $(LAPACK_LIBS)
+	@ echo "  Fortran options :" $(FOPTS)
 	@ if [ -e INSTALL.log ]; then rm INSTALL.log; fi
 
-pref90:
-	@ echo "--------------------------------------------"
-	@ echo "# COMPILING FORTRAN LIBRARIES:"
-
-prexdr:
-	@ echo "--------------------------------------------"
-	@ echo "# COMPILING XDR LIBRARY:"
+pre:
+	@ echo "-----------------------------------------------"
+	@ echo "# Libraries:"
 
 fin:
 	@ echo "--------------------------------------------"
@@ -169,56 +166,56 @@ io_formats/libxdrfile.so: xdrfile-1.1.1.tar.gz
 	@ if ! grep ': FAILED' INSTALL.log 1>/dev/null ; then echo '> io_formats/libxdrfile.so ...   OK';\
 	cp xdrfiles/lib/$(lxdrlib) io_formats/libxdrfile.so; rm -r xdrfiles; fi
 
-f90_libraries: fort_general.so fort_enm.so fort_net.so fort_math.so fort_anal_trajs.so \
-	fort_kin_anal.so io_formats/libdcdfile.so io_formats/libbinfile.so io_formats/libcell2box.so
+f90_libraries: libgeneral.so libwater.so libenm.so libnet.so libmath.so libanaltrajs.so \
+	libkinanal.so libmss.so io_formats/libdcdfile.so io_formats/libbinfile.so io_formats/libcell2box.so
 
-fort_general.so: fort_general.f90
+libgeneral.so: libgeneral.f90
 	@ echo '>>>>>> Compiling' $@ >> INSTALL.log
-	@ $(F2PY) --opt=$(FOPTS) --f90flags=$(FFLAGS) --fcompiler=$(FTYPE) -c -m fort_general fort_general.f90 $(LAPACK_LIBS) $(SOUT)
+	@ $(F2PY) --opt=$(FOPTS) --f90flags=$(FFLAGS) --fcompiler=$(FTYPE) -c -m libgeneral libgeneral.f90 $(LAPACK_LIBS) $(SOUT)
+	@ if [ ! -e $@ ]; then echo '> Error compiling' $@ ': check the file INSTALL.log'; fi
+	@ if [ -e $@ ]; then echo '>' $@ '...     OK'; fi
+
+libwater.so: libwater.f90
+	@ echo '>>>>>> Compiling' $@ >> INSTALL.log
+	@ $(F2PY) --opt=$(FOPTS) --f90flags=$(FFLAGS) --fcompiler=$(FTYPE) -c -m libwater libwater.f90 $(LAPACK_LIBS) $(SOUT)
+	@ if [ ! -e $@ ]; then echo '> Error compiling' $@ ': check the file INSTALL.log'; fi
+	@ if [ -e $@ ]; then echo '>' $@ '...       OK'; fi
+
+libenm.so: libenm.f90
+	@ echo '>>>>>> Compiling' $@ >> INSTALL.log
+	@ $(F2PY) --opt=$(FOPTS) --f90flags=$(FFLAGS) --fcompiler=$(FTYPE) -c -m libenm libenm.f90 $(LAPACK_LIBS) $(SOUT)
+	@ if [ ! -e $@ ]; then echo '> Error compiling' $@ ': check the file INSTALL.log'; fi
+	@ if [ -e $@ ]; then echo '>' $@ '...         OK'; fi
+
+libnet.so: libnet.f90
+	@ echo '>>>>>> Compiling' $@ >> INSTALL.log
+	@ $(F2PY) --opt=$(FOPTS) --f90flags=$(FFLAGS) --fcompiler=$(FTYPE) -c -m libnet libnet.f90 $(LAPACK_LIBS) $(SOUT)
+	@ if [ ! -e $@ ]; then echo '> Error compiling' $@ ': check the file INSTALL.log'; fi
+	@ if [ -e $@ ]; then echo '>' $@ '...         OK'; fi
+
+libmath.so: libmath.f90
+	@ echo '>>>>>> Compiling' $@ >> INSTALL.log
+	@ $(F2PY) --opt=$(FOPTS) --f90flags=$(FFLAGS) --fcompiler=$(FTYPE) -c -m libmath libmath.f90 $(LAPACK_LIBS) $(SOUT)
+	@ if [ ! -e $@ ]; then echo '> Error compiling' $@ ': check the file INSTALL.log'; fi
+	@ if [ -e $@ ]; then echo '>' $@ '...        OK'; fi
+
+libanaltrajs.so: libanaltrajs.f90
+	@ echo '>>>>>> Compiling' $@ >> INSTALL.log
+	@ $(F2PY) --opt=$(FOPTS) --f90flags=$(FFLAGS) --fcompiler=$(FTYPE) -c -m libanaltrajs libanaltrajs.f90 $(LAPACK_LIBS) $(SOUT)
 	@ if [ ! -e $@ ]; then echo '> Error compiling' $@ ': check the file INSTALL.log'; fi
 	@ if [ -e $@ ]; then echo '>' $@ '...   OK'; fi
 
-water.so: water.f90
+libkinanal.so: libkinanal.f90
 	@ echo '>>>>>> Compiling' $@ >> INSTALL.log
-	@ $(F2PY) --opt=$(FOPTS) --f90flags=$(FFLAGS) --fcompiler=$(FTYPE) -c -m water water.f90 $(LAPACK_LIBS) $(SOUT)
+	@ $(F2PY) --opt=$(FOPTS) --f90flags=$(FFLAGS) --fcompiler=$(FTYPE) -c -m libkinanal libkinanal.f90 $(LAPACK_LIBS) $(SOUT)
 	@ if [ ! -e $@ ]; then echo '> Error compiling' $@ ': check the file INSTALL.log'; fi
-	@ if [ -e $@ ]; then echo '>' $@ '...   OK'; fi
+	@ if [ -e $@ ]; then echo '>' $@ '...     OK'; fi
 
-fort_enm.so: fort_enm.f90
+libmss.so: libmss.f90
 	@ echo '>>>>>> Compiling' $@ >> INSTALL.log
-	@ $(F2PY) --opt=$(FOPTS) --f90flags=$(FFLAGS) --fcompiler=$(FTYPE) -c -m fort_enm fort_enm.f90 $(LAPACK_LIBS) $(SOUT)
+	@ $(F2PY) --opt=$(FOPTS) --f90flags=$(FFLAGS) --fcompiler=$(FTYPE) -c -m libmss libmss.f90 $(LAPACK_LIBS) $(SOUT)
 	@ if [ ! -e $@ ]; then echo '> Error compiling' $@ ': check the file INSTALL.log'; fi
-	@ if [ -e $@ ]; then echo '>' $@ '...   OK'; fi
-
-fort_net.so: fort_net.f90
-	@ echo '>>>>>> Compiling' $@ >> INSTALL.log
-	@ $(F2PY) --opt=$(FOPTS) --f90flags=$(FFLAGS) --fcompiler=$(FTYPE) -c -m fort_net fort_net.f90 $(LAPACK_LIBS) $(SOUT)
-	@ if [ ! -e $@ ]; then echo '> Error compiling' $@ ': check the file INSTALL.log'; fi
-	@ if [ -e $@ ]; then echo '>' $@ '...   OK'; fi
-
-fort_math.so: fort_math.f90
-	@ echo '>>>>>> Compiling' $@ >> INSTALL.log
-	@ $(F2PY) --opt=$(FOPTS) --f90flags=$(FFLAGS) --fcompiler=$(FTYPE) -c -m fort_math fort_math.f90 $(LAPACK_LIBS) $(SOUT)
-	@ if [ ! -e $@ ]; then echo '> Error compiling' $@ ': check the file INSTALL.log'; fi
-	@ if [ -e $@ ]; then echo '>' $@ '...   OK'; fi
-
-fort_anal_trajs.so: fort_anal_trajs.f90
-	@ echo '>>>>>> Compiling' $@ >> INSTALL.log
-	@ $(F2PY) --opt=$(FOPTS) --f90flags=$(FFLAGS) --fcompiler=$(FTYPE) -c -m fort_anal_trajs fort_anal_trajs.f90 $(LAPACK_LIBS) $(SOUT)
-	@ if [ ! -e $@ ]; then echo '> Error compiling' $@ ': check the file INSTALL.log'; fi
-	@ if [ -e $@ ]; then echo '>' $@ '...   OK'; fi
-
-fort_kin_anal.so: fort_kin_anal.f90
-	@ echo '>>>>>> Compiling' $@ >> INSTALL.log
-	@ $(F2PY) --opt=$(FOPTS) --f90flags=$(FFLAGS) --fcompiler=$(FTYPE) -c -m fort_kin_anal fort_kin_anal.f90 $(LAPACK_LIBS) $(SOUT)
-	@ if [ ! -e $@ ]; then echo '> Error compiling' $@ ': check the file INSTALL.log'; fi
-	@ if [ -e $@ ]; then echo '>' $@ '...   OK'; fi
-
-fort_mss.so: fort_mss.f90
-	@ echo '>>>>>> Compiling' $@ >> INSTALL.log
-	@ $(F2PY) --opt=$(FOPTS) --f90flags=$(FFLAGS) --fcompiler=$(FTYPE) -c -m fort_mss fort_mss.f90 $(LAPACK_LIBS) $(SOUT)
-	@ if [ ! -e $@ ]; then echo '> Error compiling' $@ ': check the file INSTALL.log'; fi
-	@ if [ -e $@ ]; then echo '>' $@ '...   OK'; fi
+	@ if [ -e $@ ]; then echo '>' $@ '...         OK'; fi
 
 io_formats/libdcdfile.so: io_formats/libdcdfile.f90
 	@ echo '>>>>>> Compiling' $@ >> INSTALL.log
@@ -236,7 +233,7 @@ io_formats/libcell2box.so: io_formats/libcell2box.f90
 	@ echo '>>>>>> Compiling' $@ >> INSTALL.log
 	@ cd $(PWD)/io_formats; $(F2PY) --opt=$(FOPTS) --f90flags=$(FFLAGS) --fcompiler=$(FTYPE) -c -m libcell2box libcell2box.f90 $(SOUT)
 	@ if [ ! -e $@ ]; then echo '> Error compiling' $@ ': check the file INSTALL.log'; fi
-	@ if [ -e $@ ]; then echo '>' $@ '...   OK'; fi
+	@ if [ -e $@ ]; then echo '>' $@ '...  OK'; fi
 
 clean:
 	@ rm *.so io_formats/*.so
