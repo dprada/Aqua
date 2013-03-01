@@ -20,22 +20,22 @@ sys.path.append(workdir+'/io_formats/')
 ######## Internal modules:
 
 # Base:
-from pyn_cl_set import *
-from pyn_cl_coors import *
-import pyn_fort_general as f
-from pyn_cl_anal_trajs import *
-from pyn_cl_kin_anal import *
+from cl_set import *
+from cl_coors import *
+import libgeneral as f
+from cl_anal_trajs import *
+from cl_kin_anal import *
 
 # Water:
-#from pyn_cl_water import *
+#from cl_water import *
 
 # Networks:
-from pyn_cl_net import *
-#import pyn_fort_net as f_net
+from cl_net import *
+#import libnet as f_net
 
 # GNM and ANM:
-#from pyn_cl_enm import *
-#import pyn_fort_enm as f_enm
+#from cl_enm import *
+#import libenm as f_enm
 
 # General Hbonds:
-#from pyn_cl_hbonds import *
+#from cl_hbonds import *

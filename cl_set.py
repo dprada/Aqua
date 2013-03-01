@@ -24,6 +24,7 @@ import datetime as datetime
 from pyn_cl_coors import *
 import top_par as tp
 import pyn_fort_general as faux
+from pyn_fort_mss import glob as mss_funcs
 import pyn_math as pyn_math
 
 #
@@ -1342,6 +1343,381 @@ class molecule(labels_set):               # The suptra-estructure: System (water
 
             #if verbose:
             #    print 'Listo'
+        pass
+
+
+    def mss_hbonds_wat(self,definition=1,hbonds=None,bonds=None,verbose=True):
+        
+        mss_funcs.definition_hbs=faux.hbonds.definition
+
+        if hbonds==None:
+            print '# hbonds needed.'
+            return
+
+        if definition==1:
+
+            aux=numpy.zeros((self.num_atoms,3),dtype=int,order='F')
+
+            for ii in range(len(self.water)):
+                jo=self.water[ii].O.index
+                jh1=self.water[ii].H1.index
+                jh2=self.water[ii].H2.index
+                aux[jo,0]=ii
+                aux[jo,1]=0
+                aux[jh1,0]=ii
+                aux[jh1,1]=1
+                aux[jh2,0]=ii
+                aux[jh2,1]=2
+
+
+            #for hbs in hbonds:
+            #    print hbs[1]
+            #print hbonds[0].shape,hbonds[1].shape
+            aux=numpy.array(aux,dtype=int,order='F')
+
+            if type(hbonds[0][0][0]) in [numpy.ndarray]:
+                mss_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
+                mss_ind_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
+                for jj in range(len(hbonds)):
+                    num_hbs=hbonds[jj][0].shape[0]
+                    mss_ind=mss_funcs.ind_wat_limit_4_nosim(aux,hbonds[jj][0],hbonds[jj][1],self.num_waters,self.num_atoms,num_hbs)
+                    mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
+                    mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
+                    mss_tot[jj,:,:]=mss[:,:]
+                    mss_ind_tot[jj,:,:]=mss_ind[:,:]
+                return mss_tot,mss_ind_tot
+
+            else:
+                num_hbs=hbonds[0].shape[0]
+                mss_ind=mss_funcs.ind_wat_limit_4_nosim(aux,hbonds[0],hbonds[1],self.num_waters,self.num_atoms,num_hbs)
+                mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
+                mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
+
+                return mss,mss_ind
+
+    def mss_hbonds_wat_prot(self,definition=1,hbonds=None,verbose=True):
+        
+        mss_funcs.definition_hbs=faux.hbonds.definition
+
+        if hbonds==None:
+            print '# hbonds needed.'
+            return
+
+        if definition==1:
+
+            aux=numpy.zeros((self.num_atoms,3),dtype=int,order='F')
+            filt_water=numpy.zeros(self.num_atoms,dtype=bool,order='F')
+
+            for ii in range(len(self.water)):
+                jo=self.water[ii].O.index
+                jh1=self.water[ii].H1.index
+                jh2=self.water[ii].H2.index
+                aux[jo,0]=ii
+                aux[jo,1]=0
+                aux[jh1,0]=ii
+                aux[jh1,1]=1
+                aux[jh2,0]=ii
+                aux[jh2,1]=2
+                filt_water[jo]=True
+                filt_water[jh1]=True
+                filt_water[jh2]=True
+
+            #for hbs in hbonds:
+            #    print hbs[1]
+            #print hbonds[0].shape,hbonds[1].shape
+            aux=numpy.array(aux,dtype=int,order='F')
+
+            if type(hbonds[0][0][0]) in [numpy.ndarray]:
+                mss_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
+                mss_ind_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
+                for jj in range(len(hbonds)):
+                    num_hbs=hbonds[jj][0].shape[0]
+                    mss_ind=mss_funcs.ind_wat_limit_4_nosim_prot(aux,hbonds[jj][0],hbonds[jj][1],self.num_waters,self.num_atoms,num_hbs)
+                    mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
+                    mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
+                    mss_tot[jj,:,:]=mss[:,:]
+                    mss_ind_tot[jj,:,:]=mss_ind[:,:]
+                return mss_tot,mss_ind_tot
+
+            else:
+                num_hbs=hbonds[0].shape[0]
+                mss_ind=mss_funcs.ind_wat_limit_4_nosim_prot(aux,filt_water,hbonds[0],hbonds[1],self.num_waters,self.num_atoms,num_hbs)
+                mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
+                mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
+
+                return mss,mss_ind
+
+
+
+    def mss_hbonds_wation(self,definition=1,hbonds=None,bonds=None,tipo=1,verbose=True):
+        
+        mss_funcs.definition_hbs=faux.hbonds.definition
+
+        if hbonds==None:
+            print '# hbonds needed.'
+            return
+
+        if definition==1:
+
+            aux=numpy.zeros((self.num_atoms,3),dtype=int,order='F')
+
+            for ii in range(len(self.water)):
+                jo=self.water[ii].O.index
+                jh1=self.water[ii].H1.index
+                jh2=self.water[ii].H2.index
+                aux[jo,0]=ii
+                aux[jo,1]=0
+                aux[jh1,0]=ii
+                aux[jh1,1]=1
+                aux[jh2,0]=ii
+                aux[jh2,1]=2
+
+
+            #for hbs in hbonds:
+            #    print hbs[1]
+            #print hbonds[0].shape,hbonds[1].shape
+            aux=numpy.array(aux,dtype=int,order='F')
+            
+            if bonds==None:
+                if type(hbonds[0][0][0]) in [numpy.ndarray]:
+                    mss_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
+                    mss_ind_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
+                    for jj in range(len(hbonds)):
+                        num_hbs=hbonds[jj][0].shape[0]
+                        mss_ind=mss_funcs.ind_wat_limit_4_nosim(aux,hbonds[jj][0],hbonds[jj][1],self.num_waters,self.num_atoms,num_hbs)
+                        mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
+                        mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
+                        mss_tot[jj,:,:]=mss[:,:]
+                        mss_ind_tot[jj,:,:]=mss_ind[:,:]
+                    return mss_tot,mss_ind_tot
+                else:
+                    num_hbs=hbonds[0].shape[0]
+                    mss_ind=mss_funcs.ind_wat_limit_4_nosim(aux,hbonds[0],hbonds[1],self.num_waters,self.num_atoms,num_hbs)
+                    mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
+                    mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
+                    return mss,mss_ind
+            else:
+                num_bonds=len(bonds)
+                if type(hbonds[0][0][0]) in [numpy.ndarray]:
+                    mss_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
+                    mss_ind_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
+                    for jj in range(len(hbonds)):
+                        num_hbs=hbonds[jj][0].shape[0]
+                        mss_ind=mss_funcs.ind_wat_limit_4_nosim(aux,hbonds[jj][0],hbonds[jj][1],self.num_waters,self.num_atoms,num_hbs)
+                        mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
+                        mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
+                        mss_tot[jj,:,:]=mss[:,:]
+                        mss_funcs.addbonds(tipo,mss,mss_ind,bonds,self.num_waters,num_bonds)
+                        mss_ind_tot[jj,:,:]=mss_ind[:,:]
+                    return mss_tot,mss_ind_tot
+                else:
+                    num_hbs=hbonds[0].shape[0]
+                    mss_ind=mss_funcs.ind_wat_limit_4_nosim(aux,hbonds[0],hbonds[1],self.num_waters,self.num_atoms,num_hbs)
+                    mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
+                    mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
+                    mss_funcs.addbonds(tipo,mss,mss_ind,bonds,self.num_waters,num_bonds)
+                    return mss,mss_ind
+
+
+
+#    def mss_hbonds (self,definition=None,set_A=None,set_B=None,acc_don_A=None,acc_don_B=None,traj=0,frame=0,sk_param=0.00850,roh_param=2.3000,roo_param=3.50,angooh_param=30.0,optimize=False,pbc=True,verbose=False):
+# 
+#        opt_effic=0
+#        opt_diff_syst=0
+#        opt_diff_set=1
+#        opt_pbc=0
+#        if pbc:
+#            opt_pbc=1
+# 
+# 
+#        if acc_don_A==None and acc_don_B==None:
+#            if set_A==None:
+#                print 'set_A and/or set_B needed'
+#                return
+#            else:
+#                acc_don_A=self.selection_hbonds(setA=set_A,verbose=False)
+#                if set_B==None:
+#                    acc_don_B=acc_don_A
+#                    opt_diff_set=0
+#                else:
+#                    acc_don_B=self.selection_hbonds(setA=set_B,verbose=False)
+#        else:
+#            if acc_don_B==None:
+#                acc_don_B=acc_don_A
+#                opt_diff_set=0
+# 
+# 
+#        nA_acc       = acc_don_A[0].shape[0]
+#        nA_acc_sH    = acc_don_A[1].shape[0] # Just for water and skinner, topological, etc...
+#        nA_acc_H     = acc_don_A[2].shape[0] # Just for water and skinner, topological, etc...
+#        nA_don       = acc_don_A[3].shape[0]
+#        nA_don_sH    = acc_don_A[4].shape[0]
+#        nA_don_H     = acc_don_A[5].shape[0]
+#        allwat_A     = acc_don_A[6]
+#        nB_acc       = acc_don_B[0].shape[0]
+#        nB_acc_sH    = acc_don_B[1].shape[0] # Just for water and skinner, topological, etc...
+#        nB_acc_H     = acc_don_B[2].shape[0] # Just for water and skinner, topological, etc...
+#        nB_don       = acc_don_B[3].shape[0]
+#        nB_don_sH    = acc_don_B[4].shape[0]
+#        nB_don_H     = acc_don_B[5].shape[0]
+#        allwat_B     = acc_don_B[6]
+# 
+# 
+#        num_frames=__length_frame_opt__(self,traj,frame)
+# 
+#        faux.hbonds.definition=hbonds_type(definition,verbose=False)
+#        if faux.hbonds.definition == 0 : 
+#            return
+#        
+#        elif faux.hbonds.definition == 1 : 
+#            faux.hbonds.sk_param=sk_param
+#            if not (allwat_A and allwat_B):
+#                print '# This type of hbond only works for water molecules.'
+#            print 'Not implemented yet'
+#            pass
+# 
+#        elif faux.hbonds.definition == 2 : 
+#            faux.hbonds.roh2_param= roh_param**2
+#            print 'Not implemented yet'
+#            pass
+# 
+#        elif faux.hbonds.definition == 3 : # ROO_ANG
+#            faux.hbonds.roo2_param, faux.hbonds.cos_angooh_param= roo_param**2, numpy.cos(numpy.radians(angooh_param))
+# 
+#            if optimize:
+#                gg=0
+#                hbout=[]
+#                for iframe in __read_frame_opt__(self,traj,frame):
+#                    if (gg==0): 
+#                        self.verlet_list_grid_ns(r1=roo_param,r2=roo_param,rcell=roo_param,iframe=iframe)
+#                    else:
+#                        self.verlet_list_grid_ns(r1=roo_param,r2=roo_param,rcell=roo_param,iframe=iframe,update=True)
+# 
+#                    faux.hbonds.get_hbonds_roo_ang_ns_list( opt_diff_set, opt_pbc, \
+#                                           acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
+#                                           iframe.coors,iframe.box,iframe.orthogonal, \
+#                                           acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
+#                                           nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
+#                                           nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
+#                                           self.num_atoms)
+# 
+#                    hbout.append([faux.glob.hbs_out,faux.glob.hbs_vals_out])
+#                    gg+=1
+#            else:
+#                hbout=[]
+#                gg=0
+#                for iframe in __read_frame_opt__(self,traj,frame):
+#                    faux.hbonds.get_hbonds_roo_ang( opt_diff_set, opt_pbc, \
+#                                                        acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
+#                                                        iframe.coors,iframe.box,iframe.orthogonal, \
+#                                                        acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
+#                                                        nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
+#                                                        nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
+#                                                        self.num_atoms)
+#                    hbout.append([faux.glob.hbs_out,faux.glob.hbs_vals_out])
+#                    gg+=1
+# 
+#            if gg==1:
+#                return hbout[0]
+#            else:
+#                return hbout
+# 
+#        elif faux.hbonds.definition == 4 : 
+#            if not (allwat_A and allwat_B):
+#                print '# This type of hbond only works for water molecules.'
+#            print 'Not implemented yet'
+#            pass
+# 
+#        elif faux.hbonds.definition == 5 : 
+#            if not (allwat_A and allwat_B):
+#                print '# This type of hbond only works for water molecules.'
+#            print 'Not implemented yet'
+#            pass
+# 
+#        elif faux.hbonds.definition == 6 : 
+#            faux.hbonds.cos_angooh_param= numpy.cos(numpy.radians(angooh_param))
+#            if not (allwat_A and allwat_B):
+#                print '# This type of hbond only works for water molecules.'
+#            print 'Not implemented yet'
+#            pass
+# 
+#        elif faux.hbonds.definition == 7 : 
+#            if not (allwat_A and allwat_B):
+#                print '# This type of hbond only works for water molecules.'
+#            print 'Not implemented yet'
+#            pass
+# 
+#            #if verbose:
+#            #    print 'Listo'
+#        pass
+
+
+    def hbonds2 (self,definition=None,set_A=None,set_B=None,acc_don_A=None,acc_don_B=None,traj=0,frame=0,sk_param=0.00850,roh_param=2.3000,roo_param=3.5,angooh_param=30.0,optimize=False,pbc=True,verbose=False):
+
+        opt_effic=0
+        opt_diff_syst=0
+        opt_diff_set=1
+        opt_pbc=0
+        if pbc:
+            opt_pbc=1
+
+        if acc_don_A==None and acc_don_B==None:
+            if set_A==None:
+                print 'set_A and/or set_B needed'
+                return
+            else:
+                acc_don_A=self.selection_hbonds(setA=set_A,verbose=False)
+                if set_B==None:
+                    acc_don_B=acc_don_A
+                    opt_diff_set=0
+                else:
+                    acc_don_B=self.selection_hbonds(setA=set_B,verbose=False)
+        else:
+            if acc_don_B==None:
+                acc_don_B=acc_don_A
+                opt_diff_set=0
+
+
+        nA_acc       = acc_don_A[0].shape[0]
+        nA_acc_sH    = acc_don_A[1].shape[0] # Just for water and skinner, topological, etc...
+        nA_acc_H     = acc_don_A[2].shape[0] # Just for water and skinner, topological, etc...
+        nA_don       = acc_don_A[3].shape[0]
+        nA_don_sH    = acc_don_A[4].shape[0]
+        nA_don_H     = acc_don_A[5].shape[0]
+        allwat_A     = acc_don_A[6]
+        nB_acc       = acc_don_B[0].shape[0]
+        nB_acc_sH    = acc_don_B[1].shape[0] # Just for water and skinner, topological, etc...
+        nB_acc_H     = acc_don_B[2].shape[0] # Just for water and skinner, topological, etc...
+        nB_don       = acc_don_B[3].shape[0]
+        nB_don_sH    = acc_don_B[4].shape[0]
+        nB_don_H     = acc_don_B[5].shape[0]
+        allwat_B     = acc_don_B[6]
+
+        natomA=self.num_atoms
+        natomB=self.num_atoms
+        num_frames=__length_frame_opt__(self,traj,frame)
+
+        faux.hbonds.definition=hbonds_type(definition,verbose=False)
+
+        if faux.hbonds.definition == 3 : # ROO_ANG
+            faux.hbonds.roo2_param, faux.hbonds.cos_angooh_param= roo_param**2, numpy.cos(numpy.radians(angooh_param))
+            
+            gg=0
+            for iframe in __read_frame_opt__(self,traj,frame):
+                if (gg==0): 
+                    self.verlet_list_grid_ns(r1=3.5,r2=3.5,rcell=3.5,iframe=iframe)
+                else:
+                    self.verlet_list_grid_ns(r1=3.5,r2=3.5,rcell=3.5,iframe=iframe,update=True)
+                    faux.hbonds.get_hbonds_roo_ang_ns_list(opt_effic, opt_diff_syst, opt_diff_set, opt_pbc, \
+                                                       acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
+                                                       iframe.coors,iframe.box,iframe.orthogonal, \
+                                                       acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
+                                                       iframe.coors,nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
+                                                       nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
+                                                       natomA,natomB)
+                gg+=1
+
+
         pass
 
 
