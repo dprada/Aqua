@@ -7,9 +7,9 @@ import copy
 
 ## traj: frame,num_part,dim
 
-class pyn_file():
+class pyn_traj_file():
 
-    def __init__ (self,name=None,frames=None,particles=None,dimensions=None,opt='r'):
+    def __init__ (self,name=None,frames=None,particles=None,dimensions=None,dtype=float,opt='r',verbose=True):
 
         self.name=name
         self.opt=opt
@@ -24,11 +24,15 @@ class pyn_file():
         self.frames=frames
         self.particles=particles
         self.dimensions=dimensions
-        self.coor_int=False
+        self.dtype=dtype
 
         if self.name.endswith('.bin'):
             self.binary=True
 
+        self.open()
+
+        if verbose:
+            self.info()
 
     def info(self):
         print '# File name:',self.name
@@ -40,13 +44,14 @@ class pyn_file():
         if self.frames==None:
             print '# Frames: Needed!!!'
         else:
-            print '# Frames:',self.frames
-        print '# Particles:',self.particles
-        print '# Dimensions:',self.dimensions
+            print '# Frames:', self.frames
+        print '# Particles:', self.particles
+        print '# Dimensions:', self.dimensions
+        print '# Data type:', self.dtype.__name__
 
     def open(self):
 
-        if self.binary:
+        if self.dtype==int:
             self.unit=len(pyn_math.pyn_f90units)+100
             pyn_math.pyn_f90units.append(self.unit)
             libbin.fopen_read(self.unit,self.name)
@@ -81,10 +86,10 @@ class pyn_file():
 
     def read_frame(self,frame=0):
 
-        if self.coor_int:
-            return libbin.read_int_frame(self.unit,frame,self.particles,self.dimensions)
+        if self.dtype==int:
+            return libbin.read_int_frame(self.binary,self.unit,frame,self.particles,self.dimensions)
         else:
-            return libbin.read_float_frame(self.unit,frame,self.particles,self.dimensions)
+            return libbin.read_float_frame(self.binary,self.unit,frame,self.particles,self.dimensions)
 
     def read_coor(self,frame=0,particle=0,dimension=0):
 
@@ -95,10 +100,10 @@ class pyn_file():
 
     def check_length (self):
 
-        if self.coor_int:
-            return libbin.check_int_length(self.unit,self.particles,self.dimensions)
+        if self.dtype==int:
+            return libbin.check_int_length(self.binary,self.unit,self.particles,self.dimensions)
         else:
-            return libbin.check_float_length(self.unit,self.particles,self.dimensions)
+            return libbin.check_float_length(self.binary,self.unit,self.particles,self.dimensions)
 
 
 class kinetic_analysis():
@@ -213,13 +218,13 @@ class kinetic_analysis():
             if self.__tr_mode_in_ram__ and not self.__tr_mode_by_frame__:
 
                 if traject.endswith('.bin'):
-                    self.file_traj=pyn_file(name=traject,frames=frames,particles=particles,dimensions=dimensions,opt='r')
+                    self.file_traj=pyn_traj_file(name=traject,frames=frames,particles=particles,dimensions=dimensions,opt='r')
                     self.file_traj.open()
                     self.traj=self.file_traj.extract()
 
                 else:
 
-                    self.file_traj=pyn_file(name=traject,opt='r')
+                    self.file_traj=pyn_traj_file(name=traject,opt='r')
                     self.frames = 0
                     
                     self.file_traj.open()
@@ -243,7 +248,7 @@ class kinetic_analysis():
 
             if self.__tr_mode_in_file__:
 
-                self.file_traj=pyn_file(name=traject,frames=frames,particles=particles,dimensions=dimensions)
+                self.file_traj=pyn_traj_file(name=traject,frames=frames,particles=particles,dimensions=dimensions)
 
                 if self.dimensions==None or self.particles==None:
                     print '# Error: Input variables "dimensions" and "particles" needed.'
@@ -266,6 +271,25 @@ class kinetic_analysis():
             print '# In file', self.file_traj.name,':'
 
         print '#',self.frames,'frames,',self.particles,'particles,',self.dimensions,'dimensions.'
+
+    def write2file(self,traj=None,filename=None,frame='ALL',begin=None,end=None,verbose=False):
+
+        if (frame in ['ALL','all','All']) and (end==None):
+            end=self.frames-1
+
+        if begin==None:
+            begin=0
+
+        if not filename:
+            print '# filename needed.'
+            return
+
+        opt_binary=0
+        if filename.endswith('bin'):
+            opt_binary=1
+
+        if traj=='nodes':
+            f_kin_anal.trajnodes2file(filename,opt_binary,begin,end,self.traj_nodes,self.frames,self.particles,1)
 
     def histogram(self,dimension=None,node=None,cluster=None,bins=20,segment=None,delta=None,select_dim=0,norm=False,cumul=False):
 
@@ -1064,6 +1088,17 @@ class kinetic_analysis():
             del(num_nodes,new_num_frames,aux_list)
 
             self.__type_clusters__='berezovska2012'
+
+    def build_traj_clusters(self):
+
+        num_nodes=self.network.num_nodes
+        aux_list=numpy.empty(num_nodes,dtype=int,order='F')
+        for ii in range(num_nodes):
+            aux_list[ii]=self.network.node[ii].cluster
+
+        new_num_frames=self.traj_nodes.shape[0]
+        self.traj_clusters=f_kin_anal.trajnodes2trajclusters(aux_list,self.traj_nodes,num_nodes,new_num_frames,self.particles)
+        del(num_nodes,new_num_frames,aux_list)
 
 
     def pca(self,num_eigenvs='ALL',verbose=True):

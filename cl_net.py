@@ -393,7 +393,7 @@ class network():
         self.__init_Ts__()
         pass
 
-    def merge_net(self,net=None,verbose=True):
+    def merge_net(self,net=None,traj=None,verbose=True):
          
         # merging the labels and weights of nodes
          
@@ -416,33 +416,72 @@ class network():
                 self.add_link(no2,nf2,weight=wf,index_origin=True,index_final=True)
 
         self.info(update=True,verbose=verbose)
+
+        if traj!=None:
+            f_kin_anal.trans_traj_nodes(net_to_total,traj,net.num_nodes,traj.shape[0],traj.shape[1],traj.shape[2])
+
         del(net_to_total); del(labels_aux)
 
         pass
 
     def extract_net(self,nodes=None,verbose=True):
-         
-        # extracting the labels and weights of nodes
         
-        aux=[-2 for ii in range(self.num_nodes)]
-        temp_net=network(directed=self.directed,kinetic=self.kinetic,verbose=False)
-        for ii in nodes:
-            aux[ii]=temp_net.add_node(self.node[ii].label,self.node[ii].weight,iout=True)
-        for ii in nodes:
-            aa=aux[ii]
-            for jj,kk in self.node[ii].link.iteritems():
-                bb=aux[jj]
-                if bb>-1:
-                    temp_net.add_link(aa,bb,weight=kk,index_origin=True,index_final=True)
+        nodes=numpy.array(nodes,dtype=int)
+        
+        if self.Ts==False:
+            self.build_Ts()
 
-        del(aux)
-        if temp_net.kinetic:
-            for ii in temp_net.node:
-                ii.weight=sum(ii.link.values())
+        new_N_nodes=nodes.shape[0]
 
-        temp_net.info(update=True,verbose=verbose)
-        return temp_net
-         
+        new_k_total=f_net.extract_net_new_k_total(nodes,self.T_ind,self.T_wl,self.T_start,new_N_nodes,self.num_nodes,self.k_total)
+        pfff=f_net.extract_net(new_k_total,nodes,self.T_ind,self.T_wl,self.T_start,self.num_nodes,self.k_total,new_N_nodes)
+
+        labels={}
+        for ii in range(len(nodes)):
+            labels[self.node[nodes[ii]].label]=ii
+
+
+        temp = network(verbose=False,)
+        temp.num_nodes = new_N_nodes
+        temp.k_total = new_k_total
+        temp.k_max=pfff[0]
+        temp.T_wl=pfff[1]
+        temp.T_ind=pfff[2]
+        temp.T_start=pfff[3]
+        temp.Ts=True
+        temp.weight=0
+        temp.labels={}
+        temp.node=[]
+
+        for ii in range(temp.num_nodes):
+            node=cl_node()
+            for jj in range(temp.T_start[ii],temp.T_start[ii+1]):
+                neigh=temp.T_ind[jj]
+                node.link[neigh-1]=temp.T_wl[jj]
+            node.k_out=temp.T_start[ii+1]-temp.T_start[ii]
+            node.weight=sum(node.link.values())
+            temp.weight+=node.weight
+            temp.node.append(node)
+
+        if self.kinetic:
+            temp.kinetic=True
+
+        if self.directed:
+            temp.directed=True
+
+        temp.info(update=True,verbose=verbose)
+
+        for kk,vv in labels.iteritems():
+            temp.node[vv].label=kk
+
+        temp.labels=labels
+
+        del(pfff)
+        del(labels)
+
+        return temp
+
+
     def load_net(self,name_file,format='text',verbose=True):
         """format:['text','native']"""
 
@@ -568,7 +607,7 @@ class network():
 
         if format == 'water':
             for ii in range(self.num_nodes):
-                line=ff.readline()
+                line=fff.readline()
                 mss=line.split()[1]+' |'
                 for jj in range(2,6):
                     mss=mss+' '+line.split()[jj]
@@ -849,7 +888,67 @@ class network():
 
         return vect_out
 
-    def symmetrize(self,new=True,verbose=True):
+    def weight_core(self,threshold=None,new=False):
+
+        if threshold==None:
+            print '# threshold needed.'
+            return
+
+        if self.Ts==False:
+            self.build_Ts()
+
+        new_k_total,new_N_nodes=f_net.weight_core_new_k_total(threshold,self.T_ind,self.T_wl,self.T_start,self.num_nodes,self.k_total)
+        pfff=f_net.weight_core(new_k_total,new_N_nodes,threshold,self.T_ind,self.T_wl,self.T_start,self.num_nodes,self.k_total)
+        labels={}
+        for ii in range(len(pfff[4])):
+            labels[self.node[pfff[4][ii]-1].label]=ii
+
+        if new:
+            temp             = network(verbose=False)
+        else:
+            temp             = self
+
+        temp.num_nodes = new_N_nodes
+        temp.k_total = new_k_total
+        temp.k_max=pfff[0]
+        temp.T_wl=pfff[1]
+        temp.T_ind=pfff[2]
+        temp.T_start=pfff[3]
+        temp.Ts=True
+        temp.weight=0
+        temp.labels={}
+        temp.node=[]
+
+        for ii in range(temp.num_nodes):
+            node=cl_node()
+            for jj in range(temp.T_start[ii],temp.T_start[ii+1]):
+                neigh=temp.T_ind[jj]
+                node.link[neigh-1]=temp.T_wl[jj]
+            node.k_out=temp.T_start[ii+1]-temp.T_start[ii]
+            node.weight=sum(node.link.values())
+            temp.weight+=node.weight
+            temp.node.append(node)
+
+        for kk,vv in labels.iteritems():
+            temp.node[vv].label=kk
+
+        if self.kinetic:
+            temp.kinetic=True
+
+        if self.directed:
+            temp.directed=True
+
+        temp.labels=labels
+
+        del(pfff)
+        del(labels)
+
+        if new:
+            return temp
+        else:
+            pass
+
+    def symmetrize(self,new=False,verbose=True):
 
         if self.Ts==False :
             self.build_Ts()
@@ -912,19 +1011,15 @@ class network():
         else:
             pass
 
-
-    def gradient_clusters(self,verbose=True):
+    def gradient_clusters_2(self,dim=1,verbose=True):
 
         if self.Ts==False :
 
             self.build_Ts()
 
-
-        self.num_clusters,pfff=f_net.grad(self.T_ind,self.T_wl,self.T_start,self.num_nodes,self.k_total)
-
+        self.num_clusters,pfff=f_net.grad_2(dim,self.T_ind,self.T_wl,self.T_start,self.num_nodes,self.k_total)
 
         Clust={}
-
         for ii in range(self.num_nodes):
             try:
                 Clust[pfff[ii]].append(ii)
@@ -933,18 +1028,81 @@ class network():
                 Clust[pfff[ii]].append(ii)
 
 
-        a=0
-        for ii in Clust.keys():
+        aux=numpy.array(Clust.keys(),dtype=int)
+        weight_clusts=numpy.zeros((self.num_clusters),dtype=float)
+        for ii in range(aux.shape[0]):
+            for jj in Clust[aux[ii]]:
+                weight_clusts[ii]+=self.node[jj].weight
+
+        tosort=weight_clusts.argsort(kind="mergesort")
+
+        self.cluster=[]
+
+        aa=0
+        for ii in range(tosort.shape[0]-1,-1,-1):
+            kk=tosort[ii]
+            jj=aux[kk]
             temp=cl_cluster()
-            temp.label=self.node[int(ii)].label
-            temp.nodes=Clust[ii]
+            temp.label=self.node[jj].label
+            temp.nodes=Clust[jj]
             temp.num_nodes=len(temp.nodes)
-            temp.weight=0
-            for jj in temp.nodes:
-                self.node[jj].cluster=a
-                temp.weight+=self.node[jj].weight
+            temp.weight=weight_clusts[kk]
+            for ll in temp.nodes:
+                self.node[ll].cluster=aa
             self.cluster.append(temp)
-            a+=1
+            aa+=1
+
+        del(aux,weight_clusts,tosort,aa)
+
+
+        # Output: self.clust_info, self.representants, self.node_belongs2, self.cluster_weight, self.num_clusters
+        if verbose:
+            print '# Number of clusters: ',self.num_clusters
+
+
+
+    def gradient_clusters(self,verbose=True):
+
+        if self.Ts==False :
+
+            self.build_Ts()
+
+        self.num_clusters,pfff=f_net.grad(self.T_ind,self.T_wl,self.T_start,self.num_nodes,self.k_total)
+
+        Clust={}
+        for ii in range(self.num_nodes):
+            try:
+                Clust[pfff[ii]].append(ii)
+            except:
+                Clust[pfff[ii]]=[]
+                Clust[pfff[ii]].append(ii)
+
+
+        aux=numpy.array(Clust.keys(),dtype=int)
+        weight_clusts=numpy.zeros((self.num_clusters),dtype=float)
+        for ii in range(aux.shape[0]):
+            for jj in Clust[aux[ii]]:
+                weight_clusts[ii]+=self.node[jj].weight
+
+        tosort=weight_clusts.argsort(kind="mergesort")
+
+        self.cluster=[]
+
+        aa=0
+        for ii in range(tosort.shape[0]-1,-1,-1):
+            kk=tosort[ii]
+            jj=aux[kk]
+            temp=cl_cluster()
+            temp.label=self.node[jj].label
+            temp.nodes=Clust[jj]
+            temp.num_nodes=len(temp.nodes)
+            temp.weight=weight_clusts[kk]
+            for ll in temp.nodes:
+                self.node[ll].cluster=aa
+            self.cluster.append(temp)
+            aa+=1
+
+        del(aux,weight_clusts,tosort,aa)
 
 
         # Output: self.clust_info, self.representants, self.node_belongs2, self.cluster_weight, self.num_clusters
@@ -971,6 +1129,60 @@ class network():
                 except:
                     self.cluster[c_a].link[c_b]=ww
 
+    def dendo_time(self,steps=1000,verbose=True):
+
+        if self.Ts==False:
+
+            self.build_Ts()
+
+        if self.num_clusters==0:
+            return '# Clusters are needed by the algorithm.'
+
+        belongsto=numpy.empty(shape=(self.num_nodes),dtype=int,order='Fortran')
+        for ii in range(self.num_nodes):
+            belongsto[ii]=self.node[ii].cluster
+
+        f_net.dendo_time(steps,self.num_clusters,belongsto,self.T_ind,self.T_wl,self.T_start,self.num_nodes,self.k_total)
+
+        del(belongsto)
+        print '# Done'
+        return
+
+    def dendo_bottom_up(self,verbose=True):
+
+        if self.Ts==False:
+            self.build_Ts()
+
+        if self.num_clusters==0:
+            return '# Clusters are needed by the algorithm.'
+
+        belongsto=numpy.empty(shape=(self.num_nodes),dtype=int,order='Fortran')
+        for ii in range(self.num_nodes):
+            belongsto[ii]=self.node[ii].cluster
+
+        f_net.dendo_bottom_up(self.num_clusters,belongsto,self.T_ind,self.T_wl,self.T_start,self.num_nodes,self.k_total)
+
+        del(belongsto)
+        print '# Done'
+        return
+
+    def dendo_by_nodes(self,verbose=True):
+
+        if self.Ts==False:
+            self.build_Ts()
+
+        if self.num_clusters==0:
+            return '# Clusters are needed by the algorithm.'
+
+        belongsto=numpy.empty(shape=(self.num_nodes),dtype=int,order='Fortran')
+        for ii in range(self.num_nodes):
+            belongsto[ii]=self.node[ii].cluster+1
+
+        f_net.dendo_by_nodes(self.num_clusters,belongsto,self.T_ind,self.T_wl,self.T_start,self.num_nodes,self.k_total)
+
+        del(belongsto)
+        print '# Done'
+        return
 
 
     def cfep(self,mode='pfold',A=0,B=0,num_bins=100000,num_iter=200000):
@@ -981,10 +1193,12 @@ class network():
 
         if mode=='pfold':
 
-            A=A+1
-            B=B+1
-            cfep_out,key_cfep1,key_cfep2=f_net.cfep_pfold(A,B,self.T_ind,self.T_wl,self.T_start,num_bins,num_iter,self.num_nodes,self.k_total)
-            return cfep_out,key_cfep1,key_cfep2
+            opt_bins=1
+            if num_bins<1:
+                num_bins=self.num_nodes
+                opt_bins=0
+            cfep_out,key_cfep=f_net.cfep_pfold3(opt_bins,A,B,self.T_ind,self.T_wl,self.T_start,num_bins,num_iter,self.num_nodes,self.k_total)
+            return cfep_out,key_cfep
 
         if mode=='mfpt':
 
@@ -1190,26 +1404,101 @@ class network():
                 Comp[pfff[ii]]=[]
                 Comp[pfff[ii]].append(ii)
 
+        aux=numpy.array(Comp.keys(),dtype=int)
+        weight_comps=numpy.zeros((self.num_components),dtype=float)
+        for ii in range(aux.shape[0]):
+            for jj in Comp[aux[ii]]:
+                weight_comps[ii]+=self.node[jj].weight
 
-        a=0
-        for ii in Comp.keys():
+        tosort=weight_comps.argsort(kind="mergesort")
+
+        self.component=[]
+        aa=0
+        bb=0.0
+        bb_ind=0
+        gc_num_nodes=0
+        gc_nodes=0
+        for ii in range(tosort.shape[0]-1,-1,-1):
+            kk=tosort[ii]
+            jj=aux[kk]
             temp=cl_cluster()
-            temp.label=a
-            temp.nodes=Comp[ii]
+            temp.nodes=Comp[jj]
             temp.num_nodes=len(temp.nodes)
-            temp.weight=0
-            for jj in temp.nodes:
-                self.node[jj].component=a
-                temp.weight+=self.node[jj].weight
+            temp.weight=weight_comps[kk]
+            bb=0.0
+            for ll in temp.nodes:
+                self.node[ll].component=aa
+                if (self.node[ll].weight>bb):
+                    bb=self.node[ll].weight
+                    bb_ind=ll
+            temp.label=self.node[bb_ind].label
             self.component.append(temp)
-            a+=1
+            aa+=1
+            if gc_num_nodes<temp.num_nodes:
+                gc_num_nodes=temp.num_nodes
+                gc_nodes=Comp[jj]
 
+        del(aux,weight_comps,tosort,aa)
         del(Comp)
+
 
         if verbose:
             print '# Number of components: ',self.num_components
 
         pass
+
+    def giant_component(self,verbose=True):
+
+        if self.Ts==False :
+            self.build_Ts()
+        self.num_components,pfff=f_net.components(self.T_start,self.T_ind,self.T_wl,self.num_nodes,self.k_total)
+
+        Comp={}
+
+        for ii in range(self.num_nodes):
+            try:
+                Comp[pfff[ii]].append(ii)
+            except:
+                Comp[pfff[ii]]=[]
+                Comp[pfff[ii]].append(ii)
+
+        aux=numpy.array(Comp.keys(),dtype=int)
+        weight_comps=numpy.zeros((self.num_components),dtype=float)
+        for ii in range(aux.shape[0]):
+            for jj in Comp[aux[ii]]:
+                weight_comps[ii]+=self.node[jj].weight
+
+        tosort=weight_comps.argsort(kind="mergesort")
+
+        self.component=[]
+        aa=0
+        gc_num_nodes=0
+        gc_nodes=0
+        for ii in range(tosort.shape[0]-1,-1,-1):
+            kk=tosort[ii]
+            jj=aux[kk]
+            temp=cl_cluster()
+            temp.nodes=Comp[jj]
+            temp.num_nodes=len(temp.nodes)
+            temp.weight=weight_comps[kk]
+            for ll in temp.nodes:
+                self.node[ll].component=aa
+            self.component.append(temp)
+            aa+=1
+            if gc_num_nodes<temp.num_nodes:
+                gc_num_nodes=temp.num_nodes
+                gc_nodes=Comp[jj]
+
+        del(aux,weight_comps,tosort,aa)
+        del(Comp)
+
+        if verbose:
+            print '# Nodes in the giant component: ', gc_num_nodes
+
+        return gc_nodes
+
+        pass
+
 
 #### External Functions
 
@@ -1281,6 +1570,7 @@ def kinetic_network(traj=None,ranges=None,bins=None,traj_out=False,labels=True,v
     opt_labels=0
     if labels:
         opt_labels=1
+
 
     if bins!=None:
         if type(bins) in [int]:

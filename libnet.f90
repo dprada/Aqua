@@ -338,6 +338,209 @@ SUBROUTINE DETAILED_BALANCE_DISTANCE(db_dist,p,T_start,T_ind,T_tau,N_nodes,Ktot)
 
 END SUBROUTINE DETAILED_BALANCE_DISTANCE
 
+SUBROUTINE WEIGHT_CORE_NEW_K_TOTAL(newKtot,newNnodes,threshold,T_ind,T_tau,T_start,N_nodes,Ktot)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::N_nodes,Ktot
+  DOUBLE PRECISION,INTENT(IN)::threshold
+  INTEGER,DIMENSION(Ktot),INTENT(IN)::T_ind
+  DOUBLE PRECISION,DIMENSION(Ktot),INTENT(IN)::T_tau
+  INTEGER,DIMENSION(N_nodes+1),INTENT(IN)::T_start
+
+  INTEGER,INTENT(OUT)::newKtot,newNnodes
+
+  INTEGER::i,j
+  LOGICAL,DIMENSION(:),ALLOCATABLE::filtro
+  DOUBLE PRECISION::Pe
+
+  ALLOCATE(filtro(N_nodes))
+
+  filtro=.TRUE.
+
+  DO i=1,N_nodes
+     Pe=0.0d0
+     DO j=T_start(i)+1,T_start(i+1)
+        Pe=Pe+T_tau(j)
+     END DO
+     IF (Pe<=threshold) filtro(i)=.FALSE.
+  END DO
+
+  newKtot=0
+  DO i=1,N_nodes
+     IF (filtro(i)==.TRUE.) THEN
+        DO j=T_start(i)+1,T_start(i+1)
+           IF (filtro(T_ind(j))==.TRUE.) THEN
+              newKtot=newKtot+1
+           END IF
+        END DO
+     END IF
+  END DO
+
+  newNnodes=COUNT(filtro,DIM=1)
+
+  DEALLOCATE(filtro)
+
+END SUBROUTINE WEIGHT_CORE_NEW_K_TOTAL
+
+SUBROUTINE EXTRACT_NET_NEW_K_TOTAL(newKtot,list_nodes,T_ind,T_tau,T_start,newNnodes,N_nodes,Ktot)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::N_nodes,Ktot,newNnodes
+  INTEGER,DIMENSION(Ktot),INTENT(IN)::T_ind
+  DOUBLE PRECISION,DIMENSION(Ktot),INTENT(IN)::T_tau
+  INTEGER,DIMENSION(N_nodes+1),INTENT(IN)::T_start
+  INTEGER,DIMENSION(newNnodes),INTENT(IN)::list_nodes
+
+  INTEGER,INTENT(OUT)::newKtot
+
+  INTEGER::i,j,tt
+  LOGICAL,DIMENSION(:),ALLOCATABLE::filtro
+
+  ALLOCATE(filtro(N_nodes))
+
+  filtro=.FALSE.
+
+  DO i=1,newNnodes
+     filtro(list_nodes(i)+1)=.TRUE.
+  END DO
+
+  newKtot=0
+  DO i=1,newNnodes
+     tt=list_nodes(i)+1
+     DO j=T_start(tt)+1,T_start(tt+1)
+        IF (filtro(T_ind(j))==.TRUE.) THEN
+           newKtot=newKtot+1
+        END IF
+     END DO
+  END DO
+
+  DEALLOCATE(filtro)
+
+END SUBROUTINE EXTRACT_NET_NEW_K_TOTAL
+
+SUBROUTINE EXTRACT_NET(newKmax,TT_tau,TT_ind,TT_start,newKtot,list_nodes,T_ind,T_tau,T_start,N_nodes,Ktot,newNnodes)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::N_nodes,Ktot,newKtot,newNnodes
+  INTEGER,DIMENSION(Ktot),INTENT(IN)::T_ind
+  DOUBLE PRECISION,DIMENSION(Ktot),INTENT(IN)::T_tau
+  INTEGER,DIMENSION(N_nodes+1),INTENT(IN)::T_start
+  INTEGER,DIMENSION(newNnodes),INTENT(IN)::list_nodes
+
+  INTEGER,DIMENSION(newNnodes+1),INTENT(OUT)::TT_start
+  INTEGER,DIMENSION(newKtot),INTENT(OUT)::TT_ind
+  DOUBLE PRECISION,DIMENSION(newKtot),INTENT(OUT)::TT_tau
+  INTEGER,INTENT(OUT)::newKmax
+
+  INTEGER::i,j,gg,hh,tt
+  LOGICAL,DIMENSION(:),ALLOCATABLE::filtro
+  INTEGER,DIMENSION(:),ALLOCATABLE::inv_trad
+
+  ALLOCATE(filtro(N_nodes))
+  ALLOCATE(inv_trad(N_nodes))
+
+  filtro=.FALSE.
+  inv_trad=0
+
+  DO i=1,newNnodes
+     filtro(list_nodes(i)+1)=.TRUE.
+     inv_trad(list_nodes(i)+1)=i
+  END DO
+
+  gg=0
+  hh=0
+  DO tt=1,newNnodes
+     i=list_nodes(tt)+1
+     hh=0
+     TT_start(inv_trad(i))=gg
+     DO j=T_start(i)+1,T_start(i+1)
+        IF (filtro(T_ind(j))==.TRUE.) THEN
+           gg=gg+1
+           hh=hh+1
+           TT_tau(gg)=T_tau(j)
+           TT_ind(gg)=inv_trad(T_ind(j))
+        END IF
+     END DO
+     IF (newKmax<hh) newKmax=hh
+  END DO
+  TT_start(newNnodes+1)=gg
+
+  DEALLOCATE(filtro,inv_trad)
+
+END SUBROUTINE EXTRACT_NET
+
+
+SUBROUTINE WEIGHT_CORE(newKmax,TT_tau,TT_ind,TT_start,trad,newKtot,newNnodes,threshold,T_ind,T_tau,T_start,N_nodes,Ktot)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::N_nodes,Ktot,newKtot,newNnodes
+  DOUBLE PRECISION::threshold
+  INTEGER,DIMENSION(Ktot),INTENT(IN)::T_ind
+  DOUBLE PRECISION,DIMENSION(Ktot),INTENT(IN)::T_tau
+  INTEGER,DIMENSION(N_nodes+1),INTENT(IN)::T_start
+
+  INTEGER,DIMENSION(newNnodes+1),INTENT(OUT)::TT_start
+  INTEGER,DIMENSION(newKtot),INTENT(OUT)::TT_ind
+  INTEGER,DIMENSION(newNnodes),INTENT(OUT)::trad
+  DOUBLE PRECISION,DIMENSION(newKtot),INTENT(OUT)::TT_tau
+  INTEGER,INTENT(OUT)::newKmax
+
+  INTEGER::i,j,gg,hh
+  LOGICAL,DIMENSION(:),ALLOCATABLE::filtro
+  INTEGER,DIMENSION(:),ALLOCATABLE::inv_trad
+  DOUBLE PRECISION::Pe
+
+  ALLOCATE(filtro(N_nodes),inv_trad(N_nodes))
+  filtro=.TRUE.
+  trad=0
+  inv_trad=0
+  newKmax=0
+
+  gg=0
+  DO i=1,N_nodes
+     Pe=0.0d0
+     DO j=T_start(i)+1,T_start(i+1)
+        Pe=Pe+T_tau(j)
+     END DO
+     IF (Pe<=threshold) THEN
+        filtro(i)=.FALSE.
+     ELSE
+        gg=gg+1
+        trad(gg)=i
+        inv_trad(i)=gg
+     END IF
+  END DO
+
+  gg=0
+  hh=0
+  DO i=1,N_nodes
+     IF (filtro(i)==.TRUE.) THEN
+        hh=0
+        TT_start(inv_trad(i))=gg
+        DO j=T_start(i)+1,T_start(i+1)
+           IF (filtro(T_ind(j))==.TRUE.) THEN
+              gg=gg+1
+              hh=hh+1
+              TT_tau(gg)=T_tau(j)
+              TT_ind(gg)=inv_trad(T_ind(j))
+           END IF
+        END DO
+        IF (newKmax<hh) newKmax=hh
+     END IF
+  END DO
+  TT_start(newNnodes+1)=gg
+
+  DEALLOCATE(filtro,inv_trad)
+
+END SUBROUTINE WEIGHT_CORE
+
+  
+
+
 SUBROUTINE SYMMETRIZE_NET(newKmax,TT_tau,TT_ind,TT_start,Pe,newKtot,T_ind,T_tau,T_start,N_nodes,Ktot)
 
   IMPLICIT NONE
@@ -509,9 +712,6 @@ SUBROUTINE SYMMETRIZE_NET(newKmax,TT_tau,TT_ind,TT_start,Pe,newKtot,T_ind,T_tau,
 
   DEALLOCATE(F_ind,flux,salidas,SL)
 
-  Pe=Pe/2.0d0
-  TT_tau=TT_tau/2.0d0
-
 
 END SUBROUTINE SYMMETRIZE_NET
 
@@ -556,7 +756,6 @@ SUBROUTINE GRAD (N_sets,comunidades,T_ind,T_tau,T_start,N_nodes,Ktot)   !!!! Par
         Pe(i)=Pe(i)+T_tau(j)
      END DO
   END DO
-
 
   dim=1
   dim2=dim
@@ -748,6 +947,237 @@ SUBROUTINE GRAD (N_sets,comunidades,T_ind,T_tau,T_start,N_nodes,Ktot)   !!!! Par
   DEALLOCATE(label,vect_aux1)
 
 END SUBROUTINE GRAD
+
+SUBROUTINE GRAD_2 (N_sets,comunidades,dim,T_ind,T_tau,T_start,N_nodes,Ktot)   
+
+
+  IMPLICIT NONE
+  
+
+  INTEGER,INTENT(IN)::N_nodes,Ktot,dim
+  INTEGER,DIMENSION(Ktot),INTENT(IN)::T_ind
+  DOUBLE PRECISION,DIMENSION(Ktot),INTENT(IN)::T_tau
+  INTEGER,DIMENSION(N_nodes+1),INTENT(IN)::T_start
+
+
+  INTEGER,INTENT(OUT)::N_sets
+  INTEGER,DIMENSION(N_nodes),INTENT(OUT)::comunidades
+
+  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::Pe
+
+
+  INTEGER:: i,j,jj,g,h
+
+  !! Para minimos:
+  DOUBLE PRECISION::peso
+  INTEGER::dim2,inicio,fin,candidato
+  INTEGER,DIMENSION(:),ALLOCATABLE::tope_lista
+  INTEGER,DIMENSION(:,:),ALLOCATABLE::lista
+  LOGICAL,DIMENSION(:),ALLOCATABLE::label_glob_min,label_loc_min,filtro
+  logical::inter
+
+  !! Para las basins:
+  INTEGER::hacia,desde
+  logical,dimension(:),allocatable::label
+  integer,dimension(:),allocatable::vect_aux1
+
+  ALLOCATE(Pe(N_nodes))
+  Pe=0.0d0
+
+  DO i=1,N_nodes
+     DO j=T_start(i)+1,T_start(i+1)
+        Pe(i)=Pe(i)+T_tau(j)
+     END DO
+  END DO
+
+  dim2=dim
+
+  !! Ordeno primero los contactos
+
+  ALLOCATE(lista(N_nodes,dim2),tope_lista(N_nodes))
+
+  lista=0
+  tope_lista=0
+
+  DO i=1,N_nodes
+
+     h=0
+     g=T_start(i+1)-T_start(i)
+
+     ALLOCATE(filtro(g))
+     filtro=.true.
+
+     inicio=T_start(i)+1
+     fin=T_start(i+1)
+     
+     DO j=inicio,fin
+        IF (T_ind(j)==i) THEN
+           filtro(j-inicio+1)=.false.
+           EXIT
+        END IF
+     END DO
+
+     DO WHILE (h<dim2)
+        
+        g=inicio-1+MAXLOC(T_tau(inicio:fin),DIM=1,MASK=filtro)
+        candidato=g
+        peso=Pe(T_ind(candidato))
+        DO j=inicio,fin
+           IF ((T_tau(j)==T_tau(candidato)).and.(filtro(j-inicio+1).eqv..true.)) THEN
+              IF (Pe(T_ind(j))>peso) THEN
+                 peso=Pe(T_ind(j))
+                 candidato=j
+              END IF
+           END IF
+        END DO
+        
+        h=h+1
+        lista(i,h)=T_ind(candidato)
+        filtro(candidato-inicio+1)=.false.
+        
+        IF (COUNT(filtro)==0) THEN
+           exit
+        END IF
+        
+     END DO
+
+     DEALLOCATE(filtro)
+     tope_lista(i)=h
+
+  END DO
+
+
+  ALLOCATE(label_glob_min(N_nodes),label_loc_min(N_nodes))
+  label_glob_min=.false.
+  label_loc_min=.false.
+
+
+  !! Minimos globales:
+
+  label_glob_min=.false.
+
+  DO i=1,N_nodes
+
+     peso=Pe(i)
+     inter=.true.
+     DO j=T_start(i)+1,T_start(i+1)
+        g=T_ind(j)
+        IF (peso<Pe(g)) THEN
+           inter=.false.
+           exit
+        END IF
+     END DO
+     
+     IF (inter.eqv..true.) label_glob_min(i)=.true.
+     
+  END DO
+  
+
+  !! Minimos locales:
+
+  label_loc_min=.false.
+  
+  DO i=1,N_nodes
+     
+     peso=Pe(i)
+     
+     inter=.true.
+     DO j=1,tope_lista(i)
+        
+        IF (peso<=Pe(lista(i,j))) THEN
+           inter=.false.
+           exit
+        END IF
+        
+     END DO
+     
+     IF (inter.eqv..true.) label_loc_min(i)=.true.
+     
+  END DO
+
+
+  !! Defino las basins
+
+  ALLOCATE(label(N_nodes))
+  label=.false.
+  label=label_loc_min
+  
+  allocate(vect_aux1(N_nodes))
+  vect_aux1=0
+    
+  DO i=1,N_nodes
+     IF (label_loc_min(i).eqv..true.) THEN
+        comunidades(i)=i
+     END IF
+  END DO
+
+
+  DO i=1,N_nodes
+
+     desde=i
+     h=0
+     
+     DO WHILE (label(desde).eqv..false.)
+
+        h=h+1
+        vect_aux1(h)=desde
+        label(desde)=.true.
+        
+        DO j=1,tope_lista(desde)
+           IF (Pe(lista(desde,j))>=Pe(desde)) THEN
+              hacia=lista(desde,j)
+              inter=.true.
+              exit
+           END IF
+        END DO
+
+        IF (inter.eqv..false.) THEN
+           
+           exit
+        END IF
+        
+        desde=hacia
+        
+     END DO
+     
+
+     
+     IF (comunidades(desde)==0) THEN
+        j=desde
+     ELSE
+        j=comunidades(desde)
+     END IF
+     
+     DO jj=1,h
+        comunidades(vect_aux1(jj))=j
+     END DO
+     
+  END DO
+
+
+  label=.false.
+  DO i=1,N_nodes
+     label(comunidades(i))=.true.
+  END DO
+  h=0
+
+  DO i=1,N_nodes
+     IF (label(i).eqv..true.) THEN
+        h=h+1
+     END IF
+  END DO
+  
+
+  comunidades=comunidades-1
+
+  N_sets=h
+
+
+  DEALLOCATE(Pe)
+  DEALLOCATE(tope_lista,lista,label_glob_min,label_loc_min)
+  DEALLOCATE(label,vect_aux1)
+
+END SUBROUTINE GRAD_2
 
 
 SUBROUTINE BUILD_NET_BIN (f_traj_nodes,f_net,nw,frames)   !!!! Para revisar el double precision de T_tau
@@ -1276,6 +1706,7 @@ SUBROUTINE cfep_pfold (plot,info_1,info_2,A,B,T_ind,T_tau,T_start,length,num_ite
 
   DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::Pe
   
+  integer::AA,BB
   integer::i,j,times,jj,g
 
   double precision,dimension(:),allocatable::Pf,Pf2
@@ -1286,11 +1717,12 @@ SUBROUTINE cfep_pfold (plot,info_1,info_2,A,B,T_ind,T_tau,T_start,length,num_ite
   double precision::delta_cut
   double precision::Z,Za,Zab
 
+  AA=A+1
+  BB=B+1
 
   plot=0.0d0
   info_2=0.0d0
   info_1=0
-
 
   ALLOCATE(Pe(N_nodes))
   Pe=0.0d0
@@ -1305,14 +1737,16 @@ SUBROUTINE cfep_pfold (plot,info_1,info_2,A,B,T_ind,T_tau,T_start,length,num_ite
   Pf2=0.0d0
   appear=0.0d0
 
-  Pf2(A)=1.0d0
-  Pf2(B)=0.0d0
+  Pf2(AA)=1.0d0
+  Pf2(BB)=0.0d0
 
 
   DO times=1,num_iter
 
-     Pf2(A)=1.0d0
-     Pf2(B)=0.0d0
+     print*,times
+
+     Pf2(AA)=1.0d0
+     Pf2(BB)=0.0d0
      Pf=Pf2
      Pf2=0.0d0
      DO i=1,N_nodes
@@ -1324,8 +1758,8 @@ SUBROUTINE cfep_pfold (plot,info_1,info_2,A,B,T_ind,T_tau,T_start,length,num_ite
 
   END DO
 
-  Pf2(A)=1.0d0
-  Pf2(B)=0.0d0
+  Pf2(AA)=1.0d0
+  Pf2(BB)=0.0d0
   Pf=Pf2
   
   DEALLOCATE(Pf2)
@@ -1395,6 +1829,421 @@ SUBROUTINE cfep_pfold (plot,info_1,info_2,A,B,T_ind,T_tau,T_start,length,num_ite
 END SUBROUTINE cfep_pfold
 
 
+SUBROUTINE cfep_pfold2 (opt_bins,plot,node_index,A,B,T_ind,T_tau,T_start,length,num_iter,N_nodes,Ktot)
+
+  implicit none
+
+  INTEGER,INTENT(IN)::opt_bins,A,B,N_nodes,Ktot,length,num_iter
+  INTEGER,DIMENSION(Ktot),INTENT(IN)::T_ind
+  DOUBLE PRECISION,DIMENSION(Ktot),INTENT(IN)::T_tau
+  INTEGER,DIMENSION(N_nodes+1),INTENT(IN)::T_start
+
+  DOUBLE PRECISION,DIMENSION(length,3),INTENT(OUT)::plot
+  INTEGER,DIMENSION(N_nodes),INTENT(OUT)::node_index
+
+  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::Pe
+  
+  integer::AA,BB
+  integer::i,j,times,jj,g,gg,ii,kk
+
+  double precision,dimension(:),allocatable::Pf,Pf2
+
+  INTEGER,dimension(:),allocatable::orderpf
+  
+  logical,dimension(:),allocatable::filtro,filtro2
+  double precision::cut
+  double precision::delta_cut
+  double precision::Z,Za,Zab
+
+  AA=A+1
+  BB=B+1
+
+  plot=0.0d0
+  node_index=0
+
+  ALLOCATE(Pe(N_nodes))
+  Pe=0.0d0
+  DO i=1,N_nodes
+     DO j=T_start(i)+1,T_start(i+1)
+        Pe(i)=Pe(i)+T_tau(j)
+     END DO
+  END DO
+
+  ALLOCATE(Pf(N_nodes),Pf2(N_nodes))
+  Pf=0.0d0
+  Pf2=0.0d0
+
+  Pf2(AA)=1.0d0
+  Pf2(BB)=0.0d0
+
+
+  DO times=1,num_iter
+
+     Pf2(AA)=1.0d0
+     Pf2(BB)=0.0d0
+     Pf=Pf2
+     Pf2=0.0d0
+     DO i=1,N_nodes
+        DO j=T_start(i)+1,T_start(i+1)
+           jj=T_ind(j)
+           Pf2(i)=Pf2(i)+(T_tau(j)*Pf(jj))/Pe(i)
+        END DO
+     END DO
+
+  END DO
+
+  Pf2(AA)=1.0d0
+  Pf2(BB)=0.0d0
+  Pf=Pf2
+  
+  DEALLOCATE(Pf2)
+
+  IF (opt_bins==1) THEN
+
+     ALLOCATE(filtro(N_nodes),filtro2(N_nodes))
+     
+     filtro2=.false.
+     
+     Z=sum(Pe(:),dim=1)
+     
+     delta_cut=1.0d0/(length*1.0d0)
+     
+     DO g=1,length
+        
+        cut=delta_cut*g
+        
+        Za=0.0d0
+        Zab=0.0d0
+        filtro=.false.
+        
+        DO i=1,N_nodes
+           IF (Pf(i)<cut) THEN 
+              filtro(i)=.true.
+           END IF
+        END DO
+        
+        DO i=1,N_nodes
+           IF (filtro(i).eqv..true.) THEN
+              Za=Za+Pe(i)
+              DO j=T_start(i)+1,T_start(i+1)
+                 jj=T_ind(j)
+                 IF (filtro(jj).eqv..false.) THEN
+                    Zab=Zab+T_tau(j)
+                 END IF
+              END DO
+           END IF
+        END DO
+        
+        
+        !WRITE(154,*) ((Za*1.0d0)/(Z*1.0d0)),-log((Zab*1.0d0)/(Z*1.0d0)),cut
+        plot(g,1)=(Za/Z)
+        plot(g,2)=-log(Zab/Z)
+        plot(g,3)=cut
+        
+        DO i=1,N_nodes
+           IF (filtro(i).eqv..true.) THEN 
+              IF (filtro2(i).eqv..false.) THEN
+                 filtro2(i)=.true.
+                 node_index(i)=g-1
+              END IF
+           END IF
+        END DO
+        
+     END DO
+     
+  ELSE
+
+     Z=sum(Pe(:),dim=1)
+
+     ALLOCATE(filtro(N_nodes),orderpf(N_nodes))
+
+     filtro=.TRUE.
+
+     DO i=1,N_nodes
+        j=MAXLOC(Pf,DIM=1,MASK=filtro)
+        orderpf(i)=j
+        filtro(j)=.FALSE.
+     END DO
+
+     filtro=.false.
+     Za=0.0d0
+
+     DO i=1,N_nodes
+
+        g=orderpf(i)
+        filtro(g)=.true.
+        Za=Za+Pe(g)
+        Zab=0.0d0
+
+        DO j=1,i
+           gg=orderpf(j)
+           DO jj=T_start(gg)+1,T_start(gg+1)
+              kk=T_ind(jj)
+              IF (filtro(kk).eqv..false.) THEN
+                 Zab=Zab+T_tau(jj)
+              END IF
+           END DO
+        END DO
+
+        plot(i,1)=(Za/Z)
+        plot(i,2)=-log(Zab/Z)
+        plot(i,3)=Pf(g)
+        node_index(g)=i
+
+     END DO
+
+  END IF
+
+
+END SUBROUTINE cfep_pfold2
+
+SUBROUTINE cfep_pfold3 (opt_bins,plot,node_index,A,B,T_ind,T_tau,T_start,length,num_iter,N_nodes,Ktot)
+
+  implicit none
+
+  TYPE int_pointer
+     INTEGER,DIMENSION(:),POINTER::ip
+  END TYPE int_pointer
+  
+
+  INTEGER,INTENT(IN)::opt_bins,A,B,N_nodes,Ktot,length,num_iter
+  INTEGER,DIMENSION(Ktot),INTENT(IN)::T_ind
+  DOUBLE PRECISION,DIMENSION(Ktot),INTENT(IN)::T_tau
+  INTEGER,DIMENSION(N_nodes+1),INTENT(IN)::T_start
+
+  DOUBLE PRECISION,DIMENSION(length,3),INTENT(OUT)::plot
+  INTEGER,DIMENSION(N_nodes),INTENT(OUT)::node_index
+
+  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::Pe
+  
+  integer::AA,BB
+  integer::i,j,times,jj,g,gg,ii,kk,hh,tt
+
+  double precision,dimension(:),allocatable::Pf,Pf2
+
+  INTEGER,dimension(:),allocatable::orderpf
+  
+  logical,dimension(:),allocatable::filtro,filtro2
+  double precision::cut
+  double precision::delta_cut
+  double precision::Z,Za,Zab,aux,aux_de_pf,aux_a_pf,aux_trans
+
+  !Para ordenar
+  integer::dim_buckets,num_occ_buckets
+  logical::interr
+  TYPE(int_pointer),DIMENSION(:),POINTER::buckets
+  INTEGER,DIMENSION(:),ALLOCATABLE::occup_buckets,orden
+  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::valores
+  double precision::lim_top,val_aux
+
+  AA=A+1
+  BB=B+1
+
+  plot=0.0d0
+  node_index=0
+  print*,'entra'
+  ALLOCATE(Pe(N_nodes))
+  Pe=0.0d0
+  DO i=1,N_nodes
+     DO j=T_start(i)+1,T_start(i+1)
+        Pe(i)=Pe(i)+T_tau(j)
+     END DO
+  END DO
+
+  ALLOCATE(Pf(N_nodes),Pf2(N_nodes))
+  Pf=0.0d0
+  Pf2=0.0d0
+
+  Pf2(AA)=1.0d0
+  Pf2(BB)=0.0d0
+
+
+  DO times=1,num_iter
+     print*,times
+     Pf2(AA)=1.0d0
+     Pf2(BB)=0.0d0
+     Pf=Pf2
+     Pf2=0.0d0
+     DO i=1,N_nodes
+        DO j=T_start(i)+1,T_start(i+1)
+           jj=T_ind(j)
+           Pf2(i)=Pf2(i)+(T_tau(j)*Pf(jj))/Pe(i)
+        END DO
+     END DO
+
+  END DO
+
+  Pf2(AA)=1.0d0
+  Pf2(BB)=0.0d0
+  Pf=Pf2
+  
+  DEALLOCATE(Pf2)
+  print*,'listo'
+  IF (opt_bins==1) THEN
+
+     ALLOCATE(filtro(N_nodes),filtro2(N_nodes))
+     
+     filtro2=.false.
+     
+     Z=sum(Pe(:),dim=1)
+     
+     delta_cut=1.0d0/(length*1.0d0)
+     
+     DO g=1,length
+        
+        cut=delta_cut*g
+        
+        Za=0.0d0
+        Zab=0.0d0
+        filtro=.false.
+        
+        DO i=1,N_nodes
+           IF (Pf(i)<cut) THEN 
+              filtro(i)=.true.
+           END IF
+        END DO
+        
+        DO i=1,N_nodes
+           IF (filtro(i).eqv..true.) THEN
+              Za=Za+Pe(i)
+              DO j=T_start(i)+1,T_start(i+1)
+                 jj=T_ind(j)
+                 IF (filtro(jj).eqv..false.) THEN
+                    Zab=Zab+T_tau(j)
+                 END IF
+              END DO
+           END IF
+        END DO
+        
+        
+        !WRITE(154,*) ((Za*1.0d0)/(Z*1.0d0)),-log((Zab*1.0d0)/(Z*1.0d0)),cut
+        plot(g,1)=(Za/Z)
+        plot(g,2)=-log(Zab/Z)
+        plot(g,3)=cut
+        
+        DO i=1,N_nodes
+           IF (filtro(i).eqv..true.) THEN 
+              IF (filtro2(i).eqv..false.) THEN
+                 filtro2(i)=.true.
+                 node_index(i)=g-1
+              END IF
+           END IF
+        END DO
+        
+     END DO
+     
+  ELSE
+
+     Z=sum(Pe(:),dim=1)
+     print*,'entra'
+
+     ALLOCATE(orderpf(N_nodes))
+     CALL sort_by_buckets (orderpf,0.0d0,1.0d0,100,2500,Pf,N_nodes)
+
+!!$     print*,'ahi va viejo'
+!!$
+!!$     DO i=1,N_nodes
+!!$
+!!$        g=orderpf(i)
+!!$        cut=Pf(g)
+!!$
+!!$        Za=0.0d0
+!!$        Zab=0.0d0
+!!$
+!!$        DO j=1,N_nodes
+!!$           IF (Pf(j)>cut) THEN
+!!$              Za=Za+Pe(j)
+!!$           END IF
+!!$
+!!$           DO jj=T_start(j)+1,T_start(j+1)
+!!$              kk=T_ind(jj)
+!!$              IF (((Pf(j)>cut).and.(Pf(kk)<=cut)).or.((Pf(j)<=cut).and.(Pf(kk)>cut))) THEN
+!!$                 Zab=Zab+T_tau(jj)
+!!$              END IF
+!!$           END DO
+!!$        END DO
+!!$
+!!$        plot(i,1)=(Za/Z)
+!!$        plot(i,2)=-300.0d0*0.0020d0*log(Zab/Z)
+!!$        plot(i,3)=Pf(g)
+!!$        node_index(i)=g-1
+!!$
+!!$     END DO
+
+     print*,'ahi va nuevo'
+
+     aux=0.0d0
+     plot(N_nodes,1)=aux
+     DO i=N_nodes-1,1,-1
+        g=orderpf(i+1)
+        aux=aux+Pe(g)
+        IF (Pf(orderpf(i))<Pf(g)) THEN
+           plot(i,1)=aux
+        ELSE
+           plot(i,1)=plot(i+1,1)
+        END IF
+     END DO
+
+     DO i=1,N_nodes
+        print*,i
+        g=orderpf(i)
+        aux_de_pf=Pf(g)
+        DO j=T_start(g)+1,T_start(g+1)
+           kk=T_ind(j)
+           aux_a_pf=Pf(kk)
+           aux_trans=T_tau(j)
+           IF (aux_a_pf>aux_de_pf) THEN
+              DO jj=i,1,-1
+                 gg=orderpf(jj)
+                 IF (Pf(gg)<aux_de_pf) THEN
+                    EXIT
+                 ELSE
+                    plot(jj,2)=plot(jj,2)+aux_trans
+                 END IF
+              END DO
+              DO jj=i+1,N_nodes
+                 gg=orderpf(jj)
+                 IF (Pf(gg)>=aux_a_pf) THEN
+                    EXIT
+                 ELSE
+                    plot(jj,2)=plot(jj,2)+aux_trans
+                 END IF
+              END DO
+           ELSE IF (aux_a_pf<aux_de_pf) THEN
+              !DO jj=i+1,N_nodes
+              !   gg=orderpf(jj)
+              !   IF (Pf(gg)>aux_de_pf) THEN
+              !      EXIT
+              !   ELSE
+              !      plot(jj,2)=plot(jj,2)+aux_trans
+              !   END IF
+              !END DO
+              DO jj=i,1,-1
+                 gg=orderpf(jj)
+                 IF (Pf(gg)<aux_de_pf) THEN
+                    IF (Pf(gg)<aux_a_pf) THEN
+                       EXIT
+                    ELSE
+                       plot(jj,2)=plot(jj,2)+aux_trans
+                    END IF
+                 END IF
+              END DO
+           END IF
+        END DO
+        plot(i,3)=aux_de_pf
+        node_index(i)=g-1
+     END DO
+
+     DO i=1,N_nodes
+        plot(i,1)=plot(i,1)/Z
+        plot(i,2)=-300.0d0*0.0020d0*log(plot(i,2)/Z)
+     END DO
+
+  END IF
+
+
+END SUBROUTINE cfep_pfold3
+
 
 SUBROUTINE cfep_mfpt (plot,info_1,info_2,A,T_ind,T_tau,T_start,length,num_iter,N_nodes,Ktot)
 
@@ -1430,7 +2279,7 @@ SUBROUTINE cfep_mfpt (plot,info_1,info_2,A,T_ind,T_tau,T_start,length,num_iter,N
   ALLOCATE(Pe(N_nodes))
   Pe=0.0d0
   DO i=1,N_nodes
-     DO j=T_start(i),T_start(i+1)
+     DO j=T_start(i)+1,T_start(i+1)
         Pe(i)=Pe(i)+T_tau(j)
      END DO
   END DO
@@ -1929,6 +2778,1296 @@ SUBROUTINE MCL (N_sets,comunidades,granularity,epsilon,iterations,T_start,T_ind,
   comunidades=comunidades-1
 
 END SUBROUTINE MCL
+
+
+SUBROUTINE DENDO_TIME (num_steps,N_basins,pertenece_a,T_ind,T_tau,T_start,N_nodes,Ktot)   !!!! Para revisar!!!! T_tau debe ser double precision
+
+
+  IMPLICIT NONE
+  
+
+  INTEGER,INTENT(IN)::num_steps,N_nodes,Ktot,N_basins
+  INTEGER,DIMENSION(Ktot),INTENT(IN)::T_ind
+  DOUBLE PRECISION,DIMENSION(Ktot),INTENT(IN)::T_tau
+  INTEGER,DIMENSION(N_nodes+1),INTENT(IN)::T_start
+  INTEGER,DIMENSION(N_nodes),INTENT(IN)::pertenece_a
+
+  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::Pe,poblacion,columna,columna2
+  DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE::posicion
+  LOGICAL,DIMENSION(:),ALLOCATABLE::filtro,filtro2
+  INTEGER,DIMENSION(:),ALLOCATABLE::representante,salto,vertical,etiqueta
+
+  INTEGER::N,i,j,g,h,ii,jj,gg,hh,veces,dim2,dim
+  INTEGER::factor,candidato
+  DOUBLE PRECISION::aux
+  LOGICAL::inter,bandera,bandera2
+
+  dim=1
+
+  ALLOCATE(representante(N_basins),poblacion(N_basins),Pe(N_nodes))
+  representante=0
+  poblacion=0.0d0
+  Pe=0.0d0
+
+  DO ii=1,N_nodes
+     DO jj=T_start(ii)+1,T_start(ii+1)
+        Pe(ii)=Pe(ii)+T_tau(jj)
+     END DO
+  END DO
+
+  DO ii=1,N_nodes
+     gg=pertenece_a(ii)+1
+     IF (poblacion(gg)<Pe(ii)) THEN
+        representante(gg)=ii
+        poblacion(gg)=Pe(ii)
+     END IF
+  END DO
+
+  N=N_nodes
+  dim2=dim
+
+  ALLOCATE(columna(N),filtro(N),columna2(N),filtro2(N))
+  ALLOCATE(salto(N_basins),vertical(N_basins))
+  salto=0
+  vertical=0
+
+  DO gg=1,N_basins
+
+     filtro=.false.
+     columna=0.0d0
+     filtro2=.false.
+     columna2=0.0d0
+
+     g=representante(gg)
+
+     DO i=T_start(g)+1,T_start(g+1)
+        filtro(T_ind(i))=.true.
+        columna(T_ind(i))=T_tau(i)
+     END DO
+
+     DO veces=1,num_steps
+
+        filtro2=.false.
+        columna2=0.0d0
+   
+        DO i=1,N
+           IF (filtro(i)==.true.) THEN
+              
+              DO j=T_start(i)+1,T_start(i+1)
+                 columna2(T_ind(j))=columna2(T_ind(j))+T_tau(j)*columna(i)
+                 filtro2(T_ind(j))=.true.
+              END DO
+              
+           END IF
+        END DO
+
+        filtro=.false.
+        columna=0.0d0
+        filtro=filtro2
+        columna=columna2
+
+        aux=0.0d0
+        aux=sum(columna(:),DIM=1,MASK=filtro)
+        
+        !!print*,veces+1,COUNT(filtro(:),DIM=1),sum(columna(:),DIM=1,MASK=filtro)
+        
+        columna=columna/aux
+
+        !! Detecto basin
+        
+        h=0
+        inter=.false.
+        
+        DO WHILE (h<=dim2)
+           
+           candidato=maxloc(columna(:),DIM=1,MASK=filtro2)
+           
+           IF (Pe(candidato)>Pe(g)) THEN
+              inter=.true.
+              IF (pertenece_a(candidato)==pertenece_a(g)) THEN
+                 print*,'tenemos un problema con representante',g,candidato
+                 stop
+              END IF
+           ELSE
+              filtro2(candidato)=.false.
+              h=h+1
+           END IF
+           
+           IF (inter==.true.) THEN
+              exit
+           END IF
+           
+        END DO
+        
+        IF (inter==.true.) THEN
+           exit
+        END IF
+        
+        
+     END DO
+
+     salto(gg)=veces+1
+     vertical(gg)=pertenece_a(candidato)+1
+     IF (salto(gg)==(num_steps+2)) salto(gg)=num_steps
+
+  END DO
+!!CLOSE(333)
+  
+
+  DEALLOCATE(filtro)
+  ALLOCATE(etiqueta(N_basins),posicion(N_basins,3))
+  ALLOCATE(filtro(N_basins))
+  
+  etiqueta=0
+  filtro=.false.
+  posicion=0.0d0
+  
+  DO i=1,N_basins
+     etiqueta(i)=i
+  END DO
+
+  DO i=1,N_basins
+     IF (salto(i)==num_steps) THEN
+        vertical(i)=i
+        posicion(i,2)=salto(i)
+        posicion(i,3)=1.0d0
+        filtro(i)=.true.
+     END IF
+  END DO
+
+  DO i=1,N_basins
+     IF (filtro(i)==.false.) THEN
+        inter=.true.
+        DO WHILE (inter==.true.)
+           g=vertical(i)
+           IF (salto(i)>salto(g)) THEN
+              !            print*,'ya teniamos un problema'
+              vertical(i)=vertical(g)
+           ELSE
+              inter=.false.
+           END IF
+        END DO
+     END IF
+  END DO
+
+  factor=1
+
+  DO i=num_steps,1,-1
+     
+     bandera=.true.
+     DO WHILE (bandera==.true.)
+        bandera=.false.
+        DO j=1,N_basins
+           IF ((salto(j)==i).and.(filtro(j)==.false.)) THEN
+              bandera2=.false.
+              IF (filtro(vertical(j))==.false.) THEN
+                 print*,'Teniamos un problema',salto(j),salto(vertical(j))
+                 IF (salto(j)==salto(vertical(j))) THEN
+                    bandera=.true.
+                    bandera2=.true.
+                 END IF
+              END IF
+              
+              IF (bandera2==.false.) THEN
+                 factor=factor*(-1)
+                 
+                 !!WRITE(101,*)'#',factor
+                 
+                 posicion(j,2)=i
+                 posicion(j,3)=posicion(vertical(j),3)+factor
+                 !!WRITE(101,*)'#',posicion(j,2)
+                 DO jj=1,N_basins
+                    IF (factor>0) THEN
+                       IF ((filtro(jj)==.true.).and.(posicion(jj,3)>=posicion(j,3))) THEN
+                          posicion(jj,3)=posicion(jj,3)+factor
+                       END IF
+                    END IF
+                    IF (factor<0) THEN
+                       IF ((filtro(jj)==.true.).and.(posicion(jj,3)<=posicion(j,3))) THEN
+                          posicion(jj,3)=posicion(jj,3)+factor
+                       END IF
+                    END IF
+                 END DO
+                 
+                 filtro(j)=.true.
+                 
+              END IF
+           END IF
+        END DO
+     END DO
+     
+  END DO
+  
+  WRITE(666,*)'####'
+  DO i=1,N_basins
+     
+     WRITE(666,*)'#','altura',posicion(i,3),'minimo',etiqueta(i)
+     WRITE(666,*)' '
+     WRITE(666,*)posicion(i,1),posicion(i,3)
+     WRITE(666,*)posicion(i,2),posicion(i,3)
+     WRITE(666,*)' '
+     
+     IF ((vertical(i)/=0).and.(filtro(i)==.true.)) THEN
+        WRITE(666,*)posicion(i,2),posicion(i,3)
+        WRITE(666,*)posicion(i,2),posicion(vertical(i),3)
+        WRITE(666,*)' '
+     END IF
+     
+  END DO
+
+  DEALLOCATE(representante,poblacion,Pe)
+  DEALLOCATE(columna,filtro,columna2,filtro2)
+  DEALLOCATE(salto,vertical)
+  DEALLOCATE(etiqueta,posicion)
+
+  
+END SUBROUTINE DENDO_TIME
+
+
+SUBROUTINE DENDO_BY_NODES (N_basins,pertenece_a,T_ind,T_tau,T_start,N_nodes,Ktot)
+
+  IMPLICIT NONE
+
+  TYPE int_pointer
+     INTEGER,DIMENSION(:),POINTER::ip
+  END TYPE int_pointer
+  
+  TYPE double_pointer
+     DOUBLE PRECISION,DIMENSION(:),POINTER::dp
+  END TYPE double_pointer
+
+  INTEGER,INTENT(IN)::N_nodes,Ktot,N_basins
+  INTEGER,DIMENSION(Ktot),INTENT(IN)::T_ind
+  DOUBLE PRECISION,DIMENSION(Ktot),INTENT(IN)::T_tau
+  INTEGER,DIMENSION(N_nodes+1),INTENT(IN)::T_start
+  INTEGER,DIMENSION(N_nodes),INTENT(IN)::pertenece_a
+
+  INTEGER::gg,hh,ii,jj,kk,ll
+  INTEGER,DIMENSION(:),ALLOCATABLE::aux_vect_int
+
+  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::Pe,Pe_basin
+  INTEGER,DIMENSION(:),ALLOCATABLE::Popul_basin
+  TYPE(int_pointer),DIMENSION(:),POINTER::basin
+
+  
+
+  ALLOCATE(Pe(N_nodes),Pe_basin(N_basins),Popul_basin(N_basins))
+
+  Pe=0.0d0
+  Pe_basin=0.0d0
+  Popul_basin=0
+
+  DO ii=1,N_nodes
+     DO jj=T_start(ii)+1,T_start(ii+1)
+        Pe(ii)=Pe(ii)+T_tau(jj)
+     END DO
+     kk=pertenece_a(ii)
+     Pe_basin(kk)=Pe_basin(kk)+Pe(ii)
+     Popul_basin(kk)=Popul_basin(kk)+1
+  END DO
+
+  ALLOCATE(basin(N_basins))
+  DO ii=1,N_basins
+     ALLOCATE(basin(ii)%ip(Popul_basin(ii)))
+     basin(ii)%ip(:)=0
+  END DO
+
+  ALLOCATE(aux_vect_int(N_basins))
+  aux_vect_int=0
+  DO ii=1,N_nodes
+     kk=pertenece_a(ii)
+     gg=aux_vect_int(kk)+1
+     basin(kk)%ip(gg)=ii
+     aux_vect_int(kk)=gg
+  END DO
+
+  !! Tiros con el resto de basins
+
+  
+END SUBROUTINE DENDO_BY_NODES
+
+
+
+SUBROUTINE DENDO_BOTTOM_UP (N_basins,pertenece_a,T_ind,T_tau,T_start,N_nodes,Ktot)   !!!! Para revisar!!!! T_tau debe ser double precision
+
+
+  IMPLICIT NONE
+
+  TYPE array_pointer
+     INTEGER,DIMENSION(:),POINTER::p1
+  END TYPE array_pointer
+  TYPE(array_pointer),DIMENSION(:),POINTER::cluster
+  
+  TYPE doble_pointer
+     DOUBLE PRECISION,DIMENSION(:),POINTER::dp2
+  END TYPE doble_pointer
+
+
+  INTEGER,INTENT(IN)::N_nodes,Ktot,N_basins
+  INTEGER,DIMENSION(Ktot),INTENT(IN)::T_ind
+  DOUBLE PRECISION,DIMENSION(Ktot),INTENT(IN)::T_tau
+  INTEGER,DIMENSION(N_nodes+1),INTENT(IN)::T_start
+  INTEGER,DIMENSION(N_nodes),INTENT(IN)::pertenece_a
+
+  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::Pe,pob_repres
+  INTEGER,DIMENSION(:),ALLOCATABLE::representante,poblacion
+
+  INTEGER::N,i,j,g,h,ii,jj,gg,hh,veces,dim2,dim
+  integer::ggg,k,kk,iji,dim_supra,contador
+  logical,dimension(:),allocatable::filtro,suprafiltro
+
+  integer,dimension(:),allocatable:: auxiliar
+
+  !! Para las basins:
+
+  TYPE(array_pointer),DIMENSION(:),POINTER::basin,listados
+  integer,dimension(:),allocatable::unen,lista
+
+  !! Para el dendograma:
+  integer,dimension(:),allocatable:: compi,compi_orig,etiqueta
+  double precision, dimension(:,:),allocatable:: ejey
+  TYPE(doble_pointer),DIMENSION(:),POINTER::dendo,dendo2
+  double precision, dimension(:),allocatable:: origen, ejex,comosi,comosi2
+  integer::cant_cluster
+  double precision::aux_1,aux_2
+  double precision::referencia,lim_inf,yavalio
+  double precision,dimension(:),allocatable::barrera
+  integer::desde,hacia,nada3,nada4,limite
+  logical::inter,inter2,inter3
+
+  !! Para transformar el dendograma:
+  double precision,dimension(:),allocatable::newejex,newhorizontal,horizontal,aux
+  double precision,dimension(:,:),allocatable::newejey
+  integer,dimension(:,:),allocatable::ramas
+  logical,dimension(:),allocatable::filt_rama,filtro3,pisado
+  logical,dimension(:,:),allocatable::filtro2
+  double precision,dimension(:,:),allocatable::tree
+  integer::candidato,cuantos
+  integer::minimo,compruebo
+  integer::num_steps
+
+  integer,dimension(:,:),allocatable::suprabasins,nexo,ordeno_dendo
+  integer,dimension(:),allocatable::ordeno,pertenece_cluster,poblacion_supra,supracompi,orden_total
+  double precision,dimension(:),allocatable::suprabarrera
+  logical,dimension(:),allocatable::ford,forda,fordb,selecciono
+  integer::dim_bars,dim_total
+  double precision::bandera
+
+  print*,'Que pasaaaa'
+
+  ALLOCATE(representante(N_basins),poblacion(N_basins),Pe(N_nodes),pob_repres(N_basins))
+  representante=0
+  poblacion=0
+  Pe=0.0d0
+  pob_repres=0.0d0
+
+  DO ii=1,N_nodes
+     DO jj=T_start(ii)+1,T_start(ii+1)
+        Pe(ii)=Pe(ii)+T_tau(jj)
+     END DO
+  END DO
+
+  DO ii=1,N_nodes
+     gg=pertenece_a(ii)+1
+     IF (pob_repres(gg)<Pe(ii)) THEN
+        representante(gg)=ii
+        pob_repres(gg)=Pe(ii)
+     END IF
+     poblacion(gg)=poblacion(gg)+1
+  END DO
+
+  DEALLOCATE(pob_repres)
+
+
+  ALLOCATE(basin(N_basins))
+  DO i=1,N_basins
+     ALLOCATE(basin(i)%p1(poblacion(i)))
+     basin(i)%p1(:)=0
+  END DO
+
+  poblacion=0
+
+  DO i=1,N_nodes
+     gg=pertenece_a(i)+1
+     ii=poblacion(gg)+1
+     poblacion(gg)=ii
+     basin(gg)%p1(ii)=i
+  END DO
+
+  print*,'AQUI 1'
+!!!!! Barro para el dendo
+  limite=10000
+  ALLOCATE(dendo(N_basins),dendo2(N_basins),comosi(limite),comosi2(limite),lista(limite))
+  ALLOCATE(origen(N_basins),listados(N_basins))
+  ALLOCATE(filtro(N_basins),suprafiltro(N_basins),etiqueta(N_basins))
+  ALLOCATE(ejex(N_basins),ejey(N_basins,2),barrera(N_basins))
+  ALLOCATE(compi(N_basins),compi_orig(N_basins))
+  ALLOCATE(pertenece_cluster(N_basins))
+
+  etiqueta=0
+  !dendo=0.0d0
+  comosi=0.0d0
+  comosi2=0.0d0
+  origen=0.0d0
+  ejey=0.0d0
+  ejex=-1.0d0
+  compi=1
+  compi_orig=0
+  barrera=0.0d0
+
+  DO i=1,N_basins
+     etiqueta(i)=i
+  END DO
+
+  origen=0.0d0
+  contador=0
+  DO i=1,N_basins
+     
+     aux_1=0.0d0
+     aux_2=0.0d0
+     contador=0
+     comosi=0.0d0
+     comosi2=0.0d0
+     lista=0
+     
+     DO ii=1,poblacion(i)
+        
+        g=basin(i)%p1(ii)
+        
+        
+        aux_1=Pe(g)
+        IF (origen(i)<aux_1) THEN
+           origen(i)=aux_1
+        END IF
+        
+        DO j=T_start(g)+1,T_start(g+1)
+           
+           IF ((pertenece_a(T_ind(j))+1)/=i) THEN
+              
+              aux_2=Pe(T_ind(j))
+              gg=pertenece_a(T_ind(j))+1
+              
+              inter=.false.
+              DO kk=1,contador
+                 IF (lista(kk)==gg) THEN
+                    yavalio=comosi(kk)
+                    inter=.true.
+                 END IF
+              END DO
+              IF (inter==.false.) yavalio=0.0d0
+              
+              IF ((yavalio<aux_1).and.(yavalio<aux_2)) THEN
+                 inter=.false.
+                 DO kk=1,contador
+                    IF (lista(kk)==gg) THEN
+                       inter=.true.
+                       exit
+                    END IF
+                 END DO
+                 IF (inter==.false.) THEN                  
+                    contador=contador+1
+                    IF (contador>limite) THEN
+                       print*,'problema, subele el limite'
+                       stop
+                    END IF
+                    lista(contador)=gg
+                    kk=contador
+                 END IF
+                 
+                 IF (aux_2>=aux_1) THEN
+                    comosi(kk)=aux_1
+                    comosi2(kk)=aux_2
+                    !dendo(gg,i)=aux_1
+                    !dendo2(gg,i)=aux_2
+                 ELSE
+                    comosi(kk)=aux_2
+                    comosi2(kk)=aux_1
+                    !dendo(gg,i)=aux_2
+                    !dendo2(gg,i)=aux_1
+                 END IF
+              END IF
+           END IF
+        END DO
+     END DO
+     
+     ALLOCATE(dendo(i)%dp2(contador),dendo2(i)%dp2(contador),listados(i)%p1(contador))
+     DO j=1,contador
+        dendo(i)%dp2(j)=comosi(j)
+        dendo2(i)%dp2(j)=comosi2(j)
+        listados(i)%p1(j)=lista(j)
+     END DO
+     
+  END DO
+
+  print*,'AQUI 2'
+
+  DO i=1,N_basins
+     DO j=1,size(dendo(i)%dp2(:))
+        g=listados(i)%p1(j)
+        inter=.false.
+        DO ii=1,size(dendo(g)%dp2(:))
+           h=listados(g)%p1(ii)
+           IF (h==i) THEN
+              inter=.true.
+              exit
+           END IF
+        END DO
+        IF (inter==.false.) THEN
+           kk=size(dendo(g)%dp2(:))
+           comosi=0.0d0
+           lista=0
+           kk=kk+1
+           IF (kk>limite) THEN
+              print*,'problema, subele el limite'
+              stop
+           END IF
+           DO jj=1,kk-1
+              comosi(jj)=dendo(g)%dp2(jj)
+              lista(jj)=listados(g)%p1(jj)
+           END DO
+           comosi(kk)=0.0d0
+           lista(kk)=i
+           DEALLOCATE(dendo(g)%dp2, listados(g)%p1)
+           ALLOCATE(dendo(g)%dp2(kk),listados(g)%p1(kk))
+           dendo(g)%dp2(:)=comosi(:)
+           listados(g)%p1(:)=lista(:)
+        END IF
+     END DO
+  END DO
+
+  DO i=1,N_basins
+     DO j=1,size(dendo(i)%dp2(:))
+        dendo(i)%dp2(j)=-log(dendo(i)%dp2(j))
+     END DO
+     origen(i)=-log(origen(i))
+  END DO
+  
+
+  print*,'AQUI 3'
+
+  DO i=1,N_basins
+     DO j=1,size(dendo(i)%dp2(:))
+        g=listados(i)%p1(j)
+        IF (g>i) THEN
+           
+           DO ii=1,size(dendo(g)%dp2(:))
+              h=listados(g)%p1(ii)
+              IF (h==i) THEN
+                 exit
+              END IF
+           END DO
+           
+           IF (dendo(i)%dp2(j)>dendo(g)%dp2(ii)) THEN
+              dendo(i)%dp2(j)=dendo(g)%dp2(ii)
+           END IF
+           dendo(g)%dp2(ii)=dendo(i)%dp2(j)
+           
+        END IF
+     END DO
+  END DO
+
+  DO i=1,N_basins
+     aux_1=1000.0d0
+     DO j=1,size(dendo(i)%dp2(:))
+        g=listados(i)%p1(j)
+        IF ((i/=g).and.(dendo(i)%dp2(j)<aux_1)) THEN
+           aux_1=dendo(i)%dp2(j)
+           compi_orig(i)=g
+        END IF
+     END DO
+  END DO
+
+  !! Pongo para coordenadas
+  !! Tengo el dendo y los origenes
+  
+  compi=0
+  ejex=0.0d0
+  ejey=0.0d0
+  
+  DO i=1,N_basins
+     ejey(i,1)=origen(i)
+  END DO
+  
+  !! ordeno basins y barreras
+  
+  ALLOCATE(ordeno(N_basins))
+  
+  filtro=.true.
+  DO i=1,N_basins
+     iji=MINLOC(origen,DIM=1,MASK=filtro)
+     filtro(iji)=.false.
+     ordeno(i)=iji
+  END DO
+  
+  DO i=1,N_basins
+     print*,ordeno(i),origen(ordeno(i))
+  END DO
+  
+  ALLOCATE(filtro2(N_basins,N_basins))
+  filtro2=.false.
+
+  gg=0
+  DO i=1,N_basins
+     DO j=1,size(dendo(i)%dp2(:))
+        g=listados(i)%p1(j)
+        IF (dendo(i)%dp2(j)<=1000.0) then
+           filtro2(g,i)=.true.
+           gg=gg+1
+        END IF
+     END DO
+  END DO
+  
+  
+  gg=gg/2
+  print*,'dim dendo',gg,N_basins+gg
+  
+  ALLOCATE(ordeno_dendo(N_basins+gg,2))
+  
+  gg=0
+  inter=.true.
+  DO WHILE (inter==.true.)
+     gg=gg+1
+     print*,gg
+     inter=.false.
+     aux_1=1000.0d0
+     DO i=1,N_basins
+        DO ii=1,size(dendo(i)%dp2(:))
+           g=listados(i)%p1(ii)
+           IF (g>i) THEN
+              IF (filtro2(i,g)==.true.) THEN
+                 IF (dendo(i)%dp2(ii)<aux_1) THEN
+                    ordeno_dendo(gg,1)=i
+                    ordeno_dendo(gg,2)=g
+                    aux_1=dendo(i)%dp2(ii)
+                    inter=.true.
+                 END IF
+              END IF
+           END IF
+        END DO
+     END DO
+     IF (inter==.true.) THEN
+        filtro2(ordeno_dendo(gg,1),ordeno_dendo(gg,2))=.false.
+     END IF
+  END DO
+  
+
+  gg=gg-1
+  dim_bars=gg
+  dim_total=gg+N_basins
+  print*,'dim_total',dim_total
+  deallocate(filtro2)
+  ALLOCATE(orden_total(dim_total),selecciono(dim_total))
+  selecciono=.false.
+  print*,N_basins
+  ii=1
+  jj=1
+  DO i=1,dim_total
+     IF (ii<=N_basins) THEN
+        DO kk=1,size(dendo(ordeno_dendo(jj,2))%dp2(:))
+           IF (listados(ordeno_dendo(jj,2))%p1(kk)==ordeno_dendo(jj,1)) THEN
+              inter=.true.
+              exit
+           END IF
+        END DO
+        IF (inter==.true.) THEN
+           IF (origen(ordeno(ii))<=dendo(ordeno_dendo(jj,2))%dp2(kk)) THEN
+              orden_total(i)=ii
+              ii=ii+1
+           ELSE
+              selecciono(i)=.true.
+              orden_total(i)=jj
+              jj=jj+1
+           END IF
+        ELSE
+           PRINT*,'OTRO PROBLEMA'
+           STOP
+        END IF
+        
+     ELSE
+        orden_total(i)=jj
+        jj=jj+1
+        selecciono(i)=.true.
+     END IF
+  END DO
+   
+  DO i=1,dim_total
+     g=orden_total(i)
+     IF (selecciono(i)==.false.) THEN
+        print*,'basin',origen(ordeno(g)),ordeno(g)
+     END IF
+     IF (selecciono(i)==.true.) THEN
+        inter=.false.
+        DO j=1,size(dendo(ordeno_dendo(g,2))%dp2(:))
+           h=listados(ordeno_dendo(g,2))%p1(j)
+           IF (h==ordeno_dendo(g,1)) THEN
+              inter=.true.
+              exit
+           END IF
+        END DO
+        IF (inter==.true.) THEN
+           print*,'barrera',dendo(ordeno_dendo(g,2))%dp2(j),ordeno_dendo(g,1),ordeno_dendo(g,2)
+        ELSE
+           print*,'problemica'
+           stop
+        END IF
+     END IF
+  END DO
+
+
+  bandera=0.0d0
+  ALLOCATE(cluster(N_basins))
+  !DO i=1,N_basins
+  !   ALLOCATE(cluster(i)%p1(N_basins+1))
+  !   cluster(i)%p1(:)=0
+  !END DO
+  cant_cluster=0  
+  pertenece_cluster=0
+  
+  DO i=1,dim_total
+     g=orden_total(i)
+     IF (selecciono(i)==.false.) THEN
+        cant_cluster=cant_cluster+1
+        ALLOCATE(cluster(cant_cluster)%p1(1))
+        cluster(cant_cluster)%p1(1)=ordeno(g)
+        pertenece_cluster(ordeno(g))=cant_cluster
+     ELSE
+        desde=pertenece_cluster(ordeno_dendo(g,1))
+        hacia=pertenece_cluster(ordeno_dendo(g,2))
+        IF (hacia>desde) THEN
+           desde=pertenece_cluster(ordeno_dendo(g,2))
+           hacia=pertenece_cluster(ordeno_dendo(g,1))
+        END IF
+        
+        IF (desde/=hacia) THEN
+           compi(cluster(desde)%p1(1))=cluster(hacia)%p1(1)
+           inter=.false.
+           DO kk=1,size(dendo(ordeno_dendo(g,2))%dp2(:))
+              h=listados(ordeno_dendo(g,2))%p1(kk)
+              IF (h==ordeno_dendo(g,1)) THEN
+                 inter=.true.
+                 exit
+              END IF
+           END DO
+           IF (inter==.true.) THEN
+              ejey(cluster(desde)%p1(1),2)=dendo(ordeno_dendo(g,2))%dp2(kk)
+           ELSE
+              print*,'probleeeema'
+              exit
+           END IF
+           ii=size(cluster(hacia)%p1(:))
+           jj=size(cluster(desde)%p1(:))
+           allocate(auxiliar(ii+jj))
+           auxiliar=0
+           auxiliar(1:ii)=cluster(hacia)%p1(:)
+           auxiliar(ii+1:ii+jj)=cluster(desde)%p1(:)
+           deallocate(cluster(hacia)%p1)
+           allocate(cluster(hacia)%p1(ii+jj))
+           cluster(hacia)%p1(:)=auxiliar(:)
+           deallocate(auxiliar)
+           DO j=(desde+1),cant_cluster
+              deallocate(cluster(j-1)%p1)
+              iji=size(cluster(j)%p1(:))
+              allocate(cluster(j-1)%p1(iji))
+              cluster(j-1)%p1(:)=cluster(j)%p1(:)
+           END DO
+           deallocate(cluster(cant_cluster)%p1)
+           cant_cluster=cant_cluster-1
+           DO j=1,cant_cluster
+              DO iji=1,size(cluster(j)%p1(:))
+                 pertenece_cluster(cluster(j)%p1(iji))=j
+              END DO
+           END DO
+        END IF
+     END IF
+  END DO
+  
+
+   
+  gg=0
+  DO i=1,cant_cluster
+     print*,'@@@@'
+     DO j=1,SIZE(cluster(i)%p1(:),DIM=1)
+        g=cluster(i)%p1(j)
+        gg=gg+1
+        ejex(g)=dble(gg)
+        print'(I,F14.2,2E)',g,ejex(g),ejey(g,1),ejey(g,2)
+     END DO
+  END DO
+
+  
+  gg=cluster(1)%p1(1)
+  ejey(gg,2)=20.0d0         
+      
+  
+  !DO i=1,N_basins
+  !   DEALLOCATE(cluster(i)%p1)
+  !END DO
+  !DEALLOCATE(cluster)
+  
+  OPEN(700,FILE="dendo1_lineas3.oup",STATUS="REPLACE",ACTION="WRITE")
+  OPEN(800,FILE="dendo1_puntos3.oup",STATUS="REPLACE",ACTION="WRITE")
+
+  DO i=1,N_basins
+     WRITE(700,*) '#'
+     WRITE(700,*) ' '
+     WRITE(700,*) ejex(i),ejey(i,1)
+     WRITE(700,*) ejex(i),ejey(i,2)
+     WRITE(700,*) '#'
+     WRITE(700,*) ' '
+     WRITE(700,*) ejex(i),ejey(i,2)
+     IF (compi(i)==0) THEN
+        WRITE(700,*) ejex(i),ejey(i,2)
+     ELSE
+        WRITE(700,*) ejex(compi(i)),ejey(i,2)
+     END IF
+  END DO
+
+  DO i=1,N_basins
+     WRITE(800,*) ejex(i),ejey(i,1)
+  END DO
+  
+  
+  WRITE(800,*) ' '
+  DO i=1,N_basins
+     IF (i/=gg) THEN
+        WRITE(800,'(A,x,I3,x,A,x,I,x,A,x,F14.2)') '#  basin:',i,'con representante:',representante(i),'ejex:',ejex(i)
+        WRITE(800,'(A,x,I,x,A,x,F8.4)') '#  con el compi:',compi_orig(i),'con ejex',ejex(compi_orig(i))
+        WRITE(800,*) ' '
+     ELSE
+        WRITE(800,'(A,x,I3,x,A,x,I,x,A,x,F14.2)') '#  basin:',i,'con representante:',representante(i),'ejex:',ejex(i)
+        WRITE(800,'(A,x,I,x,A,x,F14.2)') '#  con el compi:',compi_orig(i),'con ejex',0.0d0
+        WRITE(800,*) ' '      
+     END IF
+  END DO
+  
+
+
+
+
+!!! Transformo el dendograma:
+  
+  num_steps=N_basins-1
+  
+  ALLOCATE(horizontal(N_basins))
+  ALLOCATE(newejex(N_basins),newhorizontal(N_basins),newejey(N_basins,2))
+  ALLOCATE(filtro2(N_basins,N_basins),filtro3(N_basins),pisado(N_basins),aux(N_basins))
+  allocate(ramas(num_steps,2),filt_rama(N_basins))
+  aux=0.0d0
+  newejex=0.0d0
+  newhorizontal=0.0d0
+  horizontal=0.0d0
+  newejey=0.0d0
+  ramas=0.0d0
+  filt_rama=.false.
+  
+  DO i=1,N_basins
+     newejey(i,1)=ejey(i,1)
+     newejey(i,2)=ejey(i,2)
+     newejex(i)=ejex(i)
+     IF (i/=gg) THEN
+        horizontal(i)=ejex(compi(i))
+     ELSE
+        horizontal(i)=ejex(gg)
+     END IF
+  END DO
+
+  OPEN(90,FILE="dendo2_lineas3.oup",STATUS="REPLACE",ACTION="WRITE")
+  OPEN(91,FILE="dendo2_puntos3.oup",STATUS="REPLACE",ACTION="WRITE")
+  
+  
+  DO i=1,N_basins
+     WRITE(91,*) newejex(i),newejey(i,1)
+  END DO
+  
+  WRITE(91,*) ' '
+  DO i=1,N_basins
+     WRITE(91,'(A,x,I,x,A,x,I,x,A,x,F14.2)') '#  basin:',i,'con representante:',representante(i),'ejex:',newejex(i)
+     WRITE(91,*) ' '
+  END DO
+  
+  
+  minimo=minloc(ejey(:,1),DIM=1)
+  
+  k=0
+  filtro2=.false.
+  filtro3=.false.
+  pisado=.false.
+  
+  DO i=1,N_basins
+     aux(i)=ejex(i)
+  END DO
+  
+  DO j=1,N_basins
+     
+     DO i=1,N_basins
+        IF (i/=minimo) THEN
+           IF ((horizontal(i)>(ejex(j)-0.10d0)).and.(horizontal(i)<(ejex(j)+0.10d0))) THEN
+              filtro2(j,i)=.true.
+              print*,'@@',ejex(j),ejex(i),j,i
+           END IF
+        END IF
+     END DO
+     
+     inter3=.true.
+     
+     IF (count(filtro2(j,:),DIM=1)/=0) THEN
+        
+        candidato=minloc(ejey(:,2),DIM=1,MASK=filtro2(j,:))
+        
+!!!!
+        DO ii=1,N_basins
+           IF ((ii/=minimo).and.(ii/=candidato)) THEN
+              IF ((horizontal(ii)>(ejex(candidato)-0.10d0)).and.(horizontal(ii)<(ejex(candidato)+0.10d0))) THEN
+                 filtro3(j)=.true.
+                 inter3=.false.
+              END IF
+           END IF
+        END DO
+        
+        IF (inter3==.true.) THEN
+           
+           !      print*,ejex(j),ejex(candidato)
+           
+           k=k+1
+           
+           ramas(k,1)=j
+           ramas(k,2)=candidato
+           
+           newejex(j)=ejex(j)
+           newejex(candidato)=ejex(candidato)
+           newejey(j,2)=ejey(candidato,2)
+           newejey(candidato,2)=ejey(candidato,2)
+           
+           aux(j)=((newejex(candidato)-newejex(j))/2.0d0)+newejex(j)
+           
+           filtro2(j,candidato)=.false.
+           
+           WRITE(90,*) '#'
+           WRITE(90,*) ' '
+           WRITE(90,*) newejex(j),newejey(j,1)
+           WRITE(90,*) newejex(j),newejey(j,2)
+           WRITE(90,*) '#'
+           WRITE(90,*) ' '
+           WRITE(90,*) newejex(ramas(k,1)),newejey(ramas(k,1),2)
+           WRITE(90,*) newejex(ramas(k,2)),newejey(ramas(k,2),2)
+           WRITE(90,*) '#'
+           WRITE(90,*) ' '
+           WRITE(90,*) newejex(candidato),newejey(candidato,2)
+           WRITE(90,*) newejex(candidato),newejey(candidato,1)
+           
+           newejey(j,2)=newejey(candidato,2)
+           newejey(j,1)=newejey(j,2) !!
+           
+           pisado(j)=.true.
+           pisado(candidato)=.true.
+           
+        END IF
+     END IF
+     
+  END DO
+
+
+
+  print*,'***'
+  
+  compruebo=0
+  
+  DO i=1,N_basins
+     
+     compruebo=compruebo+count(filtro2(:,i),DIM=1)
+     
+  END DO
+  
+  
+  DO jj=1,N_basins
+     IF (filtro3(jj)==.true.) THEN
+        print*,'habia en',jj
+     END IF
+  END DO
+  
+  !DO jj=1,1
+  DO WHILE (compruebo/=0)
+     
+     DO j=1,N_basins
+        
+        IF ((count(filtro2(j,:),DIM=1)/=0)) THEN
+           
+           candidato=minloc(ejey(:,2),DIM=1,MASK=filtro2(j,:))
+           
+           IF (count(filtro2(candidato,:),DIM=1)==0) THEN !!
+              
+              IF (filtro3(j)==.true.) THEN
+                 
+                 print*,'******',j,candidato,ejex(j),ejex(candidato)!,eje
+                 
+                 print*, '#'
+                 print*, ' '
+                 print*, aux(j),newejey(j,1)
+                 print*, aux(j),ejey(candidato,2)    
+                 
+                 print*, '#'
+                 print*, ' '
+                 print*, aux(candidato),ejey(candidato,2)
+                 print*, aux(candidato),newejey(candidato,1)    
+                 
+                 
+                 print*, '#'
+                 print*, ' '
+                 print*, aux(j),ejey(candidato,2)
+                 print*, aux(candidato),ejey(candidato,2)    
+                 
+                 
+                 WRITE(90,*) '#'
+                 WRITE(90,*) ' '
+                 WRITE(90,*) aux(j),newejey(j,1)
+                 WRITE(90,*) aux(j),ejey(candidato,2)    
+                 
+                 WRITE(90,*) '#'
+                 WRITE(90,*) ' '
+                 WRITE(90,*) aux(candidato),ejey(candidato,2)
+                 WRITE(90,*) aux(candidato),newejey(candidato,1)    
+                 
+                 
+                 WRITE(90,*) '#'
+                 WRITE(90,*) ' '
+                 WRITE(90,*) aux(j),ejey(candidato,2)
+                 WRITE(90,*) aux(candidato),ejey(candidato,2)    
+                 
+                 newejey(j,2)=ejey(candidato,2)
+                 newejey(j,1)=newejey(j,2) !!
+                 
+                 aux_1=aux(j)
+                 aux(j)=((aux(candidato)-aux_1)/2.0d0)+aux_1
+                 
+                 filtro2(j,candidato)=.false.
+                 pisado(j)=.true.
+                 
+              ELSE
+                 
+                 print*,'***',j,candidato,ejex(j),ejex(candidato)!,eje
+                 
+                 WRITE(90,*) '#'
+                 WRITE(90,*) ' '
+                 WRITE(90,*) aux(j),newejey(j,2)
+                 WRITE(90,*) aux(j),ejey(candidato,2)    
+                 
+                 WRITE(90,*) '#'
+                 WRITE(90,*) ' '
+                 WRITE(90,*) aux(candidato),ejey(candidato,2)
+                 WRITE(90,*) aux(candidato),newejey(candidato,1)    
+                 
+                 
+                 WRITE(90,*) '#'
+                 WRITE(90,*) ' '
+                 WRITE(90,*) aux(j),ejey(candidato,2)
+                 WRITE(90,*) aux(candidato),ejey(candidato,2)    
+                 
+                 newejey(j,2)=ejey(candidato,2)
+                 newejey(j,1)=newejey(j,2) !!
+                 
+                 aux_1=aux(j)
+                 aux(j)=((aux(candidato)-aux_1)/2.0d0)+aux_1
+                 
+                 filtro2(j,candidato)=.false.
+                 pisado(j)=.true.
+                 
+              END IF !!
+              
+           END IF
+           
+        end if
+        
+     END DO
+     
+     compruebo=0
+     DO i=1,N_basins
+        
+        compruebo=compruebo+count(filtro2(:,i),DIM=1)
+        
+     END DO
+     print*,'compruebo',compruebo
+     
+     
+  END DO
+  !stop
+  
+  WRITE(90,*) '#'
+  WRITE(90,*) ' '
+  WRITE(90,*) aux(minimo),newejey(minimo,2)
+  WRITE(90,*) aux(minimo),newejey(minimo,2)+5.0d0    
+
+
+END SUBROUTINE DENDO_BOTTOM_UP
+
+SUBROUTINE SORT_BY_BUCKETS (order,lim_inf,lim_sup,dim_boxes,max_popul,valores,N_vals)
+
+  IMPLICIT NONE
+
+  TYPE int_pointer
+     INTEGER,DIMENSION(:),POINTER::ip
+  END TYPE int_pointer
+
+  INTEGER,INTENT(IN)::N_vals,max_popul,dim_boxes
+  DOUBLE PRECISION,INTENT(IN)::lim_inf,lim_sup
+  DOUBLE PRECISION,DIMENSION(N_vals),INTENT(IN)::valores
+  INTEGER,DIMENSION(N_vals),INTENT(OUT)::order
+
+  INTEGER::ii,jj,kk,hh,gg,tt,entra,iii
+  INTEGER::num_buckets,num_occ_buckets,prox,topprox,num_occ_boxes
+  INTEGER,DIMENSION(:),ALLOCATABLE::occ_buckets,reord,occ_boxes
+  DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE::lims_buckets,aux_lims,vect_aux
+  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::vals_aux
+  DOUBLE PRECISION::linf,lsup
+  TYPE(int_pointer),DIMENSION(:),POINTER::buckets
+  LOGICAL::interr
+  LOGICAL,DIMENSION(:),ALLOCATABLE::filtro
+
+  num_occ_buckets=1
+  num_buckets=1
+  ALLOCATE(occ_buckets(1),buckets(1),lims_buckets(2,1))
+  occ_buckets(1)=N_vals
+  ALLOCATE(buckets(1)%ip(N_vals))
+  DO ii=1,N_vals
+     buckets(1)%ip(ii)=ii
+  END DO
+  lims_buckets(1,1)=lim_inf
+  lims_buckets(2,1)=lim_sup
+  
+  ALLOCATE(occ_boxes(dim_boxes+1),reord(dim_boxes+1))
+  ALLOCATE(aux_lims(2,10))
+  topprox=10
+
+  interr=.FALSE.
+  IF (N_vals>max_popul) interr=.TRUE.
+  DO WHILE (interr==.TRUE.)
+     interr=.FALSE.
+     prox=0
+     gg=0
+     entra=0
+     DO ii=1,num_buckets
+        IF (occ_buckets(ii)>max_popul) THEN
+           num_occ_boxes=0
+           occ_boxes=0
+           entra=entra+1
+           linf=lims_buckets(1,entra)
+           lsup=lims_buckets(2,entra)
+           IF (linf<lsup) THEN
+              DO jj=1,occ_buckets(ii)
+                 hh=buckets(ii)%ip(jj)
+                 tt=int(((valores(hh)-linf)/(lsup-linf))*dim_boxes)+1
+                 order(hh)=tt
+                 occ_boxes(tt)=occ_boxes(tt)+1
+              END DO
+              kk=0
+              DO jj=1,dim_boxes+1
+                 IF (occ_boxes(jj)>0) THEN
+                    num_occ_boxes=num_occ_boxes+1
+                    kk=kk+1
+                    reord(jj)=kk
+                    IF (occ_boxes(jj)>max_popul) THEN
+                       interr=.TRUE.
+                       prox=prox+1
+                       IF (prox>topprox) THEN
+                          ALLOCATE(vect_aux(2,topprox))
+                          vect_aux(:,:)=aux_lims(:,:)
+                          DEALLOCATE(aux_lims)
+                          ALLOCATE(aux_lims(2,topprox+10))
+                          aux_lims(:,1:topprox)=vect_aux(:,:)
+                          DEALLOCATE(vect_aux)
+                          topprox=topprox+10
+                       END IF
+                       aux_lims(1,prox)=(jj-1)*((lsup-linf)/dim_boxes)+linf
+                       aux_lims(2,prox)=jj*((lsup-linf)/dim_boxes)+linf
+                    END IF
+                 END IF
+              END DO
+              DO jj=1,occ_buckets(ii)
+                 hh=buckets(ii)%ip(jj)
+                 tt=order(hh)
+                 order(hh)=reord(tt)+gg
+              END DO
+              gg=gg+num_occ_boxes
+           ELSE
+              gg=gg+1
+              DO jj=1,occ_buckets(ii)
+                 hh=buckets(ii)%ip(jj)
+                 order(hh)=gg
+              END DO
+              prox=prox+1
+              IF (prox>topprox) THEN
+                 ALLOCATE(vect_aux(2,topprox))
+                 vect_aux(:,:)=aux_lims(:,:)
+                 DEALLOCATE(aux_lims)
+                 ALLOCATE(aux_lims(2,topprox+10))
+                 aux_lims(:,1:topprox)=vect_aux(:,:)
+                 DEALLOCATE(vect_aux)
+                 topprox=topprox+10
+              END IF
+              aux_lims(1,prox)=linf
+              aux_lims(2,prox)=lsup
+           END IF
+        ELSE
+           gg=gg+1
+           DO jj=1,occ_buckets(ii)
+              hh=buckets(ii)%ip(jj)
+              order(hh)=gg
+           END DO
+        END IF
+        DEALLOCATE(buckets(ii)%ip)
+     END DO
+
+     DEALLOCATE(lims_buckets)
+     ALLOCATE(lims_buckets(2,prox))
+     lims_buckets(:,:)=aux_lims(:,1:prox)
+
+     DEALLOCATE(buckets,occ_buckets)
+     num_buckets=gg
+     ALLOCATE(buckets(num_buckets),occ_buckets(num_buckets))
+     occ_buckets=0
+     DO ii=1,N_vals
+        tt=order(ii)
+        occ_buckets(tt)=occ_buckets(tt)+1
+     END DO
+     DO ii=1,num_buckets
+        ALLOCATE(buckets(ii)%ip(occ_buckets(ii)))
+        occ_buckets(ii)=0
+     END DO
+     DO ii=1,N_vals
+        tt=order(ii)
+        gg=occ_buckets(tt)+1
+        buckets(tt)%ip(gg)=ii
+        occ_buckets(tt)=gg
+     END DO
+
+  END DO
+
+  DEALLOCATE(aux_lims,lims_buckets)
+  DEALLOCATE(occ_boxes,reord)
+
+  gg=0
+  DO ii=1,num_buckets
+     tt=occ_buckets(ii)
+     ALLOCATE(vals_aux(tt),filtro(tt))
+     filtro=.TRUE.
+     DO jj=1,tt
+        hh=buckets(ii)%ip(jj)
+        vals_aux(jj)=valores(hh)
+     END DO
+     DO jj=1,tt
+        gg=gg+1
+        hh=MINLOC(vals_aux,DIM=1,MASK=filtro)
+        filtro(hh)=.FALSE.
+        hh=buckets(ii)%ip(hh)
+        order(gg)=hh
+     END DO
+     DEALLOCATE(vals_aux,filtro)
+     DEALLOCATE(buckets(ii)%ip)
+  END DO
+  DEALLOCATE(buckets)
+  DEALLOCATE(occ_buckets)
+
+END SUBROUTINE SORT_BY_BUCKETS
+
 
 END MODULE GLOB
 
