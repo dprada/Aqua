@@ -2,60 +2,60 @@
 ### Template to create a new topology with new parameters.
 ###########################################################
 
-## Atom parameters:
+##### THIS IS AN EXAMPLE WITH FLUOROETHANOL
+
+## name of molecule in pdb and type (residue_types.py)
+
+residue_name='LIG'
+residue_type='Molecule'   # Molecule, Ligand, Protein, Water, Ion, DNA, ...
+
+## Atoms:
 
 atoms={
 #'atom_name' : 'atom_type' ,
-'HA1'       : 'H'         ,
-'HA2'       : 'H'         ,
-'OD1'       : 'C'         
+'C1'      : 'C'         ,
+'C2'      : 'C'         ,
+'H1'      : 'H'         ,
+'H2'      : 'H'         ,
+'H3'      : 'H'         ,
+'H4'      : 'H'         ,
+'H5'      : 'H'         ,
+'O1'      : 'O'         ,
+'F1'      : 'F'         
 }
 
 charge={
 #'atom_name' : 'charge'    ,
-'HA1'       :  0.2        ,
-'OD1'       : -1.2
+'C1'         :   0.306055  , 
+'C2'         :   0.115513  , 
+'F1'         :  -0.258437  , 
+'O1'         :  -0.640003  , 
+'H1'         :  -0.019003  , 
+'H2'         :  -0.019003  , 
+'H3'         :   0.055159  , 
+'H4'         :   0.055159  , 
+'H5'         :   0.404558 
 }
 
 donors=[
-#'atom_name',
-'HA1'      ,
-'HA2'
+'O1'
 ]
 
 acceptors=[
-#'atom_name',
-'OD1'
+'O1',
+'F1'
 ]
 
-## Molecule or residue:
-
-residue={
-#'name'      : 'type'
-'LIG'       : 'Ligand'
-}
-
-atom_list=[
-'C1' 
-'C2'    
-'F1'    
-'O1'    
-'H1'    
-'H2'    
-'H3'    
-'H4'    
-'H5' 
-]
+## Bonds:
 
 covalent_bonds=[
-['atN'   ,'atH'    ],
-['atN'   ,'atCA'   ],
-['atCA'  ,'atHA'   ],
-['atCA'  ,'atCB'   ],
-['atCA'  ,'atC'    ],
-['atCB'  ,'atHB1'  ],
-['atCB'  ,'atHB2'  ],
-['atCB'  ,'atHB3'  ],
-['atC'   ,'atO'    ] 
+['C1'   ,'C2'    ],
+['C1'   ,'O1'    ],
+['C1'   ,'H1'    ],
+['C1'   ,'H2'    ],
+['C2'   ,'F1'    ],
+['C2'   ,'H3'    ],
+['C2'   ,'H4'    ],
+['O1'   ,'H5'    ]
 ]
 

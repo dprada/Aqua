@@ -6,18 +6,12 @@ from atom_names import *
 from residue_types import * 
 from atom_par import  *
 
-# atom={}
-# residue_type={}
-# donors=[]
-# acceptors=[]
-
-
 #### Topology:
 
+from top_par_funcs import *
 from residue_top import *
 
-#residue_atoms={}
-#covalent_bonds={}
-
+#### List of new topologies made by the user:
+user_topol.append('top_par_template')
 
 

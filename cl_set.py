@@ -27,6 +27,10 @@ import libgeneral as faux
 from libmss import glob as mss_funcs
 import libmath as libmath
 
+### topologies added by user
+for ii in tp.user_topol:
+    tp.add_topol(tp,ii)
+
 #
 # Structure of the file:
 #
@@ -165,12 +169,13 @@ class cl_water(labels_set):             # Attributes of a water molecule
 class molecule(labels_set):               # The suptra-estructure: System (waters+cofactors+proteins...)
 
     
-    def __init__(self,input_file=None,download=None,coors=True,verbose=True,with_bonds=True,missing_atoms=True):
+    def __init__(self,input_file=None,download=None,coors=False,verbose=False,with_bonds=True,missing_atoms=True):
 
         # From labels_set: .name, .index, .pdb_index, .num_atoms, .list_atoms
 
         # > Instantation options:
-        self.file_topol=input_file       # pdb,gro...
+        self.file_topol=input_file       # input file name
+        self.file_topol_type=input_file.split('.')[-1] # pdb,gro,psf
         self.file_hbonds=''             # still not useful -do not remove-
         self.file_mss=''                # still not useful -do not remove-
         self.file_shell=''              # still not useful -do not remove-
@@ -270,35 +275,45 @@ class molecule(labels_set):               # The suptra-estructure: System (water
                     temp_residue.list_atoms=[]
                     temp_residue.pdb_index=atom.resid.pdb_index
                     temp_residue.name=atom.resid.name
-                    temp_residue.type=tp.residue_type[atom.resid.name]
-                    temp_residue.__int_name__=tp.residue[atom.resid.name]
-                    xxx_resid_type=temp_residue.type
-                    xxx_resid__int_name__=temp_residue.__int_name__
                     temp_residue.chain.name=atom.chain.name
                     temp_residue.chain.index=kk
                     temp_residue.__int_dict_atoms__={}
+                    temp_residue.type=tp.residue_type[temp_residue.name]
                     self.resid.append(temp_residue)
                 ii+=1                                      #### Atom
                 atom.index=ii                   
-                atom.resid.index=jj             
+                atom.resid.index=jj
+                atom.resid.type=self.resid[jj].type
                 atom.chain.index=kk
                 atom.hbonds=[]
-                atom.__int_name__=tp.atom[atom.name]
-                atom.type=tp.atom_type[atom.__int_name__]
-                atom.resid.__int_name__=xxx_resid__int_name__
-                atom.resid.type=xxx_resid_type
                 self.resid[jj].list_atoms.append(ii)
-                self.resid[jj].__int_dict_atoms__[atom.__int_name__]=ii
                 self.chain[kk].list_atoms.append(ii)
-                if atom.type=='H':
+
+            if self.file_topol_type not in ['psf']:
+                for residue in self.resid:
+                    residue.__int_name__=tp.residue[residue.name]
+                for atom in self.atom:
+                    jj=atom.resid.index
+                    atom.resid.__int_name__=self.resid[jj].__int_name__
+                    atom.__int_name__=tp.atom[atom.name]
+                    atom.type=tp.atom_type[atom.__int_name__]
+                    self.resid[jj].__int_dict_atoms__[atom.__int_name__]=atom.index
+                    if atom.type=='H':
                         without_hs=False
+            else:
+                for residue in self.resid:
+                    if residue.type=='Water':
+                        residue.__int_name__=tp.residue[residue.name]
+                        for ii in residue.list_atoms:
+                            self.atom[ii].__int_name__=tp.atom[self.atom[ii].name]
+                            residue.__int_dict_atoms__[self.atom[ii].__int_name__]=ii
 
             ### Setting up the subsets.
 
             for residue in self.resid[:]:
              
                 if residue.type=='Water':       ### Waters
-             
+                    
                     if without_hs:
                         residue.__int_name__='SOL3'
                     else:
@@ -346,131 +361,131 @@ class molecule(labels_set):               # The suptra-estructure: System (water
 
 
             ### Setting up the local attributes
+            if self.file_topol_type not in ['psf']:
+                # Topology and Covalent bonds
 
-            # Topology and Covalent bonds
-
-            if with_bonds:
-
-                for residue in self.resid[:]:
-
-                    # Found, missing or unknown atoms in the residue and its topology
-                    jj=residue.index
-                    tp_residue_name=residue.__int_name__
-                    tp_residue_atoms=tp.residue_atoms[tp_residue_name]
-                    found=residue.__int_dict_atoms__.keys()
-                    if without_hs:
-                        aux=ccopy.deepcopy(tp_residue_atoms)
-                        for ii in tp_residue_atoms:
-                            if tp.atom_type[ii]=='H':
-                                aux.remove(ii)
-                        tp_residue_atoms=aux
-                    missing=list(set(tp_residue_atoms).difference(found))
-                    unknown=list(set(found).difference(tp_residue_atoms))
-
-                    # Covalent bonds: Topology residue
-                    for ii in tp.covalent_bonds[tp_residue_name]:
-                        try:
-                            aa=residue.__int_dict_atoms__[ii[0]]
-                            bb=residue.__int_dict_atoms__[ii[1]]
-                            self.atom[aa].covalent_bonds.append(bb)
-                            self.atom[bb].covalent_bonds.append(aa)
-                        except:
-                            pass
-
-                    # Peptide bond [C(i)->N(i+1)]
-                    try:
-                        next_residue=self.resid[residue.index+1]
-                        if residue.type=='Protein' and next_residue.type=='Protein':
-                            if residue.chain.name==next_residue.chain.name :
-                                aa=residue.__int_dict_atoms__['atC']
-                                bb=next_residue.__int_dict_atoms__['atN']
-                                self.atom[aa].covalent_bonds.append(bb)
-                                self.atom[bb].covalent_bonds.append(aa)
-                    except:
-                        pass
-
-                    # Covalent bonds: Terminals
-                    unk2rm={}; miss2rm={}
-                    if unknown:
-                        for jj in (missing+['none']):
-                            for ii in unknown:
-                                try: 
-                                    kk=tp.terminal_bonds[jj][ii]
-                                    aa=residue.__int_dict_atoms__[ii]
-                                    bb=residue.__int_dict_atoms__[kk]
-                                    self.atom[aa].covalent_bonds.append(bb)
-                                    self.atom[bb].covalent_bonds.append(aa)
-                                    if jj!='none': 
-                                        miss2rm[jj]=''
-                                    unk2rm[ii]=''
-                                except:
-                                    pass
-                        for aa in miss2rm.keys():
-                            missing.remove(aa)
-                        for aa in unk2rm.keys():
-                            unknown.remove(aa)
-
-                    # Listing missing or unknown atoms
-                    if missing_atoms:
-                        for ii in missing:
-                            print '# No atom type',ii,'in', residue.name, residue.pdb_index
-                        for ii in unknown:
-                            print '# Unknown atom type',ii,'in', residue.name, residue.pdb_index
-
-
-            # Charge
-
-            for atom in self.atom[:]:
-                if tp.atom[atom.name] in tp.charge:
-                    atom.charge=tp.charge[tp.atom[atom.name]]
-
-            # Acceptors-Donors
-
-            for atom in self.atom[:]:
-                # Donors default
-                if atom.__int_name__ in tp.donors: 
-                    atom.donor=True
-                # Donors exceptions
-                if atom.__int_name__ in tp.donors_with_exceptions:
-                    try:
-                        exception=donors_exception[atom.__int_name__][atom.resid.__int_name__]
-                        if exception[0]=='Always':
-                            atom.donor=exception[1]
-                        elif exception[0]=='Without H':
-                            if 'H' not in [self.atom[ii].type for ii in atom.covalent_bonds]:
-                                atom.donor=exception[1]
-                        else:
-                            print '# Error with donors exceptions:', atom.name, atom.resid.name
-                    except:
-                        pass
-                # Acceptors default
-                if atom.__int_name__ in tp.acceptors: 
-                    atom.acceptor=True
-                # Acceptors exceptions
-                if atom.__int_name__ in tp.acceptors_with_exceptions:
-                    try:
-                        exception=acceptors_exception[atom.__int_name__][tp.resid.__int_name__]
-                        if exception[0]=='Always':
-                            atom.acceptor=exception[1]
-                        elif exception[0]=='With H':
-                            if 'H' in [self.atom[ii].type for ii in atom.covalent_bonds]:
-                                atom.acceptor=exception[1]
-                        else:
-                            print '# Error with acceptors exceptions:', atom.name, atom.resid.name
-                    except:
-                        pass
-                
-                if atom.acceptor:
-                    self.acceptors.append(atom.index)
-
-                if atom.donor:
-                    for ii in atom.covalent_bonds:
-                        if self.atom[ii].type=='H':
-                            self.donors[0].append(atom.index)
-                            self.donors[1].append(ii)
-
-            self.acceptors=numpy.array(self.acceptors,dtype=int,order='Fortran')
-            self.donors=numpy.array(self.donors,dtype=int,order='Fortran')
+                 if with_bonds:
+                  
+                     for residue in self.resid[:]:
+                  
+                         # Found, missing or unknown atoms in the residue and its topology
+                         jj=residue.index
+                         tp_residue_name=residue.__int_name__
+                         tp_residue_atoms=tp.residue_atoms[tp_residue_name]
+                         found=residue.__int_dict_atoms__.keys()
+                         if without_hs:
+                             aux=ccopy.deepcopy(tp_residue_atoms)
+                             for ii in tp_residue_atoms:
+                                 if tp.atom_type[ii]=='H':
+                                     aux.remove(ii)
+                             tp_residue_atoms=aux
+                         missing=list(set(tp_residue_atoms).difference(found))
+                         unknown=list(set(found).difference(tp_residue_atoms))
+                  
+                         # Covalent bonds: Topology residue
+                         for ii in tp.covalent_bonds[tp_residue_name]:
+                             try:
+                                 aa=residue.__int_dict_atoms__[ii[0]]
+                                 bb=residue.__int_dict_atoms__[ii[1]]
+                                 self.atom[aa].covalent_bonds.append(bb)
+                                 self.atom[bb].covalent_bonds.append(aa)
+                             except:
+                                 pass
+                  
+                         # Peptide bond [C(i)->N(i+1)]
+                         try:
+                             next_residue=self.resid[residue.index+1]
+                             if residue.type=='Protein' and next_residue.type=='Protein':
+                                 if residue.chain.name==next_residue.chain.name :
+                                     aa=residue.__int_dict_atoms__['atC']
+                                     bb=next_residue.__int_dict_atoms__['atN']
+                                     self.atom[aa].covalent_bonds.append(bb)
+                                     self.atom[bb].covalent_bonds.append(aa)
+                         except:
+                             pass
+                  
+                         # Covalent bonds: Terminals
+                         unk2rm={}; miss2rm={}
+                         if unknown:
+                             for jj in (missing+['none']):
+                                 for ii in unknown:
+                                     try: 
+                                         kk=tp.terminal_bonds[jj][ii]
+                                         aa=residue.__int_dict_atoms__[ii]
+                                         bb=residue.__int_dict_atoms__[kk]
+                                         self.atom[aa].covalent_bonds.append(bb)
+                                         self.atom[bb].covalent_bonds.append(aa)
+                                         if jj!='none': 
+                                             miss2rm[jj]=''
+                                         unk2rm[ii]=''
+                                     except:
+                                         pass
+                             for aa in miss2rm.keys():
+                                 missing.remove(aa)
+                             for aa in unk2rm.keys():
+                                 unknown.remove(aa)
+                  
+                         # Listing missing or unknown atoms
+                         if missing_atoms:
+                             for ii in missing:
+                                 print '# No atom type',ii,'in', residue.name, residue.pdb_index
+                             for ii in unknown:
+                                 print '# Unknown atom type',ii,'in', residue.name, residue.pdb_index
+                  
+                  
+                 # Charge
+                  
+                 for atom in self.atom[:]:
+                     if tp.atom[atom.name] in tp.charge:
+                         atom.charge=tp.charge[tp.atom[atom.name]]
+                  
+                 # Acceptors-Donors
+                  
+                 for atom in self.atom[:]:
+                     # Donors default
+                     if atom.__int_name__ in tp.donors: 
+                         atom.donor=True
+                     # Donors exceptions
+                     if atom.__int_name__ in tp.donors_exception:
+                         try:
+                             exception=tp.donors_exception[atom.__int_name__][atom.resid.__int_name__]
+                             if exception[0]=='Always':
+                                 atom.donor=exception[1]
+                             elif exception[0]=='Without H':
+                                 if 'H' not in [self.atom[ii].type for ii in atom.covalent_bonds]:
+                                     atom.donor=exception[1]
+                             else:
+                                 print '# Error with donors exceptions:', atom.name, atom.resid.name
+                         except:
+                             pass
+                     # Acceptors default
+                     if atom.__int_name__ in tp.acceptors: 
+                         atom.acceptor=True
+                     # Acceptors exceptions
+                     if atom.__int_name__ in tp.acceptors_exception:
+                         try:
+                             exception=tp.acceptors_exception[atom.__int_name__][atom.resid.__int_name__]
+                             if exception[0]=='Always':
+                                 atom.acceptor=exception[1]
+                             elif exception[0]=='With H':
+                                 if 'H' in [self.atom[ii].type for ii in atom.covalent_bonds]:
+                                     atom.acceptor=exception[1]
+                             else:
+                                 print '# Error with acceptors exceptions:', atom.name, atom.resid.name
+                         except:
+                             pass
+                     
+                     if atom.acceptor:
+                         self.acceptors.append(atom.index)
+                  
+                     if atom.donor:
+                         for ii in atom.covalent_bonds:
+                             if self.atom[ii].type=='H':
+                                 self.donors[0].append(atom.index)
+                                 self.donors[1].append(ii)
+                  
+                 self.acceptors=numpy.array(self.acceptors,dtype=int,order='Fortran')
+                 self.donors=numpy.array(self.donors,dtype=int,order='Fortran')
 
             ### Setting up the global attributes
 
@@ -485,6 +500,7 @@ class molecule(labels_set):               # The suptra-estructure: System (water
 
 
             ### Loading coordinates
+            if self.file_topol_type in ['psf']: coors=False
             if coors:
                 self.load_traj(self.file_topol,frame='ALL',verbose=False)
 
@@ -571,6 +587,63 @@ class molecule(labels_set):               # The suptra-estructure: System (water
                 self.atom.append(temp_atom)
 
             fff.close()
+
+        if name_file.endswith('psf'):
+
+            fff=open(name_file,'r')
+
+            line=fff.readline()
+            if not line.startswith('PSF'):
+                print '# Error: uknown PSF format'
+                return
+
+            line=fff.readline()
+            line=fff.readline()
+            num_head_lines=int(line.split()[0])
+            for ii in range(num_head_lines):
+                line=fff.readline()
+
+            line=fff.readline()
+
+            line=fff.readline()
+            self.num_atoms=int(line.split()[0])
+            if line.split()[1]!='!NATOM':
+                print '# Error: uknown PSF format'
+                return
+
+            for ii in range(self.num_atoms):
+                temp_atom=cl_unit()
+                line=fff.readline()
+                xx=line.split()
+                temp_atom.pdb_index=int(xx[0])
+                temp_atom.chain.name=xx[1]
+                temp_atom.resid.pdb_index=int(xx[2]) 
+                temp_atom.resid.name=xx[3]
+                temp_atom.name=xx[4]
+                temp_atom.type_pdb=xx[5]
+                temp_atom.charge=float(xx[6])
+                temp_atom.mass=float(xx[7])
+                self.atom.append(temp_atom)
+
+            line=fff.readline()
+            line=fff.readline()
+            numbonds=int(line.split()[0])
+            if line.split()[1]!='!NBOND:':
+                print '# Error: uknown PSF format'
+                return
+            aa=0
+            while aa<numbonds:
+                line=fff.readline()
+                bb=0
+                xx=line.split()
+                cc=len(xx)
+                while bb<cc:
+                    b1=int(xx[bb])-1
+                    b2=int(xx[bb+1])-1
+                    bb+=2
+                    self.atom[b1].covalent_bonds.append(b2)
+                    self.atom[b2].covalent_bonds.append(b1)
+                aa+=bb
 
     def write_pdb (self,filename=None):
         
@@ -667,7 +740,7 @@ class molecule(labels_set):               # The suptra-estructure: System (water
 
         pass
 
-    def load_traj (self,file_input=None,frame=None,begin=None,end=None,increment=1,units='frames',verbose=True):
+    def load_traj (self,file_input=None,frame=None,begin=None,end=None,increment=1,units='frames',verbose=False):
 
         temp_traj=cl_traj(file_input,frame,begin,end,increment,units,verbose=False)
         if verbose:
@@ -1143,6 +1216,9 @@ class molecule(labels_set):               # The suptra-estructure: System (water
 
             if infile:
 
+                if type(frame) in [int]:
+                    frame=[frame]
+
                 if type(frame) not in [list,tuple]:
                     print '# "frame" must be a list'
                     return
@@ -1234,6 +1310,9 @@ class molecule(labels_set):               # The suptra-estructure: System (water
             faux.hbonds.roo2_param, faux.hbonds.cos_angooh_param= roo_param**2, numpy.cos(numpy.radians(angooh_param))
 
             if infile:
+
+                if type(frame) in [int]:
+                    frame=[frame]
 
                 if type(frame) not in [list,tuple]:
                     print '# "frame" must be a list'
