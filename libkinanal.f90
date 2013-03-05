@@ -21,17 +21,19 @@ MODULE BINDATA
     
   END SUBROUTINE fclose
   
-  SUBROUTINE read_float_frame(funit,frame,num_parts,dimensions,coors)
+  SUBROUTINE read_float_frame(opt_bin,funit,frame,num_parts,dimensions,coors)
     
-    INTEGER,INTENT(IN)::funit,frame,num_parts,dimensions
+    INTEGER,INTENT(IN)::funit,frame,num_parts,dimensions,opt_bin
     DOUBLE PRECISION,DIMENSION(num_parts,dimensions),INTENT(OUT)::coors
     
     INTEGER(KIND=8)::needle
 
-    needle=frame
-    needle=needle*num_parts*dimensions*8+1
-    READ(funit,pos=needle) coors(:,:)
-    
+    if (opt_bin==1) then
+       needle=frame
+       needle=needle*num_parts*dimensions*8+1
+       READ(funit,pos=needle) coors(:,:)
+    end if
+
   END SUBROUTINE read_float_frame
   
   SUBROUTINE read_float_coor(funit,frame,particle,dim,num_parts,dimensions,coor)
@@ -47,17 +49,19 @@ MODULE BINDATA
     
   END SUBROUTINE read_float_coor
   
-  SUBROUTINE read_int_frame(funit,frame,num_parts,dimensions,coors)
+  SUBROUTINE read_int_frame(opt_bin,funit,frame,num_parts,dimensions,coors)
     
-    INTEGER,INTENT(IN)::funit,frame,num_parts,dimensions
+    INTEGER,INTENT(IN)::funit,frame,num_parts,dimensions,opt_bin
     INTEGER,DIMENSION(num_parts,dimensions),INTENT(OUT)::coors
     
     INTEGER(KIND=8)::needle
     
-    needle=frame
-    needle=needle*num_parts*dimensions*8+1
-    READ(funit,pos=needle) coors(:,:)
-    
+    IF (opt_bin==1) THEN
+       needle=frame
+       needle=needle*num_parts*dimensions*4+1
+       READ(funit,pos=needle) coors(:,:)
+    END IF
+
   END SUBROUTINE read_int_frame
   
   SUBROUTINE read_int_coor(funit,frame,particle,dim,num_parts,dimensions,coor)
@@ -68,14 +72,14 @@ MODULE BINDATA
     INTEGER(KIND=8)::needle
     
     needle=frame
-    needle=needle*num_parts*dimensions*8+particle*dimensions*8+dim*8+1
+    needle=needle*num_parts*dimensions*4+particle*dimensions*4+dim*4+1
     READ(funit,pos=needle) coor
     
   END SUBROUTINE read_int_coor
 
-  SUBROUTINE check_int_length(funit,num_parts,dimensions,length)
+  SUBROUTINE check_int_length(opt_bin,funit,num_parts,dimensions,length)
 
-    INTEGER,INTENT(IN)::funit,num_parts,dimensions
+    INTEGER,INTENT(IN)::funit,num_parts,dimensions,opt_bin
     INTEGER,INTENT(OUT)::length
 
     INTEGER,DIMENSION(:,:),ALLOCATABLE::coors
@@ -84,24 +88,27 @@ MODULE BINDATA
 
     length=0
 
-    rewind(funit)
+    IF (opt_bin==1) THEN
+       rewind(funit)
+       
+       DO
+          
+          READ(funit,end=700) coors(:,:)
+          length=length+1
+          
+       END DO
+       
+700    rewind(funit)
 
-    DO
-
-       READ(funit,end=700) coors(:,:)
-       length=length+1
-
-    END DO
-
-700 rewind(funit)
+    END IF
 
     DEALLOCATE(coors)
 
   END SUBROUTINE check_int_length
 
-  SUBROUTINE check_float_length(funit,num_parts,dimensions,length)
+  SUBROUTINE check_float_length(opt_bin,funit,num_parts,dimensions,length)
 
-    INTEGER,INTENT(IN)::funit,num_parts,dimensions
+    INTEGER,INTENT(IN)::funit,num_parts,dimensions,opt_bin
     INTEGER,INTENT(OUT)::length
 
     DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE::coors
@@ -110,21 +117,23 @@ MODULE BINDATA
 
     length=0
 
-    rewind(funit)
 
-    DO
+    IF (opt_bin==1) THEN
+       rewind(funit)
+       
+       DO
+          
+          READ(funit,end=701) coors(:,:)
+          length=length+1
+          
+       END DO
 
-       READ(funit,end=701) coors(:,:)
-       length=length+1
+701    rewind(funit)
 
-    END DO
-
-701 rewind(funit)
-
+    END IF
     DEALLOCATE(coors)
 
   END SUBROUTINE check_float_length
-
 
 
 END MODULE BINDATA
@@ -174,7 +183,7 @@ CONTAINS
     INTEGER,DIMENSION(num_frames,num_parts,dimensions),INTENT(IN)::traj_full
     INTEGER,DIMENSION(dimensions,2),INTENT(IN)::ranges
     INTEGER,DIMENSION(num_frames,num_parts),INTENT(OUT)::tray
-    
+
     INTEGER::N_nodes,Ktot,len_str
     INTEGER::index
     INTEGER::ii,jj,gg,kk,ll,hh,hhh,aa,bb
@@ -236,7 +245,7 @@ CONTAINS
        
        WRITE(f1,'(I6)') cajon
        WRITE(f2,'(I6)') len_str
-       f3="(I0,"//TRIM(ADJUSTL(f1))//"I"//TRIM(ADJUSTL(f2))//")"
+       f3="(I,"//TRIM(ADJUSTL(f1))//"I"//TRIM(ADJUSTL(f2))//")"
        
        OPEN(21,FILE="trad_aux.aux",status="REPLACE",ACTION="WRITE")
        IF (cajon==1) THEN
@@ -1049,7 +1058,7 @@ CONTAINS
 
     ii=bframe
     DO jj=ii-tw*increment,ii+tw*increment,increment
-       CALL read_float_frame(funit,jj,num_parts,dimensions,coors)
+       CALL read_float_frame(1,funit,jj,num_parts,dimensions,coors)
        DO nn=1,num_parts
           tt=INT((coors(nn,1)-min)/delta_x)+1
           IF (filt_min.eqv..TRUE.) THEN
@@ -1075,7 +1084,7 @@ CONTAINS
     DO jj=1,iterations
        corre=corre+1
        ! Quito el de antes
-       CALL read_float_frame(funit,ii-tw*increment,num_parts,dimensions,coors)
+       CALL read_float_frame(1,funit,ii-tw*increment,num_parts,dimensions,coors)
        DO nn=1,num_parts
           tt=INT((coors(nn,1)-min)/delta_x)+1
           IF (filt_min.eqv..TRUE.) THEN
@@ -1091,7 +1100,7 @@ CONTAINS
           prov_hist(nn,tt)=prov_hist(nn,tt)-1
        END DO
        ii=ii+increment
-       CALL read_float_frame(funit,ii+tw*increment,num_parts,dimensions,coors)
+       CALL read_float_frame(1,funit,ii+tw*increment,num_parts,dimensions,coors)
        DO nn=1,num_parts
           tt=INT((coors(nn,1)-min)/delta_x)+1
           IF (filt_min.eqv..TRUE.) THEN
@@ -1171,7 +1180,7 @@ CONTAINS
 
     ii=bframe
     DO jj=ii-tw*increment,ii+tw*increment,increment
-       CALL read_float_frame(funit,jj,num_parts,dimensions,coors)
+       CALL read_float_frame(1,funit,jj,num_parts,dimensions,coors)
        DO nn=1,num_parts
           tt=INT((coors(nn,1)-min)/delta_x)+1
           IF (filt_min.eqv..TRUE.) THEN
@@ -1197,7 +1206,7 @@ CONTAINS
     DO jj=1,iterations
        corre=corre+1
        ! Quito el de antes
-       CALL read_float_frame(funit,ii-tw*increment,num_parts,dimensions,coors)
+       CALL read_float_frame(1,funit,ii-tw*increment,num_parts,dimensions,coors)
        DO nn=1,num_parts
           tt=INT((coors(nn,1)-min)/delta_x)+1
           IF (filt_min.eqv..TRUE.) THEN
@@ -1213,7 +1222,7 @@ CONTAINS
           prov_hist(nn,tt)=prov_hist(nn,tt)-1
        END DO
        ii=ii+increment
-       CALL read_float_frame(funit,ii+tw*increment,num_parts,dimensions,coors)
+       CALL read_float_frame(1,funit,ii+tw*increment,num_parts,dimensions,coors)
        DO nn=1,num_parts
           tt=INT((coors(nn,1)-min)/delta_x)+1
           IF (filt_min.eqv..TRUE.) THEN
@@ -2572,5 +2581,46 @@ subroutine ctt_dist (opt_norm,opt_noreturn,opt_states,opt_segments, &
 
 
 end subroutine ctt_dist
+
+subroutine trajnodes2file(file_name,opt_binary,begin,end,traj,num_frames,num_parts,num_dims)
+
+  CHARACTER*80,INTENT(IN)::file_name
+  INTEGER,INTENT(IN)::opt_binary,num_frames,num_parts,num_dims,begin,end
+  INTEGER,DIMENSION(num_frames,num_parts,num_dims),INTENT(IN)::traj
+
+  INTEGER::ii,jj
+
+  IF (opt_binary==1) THEN
+     OPEN(unit=21,FILE=TRIM(file_name),action='WRITE',form='unformatted',access='stream',POSITION='APPEND')
+     DO ii=begin+1,end+1
+        WRITE(21) traj(ii,:,:)
+     END DO
+     CLOSE(21)
+  ELSE
+     OPEN(unit=21,FILE=TRIM(file_name),action='WRITE',form='formatted',POSITION='APPEND')
+     DO ii=begin+1,end+1
+        WRITE(21,*) traj(ii,:,:)
+     END DO
+     CLOSE(21)
+  END IF
+
+END subroutine trajnodes2file
+
+subroutine trans_traj_nodes(net2total,traj,num_nodes,num_frames,num_parts,num_dims)
+
+  INTEGER,INTENT(IN)::num_frames,num_parts,num_dims
+  INTEGER,DIMENSION(num_nodes),INTENT(IN)::net2total
+  INTEGER,DIMENSION(num_frames,num_parts,num_dims),INTENT(INOUT)::traj
+
+  INTEGER::ii,jj
+
+  DO ii=1,num_frames
+     DO jj=1,num_parts
+        traj(ii,jj,1)=net2total(traj(ii,jj,1)+1)
+     END DO
+  END DO
+
+END subroutine trans_traj_nodes
+
 
 END MODULE GLOB

@@ -37,12 +37,13 @@ class cl_traj():
         self.type=None
         self.title=None
         self.num_frames=0
+        self.total_frames=0
         self.precision=None
         self.frame=[]
 
         if file_input!=None:
             self.name=file_input
-            self.type=file_input.split('.')[1]
+            self.type=file_input.split('.')[-1]
             self.open()
 
         if frame!=None or begin!=None or end!=None:
@@ -65,6 +66,7 @@ class cl_traj():
         self.io_file,self.io_vars,self.io_pos,self.io_err=getattr(io,'coor_'+self.type).open_traj_read(self.name)
         if self.io_err: print '# Error opening the file'; return
         self.io_opened=1
+        self.total_frames=self.io_vars[10]
 
 
     def close(self):
