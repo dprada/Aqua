@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Berezovska2012 &mdash; Pynoramix 0.1 documentation</title>
+    <title>Berezovska2012 &mdash; Aqua 0.1 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Pynoramix 0.1 documentation" href="index.html" />
+    <link rel="top" title="Aqua 0.1 documentation" href="index.html" />
     <link rel="prev" title="Tutorial Kinetic Analysis" href="tutorial_kinetic_analysis.html" /> 
   </head>
   <body>
@@ -57,8 +57,8 @@
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Berezovska2012</a><ul>
-<li><a class="reference internal" href="#getting-pynoramix">Getting Pynoramix</a></li>
-<li><a class="reference internal" href="#loading-pynoramix">Loading Pynoramix</a></li>
+<li><a class="reference internal" href="#getting-aqua">Getting Aqua</a></li>
+<li><a class="reference internal" href="#loading-aqua">Loading Aqua</a></li>
 <li><a class="reference internal" href="#loading-a-trajectory">Loading a trajectory</a></li>
 <li><a class="reference internal" href="#analysis">Analysis</a><ul>
 <li><a class="reference internal" href="#kinetic-model-and-flux-between-clusters">Kinetic Model and Flux between clusters</a></li>
@@ -100,35 +100,35 @@
             
   <div class="section" id="berezovska2012">
 <h1>Berezovska2012<a class="headerlink" href="#berezovska2012" title="Permalink to this headline">¶</a></h1>
-<p>The set of python libraries <strong>Pynoramix</strong> allows us to analyse 1-D
+<p>The set of python libraries <strong>Aqua</strong> allows us to analyse 1-D
 trajectories as it has been propossed by G. Berezovska et al. in
 <a class="reference external" href="http://dx.doi.org/10.1063/1.4764868">J. Chem. Phys. 137, 194101 (2012)</a>. This method unveils the conformational macrostates kinetically
 &#8220;well defined&#8221; (see <a class="reference internal" href="tutorial_kinetic_analysis.html#accurate-kin-dec"><em>Accurate kinetic decomposition</em></a>) and the underlying accurate first
 order kinetic model.</p>
 <p>The following tutorial shows how this analysis can be easily done with
-Pynoramix.</p>
-<div class="section" id="getting-pynoramix">
-<h2>Getting Pynoramix<a class="headerlink" href="#getting-pynoramix" title="Permalink to this headline">¶</a></h2>
+Aqua.</p>
+<div class="section" id="getting-aqua">
+<h2>Getting Aqua<a class="headerlink" href="#getting-aqua" title="Permalink to this headline">¶</a></h2>
 <p>The indications to download and install these libraries can be found
 in <a class="reference internal" href="getting_started.html#getting-started-pyn"><em>Getting Started</em></a>.</p>
 </div>
-<div class="section" id="loading-pynoramix">
-<h2>Loading Pynoramix<a class="headerlink" href="#loading-pynoramix" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="loading-aqua">
+<h2>Loading Aqua<a class="headerlink" href="#loading-aqua" title="Permalink to this headline">¶</a></h2>
 <p>Some basic notions on python will be assumed along this tutorial.
-To load this libraries the path to Pynoramix must be either...</p>
+To load this libraries the path to Aqua must be either...</p>
 <ul class="simple">
 <li>in your PYTHONPATH variable</li>
 <li>in your script with the first lines:</li>
 </ul>
 <div class="highlight-ipython"><div class="highlight"><pre><span class="go">import sys</span>
-<span class="go">sys.path.append(&#39;/path/to/Pynoramix&#39;)</span>
+<span class="go">sys.path.append(&#39;/path/to/Aqua&#39;)</span>
 </pre></div>
 </div>
-<p>Once this has been done, Pynoramix must be imported. As you probably
+<p>Once this has been done, Aqua must be imported. As you probably
 know, Python can be run from a script or from an ipython session.  This
 tutorial as been written as an ipython history of commands. So lets
-begin with the proper command to load Pynoramix:</p>
-<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [1]: </span><span class="kn">from</span> <span class="nn">pynoramix</span> <span class="kn">import</span> <span class="o">*</span>
+begin with the proper command to load Aqua:</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [1]: </span><span class="kn">from</span> <span class="nn">aqua</span> <span class="kn">import</span> <span class="o">*</span>
 </pre></div>
 </div>
 </div>
@@ -220,7 +220,7 @@ transition probabilities, or rates, between macro-states interplay to
 mimic the macroscopical dynamical behavior observed in the 1D trajectory.</p>
 <img src="_images/mathmpl/math-e4dd06b42d.png" class="center" /><p></p>
 <img src="_images/mathmpl/math-acbbfe60df.png" class="center" /><p></p>
-<img src="_images/mathmpl/math-8aae56b1b6.png" class="center" /><p>In Pynoramix this model is enconded as a kinetic or conformational
+<img src="_images/mathmpl/math-8aae56b1b6.png" class="center" /><p>In Aqua this model is enconded as a kinetic or conformational
 network.  The trajectory is mapped into a graph where weighted nodes
 and directed links accounts for the occupation of clusters and the
 number of transitions among them.</p>

@@ -1,9 +1,9 @@
-.. Pynoramix documentation master file, created by
+.. Aqua documentation master file, created by
    sphinx-quickstart on Sun Jun 17 19:50:28 2012.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to the tentative Pynoramix's documentation!
+Welcome to the tentative Aqua's documentation!
 ===================================================
 
 **Be aware, some sections are...**

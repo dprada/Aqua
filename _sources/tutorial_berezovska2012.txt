@@ -1,27 +1,27 @@
 Berezovska2012
 **************
 
-The set of python libraries **Pynoramix** allows us to analyse 1-D
+The set of python libraries **Aqua** allows us to analyse 1-D
 trajectories as it has been propossed by G. Berezovska et al. in
 `J. Chem. Phys. 137, 194101 (2012) <http://dx.doi.org/10.1063/1.4764868>`_. This method unveils the conformational macrostates kinetically
 "well defined" (see :ref:`accurate_kin_dec`) and the underlying accurate first
 order kinetic model.
 
 The following tutorial shows how this analysis can be easily done with
-Pynoramix.
+Aqua.
 
 
-Getting Pynoramix
+Getting Aqua
 +++++++++++++++++
 
 The indications to download and install these libraries can be found
 in :ref:`getting_started_pyn`.
 
-Loading Pynoramix
+Loading Aqua
 +++++++++++++++++
 
 Some basic notions on python will be assumed along this tutorial.
-To load this libraries the path to Pynoramix must be either...
+To load this libraries the path to Aqua must be either...
 
 - in your PYTHONPATH variable
 - in your script with the first lines:
@@ -29,16 +29,16 @@ To load this libraries the path to Pynoramix must be either...
 .. sourcecode:: ipython
    
    import sys
-   sys.path.append('/path/to/Pynoramix')
+   sys.path.append('/path/to/Aqua')
 
-Once this has been done, Pynoramix must be imported. As you probably
+Once this has been done, Aqua must be imported. As you probably
 know, Python can be run from a script or from an ipython session.  This
 tutorial as been written as an ipython history of commands. So lets
-begin with the proper command to load Pynoramix:
+begin with the proper command to load Aqua:
 
 .. sourcecode:: ipython
 
-     In [1]: from pynoramix import *
+     In [1]: from aqua import *
 
 
 
@@ -173,7 +173,7 @@ mimic the macroscopical dynamical behavior observed in the 1D trajectory.
 
    \frac{dP_{2}}{dt} = P_{20}P_{0} + P_{21}P_{1} - P_{02}P_{2} - P_{12}P_{2},
 
-In Pynoramix this model is enconded as a kinetic or conformational
+In Aqua this model is enconded as a kinetic or conformational
 network.  The trajectory is mapped into a graph where weighted nodes
 and directed links accounts for the occupation of clusters and the
 number of transitions among them.
