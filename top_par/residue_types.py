@@ -134,6 +134,8 @@ residue_type={
 'CMET' :   'Protein', 
 'CASPH':   'Protein', 
 'CGLUH':   'Protein', 
+'LIG'  :   'Molecule',
+'LIGAND':  'Molecule',
 'DA'   :   'DNA',  
 'DG'   :   'DNA',  
 'DC'   :   'DNA',  

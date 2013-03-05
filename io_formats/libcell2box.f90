@@ -2,7 +2,7 @@
 SUBROUTINE CELL2BOX (cell,box,volume,ortho)
 
   IMPLICIT NONE
-  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::cell
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(INOUT)::cell
   DOUBLE PRECISION,DIMENSION(3,3),INTENT(OUT)::box
   DOUBLE PRECISION,INTENT(OUT)::volume
   INTEGER,INTENT(OUT)::ortho
@@ -20,6 +20,14 @@ SUBROUTINE CELL2BOX (cell,box,volume,ortho)
 
   box(1,1)=x
   IF ((alpha==90.0d0).and.(beta==90.0d0).and.(gamma==90.0d0)) THEN
+     box(2,2)=y
+     box(3,3)=z
+     volume=x*y*z
+     ortho=1
+  ELSE IF ((alpha==0.0d0).and.(beta==0.0d0).and.(gamma==0.0d0)) THEN
+     cell(1,2)=90.0d0
+     cell(1,3)=90.0d0
+     cell(2,3)=90.0d0
      box(2,2)=y
      box(3,3)=z
      volume=x*y*z

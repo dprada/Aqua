@@ -1,6 +1,6 @@
 import numpy
 import copy
-from pyn_fort_math import glob as fort_math
+from libmath import glob as libmath
 try:
     import pylab
     wpylab=1
@@ -96,7 +96,7 @@ def average(a):
 
     if leng > 0 :
 
-        v,sigm=fort_math.average(a,leng)
+        v,sigm=libmath.average(a,leng)
 
     else :
         
@@ -126,7 +126,7 @@ def parameters_bins(traj=None,bins=None,segment=None,delta=None):
         delta=1.0
         opt_delta=2
 
-    bins,mmx,mmn,delta=fort_math.parameters_bins(opt_range,opt_delta,bins,mmn,mmx,delta)
+    bins,mmx,mmn,delta=libmath.parameters_bins(opt_range,opt_delta,bins,mmn,mmx,delta)
 
     return bins,mmx,mmn,delta
 
@@ -152,12 +152,12 @@ def histogram(traj,bins=20,segment=None,delta=None,select_dim=0,norm=False,cumul
             pyn_f90units.append(infile.unit)
             select_dim+=1
             bins,mmx,mmn,delta=parameters_bins(False,bins,segment,delta)
-            fort_math.histogram1d_infile(infile.name,infile.binary,infile.unit,opt_norm,opt_cumul,bins,mmn,mmx,delta,select_dim,\
+            libmath.histogram1d_infile(infile.name,infile.binary,infile.unit,opt_norm,opt_cumul,bins,mmn,mmx,delta,select_dim,\
                                       in_file.frames,in_file.particles,in_file.dimensions)
 
-            h_x=copy.deepcopy(fort_math.histo_x)
-            h_y=copy.deepcopy(fort_math.histo_y)
-            fort_math.free_mem()
+            h_x=copy.deepcopy(libmath.histo_x)
+            h_y=copy.deepcopy(libmath.histo_y)
+            libmath.free_mem()
 
             pyn_f90units.remove(infile.unit)
             infile.unit=None
@@ -169,12 +169,12 @@ def histogram(traj,bins=20,segment=None,delta=None,select_dim=0,norm=False,cumul
             
             bins,mmx,mmn,delta=parameters_bins(traj,bins,segment,delta)
             select_dim+=1
-            fort_math.histogram1d(opt_norm,opt_cumul,traj,bins,mmn,mmx,delta,select_dim,\
+            libmath.histogram1d(opt_norm,opt_cumul,traj,bins,mmn,mmx,delta,select_dim,\
                                       traj.shape[0],traj.shape[1],traj.shape[2])
             
-            h_x=copy.deepcopy(fort_math.histo_x)
-            h_y=copy.deepcopy(fort_math.histo_y)
-            fort_math.free_mem()
+            h_x=copy.deepcopy(libmath.histo_x)
+            h_y=copy.deepcopy(libmath.histo_y)
+            libmath.free_mem()
             
             return h_x,h_y
 
@@ -202,13 +202,13 @@ def histogram_mask(traj,bins=20,segment=None,delta=None,select_dim=0,traj_mask=N
     select_mask=numpy.array(select_mask,dtype=int,order='F')
 
     select_dim+=1
-    fort_math.histogram1d_mask(opt_norm,opt_cumul,traj,bins,mmn,mmx,delta,select_dim,\
+    libmath.histogram1d_mask(opt_norm,opt_cumul,traj,bins,mmn,mmx,delta,select_dim,\
                                 traj_mask,select_mask,offset_mask,traj_mask.shape[0],select_mask.shape[0],\
                                    traj.shape[0],traj.shape[1],traj.shape[2])
 
-    h_x=copy.deepcopy(fort_math.histo_x)
-    h_y=copy.deepcopy(fort_math.histo_y)
-    fort_math.free_mem()
+    h_x=copy.deepcopy(libmath.histo_x)
+    h_y=copy.deepcopy(libmath.histo_y)
+    libmath.free_mem()
 
     return h_x,h_y
 
@@ -247,12 +247,12 @@ def histogram2D(traj,bins=[20,20],segment=None,delta_x=None,prec=None,norm=False
         delta_x=[1.0,1.0]
         opt=2
 
-    fort_math.histograma_2d(opt_norm,opt_prec,opt_range,opt,traj,bins,[mmn0,mmn1],[mmx0,mmx1],delta_x,prec,leng)
+    libmath.histograma_2d(opt_norm,opt_prec,opt_range,opt,traj,bins,[mmn0,mmn1],[mmx0,mmx1],delta_x,prec,leng)
 
-    h_x=copy.deepcopy(fort_math.histo_x)
-    h_y=copy.deepcopy(fort_math.histo_y)
-    h_z=copy.deepcopy(fort_math.histo_z)
-    fort_math.free_mem()
+    h_x=copy.deepcopy(libmath.histo_x)
+    h_y=copy.deepcopy(libmath.histo_y)
+    h_z=copy.deepcopy(libmath.histo_z)
+    libmath.free_mem()
     if plot and wpylab:
         pylab.plot(h_x,h_y,'ro-')
 
@@ -278,19 +278,19 @@ def binning(traj=None,bins=20,segment=None,delta_x=None,prec=None):
 
     if traj==None:
 
-        o_delta_x=fort_math.binning_x(opt_range,opt,bins,mmn,mmx,delta_x)
-        h_x=copy.deepcopy(fort_math.histo_x)
-        fort_math.free_mem()
+        o_delta_x=libmath.binning_x(opt_range,opt,bins,mmn,mmx,delta_x)
+        h_x=copy.deepcopy(libmath.histo_x)
+        libmath.free_mem()
         
         return h_x
 
     else:
 
-        tray_bins=fort_math.binning(opt_range,opt_delta_x,traj,bins,mmn,mmx,delta_x,len(traj))
+        tray_bins=libmath.binning(opt_range,opt_delta_x,traj,bins,mmn,mmx,delta_x,len(traj))
 
-        h_x=copy.deepcopy(fort_math.histo_x)
+        h_x=copy.deepcopy(libmath.histo_x)
     
-        fort_math.free_mem()
+        libmath.free_mem()
 
         return h_x,tray_bins
 

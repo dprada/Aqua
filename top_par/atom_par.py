@@ -38,7 +38,7 @@ donors_exception={
 'atND1' : { 'HIS' : [ 'Without H' , False ]}
 }
 # !! y que pasa con las ASPH?
-donors_with_exceptions=donors_exception.keys()
+
 
 
 ### Acceptors
@@ -66,6 +66,6 @@ acceptors_exception={
 'atSG'  : { 'CYH' : [ 'Always'   , True  ]},    ## Corregir esto!!!
 'atND1' : { 'HIS' : [ 'With H', False ]}
 }
-acceptors_with_exceptions=acceptors_exception.keys()
+
 
 ## Y que pasa con los terminales?

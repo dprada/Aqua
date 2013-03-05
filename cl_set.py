@@ -1,7 +1,7 @@
 ####################################
 # GENERAL COMMENTS
 
-NAME_VERSION="Pynoramix 0.1"
+NAME_VERSION="Aqua 0.2"
 
 #
 # This module requires:
@@ -21,10 +21,15 @@ except:
 import datetime as datetime
 
 ### pyno libraries:
-from pyn_cl_coors import *
+from cl_coors import *
 import top_par as tp
-import pyn_fort_general as faux
-import pyn_math as pyn_math
+import libgeneral as faux
+from libmss import glob as mss_funcs
+import libmath as libmath
+
+### topologies added by user
+for ii in tp.user_topol:
+    tp.add_topol(tp,ii)
 
 #
 # Structure of the file:
@@ -164,12 +169,13 @@ class cl_water(labels_set):             # Attributes of a water molecule
 class molecule(labels_set):               # The suptra-estructure: System (waters+cofactors+proteins...)
 
     
-    def __init__(self,input_file=None,download=None,coors=True,verbose=True,with_bonds=True,missing_atoms=True):
+    def __init__(self,input_file=None,download=None,coors=False,verbose=False,with_bonds=True,missing_atoms=True):
 
         # From labels_set: .name, .index, .pdb_index, .num_atoms, .list_atoms
 
         # > Instantation options:
-        self.file_topol=input_file       # pdb,gro...
+        self.file_topol=input_file       # input file name
+        self.file_topol_type=input_file.split('.')[-1] # pdb,gro,psf
         self.file_hbonds=''             # still not useful -do not remove-
         self.file_mss=''                # still not useful -do not remove-
         self.file_shell=''              # still not useful -do not remove-
@@ -269,35 +275,45 @@ class molecule(labels_set):               # The suptra-estructure: System (water
                     temp_residue.list_atoms=[]
                     temp_residue.pdb_index=atom.resid.pdb_index
                     temp_residue.name=atom.resid.name
-                    temp_residue.type=tp.residue_type[atom.resid.name]
-                    temp_residue.__int_name__=tp.residue[atom.resid.name]
-                    xxx_resid_type=temp_residue.type
-                    xxx_resid__int_name__=temp_residue.__int_name__
                     temp_residue.chain.name=atom.chain.name
                     temp_residue.chain.index=kk
                     temp_residue.__int_dict_atoms__={}
+                    temp_residue.type=tp.residue_type[temp_residue.name]
                     self.resid.append(temp_residue)
                 ii+=1                                      #### Atom
                 atom.index=ii                   
-                atom.resid.index=jj             
+                atom.resid.index=jj
+                atom.resid.type=self.resid[jj].type
                 atom.chain.index=kk
                 atom.hbonds=[]
-                atom.__int_name__=tp.atom[atom.name]
-                atom.type=tp.atom_type[atom.__int_name__]
-                atom.resid.__int_name__=xxx_resid__int_name__
-                atom.resid.type=xxx_resid_type
                 self.resid[jj].list_atoms.append(ii)
-                self.resid[jj].__int_dict_atoms__[atom.__int_name__]=ii
                 self.chain[kk].list_atoms.append(ii)
-                if atom.type=='H':
+
+            if self.file_topol_type not in ['psf']:
+                for residue in self.resid:
+                    residue.__int_name__=tp.residue[residue.name]
+                for atom in self.atom:
+                    jj=atom.resid.index
+                    atom.resid.__int_name__=self.resid[jj].__int_name__
+                    atom.__int_name__=tp.atom[atom.name]
+                    atom.type=tp.atom_type[atom.__int_name__]
+                    self.resid[jj].__int_dict_atoms__[atom.__int_name__]=atom.index
+                    if atom.type=='H':
                         without_hs=False
+            else:
+                for residue in self.resid:
+                    if residue.type=='Water':
+                        residue.__int_name__=tp.residue[residue.name]
+                        for ii in residue.list_atoms:
+                            self.atom[ii].__int_name__=tp.atom[self.atom[ii].name]
+                            residue.__int_dict_atoms__[self.atom[ii].__int_name__]=ii
 
             ### Setting up the subsets.
 
             for residue in self.resid[:]:
              
                 if residue.type=='Water':       ### Waters
-             
+                    
                     if without_hs:
                         residue.__int_name__='SOL3'
                     else:
@@ -345,131 +361,131 @@ class molecule(labels_set):               # The suptra-estructure: System (water
 
 
             ### Setting up the local attributes
+            if self.file_topol_type not in ['psf']:
+                # Topology and Covalent bonds
 
-            # Topology and Covalent bonds
-
-            if with_bonds:
-
-                for residue in self.resid[:]:
-
-                    # Found, missing or unknown atoms in the residue and its topology
-                    jj=residue.index
-                    tp_residue_name=residue.__int_name__
-                    tp_residue_atoms=tp.residue_atoms[tp_residue_name]
-                    found=residue.__int_dict_atoms__.keys()
-                    if without_hs:
-                        aux=ccopy.deepcopy(tp_residue_atoms)
-                        for ii in tp_residue_atoms:
-                            if tp.atom_type[ii]=='H':
-                                aux.remove(ii)
-                        tp_residue_atoms=aux
-                    missing=list(set(tp_residue_atoms).difference(found))
-                    unknown=list(set(found).difference(tp_residue_atoms))
-
-                    # Covalent bonds: Topology residue
-                    for ii in tp.covalent_bonds[tp_residue_name]:
-                        try:
-                            aa=residue.__int_dict_atoms__[ii[0]]
-                            bb=residue.__int_dict_atoms__[ii[1]]
-                            self.atom[aa].covalent_bonds.append(bb)
-                            self.atom[bb].covalent_bonds.append(aa)
-                        except:
-                            pass
-
-                    # Peptide bond [C(i)->N(i+1)]
-                    try:
-                        next_residue=self.resid[residue.index+1]
-                        if residue.type=='Protein' and next_residue.type=='Protein':
-                            if residue.chain.name==next_residue.chain.name :
-                                aa=residue.__int_dict_atoms__['atC']
-                                bb=next_residue.__int_dict_atoms__['atN']
-                                self.atom[aa].covalent_bonds.append(bb)
-                                self.atom[bb].covalent_bonds.append(aa)
-                    except:
-                        pass
-
-                    # Covalent bonds: Terminals
-                    unk2rm={}; miss2rm={}
-                    if unknown:
-                        for jj in (missing+['none']):
-                            for ii in unknown:
-                                try: 
-                                    kk=tp.terminal_bonds[jj][ii]
-                                    aa=residue.__int_dict_atoms__[ii]
-                                    bb=residue.__int_dict_atoms__[kk]
-                                    self.atom[aa].covalent_bonds.append(bb)
-                                    self.atom[bb].covalent_bonds.append(aa)
-                                    if jj!='none': 
-                                        miss2rm[jj]=''
-                                    unk2rm[ii]=''
-                                except:
-                                    pass
-                        for aa in miss2rm.keys():
-                            missing.remove(aa)
-                        for aa in unk2rm.keys():
-                            unknown.remove(aa)
-
-                    # Listing missing or unknown atoms
-                    if missing_atoms:
-                        for ii in missing:
-                            print '# No atom type',ii,'in', residue.name, residue.pdb_index
-                        for ii in unknown:
-                            print '# Unknown atom type',ii,'in', residue.name, residue.pdb_index
-
-
-            # Charge
-
-            for atom in self.atom[:]:
-                if tp.atom[atom.name] in tp.charge:
-                    atom.charge=tp.charge[tp.atom[atom.name]]
-
-            # Acceptors-Donors
-
-            for atom in self.atom[:]:
-                # Donors default
-                if atom.__int_name__ in tp.donors: 
-                    atom.donor=True
-                # Donors exceptions
-                if atom.__int_name__ in tp.donors_with_exceptions:
-                    try:
-                        exception=donors_exception[atom.__int_name__][atom.resid.__int_name__]
-                        if exception[0]=='Always':
-                            atom.donor=exception[1]
-                        elif exception[0]=='Without H':
-                            if 'H' not in [self.atom[ii].type for ii in atom.covalent_bonds]:
-                                atom.donor=exception[1]
-                        else:
-                            print '# Error with donors exceptions:', atom.name, atom.resid.name
-                    except:
-                        pass
-                # Acceptors default
-                if atom.__int_name__ in tp.acceptors: 
-                    atom.acceptor=True
-                # Acceptors exceptions
-                if atom.__int_name__ in tp.acceptors_with_exceptions:
-                    try:
-                        exception=acceptors_exception[atom.__int_name__][tp.resid.__int_name__]
-                        if exception[0]=='Always':
-                            atom.acceptor=exception[1]
-                        elif exception[0]=='With H':
-                            if 'H' in [self.atom[ii].type for ii in atom.covalent_bonds]:
-                                atom.acceptor=exception[1]
-                        else:
-                            print '# Error with acceptors exceptions:', atom.name, atom.resid.name
-                    except:
-                        pass
-                
-                if atom.acceptor:
-                    self.acceptors.append(atom.index)
-
-                if atom.donor:
-                    for ii in atom.covalent_bonds:
-                        if self.atom[ii].type=='H':
-                            self.donors[0].append(atom.index)
-                            self.donors[1].append(ii)
-
-            self.acceptors=numpy.array(self.acceptors,dtype=int,order='Fortran')
-            self.donors=numpy.array(self.donors,dtype=int,order='Fortran')
+                 if with_bonds:
+                  
+                     for residue in self.resid[:]:
+                  
+                         # Found, missing or unknown atoms in the residue and its topology
+                         jj=residue.index
+                         tp_residue_name=residue.__int_name__
+                         tp_residue_atoms=tp.residue_atoms[tp_residue_name]
+                         found=residue.__int_dict_atoms__.keys()
+                         if without_hs:
+                             aux=ccopy.deepcopy(tp_residue_atoms)
+                             for ii in tp_residue_atoms:
+                                 if tp.atom_type[ii]=='H':
+                                     aux.remove(ii)
+                             tp_residue_atoms=aux
+                         missing=list(set(tp_residue_atoms).difference(found))
+                         unknown=list(set(found).difference(tp_residue_atoms))
+                  
+                         # Covalent bonds: Topology residue
+                         for ii in tp.covalent_bonds[tp_residue_name]:
+                             try:
+                                 aa=residue.__int_dict_atoms__[ii[0]]
+                                 bb=residue.__int_dict_atoms__[ii[1]]
+                                 self.atom[aa].covalent_bonds.append(bb)
+                                 self.atom[bb].covalent_bonds.append(aa)
+                             except:
+                                 pass
+                  
+                         # Peptide bond [C(i)->N(i+1)]
+                         try:
+                             next_residue=self.resid[residue.index+1]
+                             if residue.type=='Protein' and next_residue.type=='Protein':
+                                 if residue.chain.name==next_residue.chain.name :
+                                     aa=residue.__int_dict_atoms__['atC']
+                                     bb=next_residue.__int_dict_atoms__['atN']
+                                     self.atom[aa].covalent_bonds.append(bb)
+                                     self.atom[bb].covalent_bonds.append(aa)
+                         except:
+                             pass
+                  
+                         # Covalent bonds: Terminals
+                         unk2rm={}; miss2rm={}
+                         if unknown:
+                             for jj in (missing+['none']):
+                                 for ii in unknown:
+                                     try: 
+                                         kk=tp.terminal_bonds[jj][ii]
+                                         aa=residue.__int_dict_atoms__[ii]
+                                         bb=residue.__int_dict_atoms__[kk]
+                                         self.atom[aa].covalent_bonds.append(bb)
+                                         self.atom[bb].covalent_bonds.append(aa)
+                                         if jj!='none': 
+                                             miss2rm[jj]=''
+                                         unk2rm[ii]=''
+                                     except:
+                                         pass
+                             for aa in miss2rm.keys():
+                                 missing.remove(aa)
+                             for aa in unk2rm.keys():
+                                 unknown.remove(aa)
+                  
+                         # Listing missing or unknown atoms
+                         if missing_atoms:
+                             for ii in missing:
+                                 print '# No atom type',ii,'in', residue.name, residue.pdb_index
+                             for ii in unknown:
+                                 print '# Unknown atom type',ii,'in', residue.name, residue.pdb_index
+                  
+                  
+                 # Charge
+                  
+                 for atom in self.atom[:]:
+                     if tp.atom[atom.name] in tp.charge:
+                         atom.charge=tp.charge[tp.atom[atom.name]]
+                  
+                 # Acceptors-Donors
+                  
+                 for atom in self.atom[:]:
+                     # Donors default
+                     if atom.__int_name__ in tp.donors: 
+                         atom.donor=True
+                     # Donors exceptions
+                     if atom.__int_name__ in tp.donors_exception:
+                         try:
+                             exception=tp.donors_exception[atom.__int_name__][atom.resid.__int_name__]
+                             if exception[0]=='Always':
+                                 atom.donor=exception[1]
+                             elif exception[0]=='Without H':
+                                 if 'H' not in [self.atom[ii].type for ii in atom.covalent_bonds]:
+                                     atom.donor=exception[1]
+                             else:
+                                 print '# Error with donors exceptions:', atom.name, atom.resid.name
+                         except:
+                             pass
+                     # Acceptors default
+                     if atom.__int_name__ in tp.acceptors: 
+                         atom.acceptor=True
+                     # Acceptors exceptions
+                     if atom.__int_name__ in tp.acceptors_exception:
+                         try:
+                             exception=tp.acceptors_exception[atom.__int_name__][atom.resid.__int_name__]
+                             if exception[0]=='Always':
+                                 atom.acceptor=exception[1]
+                             elif exception[0]=='With H':
+                                 if 'H' in [self.atom[ii].type for ii in atom.covalent_bonds]:
+                                     atom.acceptor=exception[1]
+                             else:
+                                 print '# Error with acceptors exceptions:', atom.name, atom.resid.name
+                         except:
+                             pass
+                     
+                     if atom.acceptor:
+                         self.acceptors.append(atom.index)
+                  
+                     if atom.donor:
+                         for ii in atom.covalent_bonds:
+                             if self.atom[ii].type=='H':
+                                 self.donors[0].append(atom.index)
+                                 self.donors[1].append(ii)
+                  
+                 self.acceptors=numpy.array(self.acceptors,dtype=int,order='Fortran')
+                 self.donors=numpy.array(self.donors,dtype=int,order='Fortran')
 
             ### Setting up the global attributes
 
@@ -484,6 +500,7 @@ class molecule(labels_set):               # The suptra-estructure: System (water
 
 
             ### Loading coordinates
+            if self.file_topol_type in ['psf']: coors=False
             if coors:
                 self.load_traj(self.file_topol,frame='ALL',verbose=False)
 
@@ -570,6 +587,63 @@ class molecule(labels_set):               # The suptra-estructure: System (water
                 self.atom.append(temp_atom)
 
             fff.close()
+
+        if name_file.endswith('psf'):
+
+            fff=open(name_file,'r')
+
+            line=fff.readline()
+            if not line.startswith('PSF'):
+                print '# Error: uknown PSF format'
+                return
+
+            line=fff.readline()
+            line=fff.readline()
+            num_head_lines=int(line.split()[0])
+            for ii in range(num_head_lines):
+                line=fff.readline()
+
+            line=fff.readline()
+
+            line=fff.readline()
+            self.num_atoms=int(line.split()[0])
+            if line.split()[1]!='!NATOM':
+                print '# Error: uknown PSF format'
+                return
+
+            for ii in range(self.num_atoms):
+                temp_atom=cl_unit()
+                line=fff.readline()
+                xx=line.split()
+                temp_atom.pdb_index=int(xx[0])
+                temp_atom.chain.name=xx[1]
+                temp_atom.resid.pdb_index=int(xx[2]) 
+                temp_atom.resid.name=xx[3]
+                temp_atom.name=xx[4]
+                temp_atom.type_pdb=xx[5]
+                temp_atom.charge=float(xx[6])
+                temp_atom.mass=float(xx[7])
+                self.atom.append(temp_atom)
+
+            line=fff.readline()
+            line=fff.readline()
+            numbonds=int(line.split()[0])
+            if line.split()[1]!='!NBOND:':
+                print '# Error: uknown PSF format'
+                return
+            aa=0
+            while aa<numbonds:
+                line=fff.readline()
+                bb=0
+                xx=line.split()
+                cc=len(xx)
+                while bb<cc:
+                    b1=int(xx[bb])-1
+                    b2=int(xx[bb+1])-1
+                    bb+=2
+                    self.atom[b1].covalent_bonds.append(b2)
+                    self.atom[b2].covalent_bonds.append(b1)
+                aa+=bb
 
     def write_pdb (self,filename=None):
         
@@ -666,7 +740,7 @@ class molecule(labels_set):               # The suptra-estructure: System (water
 
         pass
 
-    def load_traj (self,file_input=None,frame=None,begin=None,end=None,increment=1,units='frames',verbose=True):
+    def load_traj (self,file_input=None,frame=None,begin=None,end=None,increment=1,units='frames',verbose=False):
 
         temp_traj=cl_traj(file_input,frame,begin,end,increment,units,verbose=False)
         if verbose:
@@ -990,7 +1064,7 @@ class molecule(labels_set):               # The suptra-estructure: System (water
 
         setA,nlist_A,nsys_A,setB,nlist_B,nsys_B,diff_syst,diff_set=__read_sets_opt__(self,setA,None,setB)
 
-        xxx=pyn_math.binning(None,bins,segment,None,None)
+        xxx=libmath.binning(None,bins,segment,None,None)
         rdf_tot=numpy.zeros(shape=(bins),dtype=float,order='Fortran')
         num_frames=0
         for iframe in __read_frame_opt__(self,traj,frame):
@@ -1142,6 +1216,9 @@ class molecule(labels_set):               # The suptra-estructure: System (water
 
             if infile:
 
+                if type(frame) in [int]:
+                    frame=[frame]
+
                 if type(frame) not in [list,tuple]:
                     print '# "frame" must be a list'
                     return
@@ -1233,6 +1310,9 @@ class molecule(labels_set):               # The suptra-estructure: System (water
             faux.hbonds.roo2_param, faux.hbonds.cos_angooh_param= roo_param**2, numpy.cos(numpy.radians(angooh_param))
 
             if infile:
+
+                if type(frame) in [int]:
+                    frame=[frame]
 
                 if type(frame) not in [list,tuple]:
                     print '# "frame" must be a list'
@@ -1342,6 +1422,381 @@ class molecule(labels_set):               # The suptra-estructure: System (water
 
             #if verbose:
             #    print 'Listo'
+        pass
+
+
+    def mss_hbonds_wat(self,definition=1,hbonds=None,bonds=None,verbose=True):
+        
+        mss_funcs.definition_hbs=faux.hbonds.definition
+
+        if hbonds==None:
+            print '# hbonds needed.'
+            return
+
+        if definition==1:
+
+            aux=numpy.zeros((self.num_atoms,3),dtype=int,order='F')
+
+            for ii in range(len(self.water)):
+                jo=self.water[ii].O.index
+                jh1=self.water[ii].H1.index
+                jh2=self.water[ii].H2.index
+                aux[jo,0]=ii
+                aux[jo,1]=0
+                aux[jh1,0]=ii
+                aux[jh1,1]=1
+                aux[jh2,0]=ii
+                aux[jh2,1]=2
+
+
+            #for hbs in hbonds:
+            #    print hbs[1]
+            #print hbonds[0].shape,hbonds[1].shape
+            aux=numpy.array(aux,dtype=int,order='F')
+
+            if type(hbonds[0][0][0]) in [numpy.ndarray]:
+                mss_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
+                mss_ind_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
+                for jj in range(len(hbonds)):
+                    num_hbs=hbonds[jj][0].shape[0]
+                    mss_ind=mss_funcs.ind_wat_limit_4_nosim(aux,hbonds[jj][0],hbonds[jj][1],self.num_waters,self.num_atoms,num_hbs)
+                    mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
+                    mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
+                    mss_tot[jj,:,:]=mss[:,:]
+                    mss_ind_tot[jj,:,:]=mss_ind[:,:]
+                return mss_tot,mss_ind_tot
+
+            else:
+                num_hbs=hbonds[0].shape[0]
+                mss_ind=mss_funcs.ind_wat_limit_4_nosim(aux,hbonds[0],hbonds[1],self.num_waters,self.num_atoms,num_hbs)
+                mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
+                mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
+
+                return mss,mss_ind
+
+    def mss_hbonds_wat_prot(self,definition=1,hbonds=None,verbose=True):
+        
+        mss_funcs.definition_hbs=faux.hbonds.definition
+
+        if hbonds==None:
+            print '# hbonds needed.'
+            return
+
+        if definition==1:
+
+            aux=numpy.zeros((self.num_atoms,3),dtype=int,order='F')
+            filt_water=numpy.zeros(self.num_atoms,dtype=bool,order='F')
+
+            for ii in range(len(self.water)):
+                jo=self.water[ii].O.index
+                jh1=self.water[ii].H1.index
+                jh2=self.water[ii].H2.index
+                aux[jo,0]=ii
+                aux[jo,1]=0
+                aux[jh1,0]=ii
+                aux[jh1,1]=1
+                aux[jh2,0]=ii
+                aux[jh2,1]=2
+                filt_water[jo]=True
+                filt_water[jh1]=True
+                filt_water[jh2]=True
+
+            #for hbs in hbonds:
+            #    print hbs[1]
+            #print hbonds[0].shape,hbonds[1].shape
+            aux=numpy.array(aux,dtype=int,order='F')
+
+            if type(hbonds[0][0][0]) in [numpy.ndarray]:
+                mss_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
+                mss_ind_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
+                for jj in range(len(hbonds)):
+                    num_hbs=hbonds[jj][0].shape[0]
+                    mss_ind=mss_funcs.ind_wat_limit_4_nosim_prot(aux,hbonds[jj][0],hbonds[jj][1],self.num_waters,self.num_atoms,num_hbs)
+                    mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
+                    mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
+                    mss_tot[jj,:,:]=mss[:,:]
+                    mss_ind_tot[jj,:,:]=mss_ind[:,:]
+                return mss_tot,mss_ind_tot
+
+            else:
+                num_hbs=hbonds[0].shape[0]
+                mss_ind=mss_funcs.ind_wat_limit_4_nosim_prot(aux,filt_water,hbonds[0],hbonds[1],self.num_waters,self.num_atoms,num_hbs)
+                mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
+                mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
+
+                return mss,mss_ind
+
+
+
+    def mss_hbonds_wation(self,definition=1,hbonds=None,bonds=None,tipo=1,verbose=True):
+        
+        mss_funcs.definition_hbs=faux.hbonds.definition
+
+        if hbonds==None:
+            print '# hbonds needed.'
+            return
+
+        if definition==1:
+
+            aux=numpy.zeros((self.num_atoms,3),dtype=int,order='F')
+
+            for ii in range(len(self.water)):
+                jo=self.water[ii].O.index
+                jh1=self.water[ii].H1.index
+                jh2=self.water[ii].H2.index
+                aux[jo,0]=ii
+                aux[jo,1]=0
+                aux[jh1,0]=ii
+                aux[jh1,1]=1
+                aux[jh2,0]=ii
+                aux[jh2,1]=2
+
+
+            #for hbs in hbonds:
+            #    print hbs[1]
+            #print hbonds[0].shape,hbonds[1].shape
+            aux=numpy.array(aux,dtype=int,order='F')
+            
+            if bonds==None:
+                if type(hbonds[0][0][0]) in [numpy.ndarray]:
+                    mss_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
+                    mss_ind_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
+                    for jj in range(len(hbonds)):
+                        num_hbs=hbonds[jj][0].shape[0]
+                        mss_ind=mss_funcs.ind_wat_limit_4_nosim(aux,hbonds[jj][0],hbonds[jj][1],self.num_waters,self.num_atoms,num_hbs)
+                        mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
+                        mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
+                        mss_tot[jj,:,:]=mss[:,:]
+                        mss_ind_tot[jj,:,:]=mss_ind[:,:]
+                    return mss_tot,mss_ind_tot
+                else:
+                    num_hbs=hbonds[0].shape[0]
+                    mss_ind=mss_funcs.ind_wat_limit_4_nosim(aux,hbonds[0],hbonds[1],self.num_waters,self.num_atoms,num_hbs)
+                    mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
+                    mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
+                    return mss,mss_ind
+            else:
+                num_bonds=len(bonds)
+                if type(hbonds[0][0][0]) in [numpy.ndarray]:
+                    mss_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
+                    mss_ind_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
+                    for jj in range(len(hbonds)):
+                        num_hbs=hbonds[jj][0].shape[0]
+                        mss_ind=mss_funcs.ind_wat_limit_4_nosim(aux,hbonds[jj][0],hbonds[jj][1],self.num_waters,self.num_atoms,num_hbs)
+                        mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
+                        mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
+                        mss_tot[jj,:,:]=mss[:,:]
+                        mss_funcs.addbonds(tipo,mss,mss_ind,bonds,self.num_waters,num_bonds)
+                        mss_ind_tot[jj,:,:]=mss_ind[:,:]
+                    return mss_tot,mss_ind_tot
+                else:
+                    num_hbs=hbonds[0].shape[0]
+                    mss_ind=mss_funcs.ind_wat_limit_4_nosim(aux,hbonds[0],hbonds[1],self.num_waters,self.num_atoms,num_hbs)
+                    mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
+                    mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
+                    mss_funcs.addbonds(tipo,mss,mss_ind,bonds,self.num_waters,num_bonds)
+                    return mss,mss_ind
+
+
+
+#    def mss_hbonds (self,definition=None,set_A=None,set_B=None,acc_don_A=None,acc_don_B=None,traj=0,frame=0,sk_param=0.00850,roh_param=2.3000,roo_param=3.50,angooh_param=30.0,optimize=False,pbc=True,verbose=False):
+# 
+#        opt_effic=0
+#        opt_diff_syst=0
+#        opt_diff_set=1
+#        opt_pbc=0
+#        if pbc:
+#            opt_pbc=1
+# 
+# 
+#        if acc_don_A==None and acc_don_B==None:
+#            if set_A==None:
+#                print 'set_A and/or set_B needed'
+#                return
+#            else:
+#                acc_don_A=self.selection_hbonds(setA=set_A,verbose=False)
+#                if set_B==None:
+#                    acc_don_B=acc_don_A
+#                    opt_diff_set=0
+#                else:
+#                    acc_don_B=self.selection_hbonds(setA=set_B,verbose=False)
+#        else:
+#            if acc_don_B==None:
+#                acc_don_B=acc_don_A
+#                opt_diff_set=0
+# 
+# 
+#        nA_acc       = acc_don_A[0].shape[0]
+#        nA_acc_sH    = acc_don_A[1].shape[0] # Just for water and skinner, topological, etc...
+#        nA_acc_H     = acc_don_A[2].shape[0] # Just for water and skinner, topological, etc...
+#        nA_don       = acc_don_A[3].shape[0]
+#        nA_don_sH    = acc_don_A[4].shape[0]
+#        nA_don_H     = acc_don_A[5].shape[0]
+#        allwat_A     = acc_don_A[6]
+#        nB_acc       = acc_don_B[0].shape[0]
+#        nB_acc_sH    = acc_don_B[1].shape[0] # Just for water and skinner, topological, etc...
+#        nB_acc_H     = acc_don_B[2].shape[0] # Just for water and skinner, topological, etc...
+#        nB_don       = acc_don_B[3].shape[0]
+#        nB_don_sH    = acc_don_B[4].shape[0]
+#        nB_don_H     = acc_don_B[5].shape[0]
+#        allwat_B     = acc_don_B[6]
+# 
+# 
+#        num_frames=__length_frame_opt__(self,traj,frame)
+# 
+#        faux.hbonds.definition=hbonds_type(definition,verbose=False)
+#        if faux.hbonds.definition == 0 : 
+#            return
+#        
+#        elif faux.hbonds.definition == 1 : 
+#            faux.hbonds.sk_param=sk_param
+#            if not (allwat_A and allwat_B):
+#                print '# This type of hbond only works for water molecules.'
+#            print 'Not implemented yet'
+#            pass
+# 
+#        elif faux.hbonds.definition == 2 : 
+#            faux.hbonds.roh2_param= roh_param**2
+#            print 'Not implemented yet'
+#            pass
+# 
+#        elif faux.hbonds.definition == 3 : # ROO_ANG
+#            faux.hbonds.roo2_param, faux.hbonds.cos_angooh_param= roo_param**2, numpy.cos(numpy.radians(angooh_param))
+# 
+#            if optimize:
+#                gg=0
+#                hbout=[]
+#                for iframe in __read_frame_opt__(self,traj,frame):
+#                    if (gg==0): 
+#                        self.verlet_list_grid_ns(r1=roo_param,r2=roo_param,rcell=roo_param,iframe=iframe)
+#                    else:
+#                        self.verlet_list_grid_ns(r1=roo_param,r2=roo_param,rcell=roo_param,iframe=iframe,update=True)
+# 
+#                    faux.hbonds.get_hbonds_roo_ang_ns_list( opt_diff_set, opt_pbc, \
+#                                           acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
+#                                           iframe.coors,iframe.box,iframe.orthogonal, \
+#                                           acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
+#                                           nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
+#                                           nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
+#                                           self.num_atoms)
+# 
+#                    hbout.append([faux.glob.hbs_out,faux.glob.hbs_vals_out])
+#                    gg+=1
+#            else:
+#                hbout=[]
+#                gg=0
+#                for iframe in __read_frame_opt__(self,traj,frame):
+#                    faux.hbonds.get_hbonds_roo_ang( opt_diff_set, opt_pbc, \
+#                                                        acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
+#                                                        iframe.coors,iframe.box,iframe.orthogonal, \
+#                                                        acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
+#                                                        nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
+#                                                        nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
+#                                                        self.num_atoms)
+#                    hbout.append([faux.glob.hbs_out,faux.glob.hbs_vals_out])
+#                    gg+=1
+# 
+#            if gg==1:
+#                return hbout[0]
+#            else:
+#                return hbout
+# 
+#        elif faux.hbonds.definition == 4 : 
+#            if not (allwat_A and allwat_B):
+#                print '# This type of hbond only works for water molecules.'
+#            print 'Not implemented yet'
+#            pass
+# 
+#        elif faux.hbonds.definition == 5 : 
+#            if not (allwat_A and allwat_B):
+#                print '# This type of hbond only works for water molecules.'
+#            print 'Not implemented yet'
+#            pass
+# 
+#        elif faux.hbonds.definition == 6 : 
+#            faux.hbonds.cos_angooh_param= numpy.cos(numpy.radians(angooh_param))
+#            if not (allwat_A and allwat_B):
+#                print '# This type of hbond only works for water molecules.'
+#            print 'Not implemented yet'
+#            pass
+# 
+#        elif faux.hbonds.definition == 7 : 
+#            if not (allwat_A and allwat_B):
+#                print '# This type of hbond only works for water molecules.'
+#            print 'Not implemented yet'
+#            pass
+# 
+#            #if verbose:
+#            #    print 'Listo'
+#        pass
+
+
+    def hbonds2 (self,definition=None,set_A=None,set_B=None,acc_don_A=None,acc_don_B=None,traj=0,frame=0,sk_param=0.00850,roh_param=2.3000,roo_param=3.5,angooh_param=30.0,optimize=False,pbc=True,verbose=False):
+
+        opt_effic=0
+        opt_diff_syst=0
+        opt_diff_set=1
+        opt_pbc=0
+        if pbc:
+            opt_pbc=1
+
+        if acc_don_A==None and acc_don_B==None:
+            if set_A==None:
+                print 'set_A and/or set_B needed'
+                return
+            else:
+                acc_don_A=self.selection_hbonds(setA=set_A,verbose=False)
+                if set_B==None:
+                    acc_don_B=acc_don_A
+                    opt_diff_set=0
+                else:
+                    acc_don_B=self.selection_hbonds(setA=set_B,verbose=False)
+        else:
+            if acc_don_B==None:
+                acc_don_B=acc_don_A
+                opt_diff_set=0
+
+
+        nA_acc       = acc_don_A[0].shape[0]
+        nA_acc_sH    = acc_don_A[1].shape[0] # Just for water and skinner, topological, etc...
+        nA_acc_H     = acc_don_A[2].shape[0] # Just for water and skinner, topological, etc...
+        nA_don       = acc_don_A[3].shape[0]
+        nA_don_sH    = acc_don_A[4].shape[0]
+        nA_don_H     = acc_don_A[5].shape[0]
+        allwat_A     = acc_don_A[6]
+        nB_acc       = acc_don_B[0].shape[0]
+        nB_acc_sH    = acc_don_B[1].shape[0] # Just for water and skinner, topological, etc...
+        nB_acc_H     = acc_don_B[2].shape[0] # Just for water and skinner, topological, etc...
+        nB_don       = acc_don_B[3].shape[0]
+        nB_don_sH    = acc_don_B[4].shape[0]
+        nB_don_H     = acc_don_B[5].shape[0]
+        allwat_B     = acc_don_B[6]
+
+        natomA=self.num_atoms
+        natomB=self.num_atoms
+        num_frames=__length_frame_opt__(self,traj,frame)
+
+        faux.hbonds.definition=hbonds_type(definition,verbose=False)
+
+        if faux.hbonds.definition == 3 : # ROO_ANG
+            faux.hbonds.roo2_param, faux.hbonds.cos_angooh_param= roo_param**2, numpy.cos(numpy.radians(angooh_param))
+            
+            gg=0
+            for iframe in __read_frame_opt__(self,traj,frame):
+                if (gg==0): 
+                    self.verlet_list_grid_ns(r1=3.5,r2=3.5,rcell=3.5,iframe=iframe)
+                else:
+                    self.verlet_list_grid_ns(r1=3.5,r2=3.5,rcell=3.5,iframe=iframe,update=True)
+                    faux.hbonds.get_hbonds_roo_ang_ns_list(opt_effic, opt_diff_syst, opt_diff_set, opt_pbc, \
+                                                       acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
+                                                       iframe.coors,iframe.box,iframe.orthogonal, \
+                                                       acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
+                                                       iframe.coors,nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
+                                                       nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
+                                                       natomA,natomB)
+                gg+=1
+
+
         pass
 
 
