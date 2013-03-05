@@ -1,4 +1,0 @@
-@ directed=True
-# node node weight
-A B 100
-B A 100
