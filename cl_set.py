@@ -621,6 +621,7 @@ class molecule(labels_set):               # The suptra-estructure: System (water
                 temp_atom.resid.name=xx[3]
                 temp_atom.name=xx[4]
                 temp_atom.type_pdb=xx[5]
+                temp_atom.type=xx[5]
                 temp_atom.charge=float(xx[6])
                 temp_atom.mass=float(xx[7])
                 self.atom.append(temp_atom)
