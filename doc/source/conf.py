@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Pynoramix documentation build configuration file, created by
+# Aqua documentation build configuration file, created by
 # sphinx-quickstart on Sun Jun 17 19:50:28 2012.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -52,7 +52,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Pynoramix'
+project = u'Aqua'
 copyright = u'2012, Diego Prada-Gracia'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -176,7 +176,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'Pynoramixdoc'
+htmlhelp_basename = 'Aquadoc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -195,7 +195,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'Pynoramix.tex', u'Pynoramix Documentation',
+  ('index', 'Aqua.tex', u'Aqua Documentation',
    u'Diego Prada-Gracia', 'manual'),
 ]
 
@@ -225,7 +225,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'pynoramix', u'Pynoramix Documentation',
+    ('index', 'aqua', u'Aqua Documentation',
      [u'Diego Prada-Gracia'], 1)
 ]
 
@@ -239,8 +239,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'Pynoramix', u'Pynoramix Documentation',
-   u'Diego Prada-Gracia', 'Pynoramix', 'One line description of project.',
+  ('index', 'Aqua', u'Aqua Documentation',
+   u'Diego Prada-Gracia', 'Aqua', 'One line description of project.',
    'Miscellaneous'),
 ]
 
