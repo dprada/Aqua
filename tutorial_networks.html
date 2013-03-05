@@ -1,0 +1,523 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Tutorial Networks &mdash; Pynoramix 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Pynoramix 0.1 documentation" href="index.html" />
+    <link rel="next" title="Tutorial Kinetic Analysis" href="tutorial_kinetic_analysis.html" />
+    <link rel="prev" title="Tutorial Molecular Systems" href="tutorial_molecular_systems.html" /> 
+  </head>
+  <body>
+
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="index.html"><img src="_static/logo.gif" border="0" alt="py4sci"/></a>
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="tutorial_kinetic_analysis.html" title="Tutorial Kinetic Analysis"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="tutorial_molecular_systems.html" title="Tutorial Molecular Systems"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">home</a>|&nbsp;</li>
+        <li><a href="search.html">search</a>|&nbsp;</li>
+ 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.gif" alt="Logo"/>
+            </a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Tutorial Networks</a><ul>
+<li><a class="reference internal" href="#networks">Networks</a><ul>
+<li><a class="reference internal" href="#a-network-from-scratch">A network from scratch</a></li>
+<li><a class="reference internal" href="#loading-networks-from-files">Loading networks from files</a></li>
+<li><a class="reference internal" href="#writting-networks">Writting networks</a></li>
+<li><a class="reference internal" href="#merging-networks">Merging networks</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#kinetic-networks">Kinetic Networks</a><ul>
+<li><a class="reference internal" href="#examples">Examples</a><ul>
+<li><a class="reference internal" href="#d-double-well">1D double well</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#symmetrize-network-detailed-balance">Symmetrize Network (detailed balance)</a></li>
+<li><a class="reference internal" href="#cfeps">cFEPs</a></li>
+<li><a class="reference internal" href="#dijkstra">Dijkstra</a></li>
+<li><a class="reference internal" href="#mfpt">MFPT</a></li>
+<li><a class="reference internal" href="#mcl">MCL</a></li>
+<li><a class="reference internal" href="#components">Components</a><ul>
+<li><a class="reference internal" href="#gigant-component">Gigant Component</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#extracting-subnetwork">Extracting subnetwork</a></li>
+<li><a class="reference internal" href="#weight-core">Weight-core</a></li>
+<li><a class="reference internal" href="#k-core">K-core</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#water">Water</a><ul>
+<li><a class="reference internal" href="#the-second-solvation-shell">The second solvation shell</a></li>
+<li><a class="reference internal" href="#the-kinetic-network">The Kinetic network</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#encoding-a-trajectory-into-a-kinetic-network">Encoding a trajectory into a Kinetic Network</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="tutorial_molecular_systems.html"
+                        title="previous chapter">Tutorial Molecular Systems</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="tutorial_kinetic_analysis.html"
+                        title="next chapter">Tutorial Kinetic Analysis</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/tutorial_networks.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="tutorial-networks">
+<h1>Tutorial Networks<a class="headerlink" href="#tutorial-networks" title="Permalink to this headline">¶</a></h1>
+<p>First of all, lets load Pynoramix in our script or in a ipython session:</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [1]: </span><span class="kn">from</span> <span class="nn">pynoramix_beta</span> <span class="kn">import</span> <span class="o">*</span>
+</pre></div>
+</div>
+<p>Some basic notions on python will be assumed along this tutorial. If you just landed here without any idea on python, have a look to the section <em>First steps on python</em>.</p>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<p class="last">Make a short tutorial on python, enough to run pynoramix.</p>
+</div>
+<hr class="docutils" />
+<div class="section" id="networks">
+<h2>Networks<a class="headerlink" href="#networks" title="Permalink to this headline">¶</a></h2>
+<p>How to create, load and handle a network.</p>
+<div class="section" id="a-network-from-scratch">
+<h3>A network from scratch<a class="headerlink" href="#a-network-from-scratch" title="Permalink to this headline">¶</a></h3>
+<p>Lets create as simple example a network of cities:</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [2]: </span><span class="n">cities</span><span class="o">=</span><span class="n">network</span><span class="p">()</span>
+<span class="c"># Network:</span>
+<span class="c"># 0 nodes</span>
+<span class="c"># 0 links out</span>
+<span class="c"># 0 total weight nodes</span>
+</pre></div>
+</div>
+<p>Nodes can be added in two ways, along or inferred by the links addition:</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [3]: </span><span class="n">cities</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s">&#39;Zaragoza&#39;</span><span class="p">)</span>
+<span class="gp">In [4]: </span><span class="n">cities</span><span class="o">.</span><span class="n">add_link</span><span class="p">(</span><span class="s">&#39;Rome&#39;</span><span class="p">,</span><span class="s">&#39;Brescia&#39;</span><span class="p">,</span><span class="mi">444</span><span class="p">)</span>
+<span class="gp">In [5]: </span><span class="n">cities</span><span class="o">.</span><span class="n">add_link</span><span class="p">(</span><span class="s">&#39;Rome&#39;</span><span class="p">,</span><span class="s">&#39;Zaragoza&#39;</span><span class="p">,</span><span class="mi">1112</span><span class="p">)</span>
+<span class="gp">In [6]: </span><span class="n">cities</span><span class="o">.</span><span class="n">add_link</span><span class="p">(</span><span class="s">&#39;Zaragoza&#39;</span><span class="p">,</span><span class="s">&#39;Kiev&#39;</span><span class="p">,</span><span class="mi">2561</span><span class="p">)</span>
+<span class="gp">In [7]: </span><span class="n">cities</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+<span class="c"># Network:</span>
+<span class="c"># 4 nodes</span>
+<span class="c"># 3 links out</span>
+<span class="c"># 0 total weight nodes</span>
+</pre></div>
+</div>
+<p>The nodes are attached to the network in order of creation:</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [7]: </span><span class="n">cities</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">label</span>
+<span class="gr">Out[7]: </span><span class="s">&#39;Zaragoza&#39;</span>
+<span class="gp">In [8]: </span><span class="n">cities</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">label</span>
+<span class="gr">Out[8]: </span><span class="s">&#39;Kiev&#39;</span>
+</pre></div>
+</div>
+<p>Links are stored as a dictionary for each node (see ref). Nodes are from now on referred because of their indexes.</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [9]: </span><span class="n">cities</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="s">&#39;Rome&#39;</span><span class="p">]</span>
+<span class="gr">Out[9]: </span><span class="mi">1</span>
+<span class="gp">In [10]: </span><span class="n">cities</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">link</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+<span class="gr">Out[10]: </span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="gp">In [11]: </span><span class="k">print</span> <span class="s">&#39;From Rome to Zaragoza: &#39;</span><span class="p">,</span> <span class="n">cities</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">link</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s">&#39;km.&#39;</span>
+<span class="go">From Rome to Zaragoza:  1112 km.</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">include here a link to the class definition and attributes.</p>
+</div>
+</div>
+<div class="section" id="loading-networks-from-files">
+<h3>Loading networks from files<a class="headerlink" href="#loading-networks-from-files" title="Permalink to this headline">¶</a></h3>
+<p>A network can be loaded together with their labels. Pynoramix uses its
+own compact format for the network, while the labels can be readed with many formats.
+This way a network can be initialized with the files or a posteriori:</p>
+<p>Loading a simple network from a columns file such as
+<a class="reference download internal" href="_downloads/net_ex1.inp"><tt class="xref download docutils literal"><span class="pre">net_ex1.inp</span></tt></a>,
+<a class="reference download internal" href="_downloads/net_ex2.inp"><tt class="xref download docutils literal"><span class="pre">net_ex2.inp</span></tt></a> or
+<a class="reference download internal" href="_downloads/net_ex3.inp"><tt class="xref download docutils literal"><span class="pre">net_ex3.inp</span></tt></a> can be
+done as follows:</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [2]: </span><span class="n">net1</span><span class="o">=</span><span class="n">network</span><span class="p">(</span><span class="s">&#39;net_ex1.inp&#39;</span><span class="p">)</span>
+<span class="c"># Network:</span>
+<span class="c"># 5 nodes</span>
+<span class="c"># 7 links out</span>
+<span class="c"># 0 total weight nodes</span>
+
+<span class="gp">In [4]: </span><span class="n">net2</span><span class="o">=</span><span class="n">network</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="gp">In [5]: </span><span class="n">net2</span><span class="o">.</span><span class="n">read_net</span><span class="p">(</span><span class="s">&#39;net_ex2.inp&#39;</span><span class="p">)</span>
+<span class="c"># Network:</span>
+<span class="c"># 5 nodes</span>
+<span class="c"># 5 links out</span>
+<span class="c"># 6.0 total weight nodes</span>
+</pre></div>
+</div>
+<p>And using an extra file for the labels, <a class="reference download internal" href="_downloads/labels_ex3.inp"><tt class="xref download docutils literal"><span class="pre">labels_ex3.inp</span></tt></a>, we can also:</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [6]: </span><span class="n">net3</span><span class="o">=</span><span class="n">network</span><span class="p">(</span><span class="s">&#39;net_ex3.inp&#39;</span><span class="p">,</span><span class="s">&#39;labels_ex3.inp&#39;</span><span class="p">)</span>
+<span class="c"># Network:</span>
+<span class="c"># 4 nodes</span>
+<span class="c"># 5 links out</span>
+<span class="c"># 24.0 total weight nodes</span>
+
+<span class="gp">In [7]: </span><span class="n">net3</span><span class="o">.</span><span class="n">labels</span><span class="p">()</span>
+<span class="gr">Out[7]: </span><span class="p">{</span><span class="s">&#39;Alexandra&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#39;Bob&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s">&#39;Liliana&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;Tom&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">}</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Describe the parameters needed in the text input files, and make a call to the subroutines of this part (like read_labels()).</p>
+</div>
+<p>The native format reduces the size of the file writting the topology of the network in a compact way.
+The labels must be loaded from a secondary file.</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [3]: </span><span class="n">net</span><span class="o">=</span><span class="n">network</span><span class="p">(</span><span class="n">file_net</span><span class="o">=</span><span class="s">&#39;net.pyn&#39;</span><span class="p">,</span><span class="n">net_format</span><span class="o">=</span><span class="s">&#39;native&#39;</span><span class="p">)</span>
+<span class="c"># Network:</span>
+<span class="c"># 979 nodes</span>
+<span class="c"># 22572 links out</span>
+<span class="c"># 9998950 total weight nodes</span>
+
+<span class="gp">In [4]: </span><span class="n">net</span><span class="o">.</span><span class="n">read_labels</span><span class="p">(</span><span class="s">&#39;labels.pyn&#39;</span><span class="p">,</span><span class="n">format</span><span class="o">=</span><span class="s">&#39;text&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [2]: </span><span class="n">net</span><span class="o">=</span><span class="n">network</span><span class="p">(</span><span class="n">file_net</span><span class="o">=</span><span class="s">&#39;net.pyn&#39;</span><span class="p">,</span><span class="n">file_labels</span><span class="o">=</span><span class="s">&#39;labels.pyn&#39;</span><span class="p">,</span><span class="n">net_format</span><span class="o">=</span><span class="s">&#39;native&#39;</span><span class="p">,</span><span class="n">labels_format</span><span class="o">=</span><span class="s">&#39;text&#39;</span><span class="p">)</span>
+<span class="c"># Network:</span>
+<span class="c"># 979 nodes</span>
+<span class="c"># 22572 links out</span>
+<span class="c"># 9998950 total weight nodes</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="writting-networks">
+<h3>Writting networks<a class="headerlink" href="#writting-networks" title="Permalink to this headline">¶</a></h3>
+<p>There are three formats of output: &#8216;native&#8217;, &#8216;labels&#8217;, &#8216;text&#8217;.</p>
+<p>The &#8216;native format&#8217; is a compact format not readable for other
+programs.  This format is recommended to work with pynoramix since the
+size of the file is smaller than the file created with &#8216;text&#8217;.</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [10]: </span><span class="n">net</span><span class="o">.</span><span class="n">write_net</span><span class="p">(</span><span class="n">name_file</span><span class="o">=</span><span class="s">&#39;net.pyn&#39;</span><span class="p">,</span><span class="n">format</span><span class="o">=</span><span class="s">&#39;native&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [10]: </span><span class="n">net</span><span class="o">.</span><span class="n">write_net</span><span class="p">(</span><span class="n">name_file</span><span class="o">=</span><span class="s">&#39;net.net&#39;</span><span class="p">,</span><span class="n">format</span><span class="o">=</span><span class="s">&#39;text&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The labels can also be written in an independent file.</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [10]: </span><span class="n">net</span><span class="o">.</span><span class="n">write_labels</span><span class="p">(</span><span class="n">name_file</span><span class="o">=</span><span class="s">&#39;labels.pyn&#39;</span><span class="p">,</span><span class="n">format</span><span class="o">=</span><span class="s">&#39;text&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="merging-networks">
+<h3>Merging networks<a class="headerlink" href="#merging-networks" title="Permalink to this headline">¶</a></h3>
+<p>Two networks can be merged into one. The function updates one of the
+networks appending the new nodes and links and adding up the value of
+the weights of overlapping nodes and links.</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [8]: </span><span class="n">net_12</span><span class="o">=</span><span class="n">network</span><span class="p">()</span>
+<span class="c"># Network:</span>
+<span class="c"># 0 nodes</span>
+<span class="c"># 0 links out</span>
+<span class="c"># 0 total weight nodes</span>
+
+<span class="gp">In [9]: </span><span class="n">net_12</span><span class="o">.</span><span class="n">merge_net</span><span class="p">(</span><span class="n">net1</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="gp">In [10]: </span><span class="n">net_12</span><span class="o">.</span><span class="n">merge_net</span><span class="p">(</span><span class="n">net2</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="gp">In [11]: </span><span class="n">net_12</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+<span class="c"># Network:</span>
+<span class="c"># 6 nodes</span>
+<span class="c"># 11 links out</span>
+<span class="c"># 6.0 total weight nodes</span>
+</pre></div>
+</div>
+</div>
+</div>
+<hr class="docutils" />
+<div class="section" id="kinetic-networks">
+<h2>Kinetic Networks<a class="headerlink" href="#kinetic-networks" title="Permalink to this headline">¶</a></h2>
+<p>This section is a tutorial on how to analyze kinetic networks. To
+illustrate the analysis some test networks are available.</p>
+<div class="section" id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="d-double-well">
+<h4>1D double well<a class="headerlink" href="#d-double-well" title="Permalink to this headline">¶</a></h4>
+<p>A kinetic network has been obtained for particle in a 1D potential:</p>
+<img src="_images/mathmpl/math-7ce60d85fd.png" class="center" /><p>The files for this network are available as <a class="reference download internal" href="_downloads/2w_1D.net"><tt class="xref download docutils literal"><span class="pre">2w_1D.net</span></tt></a> and <a class="reference download internal" href="_downloads/2w_1D.aux"><tt class="xref download docutils literal"><span class="pre">2w_1D.aux</span></tt></a>. Where the topology file is in
+the native format and the labels in text format.</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [2]: </span><span class="n">net_1D</span><span class="o">=</span><span class="n">network</span><span class="p">(</span><span class="s">&#39;2w_1D.net&#39;</span><span class="p">,</span><span class="s">&#39;2w_1D.aux&#39;</span><span class="p">,</span><span class="n">net_format</span><span class="o">=</span><span class="s">&#39;native&#39;</span><span class="p">)</span>
+<span class="c"># Network:</span>
+<span class="c"># 970 nodes</span>
+<span class="c"># 195638 links out</span>
+<span class="c"># 1000090000 total weight nodes</span>
+</pre></div>
+</div>
+<p>Since the label of each node corresponds to the bin of coordinate x, a
+single value on the midle of the bin can be given to each node as
+coordinate for representations.</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [3]: </span><span class="k">for</span> <span class="n">nn</span> <span class="ow">in</span> <span class="n">net_1D</span><span class="o">.</span><span class="n">node</span><span class="p">:</span>
+<span class="go">  ....:     aa=nn.label[1:-1].split(&#39;,&#39;)</span>
+<span class="go">  ....:     nn.coors=(float(aa[0])+float(aa[1]))/2.0</span>
+<span class="go">  ....:</span>
+
+<span class="gp">In [4]: </span><span class="k">print</span> <span class="n">net_1D</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">net_1D</span><span class="o">.</span><span class="n">node</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">coors</span>
+<span class="go">[-1.530,-1.525] -1.5275</span>
+</pre></div>
+</div>
+<p>This way we can plot the stationary probability distribution of the
+particle along x:</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [5]: </span><span class="n">xx</span><span class="o">=</span><span class="p">[];</span> <span class="n">yy</span><span class="o">=</span><span class="p">[];</span> <span class="n">delta_x</span><span class="o">=</span><span class="mf">0.025</span>
+
+<span class="gp">In [6]: </span><span class="k">for</span> <span class="n">nn</span> <span class="ow">in</span> <span class="n">net_1D</span><span class="o">.</span><span class="n">node</span><span class="p">:</span>
+<span class="go">  ....:         xx.append(nn.coors); yy.append(nn.weight/(net_1D.weight*delta_x))</span>
+<span class="go">  ....:</span>
+
+<span class="gp">In [7]: </span><span class="n">pyl</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xx</span><span class="p">,</span><span class="n">yy</span><span class="p">,</span><span class="s">&#39;bo&#39;</span><span class="p">)</span>
+<span class="gr">Out[7]: </span><span class="p">[</span><span class="o">&lt;</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">Line2D</span> <span class="nb">object</span> <span class="n">at</span> <span class="mh">0x515a110</span><span class="o">&gt;</span><span class="p">]</span>
+
+<span class="gp">In [8]: </span><span class="n">pylab</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="symmetrize-network-detailed-balance">
+<h3>Symmetrize Network (detailed balance)<a class="headerlink" href="#symmetrize-network-detailed-balance" title="Permalink to this headline">¶</a></h3>
+<p>Detailed balance can be impossed in a kinetic network in the following
+way: if pji and pi are the original transition and stationary
+probabilities, the symmetric network has PiPji=(pjpij+pipji)/2.0 and
+Pi=sum(Pji).  The following rule is applied for all nodes and
+links. Note that the factor 1/2.0 is not applied. In this way the
+symmetric network as a twofold total weight.</p>
+<p>The function creates a new network but there is an option not to do it.</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [10]: </span><span class="n">net</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+<span class="c"># Network:</span>
+<span class="c"># 979 nodes</span>
+<span class="c"># 22572 links out</span>
+<span class="c"># 9998950.0 total weight nodes</span>
+
+<span class="gp">In [11]: </span><span class="n">net_s</span><span class="o">=</span><span class="n">net</span><span class="o">.</span><span class="n">symmetrize</span><span class="p">()</span>
+<span class="c"># Network:</span>
+<span class="c"># 979 nodes</span>
+<span class="c"># 26887 links out</span>
+<span class="c"># 19997900.0 total weight nodes</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="cfeps">
+<h3>cFEPs<a class="headerlink" href="#cfeps" title="Permalink to this headline">¶</a></h3>
+<p>How to build a cFEP from a kinetic network.</p>
+</div>
+<div class="section" id="dijkstra">
+<h3>Dijkstra<a class="headerlink" href="#dijkstra" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="mfpt">
+<h3>MFPT<a class="headerlink" href="#mfpt" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="mcl">
+<h3>MCL<a class="headerlink" href="#mcl" title="Permalink to this headline">¶</a></h3>
+<p>The Markov Clustering Algorithm is applied to the network with two
+different criteriums: convergence (eps) or number of iterations (iterations).</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [5]: </span><span class="n">net</span><span class="o">.</span><span class="n">mcl</span><span class="p">(</span><span class="n">granularity</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span><span class="n">eps</span><span class="o">=</span><span class="mf">0.005</span><span class="p">,</span><span class="n">pruning</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="c"># Number of clusters:  3</span>
+
+<span class="gp">In [5]: </span><span class="n">net</span><span class="o">.</span><span class="n">mcl</span><span class="p">(</span><span class="n">granularity</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span><span class="n">iterations</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span><span class="n">pruning</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="c"># Number of clusters:  3</span>
+</pre></div>
+</div>
+<p>The pruning option executes an approximation to MCL which is faster.
+When this pruning option is activated the algorithm is run via an external program (mcl).
+In the future the pruning option will be included in the code of Pynoramix.
+In this case no additional parameters are needed.</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [5]: </span><span class="n">net</span><span class="o">.</span><span class="n">mcl</span><span class="p">(</span><span class="n">granularity</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span><span class="n">pruning</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="c"># Number of clusters:  3</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="components">
+<h3>Components<a class="headerlink" href="#components" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="gigant-component">
+<h4>Gigant Component<a class="headerlink" href="#gigant-component" title="Permalink to this headline">¶</a></h4>
+</div>
+</div>
+<div class="section" id="extracting-subnetwork">
+<h3>Extracting subnetwork<a class="headerlink" href="#extracting-subnetwork" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="weight-core">
+<h3>Weight-core<a class="headerlink" href="#weight-core" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="k-core">
+<h3>K-core<a class="headerlink" href="#k-core" title="Permalink to this headline">¶</a></h3>
+<p>eeeee</p>
+</div>
+</div>
+<hr class="docutils" />
+<div class="section" id="water">
+<h2>Water<a class="headerlink" href="#water" title="Permalink to this headline">¶</a></h2>
+<p>How to analize the Conformational Space Network of bulk water. Add references.</p>
+<div class="section" id="the-second-solvation-shell">
+<h3>The second solvation shell<a class="headerlink" href="#the-second-solvation-shell" title="Permalink to this headline">¶</a></h3>
+<p>The system is loaded from a pdb or gro file.</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [2]: </span><span class="n">watbox</span><span class="o">=</span><span class="n">molecule</span><span class="p">(</span><span class="s">&#39;tip4p-2005.pdb&#39;</span><span class="p">)</span>
+<span class="c"># System created from the file  tip4p-2005.pdb :</span>
+<span class="c"># 4096  atoms</span>
+<span class="c"># 1024  residues</span>
+<span class="c"># 1  chains</span>
+<span class="c"># 1024  waters</span>
+<span class="c"># 0  ions</span>
+<span class="c"># 1  frames/models</span>
+</pre></div>
+</div>
+<p>We can already calculate the microstates for the coordinates stored from the pdb:</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [3]: </span><span class="n">mss_water</span><span class="p">(</span><span class="n">watbox</span><span class="p">,</span><span class="n">definition</span><span class="o">=</span><span class="s">&#39;Skinner&#39;</span><span class="p">)</span>
+<span class="c"># Water microstates updated</span>
+<span class="gp">In [4]: </span><span class="n">watbox</span><span class="o">.</span><span class="n">water</span><span class="p">[</span><span class="mi">500</span><span class="p">]</span><span class="o">.</span><span class="n">microstate</span>
+<span class="gr">Out[4]: </span><span class="s">&#39;1 | 2 3 4 5 | 6 7 8 | 9 10 11 | 12 13 14 | 15 0 17&#39;</span>
+</pre></div>
+</div>
+<p>The former function can return the microstates of the system as an
+array or the indexes of the water molecules behind it.</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [5]: </span><span class="n">mss_frame</span><span class="o">=</span><span class="n">mss_water</span><span class="p">(</span><span class="n">watbox</span><span class="p">,</span><span class="n">definition</span><span class="o">=</span><span class="s">&#39;Skinner&#39;</span><span class="p">,</span><span class="n">output_array</span><span class="o">=</span><span class="s">&#39;microstates&#39;</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="gp">In [6]: </span><span class="n">ind_frame</span><span class="o">=</span><span class="n">mss_water</span><span class="p">(</span><span class="n">watbox</span><span class="p">,</span><span class="n">definition</span><span class="o">=</span><span class="s">&#39;Skinner&#39;</span><span class="p">,</span><span class="n">output_array</span><span class="o">=</span><span class="s">&#39;indexes_waters&#39;</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="gp">In [7]: </span><span class="k">print</span> <span class="n">mss_frame</span><span class="p">[</span><span class="mi">500</span><span class="p">];</span> <span class="k">print</span> <span class="n">ind_frame</span><span class="p">[</span><span class="mi">500</span><span class="p">]</span>
+<span class="go">[ 1  2  3  4  5  6  7  8  9 10 11 12 13 14 15  0 17]</span>
+<span class="go">[500 323 670 973 151 566  10 722 942  71 306 777 212  97 865  -1 573]</span>
+</pre></div>
+</div>
+<p>Notice that a &#8216;0&#8217; in any position of the microstate corresponds to a
+&#8216;-1&#8217; in the array of water indexes. This is due to the fact that zero
+is the first index of water.</p>
+</div>
+<div class="section" id="the-kinetic-network">
+<h3>The Kinetic network<a class="headerlink" href="#the-kinetic-network" title="Permalink to this headline">¶</a></h3>
+<p>The system is loaded as it was described in the previous section but
+only the topology will be used, not the coordinates of the initial
+frame. This way these data can be removed:</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [2]: </span><span class="n">watbox</span><span class="o">=</span><span class="n">molecule</span><span class="p">(</span><span class="s">&#39;tip4p-2005.pdb&#39;</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="gp">In [3]: </span><span class="n">watbox</span><span class="o">.</span><span class="n">delete_coors</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>We can now build the kinetic network reading the frames of a trajectory:</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [6]: </span><span class="n">watnet</span><span class="o">=</span><span class="n">kinetic_network</span><span class="p">(</span><span class="n">watbox</span><span class="p">,</span><span class="s">&#39;md_test.xtc&#39;</span><span class="p">,</span><span class="n">begin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">end</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span><span class="n">definition</span><span class="o">=</span><span class="s">&#39;Skinner&#39;</span><span class="p">)</span>
+<span class="c"># Network:</span>
+<span class="c"># 2597 nodes</span>
+<span class="c"># 11277 links out</span>
+<span class="c"># 102400.0 total weight nodes</span>
+</pre></div>
+</div>
+<p>A kinetic network &#8216;watnet&#8217; has been created analysing the first 100 frames of the trajectory.</p>
+</div>
+</div>
+<hr class="docutils" />
+<div class="section" id="encoding-a-trajectory-into-a-kinetic-network">
+<h2>Encoding a trajectory into a Kinetic Network<a class="headerlink" href="#encoding-a-trajectory-into-a-kinetic-network" title="Permalink to this headline">¶</a></h2>
+<p>The trajectory to convert into a Kinetic Network can have the following format:
+- [ Num. Particles, time step, dimension]
+- [time step, dimension]
+- [time step]</p>
+<p>To illustrate this section lets take 4 independent particles, or 1
+particle with 4 independent realizations, with a 10 steps dynamics
+each, characterized by a 3D array of integers.</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [56]: </span><span class="k">print</span> <span class="n">traj</span>
+<span class="go">[[[1, 3, 6], [1, 4, 6], [1, 5, 6], [1, 5, 7], [1, 5, 8], [1, 5, 9], [2, 5, 0], [2, 4, 0], [2, 4, 1], [2, 3, 0]],\</span>
+<span class="go"> [[1, 3, 3], [1, 4, 4], [1, 5, 5], [1, 5, 6], [1, 5, 7], [2, 5, 7], [2, 4, 7], [2, 4, 6], [2, 4, 5], [2, 4, 4]],\</span>
+<span class="go"> [[2, 3, 4], [1, 3, 4], [1, 3, 5], [1, 3, 6], [1, 3, 7], [2, 3, 7], [2, 3, 7], [2, 3, 6], [2, 3, 5], [2, 3, 4]],\</span>
+<span class="go"> [[1, 3, 4], [1, 2, 4], [1, 1, 4], [2, 1, 4], [2, 1, 1], [2, 4, 1], [2, 5, 1], [2, 5, 9], [1, 5, 9], [2, 4, 4]]]</span>
+</pre></div>
+</div>
+<p>This way, the coordinates of the 3rd particle at time=4 are:</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [63]: </span><span class="k">print</span> <span class="n">traj</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">4</span><span class="p">][:]</span>
+<span class="go">[1, 3, 7]</span>
+</pre></div>
+</div>
+<p>To map it into a kinetic network:</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [3]: </span><span class="n">net</span><span class="o">=</span><span class="n">kinetic_network</span><span class="p">(</span><span class="n">traj</span><span class="p">,</span><span class="n">ranges</span><span class="o">=</span><span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">]])</span>
+<span class="c"># Network:</span>
+<span class="c"># 31 nodes</span>
+<span class="c"># 35 links out</span>
+<span class="c"># 36.0 total weight nodes</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="tutorial_kinetic_analysis.html" title="Tutorial Kinetic Analysis"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="tutorial_molecular_systems.html" title="Tutorial Molecular Systems"
+             >previous</a> |</li>
+        <li><a href="index.html">home</a>|&nbsp;</li>
+        <li><a href="search.html">search</a>|&nbsp;</li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Diego Prada-Gracia.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
