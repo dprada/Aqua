@@ -1,7 +1,7 @@
 from libnet import glob as f_net
 from libkinanal import glob as f_kin_anal
 from libanaltrajs import glob as f_trajs
-import libmath as pyn_math
+import cl_math as pyn_math
 import numpy
 import copy
 from os import system

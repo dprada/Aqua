@@ -204,12 +204,12 @@ SUBROUTINE ind_wat_limit_4_nosim (mss,aux,hbs,hbdists,num_wats,num_atoms,num_hbs
      !!g=0
      !! 
      !!DO j=1,17
-     !!   IF (filtro(j)==.true.) THEN
+     !!   IF (filtro(j).eqv..true.) THEN
      !!      b=aux(j)
      !!      g=g+1
      !!      shell_w(a,g)=b
      !!      DO i=1,17
-     !!         IF (filtro(i)==.true.) THEN
+     !!         IF (filtro(i).eqv..true.) THEN
      !!            IF (aux(i)==b) THEN
      !!               microstate(i)=j
      !!               filtro(i)=.false.
@@ -278,7 +278,7 @@ SUBROUTINE ind_wat_limit_4_nosim_prot (mss,aux,filt_water,hbs,hbdists,num_wats,n
         ELSE
            ind_o=-(hbs(ii,3)+1)
         END IF
-        IF (interr_oh==.TRUE.) THEN
+        IF (interr_oh.eqv..TRUE.) THEN
            IF (first_shell(ind_oh,hi)==0) THEN
               first_shell(ind_oh,hi)=ind_o
               dist_first_shell(ind_oh,hi)=hbdists(ii)
@@ -289,7 +289,7 @@ SUBROUTINE ind_wat_limit_4_nosim_prot (mss,aux,filt_water,hbs,hbdists,num_wats,n
               END IF
            END IF
         END IF
-        IF (interr_o==.TRUE.) THEN
+        IF (interr_o.eqv..TRUE.) THEN
            IF (bonds_o(ind_o)==0) THEN
               first_shell(ind_o,3)=ind_oh
               dist_first_shell(ind_o,3)=hbdists(ii)
@@ -341,7 +341,7 @@ SUBROUTINE ind_wat_limit_4_nosim_prot (mss,aux,filt_water,hbs,hbdists,num_wats,n
         ELSE
            ind_o=-(hbs(ii,3)+1)
         END IF
-        IF (interr_oh==.TRUE.) THEN
+        IF (interr_oh.eqv..TRUE.) THEN
            IF (first_shell(ind_oh,hi)==0) THEN
               first_shell(ind_oh,hi)=ind_o
               dist_first_shell(ind_oh,hi)=hbdists(ii)
@@ -352,7 +352,7 @@ SUBROUTINE ind_wat_limit_4_nosim_prot (mss,aux,filt_water,hbs,hbdists,num_wats,n
               END IF
            END IF
         END IF
-        IF (interr_o==.TRUE.) THEN
+        IF (interr_o.eqv..TRUE.) THEN
            IF (bonds_o(ind_o)==0) THEN
               first_shell(ind_o,3)=ind_oh
               dist_first_shell(ind_o,3)=hbdists(ii)
@@ -465,12 +465,12 @@ SUBROUTINE ind_wat_limit_4_nosim_prot (mss,aux,filt_water,hbs,hbdists,num_wats,n
      !!g=0
      !! 
      !!DO j=1,17
-     !!   IF (filtro(j)==.true.) THEN
+     !!   IF (filtro(j).eqv..true.) THEN
      !!      b=aux(j)
      !!      g=g+1
      !!      shell_w(a,g)=b
      !!      DO i=1,17
-     !!         IF (filtro(i)==.true.) THEN
+     !!         IF (filtro(i).eqv..true.) THEN
      !!            IF (aux(i)==b) THEN
      !!               microstate(i)=j
      !!               filtro(i)=.false.
@@ -516,11 +516,11 @@ SUBROUTINE remove_index_mol(mss_ind,num_mss,mss)
      gg=0
   
      DO ii=1,17
-        IF (filtro(ii)==.true.) THEN
+        IF (filtro(ii).eqv..true.) THEN
            bb=aux_mss(ii)
            gg=gg+1
            DO ll=1,17
-              IF (filtro(ll)==.true.) THEN
+              IF (filtro(ll).eqv..true.) THEN
                  IF (aux_mss(ll)==bb) THEN
                     aux_mss2(ll)=ii
                     filtro(ll)=.false.
@@ -580,13 +580,13 @@ SUBROUTINE remove_permutations_limit_4_nosim(mss,mss_ind,num_mss)
               key_aux(j)=key(i)
               filtro=.true.
               DO g=1,17
-                 IF ((microstate(g)==i).and.(filtro(g)==.true.)) THEN
+                 IF ((microstate(g)==i).and.(filtro(g).eqv..true.)) THEN
                     microstate(g)=j
                     filtro(g)=.false.
                  END IF
               END DO
               DO g=1,17
-                 IF ((microstate(g)==j).and.(filtro(g)==.true.)) THEN
+                 IF ((microstate(g)==j).and.(filtro(g).eqv..true.)) THEN
                     microstate(g)=i
                     filtro(g)=.false.
                  END IF
@@ -666,7 +666,7 @@ SUBROUTINE remove_permutations_limit_4_nosim(mss,mss_ind,num_mss)
      IF (ms_short2(5)==0) THEN
         interruptor=.true.
      END IF
-     IF (interruptor==.false.) THEN
+     IF (interruptor.eqv..false.) THEN
         IF (x_core/=0) THEN
            IF (x_core==1) THEN
               IF (x_core5==1) THEN
@@ -683,21 +683,21 @@ SUBROUTINE remove_permutations_limit_4_nosim(mss,mss_ind,num_mss)
         END IF
      END IF
      
-     IF (interruptor==.false.) THEN
+     IF (interruptor.eqv..false.) THEN
         IF (ceros4/=ceros5) interruptor=.true.
         IF (ceros5<ceros4) THEN
            CALL DOY_VUELTA(ms_short2)
            CALL DOY_VUELTA_KEY (key,key_aux)
         END IF
      END IF
-     IF (interruptor==.false.) THEN
+     IF (interruptor.eqv..false.) THEN
         IF (x_primera4/=x_primera5) interruptor=.true.
         IF (x_primera5<x_primera4) THEN
            CALL DOY_VUELTA(ms_short2)
            CALL DOY_VUELTA_KEY (key,key_aux)
         END IF
      END IF
-     IF (interruptor==.false.) THEN
+     IF (interruptor.eqv..false.) THEN
         IF (x_segunda4/=x_segunda5) interruptor=.true.
         IF (x_segunda5<x_segunda4) THEN
            CALL DOY_VUELTA(ms_short2)
@@ -719,13 +719,13 @@ SUBROUTINE remove_permutations_limit_4_nosim(mss,mss_ind,num_mss)
               microstate(j)=ms_short2(i)
               filtro=.true.
               DO g=1,17
-                 IF ((microstate(g)==i).and.(filtro(g)==.true.)) THEN
+                 IF ((microstate(g)==i).and.(filtro(g).eqv..true.)) THEN
                     microstate(g)=j
                     filtro(g)=.false.
                  END IF
               END DO
               DO g=1,17
-                 IF ((microstate(g)==j).and.(filtro(g)==.true.)) THEN
+                 IF ((microstate(g)==j).and.(filtro(g).eqv..true.)) THEN
                     microstate(g)=i
                     filtro(g)=.false.
                  END IF
@@ -742,7 +742,7 @@ SUBROUTINE remove_permutations_limit_4_nosim(mss,mss_ind,num_mss)
      
      !sigo
      
-     IF (interruptor==.false.) THEN
+     IF (interruptor.eqv..false.) THEN
         IF (ceros>0) THEN
            IF ((ms_short2(12)==0).and.(ms_short2(15)/=0)) THEN
               interruptor=.true.
@@ -753,7 +753,7 @@ SUBROUTINE remove_permutations_limit_4_nosim(mss,mss_ind,num_mss)
                  interruptor=.true.
               END IF
            END IF
-           IF (interruptor==.false.) THEN
+           IF (interruptor.eqv..false.) THEN
               IF ((ms_short2(13)==0).and.(ms_short2(16)/=0)) THEN
                  interruptor=.true.
               ELSE
@@ -764,7 +764,7 @@ SUBROUTINE remove_permutations_limit_4_nosim(mss,mss_ind,num_mss)
                  END IF
               END IF
            END IF
-           IF (interruptor==.false.) THEN
+           IF (interruptor.eqv..false.) THEN
               IF ((ms_short2(14)==0).and.(ms_short2(17)/=0)) THEN
                  interruptor=.true.
               ELSE
@@ -779,7 +779,7 @@ SUBROUTINE remove_permutations_limit_4_nosim(mss,mss_ind,num_mss)
      END IF
      
      
-     IF (interruptor==.false.) THEN
+     IF (interruptor.eqv..false.) THEN
         IF ((ms_short2(12)==12).and.(ms_short2(15)/=15)) THEN
            interruptor=.true.
         ELSE
@@ -789,7 +789,7 @@ SUBROUTINE remove_permutations_limit_4_nosim(mss,mss_ind,num_mss)
               interruptor=.true.
            END IF
         END IF
-        IF (interruptor==.false.) THEN
+        IF (interruptor.eqv..false.) THEN
            IF ((ms_short2(13)==13).and.(ms_short2(16)/=16)) THEN
               interruptor=.true.
            ELSE
@@ -800,7 +800,7 @@ SUBROUTINE remove_permutations_limit_4_nosim(mss,mss_ind,num_mss)
               END IF
            END IF
         END IF
-        IF (interruptor==.false.) THEN
+        IF (interruptor.eqv..false.) THEN
            IF ((ms_short2(14)==14).and.(ms_short2(17)/=17)) THEN
               interruptor=.true.
            ELSE
@@ -851,11 +851,11 @@ SUBROUTINE remove_permutations_limit_4_nosim(mss,mss_ind,num_mss)
         filtro=.true.
         DO i=12,17
            j=ms_short2(i)
-           IF ((j>11).and.(filtro(i)==.true.)) THEN
+           IF ((j>11).and.(filtro(i).eqv..true.)) THEN
               ms_short2(i)=i
               filtro(i)=.false.
               DO ii=i+1,17
-                 IF ((microstate(ii)==j).and.(filtro(ii)==.true.)) THEN
+                 IF ((microstate(ii)==j).and.(filtro(ii).eqv..true.)) THEN
                     ms_short2(ii)=i
                     filtro(ii)=.false.
                  END IF
@@ -867,7 +867,7 @@ SUBROUTINE remove_permutations_limit_4_nosim(mss,mss_ind,num_mss)
      key_aux=key
      
      
-     IF (interruptor==.false.) THEN
+     IF (interruptor.eqv..false.) THEN
         IF ((ms_short2(13)==3).and.(ms_short2(16)==2)) THEN
            CALL DOY_VUELTA(ms_short2)
            CALL DOY_VUELTA_KEY (key,key_aux)
@@ -892,14 +892,14 @@ SUBROUTINE remove_permutations_limit_4_nosim(mss,mss_ind,num_mss)
      ! EXIT
      ! END IF
      ! END DO
-     ! IF (interruptor==.true.) THEN
+     ! IF (interruptor.eqv..true.) THEN
      ! print*,'...>',frame,mol
      ! print 117,ms_short2(:)
      ! END IF
      !END IF
      
      
-     !IF (interruptor==.false.) THEN
+     !IF (interruptor.eqv..false.) THEN
      ! print*,'TATE',frame,mol
      ! print 117,ms_short2
      !END IF
@@ -931,11 +931,11 @@ SUBROUTINE DOY_VUELTA (ms_short2)
   
   DO i=1,17
      j=ms_short2(i)
-     IF ((j>1).and.(filtro(i)==.true.)) THEN
+     IF ((j>1).and.(filtro(i).eqv..true.)) THEN
         ms_short2(i)=i
         filtro(i)=.false.
         DO ii=i+1,17
-           IF ((microstate(ii)==j).and.(filtro(ii)==.true.)) THEN
+           IF ((microstate(ii)==j).and.(filtro(ii).eqv..true.)) THEN
               ms_short2(ii)=i
               filtro(ii)=.false.
            END IF
@@ -986,7 +986,7 @@ SUBROUTINE addbonds (tipo,mss,mss_ind,bonds,num_wats,num_bonds)
         DO jj=1,num_wats
            corrijo=.FALSE.
            DO kk=1,5
-              IF (dentro(mss_ind(jj,kk))==.TRUE.) THEN
+              IF (dentro(mss_ind(jj,kk)).eqv..TRUE.) THEN
                  IF (kk==1) THEN
                     IF (mss_ind(jj,4)==0) THEN
                        corrijo(4)=.TRUE.
@@ -1023,7 +1023,7 @@ SUBROUTINE addbonds (tipo,mss,mss_ind,bonds,num_wats,num_bonds)
               END IF
            END DO
            DO kk=1,17
-              IF (corrijo(kk)==.TRUE.) THEN
+              IF (corrijo(kk).eqv..TRUE.) THEN
                  mss_ind(jj,kk)=-1
                  mss(jj,kk)=-1
               END IF
@@ -1036,7 +1036,7 @@ SUBROUTINE addbonds (tipo,mss,mss_ind,bonds,num_wats,num_bonds)
            DO kk=1,17
               ii=mss_ind(jj,kk)
               IF (ii>0) THEN
-                 IF (dentro(ii)==.TRUE.) THEN
+                 IF (dentro(ii).eqv..TRUE.) THEN
                     mss(jj,kk)=-mss(jj,kk)
                  END IF
               END IF
@@ -1050,7 +1050,7 @@ SUBROUTINE addbonds (tipo,mss,mss_ind,bonds,num_wats,num_bonds)
            DO kk=1,5
               ii=mss_ind(jj,kk)
               IF (ii>0) THEN
-                 IF (dentro(ii)==.TRUE.) THEN
+                 IF (dentro(ii).eqv..TRUE.) THEN
                     mss(jj,kk)=-mss(jj,kk)
                  END IF
               END IF

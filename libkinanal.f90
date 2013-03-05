@@ -1787,7 +1787,7 @@ CONTAINS
                       EXIT
                    END IF
                 END DO
-                IF (inside==.TRUE.) EXIT
+                IF (inside.eqv..TRUE.) EXIT
              END DO
           ELSE
              DO lll=1,num_sel_dim
@@ -2590,7 +2590,7 @@ subroutine trajnodes2file(file_name,opt_binary,begin,end,traj,num_frames,num_par
 
   INTEGER::ii,jj
 
-  IF (opt_binary) THEN
+  IF (opt_binary==1) THEN
      OPEN(unit=21,FILE=TRIM(file_name),action='WRITE',form='unformatted',access='stream',POSITION='APPEND')
      DO ii=begin+1,end+1
         WRITE(21) traj(ii,:,:)
