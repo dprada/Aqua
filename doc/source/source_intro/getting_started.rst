@@ -4,14 +4,12 @@
 Getting Started
 ***************
 
-The whole project is public available at https://github.com/dprada/Aqua.git .
+The whole project **Aqua** is public available at https://github.com/dprada/Aqua.git .
 There is not stable version yet, for this reason the use of these libraries it is under your responsability.
 
-Getting Aqua
-=================
 
 The testing version
-+++++++++++++++++++
+===================
 
 This version of Aqua is the seed of a future first stable version, and
 thereby the most robust configuration at the moment.
@@ -39,8 +37,6 @@ https://github.com/dprada/Aqua/commits/master
 .. Todo:: In the future the project will be included in easy_install
    or setup.py
    (http://packages.python.org/an_example_pypi_project/setuptools.html#registering-your-project)
-
-
 
 
 Installing
@@ -84,7 +80,7 @@ At this point, and in the directory of Aqua, the following command needs to be e
 
    make
 
-If the installation run without troubles, Aqua is ready to be used.
+If the installation runs without troubles, Aqua is ready to be used.
 
 .. warning:: Do not forget to add Aqua to your python path: export PYTHONPATH=$PYTHONPATH:/path/to/Aqua
 

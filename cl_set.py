@@ -166,10 +166,10 @@ class cl_water(labels_set):             # Attributes of a water molecule
 ####
 
 
-class molecule(labels_set):               # The suptra-estructure: System (waters+cofactors+proteins...)
+class msystem(labels_set):               # The suptra-estructure: System (waters+cofactors+proteins...)
 
     
-    def __init__(self,input_file=None,download=None,coors=False,verbose=False,with_bonds=True,missing_atoms=True):
+    def __init__(self,input_file=None,download=None,coors=False,with_bonds=True,missing_atoms=True,verbose=False):
 
         # From labels_set: .name, .index, .pdb_index, .num_atoms, .list_atoms
 

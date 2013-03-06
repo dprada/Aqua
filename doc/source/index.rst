@@ -6,11 +6,40 @@
 Welcome to the tentative Aqua's documentation!
 ===================================================
 
+The whole project **Aqua** is public available at
+https://github.com/dprada/Aqua.git .  There is not stable version yet,
+for this reason the use of these libraries it is under your
+responsability. Find more info here.
+
+Overview, license and future references.
+
+
 **Be aware, some sections are...**
 
 .. image:: _static/Under_Construction.jpg
    :align: center
    :scale: 70 %
+
+
+Introduction
+++++++++++++
+
+.. toctree::
+   :maxdepth: 2
+
+   source_intro/whatsthis.rst
+   source_intro/getting_started.rst
+
+Molecular Systems
++++++++++++++++++
+
+.. toctree::
+   :maxdepth: 3
+
+   source_ms/intro.rst
+   source_ms/msystem.rst
+   source_ms/coors.rst
+   source_ms/functions.rst
 
 Contents:
 +++++++++
