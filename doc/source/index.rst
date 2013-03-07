@@ -40,41 +40,41 @@ Molecular Systems
    source_ms/msystem.rst
    source_ms/coors.rst
    source_ms/functions.rst
-
-Contents:
-+++++++++
-
-.. toctree::
-   :maxdepth: 2
-
-   getting_started.rst
-   molecular_systems.rst
-   networks.rst
-   kinetic_analysis.rst
+   source_ms/tutorial.rst
 
 
-Tutorials:
-++++++++++
+
+Kinetic Lab
++++++++++++
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 3
 
-   tutorial_molecular_systems.rst
-
+   source_kl/kinetic_analysis.rst
+   source_kl/tutorial_kinetic_analysis.rst
+   source_kl/tutorial_berezovska2012.rst
+ 
+Conformational Space Networks
++++++++++++++++++++++++++++++
+ 
 .. toctree::
-   :maxdepth: 4
-
-   tutorial_networks.rst
-
+   :maxdepth: 3
+ 
+   source_csn/networks.rst
+   source_csn/tutorial_networks.rst
+ 
+ 
+FAQs
+++++
+ 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 3
+ 
+   source_faqs/faqs_ms.rst
+   source_faqs/faqs_kl.rst
+   source_faqs/faqs_csn.rst
 
-   tutorial_kinetic_analysis.rst
 
-.. toctree::
-   :maxdepth: 1
-
-   tutorial_berezovska2012.rst
 
 
 Indices and tables

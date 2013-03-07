@@ -1,17 +1,15 @@
 
-Tutorial Molecular Systems
-**************************
+Tutorials
+*********
 
-First of all, lets load Pynoramix in our script or in a ipython session:
+First of all, lets load Aqua in our script or in a ipython session:
 
 .. sourcecode:: ipython
 
-     In [1]: from pynoramix_beta import *
+     In [1]: from aqua import *
 
 
-Some basic notions on python will be assumed along this tutorial. If you just landed here without any idea on python, have a look to the section *First steps on python*.
-
-.. todo:: Make a short tutorial on python, enough to run pynoramix.
+Some basic notions on python will be assumed along this tutorial. If you just landed here without any idea on python, have a look to a Python manual or tutorial first of all.
 
 ----------------------
  
@@ -22,11 +20,11 @@ Loading/Writting the topology
 Loading
 +++++++
 
-A system can be loaded from a file (pdb,gro) or downloaded from the Protein Data Bank.
+A system can be loaded from a file (pdb,gro or psf) or downloaded from the Protein Data Bank.
 
 .. sourcecode:: ipython
 
-   In [2]: mol_test=molecule(download='2WC2')
+   In [2]: mol_test=msystem(download='2WC2',verbose=True)
    # File saved as 2WC2.pdb
    # System created from the file 2WC2.pdb :
    # 6704  atoms
@@ -36,9 +34,9 @@ A system can be loaded from a file (pdb,gro) or downloaded from the Protein Data
    # 0  ions
    # 20  frames/models in traj 0
 
-   In [3]: mol_test=molecule('2WC2.pdb',verbose=False)
+   In [3]: mol2_test=msystem('2WC2.pdb')
 
-   In [4]: mol_test.info()
+   In [4]: mol2_test.info()
    # System created from the file 2WC2.pdb :
    # 6704  atoms
    # 418  residues
@@ -54,11 +52,11 @@ A system can be loaded from a file (pdb,gro) or downloaded from the Protein Data
 This way the pdb file has been loaded together with the coordinates
 present in the file, 20 different models in the case of 2WC2.  If the
 coordinates are going to be loaded from a different file, the topology
-can be created adding the option coors=False:
+without coordinates can be created adding the option coors=False:
 
 .. sourcecode:: ipython
 
-   In [5]: mol_test2=molecule('2WC2.pdb',coors=False)
+   In [5]: mol3_test=msystem('2WC2.pdb',coors=False)
    # System created from the file 2WC2.pdb :
    # 6704  atoms
    # 418  residues
@@ -66,11 +64,16 @@ can be created adding the option coors=False:
    # 0  waters
    # 0  ions
 
-   In [6]: mol_test2.info_trajs()
+   In [6]: mol3_test.info_trajs()
    # No coordinates
 
-   In [7]: mol_test.info_trajs()
+   In [7]: mol2_test.info_trajs()
    # 20 frames/models in traj 0
+
+
+.. Note:: For further information on the functions and attributes used
+   visit: :class:`msystem`, :meth:`msystem.info`, :meth:`msystem.info_trajs`.
+
 
 
 Navigating
@@ -81,8 +84,6 @@ Navigating
 Writting
 ++++++++
 
-
-sdfsdfdsf
 
 ----------------------
 
@@ -104,7 +105,7 @@ and :download:`GSGS.dcd <../tutorials/systems_tut1/GSGS.dcd>`.
 
 .. sourcecode:: ipython
 
-   In [2]: GSGS=molecule('GSGS.pdb')
+   In [2]: GSGS=msystem('GSGS.pdb')
    # System created from the file GSGS.pdb :
    # 4723  atoms
    # 1568  residues
@@ -118,12 +119,12 @@ and :download:`GSGS.dcd <../tutorials/systems_tut1/GSGS.dcd>`.
    In [4]: GSGS.info_trajs()
    # No coordinates
 
-   In [5]: GSGS.load_traj('GSGS.dcd','ALL')
+   In [5]: GSGS.msystem('GSGS.dcd','ALL')
    # 10 frames/models loaded.
 
 .. sourcecode:: ipython
 
-   In [2]: GSGS=molecule('GSGS.pdb',coors=False,verbose=False)
+   In [2]: GSGS=msystem('GSGS.pdb',coors=False,verbose=False)
     
    In [3]: GSGS.load_traj('GSGS.dcd',frame='ALL',verbose=False)
     
@@ -138,7 +139,7 @@ and :download:`GSGS.dcd <../tutorials/systems_tut1/GSGS.dcd>`.
 
 .. sourcecode:: ipython
 
-   In [2]: GSGS=molecule('GSGS.pdb',coors=False,verbose=False)
+   In [2]: GSGS=msystem('GSGS.pdb',coors=False,verbose=False)
 
    In [3]: GSGS.load_traj('GSGS.dcd')
    # 0 frames/models in traj 0
@@ -157,7 +158,7 @@ and :download:`GSGS.dcd <../tutorials/systems_tut1/GSGS.dcd>`.
 
 .. sourcecode:: ipython
 
-   In [2]: GSGS=molecule('GSGS.pdb',coors=False,verbose=False)
+   In [2]: GSGS=msystem('GSGS.pdb',coors=False,verbose=False)
 
    In [3]: GSGS.load_traj('GSGS.dcd',frame=0)  # Or frame='Next'
    # 1 frames/models in traj 0
@@ -180,6 +181,7 @@ and :download:`GSGS.dcd <../tutorials/systems_tut1/GSGS.dcd>`.
 
    In [5]: GSGS.info_trajs()
    # 1 frames/models in traj 0
+
 
 
 
@@ -226,7 +228,7 @@ This way the original trajectory is not stored in memory:
 How to make atoms selections
 ============================
 
-The syntax is close to the pynoramix syntax.
+The syntax is close to the aqua syntax.
 There are few special key words.
 
 .. sourcecode:: ipython
@@ -382,10 +384,5 @@ As it happens with the distance function, when len(list1)<len(list2) it is faste
    # End of file
     
    In [10]: rdf_yy=rdf_yy/(1.0*num_frames)
-
-
-
-
-
 
 

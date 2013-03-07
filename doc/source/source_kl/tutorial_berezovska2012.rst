@@ -46,7 +46,7 @@ Loading a trajectory
 ++++++++++++++++++++
 	       
 Given a file with a 1D trajectory in its second column,
-:download:`traj.oup <../tutorials/kinetic_1D_analysis/traj.oup.gz>`,
+:download:`traj.oup <../../tutorials/kinetic_1D_analysis/traj.oup.gz>`,
 the class *kinetic_1D_analysis* can be initialized:
 
 .. sourcecode:: ipython
@@ -87,7 +87,7 @@ And plotted with pylab as:
 
    In [11]: pylab.show()
 
-.. figure:: ../tutorials/kinetic_1D_analysis/histo_1D.png
+.. figure:: ../../tutorials/kinetic_1D_analysis/histo_1D.png
    :align: center
    :scale: 70 %
 
@@ -145,7 +145,7 @@ We can now have a look to the histograms of these 3 macro-states.
    In [8]: hx_c2,hy_c2 = test.histogram(cluster=2,delta=0.20,segment=[-12.0,4.0],norm=False)
 
 
-.. figure:: ../tutorials/kinetic_1D_analysis/histo_color_ganna.png
+.. figure:: ../../tutorials/kinetic_1D_analysis/histo_color_ganna.png
    :align: center
    :scale: 70 %
 
@@ -257,7 +257,7 @@ extracted from the trajectory:
    # Mean first passage time: 4258.04559256 frames.
 
 
-.. figure:: ../tutorials/kinetic_1D_analysis/fpt_berez_traj.png
+.. figure:: ../../tutorials/kinetic_1D_analysis/fpt_berez_traj.png
    :align: center
    :scale: 70 %
 
@@ -287,7 +287,7 @@ Now as we did with the original trajectory:
    # Mean first passage time: 4692.91090041 frames.
 
 
-.. figure:: ../tutorials/kinetic_1D_analysis/fpt_berez_model.png
+.. figure:: ../../tutorials/kinetic_1D_analysis/fpt_berez_model.png
    :align: center
    :scale: 70 %
 

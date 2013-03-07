@@ -73,7 +73,7 @@ The histogram can be obtained with the following command:
 
    In [11]: pylab.show()
 
-.. figure:: ../tutorials/kinetic_1D_analysis/histo_1D.png
+.. figure:: ../../tutorials/kinetic_1D_analysis/histo_1D.png
    :align: center
    :scale: 70 %
 
@@ -86,7 +86,7 @@ from a dynamical system. Actually, the trajectory corresponds to the
 projection onto an arbitrary coordinate of a langevin dynamics of a
 particle embeded in a 2D potential.
 
-.. figure:: ../tutorials/kinetic_1D_analysis/histo_color.png
+.. figure:: ../../tutorials/kinetic_1D_analysis/histo_color.png
    :align: center
    :scale: 70 %
 
@@ -232,7 +232,7 @@ The distributions can be fitted to exponential functions:
 the distributions, where approximately A=-0.008 and B=-9.763 for
 cluster 1 (orange), and A=-0.026 and B=-7.311 for cluster 2 (blue).
 
-.. figure:: ../tutorials/kinetic_1D_analysis/lf_dist_bad.png
+.. figure:: ../../tutorials/kinetic_1D_analysis/lf_dist_bad.png
    :align: center
    :scale: 70 %
 
@@ -260,7 +260,7 @@ kinetic network can be run according to the transition probabilities.
 This time the distributions and their exponential fits, A=-0.068 and B=-5.504 for
 cluster 1 (orange) and A=-0.029 and B=-7.034 for cluster 2 (blue), shows a different behavior:
 
-.. figure:: ../tutorials/kinetic_1D_analysis/lf_dist_model_bad.png
+.. figure:: ../../tutorials/kinetic_1D_analysis/lf_dist_model_bad.png
    :align: center
    :scale: 70 %
 
@@ -303,7 +303,7 @@ cluster 0 (green) to cluster 2 and from cluster 1 (orange) to cluster 2.
    # Mean first passage time: 124.958081567 frames.
 
 
-.. figure:: ../tutorials/kinetic_1D_analysis/fpt_bad_to2.png
+.. figure:: ../../tutorials/kinetic_1D_analysis/fpt_bad_to2.png
    :align: center
    :scale: 70 %
 
@@ -335,7 +335,7 @@ transition probabilities.
    # Mean first passage time: 36.4134420305 frames.
 
 
-.. figure:: ../tutorials/kinetic_1D_analysis/fpt_bad_to2_model.png
+.. figure:: ../../tutorials/kinetic_1D_analysis/fpt_bad_to2_model.png
    :align: center
    :scale: 70 %
 
@@ -382,7 +382,7 @@ passing by cluster 1.
    In [28]: fcptx0no12,fcpty0no12=kin_test.first_committed_passage_time(traj='clusters',states=[0,1,2],commitment=[True,False,True],norm=False,verbose=True)
    # Mean first passage time: 861.446234118 frames.
 
-.. figure:: ../tutorials/kinetic_1D_analysis/fcpt_bad_0to2.png
+.. figure:: ../../tutorials/kinetic_1D_analysis/fcpt_bad_0to2.png
    :align: center
    :scale: 70 %
 
@@ -400,7 +400,7 @@ The kinetic model shows also a similar behavior:
    In [30]: fcptbwx0no12,fcptbwy0no12=bw.first_committed_passage_time(states=[0,1,2],commitment=[True,False,True],norm=False,verbose=True)
    # Mean first passage time: 682.339500433 frames.
 
-.. figure:: ../tutorials/kinetic_1D_analysis/fcpt_bad_0to2_model.png
+.. figure:: ../../tutorials/kinetic_1D_analysis/fcpt_bad_0to2_model.png
    :align: center
    :scale: 70 %
 
@@ -430,7 +430,7 @@ Lets check the trip time distribution from cluster 0 to cluster 2:
    In [32]: ttbw02x,ttbw02y=bw.trip_time(from_state=0,to_state=2,verbose=True)
    # Mean first passage time: 33.0993065874 frames.
 
-.. figure:: ../tutorials/kinetic_1D_analysis/tt_bad_0to2_1.png
+.. figure:: ../../tutorials/kinetic_1D_analysis/tt_bad_0to2_1.png
    :align: center
    :scale: 70 %
 
@@ -472,7 +472,7 @@ to discard this events the option 'no_return' is required:
    # Mean first passage time: 15.7288866345 frames.
 
 
-.. figure:: ../tutorials/kinetic_1D_analysis/tt_bad_0to2_2.png
+.. figure:: ../../tutorials/kinetic_1D_analysis/tt_bad_0to2_2.png
    :align: center
    :scale: 70 %
 
@@ -504,7 +504,7 @@ cluster.
    In [36]: tt0no12x,tt0no12y=kin_test.committed_trip_time(traj='clusters',states=[0,1,2],commitment=[True,False,True],no_return=True,verbose=True)
    # Mean first passage time: 1.0 frames.
 
-.. figure:: ../tutorials/kinetic_1D_analysis/ctt_bad_0to2.png
+.. figure:: ../../tutorials/kinetic_1D_analysis/ctt_bad_0to2.png
    :align: center
    :scale: 70 %
 
@@ -526,7 +526,7 @@ it is not properly built up.
    In [38]: ttbw0no12x,ttbw0no12y=bw.committed_trip_time(states=[0,1,2],commitment=[True,False,True],no_return=True,verbose=True)
    # Mean first passage time: 1.0 frames.
 
-.. figure:: ../tutorials/kinetic_1D_analysis/ctt_bad_0to2_model.png
+.. figure:: ../../tutorials/kinetic_1D_analysis/ctt_bad_0to2_model.png
    :align: center
    :scale: 70 %
 
@@ -560,7 +560,7 @@ not reproduce the kinetics from the trajectory. The three cluster with
 which the model was built are not well defined. Have a look to a piece
 of trajectory to understand all the previous results and conclussions:
 
-.. figure:: ../tutorials/kinetic_1D_analysis/traj123.png
+.. figure:: ../../tutorials/kinetic_1D_analysis/traj123.png
    :align: center
    :scale: 70 %
 
@@ -577,7 +577,7 @@ embedded in a larger dimensional space (2 in this case).  Before
 propossing how to get a better description, a better kinetic model,
 let see how the system behaves in the original 2 dimmensions:
 
-.. figure:: ../tutorials/kinetic_1D_analysis/histo_2d.png
+.. figure:: ../../tutorials/kinetic_1D_analysis/histo_2d.png
    :align: center
    :scale: 70 %
 
@@ -586,7 +586,7 @@ The trajectory studied was the projection over the black axe. Knowing
 now that we can define the three macro-states, clusters or basins of
 attraction, with the barriers X=-5.5 and Y=5.5, we can rebuild the histogram:
 
-.. figure:: ../tutorials/kinetic_1D_analysis/histo_color_good.png
+.. figure:: ../../tutorials/kinetic_1D_analysis/histo_color_good.png
    :align: center
    :scale: 70 %
 
@@ -641,7 +641,7 @@ Long life times comparable with long traj.
    # Mean first passage time: 5863.2847721 frames.
 
 
-.. figure:: ../tutorials/kinetic_1D_analysis/fpt_dist_good.png
+.. figure:: ../../tutorials/kinetic_1D_analysis/fpt_dist_good.png
    :align: center
    :scale: 70 %
 
@@ -651,7 +651,7 @@ is not possible since it has to go through 1. The times are also different.
 
 Having an apparantly exponential behavior it is not saying that our kinetics is ok.
 
-.. figure:: ../tutorials/kinetic_1D_analysis/fpt_dist_good_model.png
+.. figure:: ../../tutorials/kinetic_1D_analysis/fpt_dist_good_model.png
    :align: center
    :scale: 70 %
 
@@ -701,7 +701,7 @@ a trajectory from a brownian walker over the kinetic network (see XXX).
    # Mean first passage time: 3571.33044323 frames.
 
 
-.. figure:: ../tutorials/kinetic_1D_analysis/fpt_ganna.png
+.. figure:: ../../tutorials/kinetic_1D_analysis/fpt_ganna.png
    :align: center
    :scale: 70 %
 

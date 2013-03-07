@@ -1,6 +1,9 @@
 Molecular system
 ****************
 
+System
+++++++
+
 **Aqua** defines a moleculer system with the class *msystem*. This python class is the parent object where all info about the molecular system (topology, attributes, coordinates) as well as functions for its analysis is found.
 
 .. class:: msystem(input_file=None,download=None,coors=False,with_bonds=True,missing_atoms=True,verbose=False)
@@ -26,7 +29,7 @@ Molecular system
 
 .. attribute:: msystem.file_topol
    
-   Name of the input file with topology.  (String)
+   Name of the input file with the topology.  (String)
 
 .. attribute:: msystem.file_topol_type 
 

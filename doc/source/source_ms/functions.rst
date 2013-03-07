@@ -69,9 +69,9 @@ Trajectories
 Load Trajectory
 +++++++++++++++
 
-.. method:: msystem.load_traj(file_input=None,[frame=None,begin=None,end=None,increment=1,units='frames',]verbose=False)
+.. method:: msystem.load_traj(file_input=None [,frame=None,begin=None,end=None,increment=1,units='frames',verbose=False])
 
-   :arg str file_input: Name of trajectory file (pdb, gro, xtc, trr, dcd) 
+   :arg str file_input: Name of trajectory file in the following formats: pdb, gro, xtc, trr, dcd.
    :arg frame: Index of frames to be loaded.
    :type frame: int or list.
    :arg begin: Frame to start the loading process.
@@ -93,15 +93,92 @@ Info Trajectories
 .. method:: msystem.info_trajs()
 
    :return: None
-   :prints out: General information of the trajectories loaded.
+   :prints out: General information of the whole set of trajectories loaded.
+
+Delete Trajectory
++++++++++++++++++
+
+.. method:: msystem.delete_traj(index='ALL')
+
+   :arg index: index of trajectory to be deleted in the list msystem.traj
+   :arg index: int or 'ALL'
+   :return: None
 
 
+Load Frames
++++++++++++
+
+To append a new frame to the list traj.frame:
+
+.. method:: traj.upload_frame(frame='next'[,begin=None,end=None,increment=1,units=None])
+
+   :arg frame: Index of frames to be loaded.
+   :type frame: int or list or 'next' or 'all'.
+   :arg begin: Frame to start the loading process.
+   :type begin: int.
+   :arg end:  Frame to finish the loading process.
+   :type end: int.
+   :arg increment: Interval to load frames.
+   :type increment: int.
+   :arg units: Units for "begin", "end" and "increment". [only units='frames' available]
+   :type units: str.
+   :return: None
+
+To rewrite an old frame of the traj.frame list with a new frame:
+
+.. method:: traj.reload_frame(frame='next',old=0)
+
+   :arg frame: Index of frames to be loaded.
+   :type frame: int or 'next'.
+   :arg int old: Index of frame in the list traj.frame to be rewritten.
+
+Info Frames
++++++++++++
+
+.. method:: traj.info()
+
+   :return: None
+   :prints out: General information of the whole set of the trajectory.
+
+
+Delete Frames
++++++++++++++
+
+.. method:: traj.delete_frame(frame='ALL'[,begin=None,end=None,increment=1,units=None])
+
+   :arg frame: Index of frame in the list traj.frame to be deleted.
+   :type frame: int or list or 'ALL'.
+   :arg begin: Frame to start the deleting process. [not available yet]
+   :type begin: int.
+   :arg end:  Frame to finish the deleting process. [not available yet]
+   :type end: int.
+   :arg increment: Interval to delete frames. [not available yet]
+   :type increment: int.
+   :arg units: Units for "begin", "end" and "increment". [only units='frames' available]
+   :type units: str.
+   :return: None
 
 
 
 Writting dcd files
 ++++++++++++++++++
 
-Writting pdb files
-++++++++++++++++++
+.. method:: traj.write(file_name=None,frame='ALL',begin=None,end=None,increment=1,units=None,action=None)
+
+   :arg str file_name: Name of new trajectory file.
+   :arg frame: Indexes of frames to be written in the new trajectory file.
+   :type frame: int or list or 'ALL'
+   :arg begin: Frame to start the deleting process. [not available yet]
+   :type begin: int.
+   :arg end:  Frame to finish the deleting process. [not available yet]
+   :type end: int.
+   :arg increment: Interval to delete frames. [not available yet]
+   :type increment: int.
+   :arg units: Units for "begin", "end" and "increment". [only units='frames' available]
+   :type units: str.
+   :arg action: "OPEN" or "CLOSE" to open or close a file without writting, None to writte frames in the opened new trajectory file.
+   :type action: str.
+   :return: None
+
+
 
