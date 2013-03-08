@@ -59,9 +59,11 @@ Conformational Space Networks
  
 .. toctree::
    :maxdepth: 3
- 
-   source_csn/networks.rst
-   source_csn/tutorial_networks.rst
+
+   source_csn/intro.rst
+   source_csn/network.rst
+   source_csn/functions.rst
+   source_csn/tutorial.rst
  
  
 FAQs
