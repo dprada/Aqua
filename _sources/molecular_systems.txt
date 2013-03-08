@@ -5,12 +5,6 @@ Info about Molecular Systems
 ============================
 
 
-Units
-+++++
-
-Length: Angstroms.
-Angles: Degrees.
-
 Periodic Box and Cell
 +++++++++++++++++++++
 
@@ -26,29 +20,7 @@ Pynoramix sets the box always in the positive cuadrant. This way any
 atom is always in {[0,Lx),[0,Ly),[0,Lz)}. It implies that molecules
 can be split if they are over the cell edges.
 
-----------------------
 
-
-Molecule class
-==============
-
-Subclasses
-++++++++++
-
-Functions
-+++++++++
-
-Trajectory class
-================
-
-Functions
-+++++++++
-
-Functions
-=========
-
-Selection
-+++++++++
 
 
 

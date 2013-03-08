@@ -17,7 +17,7 @@ All functions and attributes described on this documentation are available here.
 
 The source code can be downloaded in the web page https://github.com/dprada/Aqua.git as a zip file:
 
-.. image:: _static/screenshot_github.png
+.. image:: ../_static/screenshot_github.png
 
 However, clonning the project with git is a better way to get Aqua:
 
