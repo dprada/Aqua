@@ -171,6 +171,27 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
     
     def __init__(self,input_file=None,download=None,coors=False,with_bonds=True,missing_atoms=True,verbose=False):
 
+
+        # If download:
+
+        if download:
+            if not download.endswith('.pdb'):
+                    download=download+'.pdb'
+            input_file=download
+            if not path.exists(input_file):
+                temp='wget -nv http://www.rcsb.org/pdb/files/'+input_file+' 1>/dev/null 2>&1'
+                system(temp)
+                if path.exists(input_file):
+                    print '# File saved as '+input_file
+                else:
+                    print '# Error downloading http://www.rcsb.org/pdb/files/'+input_file
+
+            else:
+                print '# The file '+input_file+' exists in the local folder. Loading it...'
+
+            self.file_topol=input_file
+
+
         # From labels_set: .name, .index, .pdb_index, .num_atoms, .list_atoms
 
         # > Instantation options:
@@ -213,26 +234,10 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 
         ##################################
 
-        # A SET CAN BE BUILT FROM A FILE OR FROM A SELECTION
+        # A SYSTEM CAN BE BUILT FROM A FILE OR FROM A SELECTION
 
-        # IF IT COMES FROM A FILE, DOES IT NEED TO BE DOWNLOADED?
 
-        if download:
-            if not download.endswith('.pdb'):
-                    download=download+'.pdb'
-            input_file=download
-            if not path.exists(input_file):
-                temp='wget -nv http://www.rcsb.org/pdb/files/'+input_file+' 1>/dev/null 2>&1'
-                system(temp)
-                if path.exists(input_file):
-                    print '# File saved as '+input_file
-                else:
-                    print '# Error downloading http://www.rcsb.org/pdb/files/'+input_file
 
-            else:
-                print '# The file '+input_file+' exists in the local folder. Loading it...'
-
-            self.file_topol=input_file
 
         # BUILDING THE SET FROM A FILE
 
