@@ -137,7 +137,7 @@ default: options pre f90_libraries io_formats/libxdrfile.so fin
 
 options:
 	@ echo "-----------------------------------------------"
-	@ echo "                    AQUA                       "
+	@ echo "                    AQUA 0.1                   "
 	@ echo "-----------------------------------------------"
 	@ echo "# Compiling in" $(PLATF_TYPE)"-"$(MACHINE_TYPE) "with:"
 	@ echo "  Fortran Compiler:" $(FCOMP) "("$(FTYPE)")"
