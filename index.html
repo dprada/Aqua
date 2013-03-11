@@ -245,37 +245,69 @@ responsability. Find more info here.</p>
 <h2>Conformational Space Networks<a class="headerlink" href="#conformational-space-networks" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="source_csn/networks.html">Networks</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="source_csn/networks.html#network-class">Network class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="source_csn/intro.html">Introduction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="source_csn/intro.html#a-quick-view">A quick view</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/intro.html#example">Example</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="source_csn/tutorial_networks.html">Tutorial Networks</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="source_csn/tutorial_networks.html#networks">Networks</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial_networks.html#a-network-from-scratch">A network from scratch</a></li>
-<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial_networks.html#loading-networks-from-files">Loading networks from files</a></li>
-<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial_networks.html#writting-networks">Writting networks</a></li>
-<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial_networks.html#merging-networks">Merging networks</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="source_csn/tutorial_networks.html#kinetic-networks">Kinetic Networks</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial_networks.html#examples">Examples</a></li>
-<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial_networks.html#symmetrize-network-detailed-balance">Symmetrize Network (detailed balance)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial_networks.html#cfeps">cFEPs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial_networks.html#dijkstra">Dijkstra</a></li>
-<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial_networks.html#mfpt">MFPT</a></li>
-<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial_networks.html#mcl">MCL</a></li>
-<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial_networks.html#components">Components</a></li>
-<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial_networks.html#extracting-subnetwork">Extracting subnetwork</a></li>
-<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial_networks.html#weight-core">Weight-core</a></li>
-<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial_networks.html#k-core">K-core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="source_csn/network.html">Networks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="source_csn/network.html#network">Network</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/network.html#node">Node</a></li>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/network.html#cluster">Cluster</a></li>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/network.html#component">Component</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="source_csn/tutorial_networks.html#water">Water</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial_networks.html#the-second-solvation-shell">The second solvation shell</a></li>
-<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial_networks.html#the-kinetic-network">The Kinetic network</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="source_csn/tutorial_networks.html#encoding-a-trajectory-into-a-kinetic-network">Encoding a trajectory into a Kinetic Network</a></li>
+<li class="toctree-l1"><a class="reference internal" href="source_csn/functions.html">Functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="source_csn/functions.html#topology">Topology</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/functions.html#loading-network">Loading network</a></li>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/functions.html#loading-labels">Loading labels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/functions.html#adding-node">Adding node</a></li>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/functions.html#adding-link">Adding link</a></li>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/functions.html#info">Info</a></li>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/functions.html#merging-network">Merging network</a></li>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/functions.html#extracting-network">Extracting network</a></li>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/functions.html#writting-network">Writting network</a></li>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/functions.html#writting-labels">Writting labels</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="source_csn/functions.html#clustering">Clustering</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/functions.html#mcl">MCL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/functions.html#gradient-clusters">Gradient Clusters</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="source_csn/tutorial.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="source_csn/tutorial.html#networks">Networks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial.html#a-network-from-scratch">A network from scratch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial.html#loading-networks-from-files">Loading networks from files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial.html#writting-networks">Writting networks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial.html#merging-networks">Merging networks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="source_csn/tutorial.html#kinetic-networks">Kinetic Networks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial.html#examples">Examples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial.html#symmetrize-network-detailed-balance">Symmetrize Network (detailed balance)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial.html#cfeps">cFEPs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial.html#dijkstra">Dijkstra</a></li>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial.html#mfpt">MFPT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial.html#mcl">MCL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial.html#components">Components</a></li>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial.html#extracting-subnetwork">Extracting subnetwork</a></li>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial.html#weight-core">Weight-core</a></li>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial.html#k-core">K-core</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="source_csn/tutorial.html#water">Water</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial.html#the-second-solvation-shell">The second solvation shell</a></li>
+<li class="toctree-l3"><a class="reference internal" href="source_csn/tutorial.html#the-kinetic-network">The Kinetic network</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="source_csn/tutorial.html#encoding-a-trajectory-into-a-kinetic-network">Encoding a trajectory into a Kinetic Network</a></li>
 </ul>
 </li>
 </ul>
