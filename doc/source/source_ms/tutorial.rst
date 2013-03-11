@@ -8,7 +8,6 @@ First of all, lets load Aqua in our script or in a ipython session:
 
      In [1]: from aqua import *
 
-
 Some basic notions on python will be assumed along this tutorial. If you just landed here without any idea on python, have a look to a Python manual or tutorial first of all.
 
 ----------------------
@@ -83,7 +82,7 @@ Navigating
 
 Writting
 ++++++++
-
+XXX
 
 ----------------------
 
@@ -100,8 +99,8 @@ It is recommended the use of dcd files, the file is unformatted and
 thereby it is small and easy to handle.
 
 Along this section the different ways to do it will be illustrated
-using the files :download:`GSGS.pdb <../tutorials/systems_tut1/GSGS.pdb>`
-and :download:`GSGS.dcd <../tutorials/systems_tut1/GSGS.dcd>`.
+using the files :download:`GSGS.pdb <../../tutorials/systems_tut1/GSGS.pdb>`
+and :download:`GSGS.dcd <../../tutorials/systems_tut1/GSGS.dcd>`.
 
 .. sourcecode:: ipython
 

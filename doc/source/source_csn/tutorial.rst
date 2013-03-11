@@ -1,22 +1,22 @@
-Tutorial Networks
-*****************
+Tutorials
+*********
 
-First of all, lets load Pynoramix in our script or in a ipython session:
+First of all, lets load Aqua in our script or in a ipython session:
 
 .. sourcecode:: ipython
 
-     In [1]: from pynoramix_beta import *
+     In [1]: from aqua import *
 
 
-Some basic notions on python will be assumed along this tutorial. If you just landed here without any idea on python, have a look to the section *First steps on python*.
+Some basic notions on python will be assumed along this tutorial.
 
-.. todo:: Make a short tutorial on python, enough to run pynoramix.
+.. todo:: Make a short tutorial on python, enough to run aqua.
 
 ----------------------
  
 
 Networks
-===================
+========
 
 How to create, load and handle a network.
 
@@ -73,14 +73,14 @@ Links are stored as a dictionary for each node (see ref). Nodes are from now on 
 Loading networks from files
 +++++++++++++++++++++++++++++
 
-A network can be loaded together with their labels. Pynoramix uses its
+A network can be loaded together with their labels. Aqua uses its
 own compact format for the network, while the labels can be readed with many formats.
 This way a network can be initialized with the files or a posteriori:
 
 Loading a simple network from a columns file such as
-:download:`net_ex1.inp <../tutorials/nets/net_ex1.inp>`,
-:download:`net_ex2.inp <../tutorials/nets/net_ex2.inp>` or
-:download:`net_ex3.inp <../tutorials/nets/net_ex3.inp>` can be
+:download:`net_ex1.inp <../../tutorials/nets/net_ex1.inp>`,
+:download:`net_ex2.inp <../../tutorials/nets/net_ex2.inp>` or
+:download:`net_ex3.inp <../../tutorials/nets/net_ex3.inp>` can be
 done as follows:
 
 .. sourcecode:: ipython
@@ -99,7 +99,7 @@ done as follows:
    # 6.0 total weight nodes
 
 And using an extra file for the labels, :download:`labels_ex3.inp
-<../tutorials/nets/labels_ex3.inp>`, we can also:
+<../../tutorials/nets/labels_ex3.inp>`, we can also:
 
 .. sourcecode:: ipython
 
@@ -144,7 +144,7 @@ Writting networks
 There are three formats of output: 'native', 'labels', 'text'.
 
 The 'native format' is a compact format not readable for other
-programs.  This format is recommended to work with pynoramix since the
+programs.  This format is recommended to work with aqua since the
 size of the file is smaller than the file created with 'text'.
 
 .. sourcecode:: ipython
@@ -190,7 +190,7 @@ the weights of overlapping nodes and links.
 ----------------------
 
 Kinetic Networks
-===================
+================
 
 This section is a tutorial on how to analyze kinetic networks. To
 illustrate the analysis some test networks are available.
@@ -208,8 +208,8 @@ A kinetic network has been obtained for particle in a 1D potential:
    x^4-4x^2+x+sin(10x) 
 
 The files for this network are available as :download:`2w_1D.net
-<../tutorials/nets/1D_2well/2w_1D.net>` and :download:`2w_1D.aux
-<../tutorials/nets/1D_2well/2w_1D.aux>`. Where the topology file is in
+<../../tutorials/nets/1D_2well/2w_1D.net>` and :download:`2w_1D.aux
+<../../tutorials/nets/1D_2well/2w_1D.aux>`. Where the topology file is in
 the native format and the labels in text format.
 
 
@@ -312,7 +312,7 @@ different criteriums: convergence (eps) or number of iterations (iterations).
 
 The pruning option executes an approximation to MCL which is faster.
 When this pruning option is activated the algorithm is run via an external program (mcl).
-In the future the pruning option will be included in the code of Pynoramix.
+In the future the pruning option will be included in the code of Aqua.
 In this case no additional parameters are needed.
 
 .. sourcecode:: ipython

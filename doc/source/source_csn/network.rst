@@ -147,8 +147,63 @@ Nodes are represented by objects with the common attributes of class node:
 
 
 Cluster
-++++
++++++++
 
 Clusters are represented by objects with the common attributes of class cluster:
+
+.. attribute:: cluster.num_nodes
+
+   Number of nodes in the cluster. (int)
+
+.. attribute:: cluster.nodes
+
+   List of indexes of nodes which belong to the cluster. (list[int])
+
+.. attribute:: cluster.weight
+
+   Total weight of cluster if the nodes are weighted. (int)
+
+.. attribute:: cluster.label
+
+   Label of the cluster. Label of the most weighted node in the cluster -if the network is weighted-. (str)
+
+.. attribute:: cluster.link
+
+   Dictionary of links with the index of the destination cluster as key, and its weight as value. (dict[int]=float)
+
+.. attribute:: cluster.k
+
+    Degree or number of links of the cluster. (int)
+
+.. attribute:: cluster.k_out
+
+   Degree or number of links out of the cluster if the network is directed. (int)
+
+.. attribute:: cluster.k_in
+
+   Degree or number of links in the cluster if the network is directed. (int)
+
+Component
++++++++++
+
+Components are represented by objects with the common attributes of a cluster:
+
+.. attribute:: component.num_nodes
+
+   Number of nodes in the component. (int)
+
+.. attribute:: component.nodes
+
+   List of indexes of nodes which belong to the component. (list[int])
+
+.. attribute:: component.weight
+
+   Total weight of component if the nodes are weighted. (int)
+
+.. attribute:: component.label
+
+   Label of the component. Label of the most weighted node in the component -if the network is weighted-. (str)
+
+
 
 

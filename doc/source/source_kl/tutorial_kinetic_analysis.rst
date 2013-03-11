@@ -31,7 +31,7 @@ Loading a trajectory
 ++++++++++++++++++++
 
 Given a file, :download:`traj.oup
-<../tutorials/kinetic_1D_analysis/traj.oup.gz>`, with the 1D
+<../../tutorials/kinetic_1D_analysis/traj.oup.gz>`, with the 1D
 trajectory in its second column, the class *kinetic_1D_analysis* can
 be initialized:
 
