@@ -8,59 +8,59 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Tutorial Networks &mdash; Aqua 0.1 documentation</title>
+    <title>Tutorials &mdash; Aqua 0.1 documentation</title>
     
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
+        URL_ROOT:    '../',
         VERSION:     '0.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Aqua 0.1 documentation" href="index.html" />
-    <link rel="next" title="Tutorial Kinetic Analysis" href="tutorial_kinetic_analysis.html" />
-    <link rel="prev" title="Tutorial Molecular Systems" href="tutorial_molecular_systems.html" /> 
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Aqua 0.1 documentation" href="../index.html" />
+    <link rel="next" title="Molecular Systems" href="../source_faqs/faqs_ms.html" />
+    <link rel="prev" title="Functions" href="functions.html" /> 
   </head>
   <body>
 
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
-<a href="index.html"><img src="_static/logo.gif" border="0" alt="py4sci"/></a>
+<a href="../index.html"><img src="../_static/logo.gif" border="0" alt="py4sci"/></a>
 </div>
 
     <div class="related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
+          <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="tutorial_kinetic_analysis.html" title="Tutorial Kinetic Analysis"
+          <a href="../source_faqs/faqs_ms.html" title="Molecular Systems"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="tutorial_molecular_systems.html" title="Tutorial Molecular Systems"
+          <a href="functions.html" title="Functions"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">home</a>|&nbsp;</li>
-        <li><a href="search.html">search</a>|&nbsp;</li>
+        <li><a href="../index.html">home</a>|&nbsp;</li>
+        <li><a href="../search.html">search</a>|&nbsp;</li>
  
       </ul>
     </div>
 
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-            <p class="logo"><a href="index.html">
-              <img class="logo" src="_static/logo.gif" alt="Logo"/>
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.gif" alt="Logo"/>
             </a></p>
-  <h3><a href="index.html">Table Of Contents</a></h3>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Tutorial Networks</a><ul>
+<li><a class="reference internal" href="#">Tutorials</a><ul>
 <li><a class="reference internal" href="#networks">Networks</a><ul>
 <li><a class="reference internal" href="#a-network-from-scratch">A network from scratch</a></li>
 <li><a class="reference internal" href="#loading-networks-from-files">Loading networks from files</a></li>
@@ -98,19 +98,19 @@
 </ul>
 
   <h4>Previous topic</h4>
-  <p class="topless"><a href="tutorial_molecular_systems.html"
-                        title="previous chapter">Tutorial Molecular Systems</a></p>
+  <p class="topless"><a href="functions.html"
+                        title="previous chapter">Functions</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="tutorial_kinetic_analysis.html"
-                        title="next chapter">Tutorial Kinetic Analysis</a></p>
+  <p class="topless"><a href="../source_faqs/faqs_ms.html"
+                        title="next chapter">Molecular Systems</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="_sources/tutorial_networks.txt"
+    <li><a href="../_sources/source_csn/tutorial.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
-    <form class="search" action="search.html" method="get">
+    <form class="search" action="../search.html" method="get">
       <input type="text" name="q" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
@@ -129,16 +129,16 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="tutorial-networks">
-<h1>Tutorial Networks<a class="headerlink" href="#tutorial-networks" title="Permalink to this headline">¶</a></h1>
-<p>First of all, lets load Pynoramix in our script or in a ipython session:</p>
-<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [1]: </span><span class="kn">from</span> <span class="nn">pynoramix_beta</span> <span class="kn">import</span> <span class="o">*</span>
+  <div class="section" id="tutorials">
+<h1>Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this headline">¶</a></h1>
+<p>First of all, lets load Aqua in our script or in a ipython session:</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [1]: </span><span class="kn">from</span> <span class="nn">aqua</span> <span class="kn">import</span> <span class="o">*</span>
 </pre></div>
 </div>
-<p>Some basic notions on python will be assumed along this tutorial. If you just landed here without any idea on python, have a look to the section <em>First steps on python</em>.</p>
+<p>Some basic notions on python will be assumed along this tutorial.</p>
 <div class="admonition-todo admonition" id="index-0">
 <p class="first admonition-title">Todo</p>
-<p class="last">Make a short tutorial on python, enough to run pynoramix.</p>
+<p class="last">Make a short tutorial on python, enough to run aqua.</p>
 </div>
 <hr class="docutils" />
 <div class="section" id="networks">
@@ -189,13 +189,13 @@
 </div>
 <div class="section" id="loading-networks-from-files">
 <h3>Loading networks from files<a class="headerlink" href="#loading-networks-from-files" title="Permalink to this headline">¶</a></h3>
-<p>A network can be loaded together with their labels. Pynoramix uses its
+<p>A network can be loaded together with their labels. Aqua uses its
 own compact format for the network, while the labels can be readed with many formats.
 This way a network can be initialized with the files or a posteriori:</p>
 <p>Loading a simple network from a columns file such as
-<a class="reference download internal" href="_downloads/net_ex1.inp"><tt class="xref download docutils literal"><span class="pre">net_ex1.inp</span></tt></a>,
-<a class="reference download internal" href="_downloads/net_ex2.inp"><tt class="xref download docutils literal"><span class="pre">net_ex2.inp</span></tt></a> or
-<a class="reference download internal" href="_downloads/net_ex3.inp"><tt class="xref download docutils literal"><span class="pre">net_ex3.inp</span></tt></a> can be
+<a class="reference download internal" href="../_downloads/net_ex1.inp"><tt class="xref download docutils literal"><span class="pre">net_ex1.inp</span></tt></a>,
+<a class="reference download internal" href="../_downloads/net_ex2.inp"><tt class="xref download docutils literal"><span class="pre">net_ex2.inp</span></tt></a> or
+<a class="reference download internal" href="../_downloads/net_ex3.inp"><tt class="xref download docutils literal"><span class="pre">net_ex3.inp</span></tt></a> can be
 done as follows:</p>
 <div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [2]: </span><span class="n">net1</span><span class="o">=</span><span class="n">network</span><span class="p">(</span><span class="s">&#39;net_ex1.inp&#39;</span><span class="p">)</span>
 <span class="c"># Network:</span>
@@ -211,7 +211,7 @@ done as follows:</p>
 <span class="c"># 6.0 total weight nodes</span>
 </pre></div>
 </div>
-<p>And using an extra file for the labels, <a class="reference download internal" href="_downloads/labels_ex3.inp"><tt class="xref download docutils literal"><span class="pre">labels_ex3.inp</span></tt></a>, we can also:</p>
+<p>And using an extra file for the labels, <a class="reference download internal" href="../_downloads/labels_ex3.inp"><tt class="xref download docutils literal"><span class="pre">labels_ex3.inp</span></tt></a>, we can also:</p>
 <div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [6]: </span><span class="n">net3</span><span class="o">=</span><span class="n">network</span><span class="p">(</span><span class="s">&#39;net_ex3.inp&#39;</span><span class="p">,</span><span class="s">&#39;labels_ex3.inp&#39;</span><span class="p">)</span>
 <span class="c"># Network:</span>
 <span class="c"># 4 nodes</span>
@@ -250,7 +250,7 @@ The labels must be loaded from a secondary file.</p>
 <h3>Writting networks<a class="headerlink" href="#writting-networks" title="Permalink to this headline">¶</a></h3>
 <p>There are three formats of output: &#8216;native&#8217;, &#8216;labels&#8217;, &#8216;text&#8217;.</p>
 <p>The &#8216;native format&#8217; is a compact format not readable for other
-programs.  This format is recommended to work with pynoramix since the
+programs.  This format is recommended to work with aqua since the
 size of the file is smaller than the file created with &#8216;text&#8217;.</p>
 <div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [10]: </span><span class="n">net</span><span class="o">.</span><span class="n">write_net</span><span class="p">(</span><span class="n">name_file</span><span class="o">=</span><span class="s">&#39;net.pyn&#39;</span><span class="p">,</span><span class="n">format</span><span class="o">=</span><span class="s">&#39;native&#39;</span><span class="p">)</span>
 </pre></div>
@@ -295,7 +295,7 @@ illustrate the analysis some test networks are available.</p>
 <div class="section" id="d-double-well">
 <h4>1D double well<a class="headerlink" href="#d-double-well" title="Permalink to this headline">¶</a></h4>
 <p>A kinetic network has been obtained for particle in a 1D potential:</p>
-<img src="_images/mathmpl/math-7ce60d85fd.png" class="center" /><p>The files for this network are available as <a class="reference download internal" href="_downloads/2w_1D.net"><tt class="xref download docutils literal"><span class="pre">2w_1D.net</span></tt></a> and <a class="reference download internal" href="_downloads/2w_1D.aux"><tt class="xref download docutils literal"><span class="pre">2w_1D.aux</span></tt></a>. Where the topology file is in
+<img src="../_images/mathmpl/math-7ce60d85fd.png" class="center" /><p>The files for this network are available as <a class="reference download internal" href="../_downloads/2w_1D.net"><tt class="xref download docutils literal"><span class="pre">2w_1D.net</span></tt></a> and <a class="reference download internal" href="../_downloads/2w_1D.aux"><tt class="xref download docutils literal"><span class="pre">2w_1D.aux</span></tt></a>. Where the topology file is in
 the native format and the labels in text format.</p>
 <div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [2]: </span><span class="n">net_1D</span><span class="o">=</span><span class="n">network</span><span class="p">(</span><span class="s">&#39;2w_1D.net&#39;</span><span class="p">,</span><span class="s">&#39;2w_1D.aux&#39;</span><span class="p">,</span><span class="n">net_format</span><span class="o">=</span><span class="s">&#39;native&#39;</span><span class="p">)</span>
 <span class="c"># Network:</span>
@@ -378,7 +378,7 @@ different criteriums: convergence (eps) or number of iterations (iterations).</p
 </div>
 <p>The pruning option executes an approximation to MCL which is faster.
 When this pruning option is activated the algorithm is run via an external program (mcl).
-In the future the pruning option will be included in the code of Pynoramix.
+In the future the pruning option will be included in the code of Aqua.
 In this case no additional parameters are needed.</p>
 <div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [5]: </span><span class="n">net</span><span class="o">.</span><span class="n">mcl</span><span class="p">(</span><span class="n">granularity</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span><span class="n">pruning</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 <span class="c"># Number of clusters:  3</span>
@@ -502,16 +502,16 @@ each, characterized by a 3D array of integers.</p>
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
+          <a href="../genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="tutorial_kinetic_analysis.html" title="Tutorial Kinetic Analysis"
+          <a href="../source_faqs/faqs_ms.html" title="Molecular Systems"
              >next</a> |</li>
         <li class="right" >
-          <a href="tutorial_molecular_systems.html" title="Tutorial Molecular Systems"
+          <a href="functions.html" title="Functions"
              >previous</a> |</li>
-        <li><a href="index.html">home</a>|&nbsp;</li>
-        <li><a href="search.html">search</a>|&nbsp;</li>
+        <li><a href="../index.html">home</a>|&nbsp;</li>
+        <li><a href="../search.html">search</a>|&nbsp;</li>
  
       </ul>
     </div>

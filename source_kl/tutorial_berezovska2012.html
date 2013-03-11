@@ -10,51 +10,55 @@
     
     <title>Berezovska2012 &mdash; Aqua 0.1 documentation</title>
     
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
+        URL_ROOT:    '../',
         VERSION:     '0.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Aqua 0.1 documentation" href="index.html" />
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Aqua 0.1 documentation" href="../index.html" />
+    <link rel="next" title="Introduction" href="../source_csn/intro.html" />
     <link rel="prev" title="Tutorial Kinetic Analysis" href="tutorial_kinetic_analysis.html" /> 
   </head>
   <body>
 
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
-<a href="index.html"><img src="_static/logo.gif" border="0" alt="py4sci"/></a>
+<a href="../index.html"><img src="../_static/logo.gif" border="0" alt="py4sci"/></a>
 </div>
 
     <div class="related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
+          <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../source_csn/intro.html" title="Introduction"
+             accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="tutorial_kinetic_analysis.html" title="Tutorial Kinetic Analysis"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">home</a>|&nbsp;</li>
-        <li><a href="search.html">search</a>|&nbsp;</li>
+        <li><a href="../index.html">home</a>|&nbsp;</li>
+        <li><a href="../search.html">search</a>|&nbsp;</li>
  
       </ul>
     </div>
 
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-            <p class="logo"><a href="index.html">
-              <img class="logo" src="_static/logo.gif" alt="Logo"/>
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.gif" alt="Logo"/>
             </a></p>
-  <h3><a href="index.html">Table Of Contents</a></h3>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Berezovska2012</a><ul>
 <li><a class="reference internal" href="#getting-aqua">Getting Aqua</a></li>
@@ -72,14 +76,17 @@
   <h4>Previous topic</h4>
   <p class="topless"><a href="tutorial_kinetic_analysis.html"
                         title="previous chapter">Tutorial Kinetic Analysis</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../source_csn/intro.html"
+                        title="next chapter">Introduction</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="_sources/tutorial_berezovska2012.txt"
+    <li><a href="../_sources/source_kl/tutorial_berezovska2012.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
-    <form class="search" action="search.html" method="get">
+    <form class="search" action="../search.html" method="get">
       <input type="text" name="q" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
@@ -110,7 +117,7 @@ Aqua.</p>
 <div class="section" id="getting-aqua">
 <h2>Getting Aqua<a class="headerlink" href="#getting-aqua" title="Permalink to this headline">¶</a></h2>
 <p>The indications to download and install these libraries can be found
-in <a class="reference internal" href="getting_started.html#getting-started-pyn"><em>Getting Started</em></a>.</p>
+in <a class="reference internal" href="../source_intro/getting_started.html#getting-started-pyn"><em>Getting Started</em></a>.</p>
 </div>
 <div class="section" id="loading-aqua">
 <h2>Loading Aqua<a class="headerlink" href="#loading-aqua" title="Permalink to this headline">¶</a></h2>
@@ -135,7 +142,7 @@ begin with the proper command to load Aqua:</p>
 <div class="section" id="loading-a-trajectory">
 <h2>Loading a trajectory<a class="headerlink" href="#loading-a-trajectory" title="Permalink to this headline">¶</a></h2>
 <p>Given a file with a 1D trajectory in its second column,
-<a class="reference download internal" href="_downloads/traj.oup.gz"><tt class="xref download docutils literal"><span class="pre">traj.oup</span></tt></a>,
+<a class="reference download internal" href="../_downloads/traj.oup.gz"><tt class="xref download docutils literal"><span class="pre">traj.oup</span></tt></a>,
 the class <em>kinetic_1D_analysis</em> can be initialized:</p>
 <div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [2]: </span><span class="n">test</span><span class="o">=</span><span class="n">kinetic_analysis</span><span class="p">(</span><span class="s">&#39;traj.oup&#39;</span><span class="p">,</span><span class="n">columns</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="c"># 999901 frames, 1 particles, 1 dimensions.</span>
@@ -167,7 +174,7 @@ advantage of its intrinsic numpy attributes and functions:</p>
 </pre></div>
 </div>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/histo_1D.png"><img alt="_images/histo_1D.png" src="_images/histo_1D.png" style="width: 568.4px; height: 428.4px;" /></a>
+<a class="reference internal image-reference" href="../_images/histo_1D.png"><img alt="../_images/histo_1D.png" src="../_images/histo_1D.png" style="width: 568.4px; height: 428.4px;" /></a>
 </div>
 </div>
 <div class="section" id="analysis">
@@ -210,7 +217,7 @@ test.traj[10].</p>
 </pre></div>
 </div>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/histo_color_ganna.png"><img alt="_images/histo_color_ganna.png" src="_images/histo_color_ganna.png" style="width: 568.4px; height: 428.4px;" /></a>
+<a class="reference internal image-reference" href="../_images/histo_color_ganna.png"><img alt="../_images/histo_color_ganna.png" src="../_images/histo_color_ganna.png" style="width: 568.4px; height: 428.4px;" /></a>
 </div>
 <div class="section" id="kinetic-model-and-flux-between-clusters">
 <h3>Kinetic Model and Flux between clusters<a class="headerlink" href="#kinetic-model-and-flux-between-clusters" title="Permalink to this headline">¶</a></h3>
@@ -218,9 +225,9 @@ test.traj[10].</p>
 macro-states. The model should be written as a master equation where the
 transition probabilities, or rates, between macro-states interplay to
 mimic the macroscopical dynamical behavior observed in the 1D trajectory.</p>
-<img src="_images/mathmpl/math-e4dd06b42d.png" class="center" /><p></p>
-<img src="_images/mathmpl/math-acbbfe60df.png" class="center" /><p></p>
-<img src="_images/mathmpl/math-8aae56b1b6.png" class="center" /><p>In Aqua this model is enconded as a kinetic or conformational
+<img src="../_images/mathmpl/math-e4dd06b42d.png" class="center" /><p></p>
+<img src="../_images/mathmpl/math-acbbfe60df.png" class="center" /><p></p>
+<img src="../_images/mathmpl/math-8aae56b1b6.png" class="center" /><p>In Aqua this model is enconded as a kinetic or conformational
 network.  The trajectory is mapped into a graph where weighted nodes
 and directed links accounts for the occupation of clusters and the
 number of transitions among them.</p>
@@ -232,7 +239,7 @@ number of transitions among them.</p>
 </pre></div>
 </div>
 <p>Before getting the transision probabilities, or rates, detailed
-balance condition, <img src="_images/mathmpl/math-c1fe9ce35a.png" style="position: relative; bottom: -11px"/>, is
+balance condition, <img src="../_images/mathmpl/math-c1fe9ce35a.png" style="position: relative; bottom: -11px"/>, is
 impossed symmetrising the network.</p>
 <div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [10]: </span><span class="n">test</span><span class="o">.</span><span class="n">network_clusters</span><span class="o">.</span><span class="n">symmetrize</span><span class="p">(</span><span class="n">new</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 </pre></div>
@@ -259,7 +266,7 @@ weight of a given link. This way, the flux from cluster 0 to cluster 1:</p>
 </div>
 <p>Since detailed balance condition is fulfilled by construction, the
 stationary solution of the model is given by the occupation
-probabilities (<img src="_images/mathmpl/math-f6f3152566.png" style="position: relative; bottom: -8px"/>, <img src="_images/mathmpl/math-fe719855fd.png" style="position: relative; bottom: -8px"/>, <img src="_images/mathmpl/math-6eeeb85885.png" style="position: relative; bottom: -8px"/>):</p>
+probabilities (<img src="../_images/mathmpl/math-f6f3152566.png" style="position: relative; bottom: -8px"/>, <img src="../_images/mathmpl/math-fe719855fd.png" style="position: relative; bottom: -8px"/>, <img src="../_images/mathmpl/math-6eeeb85885.png" style="position: relative; bottom: -8px"/>):</p>
 <div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [12]: </span><span class="n">ww</span><span class="o">=</span><span class="n">test</span><span class="o">.</span><span class="n">network_clusters</span><span class="o">.</span><span class="n">weight</span>
 <span class="gp">In [13]: </span><span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
 <span class="go">   ....:     print &#39;P&#39;+str(ii)+&#39;^s =&#39;, test.network_clusters.node[ii].weight/ww</span>
@@ -289,7 +296,7 @@ extracted from the trajectory:</p>
 </pre></div>
 </div>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/fpt_berez_traj.png"><img alt="_images/fpt_berez_traj.png" src="_images/fpt_berez_traj.png" style="width: 568.4px; height: 428.4px;" /></a>
+<a class="reference internal image-reference" href="../_images/fpt_berez_traj.png"><img alt="../_images/fpt_berez_traj.png" src="../_images/fpt_berez_traj.png" style="width: 568.4px; height: 428.4px;" /></a>
 </div>
 <p>The trajectory of this tutorial is not long enough to have good
 statistics. But we can compare these distributions with with those
@@ -313,7 +320,7 @@ walker following the transition probabilities of the model is obtained:</p>
 </pre></div>
 </div>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/fpt_berez_model.png"><img alt="_images/fpt_berez_model.png" src="_images/fpt_berez_model.png" style="width: 568.4px; height: 428.4px;" /></a>
+<a class="reference internal image-reference" href="../_images/fpt_berez_model.png"><img alt="../_images/fpt_berez_model.png" src="../_images/fpt_berez_model.png" style="width: 568.4px; height: 428.4px;" /></a>
 </div>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
@@ -341,13 +348,16 @@ walker following the transition probabilities of the model is obtained:</p>
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
+          <a href="../genindex.html" title="General Index"
              >index</a></li>
+        <li class="right" >
+          <a href="../source_csn/intro.html" title="Introduction"
+             >next</a> |</li>
         <li class="right" >
           <a href="tutorial_kinetic_analysis.html" title="Tutorial Kinetic Analysis"
              >previous</a> |</li>
-        <li><a href="index.html">home</a>|&nbsp;</li>
-        <li><a href="search.html">search</a>|&nbsp;</li>
+        <li><a href="../index.html">home</a>|&nbsp;</li>
+        <li><a href="../search.html">search</a>|&nbsp;</li>
  
       </ul>
     </div>

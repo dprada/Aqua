@@ -1,12 +1,6 @@
 # git rm -r *.html *.inv *.js _downloads/* _images/* _sources/* _static/*
 
-cp -r doc/html/_downloads .
-cp -r doc/html/_images .
-cp -r doc/html/_sources .
-cp -r doc/html/_static .
-cp doc/html/*.html .
-cp doc/html/*.inv .
-cp doc/html/*.js .
+cp -r doc/html/* .
 
 touch .nojekyll
 git add .nojekyll *.html *.inv *.js _downloads/* _images/* _sources/* _static/*

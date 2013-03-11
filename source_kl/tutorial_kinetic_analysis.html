@@ -10,55 +10,55 @@
     
     <title>Tutorial Kinetic Analysis &mdash; Aqua 0.1 documentation</title>
     
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
+        URL_ROOT:    '../',
         VERSION:     '0.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="Aqua 0.1 documentation" href="index.html" />
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Aqua 0.1 documentation" href="../index.html" />
     <link rel="next" title="Berezovska2012" href="tutorial_berezovska2012.html" />
-    <link rel="prev" title="Tutorial Networks" href="tutorial_networks.html" /> 
+    <link rel="prev" title="Kinetic Analysis" href="kinetic_analysis.html" /> 
   </head>
   <body>
 
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
-<a href="index.html"><img src="_static/logo.gif" border="0" alt="py4sci"/></a>
+<a href="../index.html"><img src="../_static/logo.gif" border="0" alt="py4sci"/></a>
 </div>
 
     <div class="related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
+          <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
           <a href="tutorial_berezovska2012.html" title="Berezovska2012"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="tutorial_networks.html" title="Tutorial Networks"
+          <a href="kinetic_analysis.html" title="Kinetic Analysis"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">home</a>|&nbsp;</li>
-        <li><a href="search.html">search</a>|&nbsp;</li>
+        <li><a href="../index.html">home</a>|&nbsp;</li>
+        <li><a href="../search.html">search</a>|&nbsp;</li>
  
       </ul>
     </div>
 
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-            <p class="logo"><a href="index.html">
-              <img class="logo" src="_static/logo.gif" alt="Logo"/>
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo.gif" alt="Logo"/>
             </a></p>
-  <h3><a href="index.html">Table Of Contents</a></h3>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Tutorial Kinetic Analysis</a><ul>
 <li><a class="reference internal" href="#d-trajectories">1D Trajectories</a><ul>
@@ -77,19 +77,19 @@
 </ul>
 
   <h4>Previous topic</h4>
-  <p class="topless"><a href="tutorial_networks.html"
-                        title="previous chapter">Tutorial Networks</a></p>
+  <p class="topless"><a href="kinetic_analysis.html"
+                        title="previous chapter">Kinetic Analysis</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="tutorial_berezovska2012.html"
                         title="next chapter">Berezovska2012</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="_sources/tutorial_kinetic_analysis.txt"
+    <li><a href="../_sources/source_kl/tutorial_kinetic_analysis.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
-    <form class="search" action="search.html" method="get">
+    <form class="search" action="../search.html" method="get">
       <input type="text" name="q" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
@@ -126,7 +126,7 @@ The following subsections are a description of how to deal with this class and t
 </div>
 <div class="section" id="loading-a-trajectory">
 <h3>Loading a trajectory<a class="headerlink" href="#loading-a-trajectory" title="Permalink to this headline">¶</a></h3>
-<p>Given a file, <a class="reference download internal" href="_downloads/traj.oup.gz"><tt class="xref download docutils literal"><span class="pre">traj.oup</span></tt></a>, with the 1D
+<p>Given a file, <a class="reference download internal" href="../_downloads/traj.oup.gz"><tt class="xref download docutils literal"><span class="pre">traj.oup</span></tt></a>, with the 1D
 trajectory in its second column, the class <em>kinetic_1D_analysis</em> can
 be initialized:</p>
 <div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [2]: </span><span class="n">kin_test</span><span class="o">=</span><span class="n">kinetic_1D_analysis</span><span class="p">(</span><span class="s">&#39;traj.oup&#39;</span><span class="p">,</span><span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -161,7 +161,7 @@ be initialized:</p>
 </pre></div>
 </div>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/histo_1D.png"><img alt="_images/histo_1D.png" src="_images/histo_1D.png" style="width: 568.4px; height: 428.4px;" /></a>
+<a class="reference internal image-reference" href="../_images/histo_1D.png"><img alt="../_images/histo_1D.png" src="../_images/histo_1D.png" style="width: 568.4px; height: 428.4px;" /></a>
 </div>
 </div>
 <div class="section" id="first-order-kinetic-model">
@@ -172,7 +172,7 @@ from a dynamical system. Actually, the trajectory corresponds to the
 projection onto an arbitrary coordinate of a langevin dynamics of a
 particle embeded in a 2D potential.</p>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/histo_color.png"><img alt="_images/histo_color.png" src="_images/histo_color.png" style="width: 568.4px; height: 428.4px;" /></a>
+<a class="reference internal image-reference" href="../_images/histo_color.png"><img alt="../_images/histo_color.png" src="../_images/histo_color.png" style="width: 568.4px; height: 428.4px;" /></a>
 </div>
 <p>According to this first superficial analysis, the particle moves
 through a landscape with 3 basins (green, orange, blue) separated by 2
@@ -223,9 +223,9 @@ balance condition is impossed symmetrising the network.</p>
 <p class="last">The section XXX for the details of this function.</p>
 </div>
 <p>The network we have now is nothing but a kinetic model respresented as a graph. This way the master equations:</p>
-<img src="_images/mathmpl/math-e4dd06b42d.png" class="center" /><p></p>
-<img src="_images/mathmpl/math-acbbfe60df.png" class="center" /><p></p>
-<img src="_images/mathmpl/math-8aae56b1b6.png" class="center" /><p>can be written with the transition probabilities:</p>
+<img src="../_images/mathmpl/math-e4dd06b42d.png" class="center" /><p></p>
+<img src="../_images/mathmpl/math-acbbfe60df.png" class="center" /><p></p>
+<img src="../_images/mathmpl/math-8aae56b1b6.png" class="center" /><p>can be written with the transition probabilities:</p>
 <div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [10]: </span><span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
 <span class="go">   ....:    ww=kin_test.network_clusters.node[ii].weight</span>
 <span class="go">   ....:        for jj in range(3):</span>
@@ -240,7 +240,7 @@ balance condition is impossed symmetrising the network.</p>
 <span class="go">P12= 0.0285230372469</span>
 </pre></div>
 </div>
-<p>Where detailed balance condition, <img src="_images/mathmpl/math-c1fe9ce35a.png" style="position: relative; bottom: -11px"/>, is
+<p>Where detailed balance condition, <img src="../_images/mathmpl/math-c1fe9ce35a.png" style="position: relative; bottom: -11px"/>, is
 fullfilled by construction. Thereby, the stationary solution of this
 master equation is given by the occupation probabilities given found
 as weights of nodes.</p>
@@ -283,11 +283,11 @@ file &#8216;traj.oup&#8217; but to a trajectory 10 times larges.</p>
 <p class="last">Function for further details.</p>
 </div>
 <p>The distributions can be fitted to exponential functions:
-<img src="_images/mathmpl/math-e8c191130b.png" style="position: relative; bottom: -8px"/>. The next plot shows the fitting together with
+<img src="../_images/mathmpl/math-e8c191130b.png" style="position: relative; bottom: -8px"/>. The next plot shows the fitting together with
 the distributions, where approximately A=-0.008 and B=-9.763 for
 cluster 1 (orange), and A=-0.026 and B=-7.311 for cluster 2 (blue).</p>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/lf_dist_bad.png"><img alt="_images/lf_dist_bad.png" src="_images/lf_dist_bad.png" style="width: 568.4px; height: 428.4px;" /></a>
+<a class="reference internal image-reference" href="../_images/lf_dist_bad.png"><img alt="../_images/lf_dist_bad.png" src="../_images/lf_dist_bad.png" style="width: 568.4px; height: 428.4px;" /></a>
 </div>
 <p>We observe how the long time behavior fits to an exponential
 distribution but <strong>many non expected short life events appear</strong>.</p>
@@ -310,7 +310,7 @@ kinetic network can be run according to the transition probabilities.</p>
 <p>This time the distributions and their exponential fits, A=-0.068 and B=-5.504 for
 cluster 1 (orange) and A=-0.029 and B=-7.034 for cluster 2 (blue), shows a different behavior:</p>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/lf_dist_model_bad.png"><img alt="_images/lf_dist_model_bad.png" src="_images/lf_dist_model_bad.png" style="width: 568.4px; height: 428.4px;" /></a>
+<a class="reference internal image-reference" href="../_images/lf_dist_model_bad.png"><img alt="../_images/lf_dist_model_bad.png" src="../_images/lf_dist_model_bad.png" style="width: 568.4px; height: 428.4px;" /></a>
 </div>
 <p>We can see how, <strong>although the mean life time (in [13],[14] and
 [17],[18]) are similar, the relaxations times are different from
@@ -342,7 +342,7 @@ cluster 0 (green) to cluster 2 and from cluster 1 (orange) to cluster 2.</p>
 </pre></div>
 </div>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/fpt_bad_to2.png"><img alt="_images/fpt_bad_to2.png" src="_images/fpt_bad_to2.png" style="width: 568.4px; height: 428.4px;" /></a>
+<a class="reference internal image-reference" href="../_images/fpt_bad_to2.png"><img alt="../_images/fpt_bad_to2.png" src="../_images/fpt_bad_to2.png" style="width: 568.4px; height: 428.4px;" /></a>
 </div>
 <p>There are two things not expected in this plot. The <strong>short time
 behavior looks anomalous</strong> and both distributions &#8216;1 to 2&#8217; and &#8216;0 to
@@ -368,7 +368,7 @@ transition probabilities.</p>
 </pre></div>
 </div>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/fpt_bad_to2_model.png"><img alt="_images/fpt_bad_to2_model.png" src="_images/fpt_bad_to2_model.png" style="width: 568.4px; height: 428.4px;" /></a>
+<a class="reference internal image-reference" href="../_images/fpt_bad_to2_model.png"><img alt="../_images/fpt_bad_to2_model.png" src="../_images/fpt_bad_to2_model.png" style="width: 568.4px; height: 428.4px;" /></a>
 </div>
 <p>This time we <strong>at least observe a bi-exponential</strong> behavior in the &#8216;1 to 2&#8217;
 distribution in agreement with our first guess. But if we compare the
@@ -405,7 +405,7 @@ passing by cluster 1.</p>
 </pre></div>
 </div>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/fcpt_bad_0to2.png"><img alt="_images/fcpt_bad_0to2.png" src="_images/fcpt_bad_0to2.png" style="width: 568.4px; height: 428.4px;" /></a>
+<a class="reference internal image-reference" href="../_images/fcpt_bad_0to2.png"><img alt="../_images/fcpt_bad_0to2.png" src="../_images/fcpt_bad_0to2.png" style="width: 568.4px; height: 428.4px;" /></a>
 </div>
 <p>The first passage time distribution of going from 0 to 2 without
 passing by 1 it is not negligible as we assumed at the begining of
@@ -419,7 +419,7 @@ this tutorial just looking at the histogram.</p>
 </pre></div>
 </div>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/fcpt_bad_0to2_model.png"><img alt="_images/fcpt_bad_0to2_model.png" src="_images/fcpt_bad_0to2_model.png" style="width: 568.4px; height: 428.4px;" /></a>
+<a class="reference internal image-reference" href="../_images/fcpt_bad_0to2_model.png"><img alt="../_images/fcpt_bad_0to2_model.png" src="../_images/fcpt_bad_0to2_model.png" style="width: 568.4px; height: 428.4px;" /></a>
 </div>
 <p>But in this distributions, the life time of each stay in 0 is included
 (as with the first passage time). Let see how in the next section we
@@ -441,7 +441,7 @@ initial cluster accounts for the distribution.</p>
 </pre></div>
 </div>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/tt_bad_0to2_1.png"><img alt="_images/tt_bad_0to2_1.png" src="_images/tt_bad_0to2_1.png" style="width: 568.4px; height: 428.4px;" /></a>
+<a class="reference internal image-reference" href="../_images/tt_bad_0to2_1.png"><img alt="../_images/tt_bad_0to2_1.png" src="../_images/tt_bad_0to2_1.png" style="width: 568.4px; height: 428.4px;" /></a>
 </div>
 <p>Once more the kinetics observed in the model is different from what
 can be computed in the trajectory. This observation points, once again,
@@ -473,7 +473,7 @@ to discard this events the option &#8216;no_return&#8217; is required:</p>
 </pre></div>
 </div>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/tt_bad_0to2_2.png"><img alt="_images/tt_bad_0to2_2.png" src="_images/tt_bad_0to2_2.png" style="width: 560.0px; height: 420.0px;" /></a>
+<a class="reference internal image-reference" href="../_images/tt_bad_0to2_2.png"><img alt="../_images/tt_bad_0to2_2.png" src="../_images/tt_bad_0to2_2.png" style="width: 560.0px; height: 420.0px;" /></a>
 </div>
 <p>The observations we can make are the same written above. The kinetic
 model does not offer a good representation of the system. Regarding
@@ -498,7 +498,7 @@ cluster.</p>
 </pre></div>
 </div>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/ctt_bad_0to2.png"><img alt="_images/ctt_bad_0to2.png" src="_images/ctt_bad_0to2.png" style="width: 560.0px; height: 420.0px;" /></a>
+<a class="reference internal image-reference" href="../_images/ctt_bad_0to2.png"><img alt="../_images/ctt_bad_0to2.png" src="../_images/ctt_bad_0to2.png" style="width: 560.0px; height: 420.0px;" /></a>
 </div>
 <p>It is clear now that the one step trips are straight transitions 0
 to 1. We can now state that there are two time scales or mechanisms
@@ -516,7 +516,7 @@ it is not properly built up.</p>
 </pre></div>
 </div>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/ctt_bad_0to2_model.png"><img alt="_images/ctt_bad_0to2_model.png" src="_images/ctt_bad_0to2_model.png" style="width: 560.0px; height: 420.0px;" /></a>
+<a class="reference internal image-reference" href="../_images/ctt_bad_0to2_model.png"><img alt="../_images/ctt_bad_0to2_model.png" src="../_images/ctt_bad_0to2_model.png" style="width: 560.0px; height: 420.0px;" /></a>
 </div>
 <p>Although there exist straight transitions from 0 to 2 in just one time
 step, it is part of the same mechanism (exponential decay). The saving
@@ -538,7 +538,7 @@ not reproduce the kinetics from the trajectory. The three cluster with
 which the model was built are not well defined. Have a look to a piece
 of trajectory to understand all the previous results and conclussions:</p>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/traj123.png"><img alt="_images/traj123.png" src="_images/traj123.png" style="width: 560.0px; height: 420.0px;" /></a>
+<a class="reference internal image-reference" href="../_images/traj123.png"><img alt="../_images/traj123.png" src="../_images/traj123.png" style="width: 560.0px; height: 420.0px;" /></a>
 </div>
 <p>The colors correspond to the three macro-states or clusters comming
 from the barriers observed in the histogram (XXX).</p>
@@ -549,13 +549,13 @@ embedded in a larger dimensional space (2 in this case).  Before
 propossing how to get a better description, a better kinetic model,
 let see how the system behaves in the original 2 dimmensions:</p>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/histo_2d.png"><img alt="_images/histo_2d.png" src="_images/histo_2d.png" style="width: 568.4px; height: 428.4px;" /></a>
+<a class="reference internal image-reference" href="../_images/histo_2d.png"><img alt="../_images/histo_2d.png" src="../_images/histo_2d.png" style="width: 568.4px; height: 428.4px;" /></a>
 </div>
 <p>The trajectory studied was the projection over the black axe. Knowing
 now that we can define the three macro-states, clusters or basins of
 attraction, with the barriers X=-5.5 and Y=5.5, we can rebuild the histogram:</p>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/histo_color_good.png"><img alt="_images/histo_color_good.png" src="_images/histo_color_good.png" style="width: 568.4px; height: 428.4px;" /></a>
+<a class="reference internal image-reference" href="../_images/histo_color_good.png"><img alt="../_images/histo_color_good.png" src="../_images/histo_color_good.png" style="width: 568.4px; height: 428.4px;" /></a>
 </div>
 <p>We understand now why, trying to understand the mechanisms of
 transition 0 to 1 to 2 made no sense. Actually, there are no such
@@ -601,14 +601,14 @@ kinetic magnitudes previously computed for the wrong model.</p>
 </pre></div>
 </div>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/fpt_dist_good.png"><img alt="_images/fpt_dist_good.png" src="_images/fpt_dist_good.png" style="width: 568.4px; height: 428.4px;" /></a>
+<a class="reference internal image-reference" href="../_images/fpt_dist_good.png"><img alt="../_images/fpt_dist_good.png" src="../_images/fpt_dist_good.png" style="width: 568.4px; height: 428.4px;" /></a>
 </div>
 <p>The order is different. I have to writte before that the kinetics was
 absurdo. 0 to 2 was faster than 1 to 2 even with a barrier higher. It
 is not possible since it has to go through 1. The times are also different.</p>
 <p>Having an apparantly exponential behavior it is not saying that our kinetics is ok.</p>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/fpt_dist_good_model.png"><img alt="_images/fpt_dist_good_model.png" src="_images/fpt_dist_good_model.png" style="width: 568.4px; height: 428.4px;" /></a>
+<a class="reference internal image-reference" href="../_images/fpt_dist_good_model.png"><img alt="../_images/fpt_dist_good_model.png" src="../_images/fpt_dist_good_model.png" style="width: 568.4px; height: 428.4px;" /></a>
 </div>
 <p>First committed_passage_time:</p>
 <div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [136]: </span><span class="n">fcptx012</span><span class="p">,</span><span class="n">fcpty012</span><span class="o">=</span><span class="n">kin_test</span><span class="o">.</span><span class="n">first_committed_passage_time</span><span class="p">(</span><span class="n">traj</span><span class="o">=</span><span class="s">&#39;clusters&#39;</span><span class="p">,</span><span class="n">states</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span><span class="n">commitment</span><span class="o">=</span><span class="p">[</span><span class="bp">True</span><span class="p">,</span><span class="bp">True</span><span class="p">,</span><span class="bp">True</span><span class="p">],</span><span class="n">norm</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
@@ -643,7 +643,7 @@ a trajectory from a brownian walker over the kinetic network (see XXX).</p>
 </pre></div>
 </div>
 <div class="figure align-center">
-<a class="reference internal image-reference" href="_images/fpt_ganna.png"><img alt="_images/fpt_ganna.png" src="_images/fpt_ganna.png" style="width: 568.4px; height: 428.4px;" /></a>
+<a class="reference internal image-reference" href="../_images/fpt_ganna.png"><img alt="../_images/fpt_ganna.png" src="../_images/fpt_ganna.png" style="width: 568.4px; height: 428.4px;" /></a>
 </div>
 <div class="admonition-see-also admonition seealso">
 <p class="first admonition-title">See also</p>
@@ -667,16 +667,16 @@ a trajectory from a brownian walker over the kinetic network (see XXX).</p>
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
+          <a href="../genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
           <a href="tutorial_berezovska2012.html" title="Berezovska2012"
              >next</a> |</li>
         <li class="right" >
-          <a href="tutorial_networks.html" title="Tutorial Networks"
+          <a href="kinetic_analysis.html" title="Kinetic Analysis"
              >previous</a> |</li>
-        <li><a href="index.html">home</a>|&nbsp;</li>
-        <li><a href="search.html">search</a>|&nbsp;</li>
+        <li><a href="../index.html">home</a>|&nbsp;</li>
+        <li><a href="../search.html">search</a>|&nbsp;</li>
  
       </ul>
     </div>
