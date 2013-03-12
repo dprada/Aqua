@@ -50,6 +50,8 @@ Some special words can be used although they have an easy translation:
 
 Find some examples in section Tutorial-Syntaxis.
 
+.. seealso:: :ref:`ms-tut-selections`
+
 
 Info
 ++++
@@ -62,6 +64,9 @@ Info
 Writting pdb files
 ++++++++++++++++++
 
+xxx
+
+------------------------
 
 Trajectories
 ============
@@ -158,6 +163,7 @@ Delete Frames
    :type units: str.
    :return: None
 
+.. seealso:: .
 
 
 Writting dcd files
@@ -180,5 +186,4 @@ Writting dcd files
    :type action: str.
    :return: None
 
-
-
+.. seealso:: :ref:`ms-tut-convert-traj`

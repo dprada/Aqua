@@ -277,80 +277,87 @@ and <a class="reference download internal" href="../_downloads/GSGS.dcd"><tt cla
 </div>
 </div>
 <div class="section" id="converting-a-trajectory-into-other-format">
-<h3>Converting a trajectory into other format<a class="headerlink" href="#converting-a-trajectory-into-other-format" title="Permalink to this headline">¶</a></h3>
-<p>Right now the output formats are only dcd files.</p>
-<p>This way the original trajectory is stored in memory:</p>
-<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [2]: </span><span class="n">ion</span><span class="o">=</span><span class="n">molecule</span><span class="p">(</span><span class="s">&#39;run_ion.gro&#39;</span><span class="p">,</span><span class="n">coors</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span id="ms-tut-convert-traj"></span><h3>Converting a trajectory into other format<a class="headerlink" href="#converting-a-trajectory-into-other-format" title="Permalink to this headline">¶</a></h3>
+<p>Right now the output format is only dcd.</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [2]: </span><span class="n">metenk</span><span class="o">=</span><span class="n">msystem</span><span class="p">(</span><span class="s">&#39;metenk.pdb&#39;</span><span class="p">)</span>
 
-<span class="gp">In [3]: </span><span class="n">ion</span><span class="o">.</span><span class="n">load_traj</span><span class="p">(</span><span class="s">&#39;traj.xtc&#39;</span><span class="p">,</span><span class="n">frame</span><span class="o">=</span><span class="s">&#39;ALL&#39;</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="gp">In [3]: </span><span class="n">metenk</span><span class="o">.</span><span class="n">load_traj</span><span class="p">(</span><span class="s">&#39;traj_metenk.xtc&#39;</span><span class="p">)</span>
 
-<span class="gp">In [4]: </span><span class="n">ion</span><span class="o">.</span><span class="n">traj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;new_traj.dcd&#39;</span><span class="p">,</span><span class="n">action</span><span class="o">=</span><span class="s">&#39;Open&#39;</span><span class="p">)</span>
+<span class="gp">In [4]: </span><span class="n">metenk</span><span class="o">.</span><span class="n">info_trajs</span><span class="p">()</span>
+<span class="c"># 0 frames/models in traj 0</span>
 
-<span class="gp">In [5]: </span><span class="n">ion</span><span class="o">.</span><span class="n">traj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">frame</span><span class="o">=</span><span class="s">&#39;ALL&#39;</span><span class="p">)</span>
+<span class="gp">In [5]: </span><span class="n">metenk</span><span class="o">.</span><span class="n">traj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;traj_metenk.dcd&#39;</span><span class="p">,</span><span class="n">action</span><span class="o">=</span><span class="s">&#39;Open&#39;</span><span class="p">)</span>
 
-<span class="gp">In [6]: </span><span class="n">ion</span><span class="o">.</span><span class="n">traj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s">&#39;Close&#39;</span><span class="p">)</span>
+<span class="gp">In [6]: </span><span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+<span class="go">   ...:     metenk.traj[0].reload_frame()</span>
+<span class="go">   ...:     if metenk.traj[0].io_end:</span>
+<span class="go">   ...:        metenk.traj[0].write(action=&#39;Close&#39;)</span>
+<span class="go">   ...:        break</span>
+<span class="go">   ...:     metenk.traj[0].write(frame=0)</span>
 </pre></div>
 </div>
-<p>This way the original trajectory is not stored in memory:</p>
-<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [2]: </span><span class="n">ion</span><span class="o">=</span><span class="n">molecule</span><span class="p">(</span><span class="s">&#39;run_ion.gro&#39;</span><span class="p">,</span><span class="n">coors</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-
-<span class="gp">In [3]: </span><span class="n">ion</span><span class="o">.</span><span class="n">load_traj</span><span class="p">(</span><span class="s">&#39;traj.xtc&#39;</span><span class="p">,</span><span class="n">frame</span><span class="o">=</span><span class="s">&#39;Next&#39;</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-
-<span class="gp">In [4]: </span><span class="n">ion</span><span class="o">.</span><span class="n">traj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;new_traj.dcd&#39;</span><span class="p">,</span><span class="n">action</span><span class="o">=</span><span class="s">&#39;Open&#39;</span><span class="p">)</span>
-
-<span class="gp">In [5]: </span><span class="k">while</span> <span class="n">ion</span><span class="o">.</span><span class="n">traj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">io_opened</span><span class="p">:</span>
-<span class="go">   ...:     ion.traj[0].write()</span>
-<span class="go">   ...:     ion.traj[0].reload_frame()</span>
-<span class="go">   ...:</span>
-
-<span class="c"># End of file</span>
-<span class="gp">In [6]: </span><span class="n">ion</span><span class="o">.</span><span class="n">traj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s">&#39;Close&#39;</span><span class="p">)</span>
-</pre></div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="msystem.html#msystem" title="msystem"><tt class="xref py py-class docutils literal"><span class="pre">msystem</span></tt></a>, <a class="reference internal" href="coors.html#traj" title="traj"><tt class="xref py py-class docutils literal"><span class="pre">traj</span></tt></a>, <a class="reference internal" href="functions.html#msystem.load_traj" title="msystem.load_traj"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.load_traj()</span></tt></a>, <a class="reference internal" href="functions.html#msystem.info_trajs" title="msystem.info_trajs"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.info_trajs()</span></tt></a>, <a class="reference internal" href="functions.html#traj.reload_frame" title="traj.reload_frame"><tt class="xref py py-meth docutils literal"><span class="pre">traj.reload_frame()</span></tt></a>, <a class="reference internal" href="functions.html#traj.write" title="traj.write"><tt class="xref py py-meth docutils literal"><span class="pre">traj.write()</span></tt></a></p>
 </div>
 </div>
 </div>
 <div class="section" id="how-to-make-atoms-selections">
-<h2>How to make atoms selections<a class="headerlink" href="#how-to-make-atoms-selections" title="Permalink to this headline">¶</a></h2>
+<span id="ms-tut-selections"></span><h2>How to make atoms selections<a class="headerlink" href="#how-to-make-atoms-selections" title="Permalink to this headline">¶</a></h2>
 <p>The syntax is close to the aqua syntax.
 There are few special key words.</p>
-<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [2]: </span><span class="n">GSGS</span><span class="o">=</span><span class="n">molecule</span><span class="p">(</span><span class="s">&#39;GSGS.pdb&#39;</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [2]: </span><span class="n">metenk</span><span class="o">=</span><span class="n">msystem</span><span class="p">(</span><span class="s">&#39;metenk.pdb&#39;</span><span class="p">)</span>
 
-<span class="gp">In [3]: </span><span class="n">list1</span><span class="o">=</span><span class="n">GSGS</span><span class="o">.</span><span class="n">selection</span><span class="p">(</span><span class="s">&#39;backbone&#39;</span><span class="p">)</span>
+<span class="gp">In [3]: </span><span class="n">list1</span><span class="o">=</span><span class="n">metenk</span><span class="o">.</span><span class="n">selection</span><span class="p">(</span><span class="s">&#39;backbone&#39;</span><span class="p">)</span>
 
-<span class="gp">In [4]: </span><span class="n">list2</span><span class="o">=</span><span class="n">GSGS</span><span class="o">.</span><span class="n">selection</span><span class="p">(</span><span class="s">&#39;atom.name N CA C O&#39;</span><span class="p">)</span>
+<span class="gp">In [4]: </span><span class="n">list2</span><span class="o">=</span><span class="n">metenk</span><span class="o">.</span><span class="n">selection</span><span class="p">(</span><span class="s">&#39;atom.name N CA C O&#39;</span><span class="p">)</span>
 
 <span class="gp">In [5]: </span><span class="k">print</span> <span class="n">list1</span><span class="p">;</span> <span class="k">print</span> <span class="n">list2</span>
-<span class="go">[0, 4, 7, 8, 9, 11, 18, 19, 20, 22, 25, 26, 27, 30, 32]</span>
-<span class="go">[0, 4, 7, 8, 9, 11, 18, 19, 20, 22, 25, 26, 27, 30, 32]</span>
+<span class="go">[0, 4, 21, 22, 23, 25, 28, 29, 30, 32, 35, 36, 37, 39, 55, 56, 57, 59, 72]</span>
+<span class="go">[0, 4, 21, 22, 23, 25, 28, 29, 30, 32, 35, 36, 37, 39, 55, 56, 57, 59, 72]</span>
 
-<span class="gp">In [5]: </span><span class="n">list1</span><span class="o">=</span><span class="n">GSGS</span><span class="o">.</span><span class="n">selection</span><span class="p">(</span><span class="s">&#39;sidechain&#39;</span><span class="p">)</span>
+<span class="gp">In [5]: </span><span class="n">metenk</span><span class="o">.</span><span class="n">selection</span><span class="p">(</span><span class="s">&#39;resid.name PHE and backbone&#39;</span><span class="p">)</span>
+<span class="gr">Out[5]: </span><span class="p">[</span><span class="mi">37</span><span class="p">,</span> <span class="mi">39</span><span class="p">,</span> <span class="mi">55</span><span class="p">,</span> <span class="mi">56</span><span class="p">]</span>
 
-<span class="gp">In [6]: </span><span class="n">list2</span><span class="o">=</span><span class="n">GSGS</span><span class="o">.</span><span class="n">selection</span><span class="p">(</span><span class="s">&#39;(atom.resid.type Protein and not atom.name N CA C O H1 H2)&#39;</span><span class="p">)</span>
+<span class="gp">In [6]: </span><span class="n">metenk</span><span class="o">.</span><span class="n">selection</span><span class="p">(</span><span class="s">&#39;chain.name A and atom.donor&#39;</span><span class="p">)</span>
+<span class="gr">Out[6]: </span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">23</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">37</span><span class="p">,</span> <span class="mi">57</span><span class="p">]</span>
 
-<span class="gp">In [7]: </span><span class="k">print</span> <span class="nb">list</span><span class="p">;</span> <span class="k">print</span> <span class="n">list2</span>
-<span class="go">[1, 2, 3, 5, 6, 10, 12, 13, 14, 15, 16, 17, 21, 23, 24, 28, 29, 31, 33, 34, 35, 36, 37, 38]</span>
-<span class="go">[1, 2, 3, 5, 6, 10, 12, 13, 14, 15, 16, 17, 21, 23, 24, 28, 29, 31, 33, 34, 35, 36, 37, 38]</span>
+<span class="gp">In [7]: </span><span class="n">metenk</span><span class="o">.</span><span class="n">selection</span><span class="p">(</span><span class="s">&#39;(atom.resid.name GLY and not atom.name N CA C O H) or (atom.name O1)&#39;</span><span class="p">)</span>
+<span class="gr">Out[7]: </span><span class="p">[</span><span class="mi">26</span><span class="p">,</span> <span class="mi">27</span><span class="p">,</span> <span class="mi">33</span><span class="p">,</span> <span class="mi">34</span><span class="p">,</span> <span class="mi">73</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>We can also make use of the expression &#8216;within X of&#8217;, X is a float number indicating a distance threshold.</p>
-<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [2]: </span><span class="n">GSGS</span><span class="o">=</span><span class="n">molecule</span><span class="p">(</span><span class="s">&#39;GSGS.pdb&#39;</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [8]: </span><span class="n">metenk</span><span class="o">.</span><span class="n">load_traj</span><span class="p">(</span><span class="s">&#39;traj_metenk.xtc&#39;</span><span class="p">,</span><span class="n">frame</span><span class="o">=</span><span class="s">&#39;ALL&#39;</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 
-<span class="gp">In [3]: </span><span class="n">list1</span><span class="o">=</span><span class="n">GSGS</span><span class="o">.</span><span class="n">selection</span><span class="p">(</span><span class="s">&#39;atom.name OH2 within 3.0 of atom.resid.type Protein&#39;</span><span class="p">)</span>
+<span class="gp">In [9]: </span><span class="n">list0</span><span class="o">=</span><span class="n">metenk</span><span class="o">.</span><span class="n">selection</span><span class="p">(</span><span class="s">&#39;atom.name OW within 3.0 of resid.type Protein&#39;</span><span class="p">)</span>
+
+<span class="gp">In [10]: </span><span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">metenk</span><span class="o">.</span><span class="n">traj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_frames</span><span class="p">):</span>
+<span class="go">   ....:     print len(list0[ii]), &#39;waters below 3.0 in frame&#39;, ii</span>
+<span class="go">   ....:</span>
+<span class="go">25 waters below 3.0 in frame 0</span>
+<span class="go">30 waters below 3.0 in frame 1</span>
+<span class="go">28 waters below 3.0 in frame 2</span>
+<span class="go">...</span>
+
+<span class="gp">In [11]: </span><span class="n">list0</span><span class="o">=</span><span class="n">metenk</span><span class="o">.</span><span class="n">selection</span><span class="p">(</span><span class="s">&#39;(atom.name CA and not resid.name TYR) within 6.0 of (atom.name CA and resid.name TYR)&#39;</span><span class="p">)</span>
+
+<span class="gp">In [12]: </span><span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">metenk</span><span class="o">.</span><span class="n">traj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_frames</span><span class="p">):</span>
+<span class="go">   ....:     print &#39;At time:&#39;, metenk.traj[0].frame[ii].time</span>
+<span class="go">   ....:     for jj in list0[ii]:</span>
+<span class="go">   ....:         print &#39;   &#39;,metenk.atom[jj].name+&#39;-&#39;+str(metenk.atom[jj].pdb_index),&#39;within 6.0 of CA-5&#39;</span>
+<span class="go">At time: 0.0</span>
+<span class="go">   CA-26 within 6.0 of CA-5</span>
+<span class="go">At time: 10.0</span>
+<span class="go">   CA-26 within 6.0 of CA-5</span>
+<span class="go">At time: 20.0</span>
+<span class="go">   CA-26 within 6.0 of CA-5</span>
+<span class="go">   CA-33 within 6.0 of CA-5</span>
+<span class="go">...</span>
 </pre></div>
 </div>
-<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [2]: </span><span class="n">ion</span><span class="o">=</span><span class="n">molecule</span><span class="p">(</span><span class="s">&#39;run_ion.gro&#39;</span><span class="p">,</span><span class="n">coors</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-
-<span class="gp">In [3]: </span><span class="n">ion</span><span class="o">.</span><span class="n">load_traj</span><span class="p">(</span><span class="s">&#39;traj.dcd&#39;</span><span class="p">,</span><span class="n">frame</span><span class="o">=</span><span class="s">&#39;ALL&#39;</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-
-<span class="gp">In [4]: </span><span class="n">list1</span><span class="o">=</span><span class="n">ion</span><span class="o">.</span><span class="n">selection</span><span class="p">(</span><span class="s">&#39;atom.name OW within 3.0 of atom.resid.type Ion&#39;</span><span class="p">)</span>
-
-<span class="gp">In [5]: </span><span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
-<span class="go">   ...:     print len(list1[ii]),&#39;waters below 3.0 in frame&#39;, ii</span>
-<span class="go">   ...:</span>
-<span class="go">6 waters below 3.0 in frame 0</span>
-<span class="go">6 waters below 3.0 in frame 1</span>
-<span class="go">6 waters below 3.0 in frame 2</span>
-</pre></div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="functions.html#msystem.selection" title="msystem.selection"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.selection()</span></tt></a></p>
 </div>
 </div>
 <div class="section" id="computing-distances">

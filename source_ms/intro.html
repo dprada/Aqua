@@ -110,6 +110,45 @@
 <p>General description with a general list of what can be done and a first example on whats a molecule.</p>
 <div class="section" id="example">
 <h3>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
+<p>Download the files <a class="reference download internal" href="../_downloads/metenk.pdb"><tt class="xref download docutils literal"><span class="pre">metenk.pdb</span></tt></a> and
+<a class="reference download internal" href="../_downloads/traj_metenk.xtc"><tt class="xref download docutils literal"><span class="pre">traj_metenk.xtc</span></tt></a> to run a short
+example with the Methionine-Enkephaline coming from the 1PLW pdb.</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [1]: </span><span class="kn">from</span> <span class="nn">aqua</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="gp">In [2]: </span><span class="n">metenk</span><span class="o">=</span><span class="n">msystem</span><span class="p">(</span><span class="s">&#39;metenk.pdb&#39;</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="c"># System created from the file metenk.pdb :</span>
+<span class="c"># 6015  atoms</span>
+<span class="c"># 1490  residues</span>
+<span class="c"># 2  chains</span>
+<span class="c"># 1485  waters</span>
+<span class="c"># 0  ions</span>
+
+<span class="gp">In [3]: </span><span class="n">idS</span><span class="o">=</span><span class="n">metenk</span><span class="o">.</span><span class="n">selection</span><span class="p">(</span><span class="s">&#39;atom.type S&#39;</span><span class="p">)</span>
+
+<span class="gp">In [4]: </span><span class="k">print</span> <span class="s">&#39;The atom&#39;</span><span class="p">,</span><span class="n">metenk</span><span class="o">.</span><span class="n">atom</span><span class="p">[</span><span class="n">idS</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s">&#39;-&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">metenk</span><span class="o">.</span><span class="n">atom</span><span class="p">[</span><span class="n">idS</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">pdb_index</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;/&#39;</span><span class="o">+</span>\
+<span class="go">   ...: metenk.atom[idS[0]].resid.name+&#39;-&#39;+str(metenk.atom[idS[0]].resid.pdb_index),\</span>
+<span class="go">   ...: &#39;has the internal index:&#39;, idS[0]</span>
+<span class="go">The atom SD-68/MET-5 has the internal index: 67</span>
+
+<span class="gp">In [5]: </span><span class="n">metenk</span><span class="o">.</span><span class="n">info_trajs</span><span class="p">()</span>
+<span class="c"># No coordinates</span>
+
+<span class="gp">In [6]: </span><span class="n">metenk</span><span class="o">.</span><span class="n">load_traj</span><span class="p">(</span><span class="s">&#39;traj_metenk.xtc&#39;</span><span class="p">,</span><span class="n">frame</span><span class="o">=</span><span class="s">&#39;ALL&#39;</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="c"># 21 frames/models in traj 0</span>
+
+<span class="gp">In [7]: </span><span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="n">metenk</span><span class="o">.</span><span class="n">traj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">frame</span><span class="p">:</span>
+<span class="go">   ...:     print &#39;# Step&#39;,ii.step,&#39;(t=&#39;+str(ii.time)+&#39;)&#39;,&#39;SD-68/MET-5 at&#39;, ii.coors[idS[0]]</span>
+<span class="go">   ...:</span>
+<span class="go">Step 0 (t=0.0) SD-68/MET-5 at [ 19.8200016   12.90999985    19.6400013 ]</span>
+<span class="go">Step 5000 (t=10.0) SD-68/MET-5 at [ 19.87000084    13.27000046  19.44000053]</span>
+<span class="go">Step 10000 (t=20.0) SD-68/MET-5 at [ 20.09000015    12.96000004  18.93000031]</span>
+<span class="go">...</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="msystem.html#msystem" title="msystem"><tt class="xref py py-class docutils literal"><span class="pre">msystem</span></tt></a>, <tt class="xref py py-class docutils literal"><span class="pre">atom</span></tt> , <a class="reference internal" href="functions.html#msystem.selection" title="msystem.selection"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.selection()</span></tt></a>, <a class="reference internal" href="functions.html#msystem.load_traj" title="msystem.load_traj"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.load_traj()</span></tt></a>, <a class="reference internal" href="functions.html#msystem.info_trajs" title="msystem.info_trajs"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.info_trajs()</span></tt></a>, <a class="reference internal" href="coors.html#traj" title="traj"><tt class="xref py py-class docutils literal"><span class="pre">traj</span></tt></a>, <tt class="xref py py-class docutils literal"><span class="pre">frame</span></tt></p>
+</div>
 </div>
 </div>
 <div class="section" id="units">
