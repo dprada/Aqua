@@ -99,7 +99,6 @@ class cl_traj():
                 print '# Error reading the file'
                 return
             if self.io_end: 
-                print '# End of file'
                 self.io_err=getattr(io,'coor_'+self.type).close_traj(self.io_file)
                 if self.io_err: return '# Error closing file'
                 self.io_opened=0
@@ -120,7 +119,6 @@ class cl_traj():
                 if self.io_err: 
                     return '# Error reading file'
                 if self.io_end: 
-                    print '# End of file'
                     self.io_err=getattr(io,'coor_'+self.type).close_traj(self.io_file)
                     if self.io_err: return '# Error closing file'
                     self.io_opened=0
@@ -174,7 +172,6 @@ class cl_traj():
                     print '# Error reading the file'
                     return
                 if self.io_end: 
-                    print '# End of file'
                     self.io_err=getattr(io,'coor_'+self.type).close_traj(self.io_file)
                     if self.io_err: return '# Error closing file'
                     self.io_opened=False
@@ -237,10 +234,19 @@ class cl_traj():
         if action==None:
             if not self.io_w_opened: print '# Error: No file opened to be written.'; return
             
+            if type(frame) in [int]:
+                frame=[frame]
+
             if frame=='ALL' and begin==None and end==None:
                 for temp_frame in self.frame:
                     self.io_w_vars[10]+=1
                     self.io_err=getattr(io,'coor_'+self.io_w_type).write_frame(self.io_w_file,temp_frame)
+
+            if type(frame) in [list,tuple]:
+                for ii in frame:
+                    self.io_w_vars[10]+=1
+                    self.io_err=getattr(io,'coor_'+self.io_w_type).write_frame(self.io_w_file,self.frame[ii])
+
 
         if action in ['CLOSE','Close','close']:
             self.io_w_vars[13]=self.io_w_vars[10]  # Number of integration steps in the run to create this file  (INT)

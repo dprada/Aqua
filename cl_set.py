@@ -2283,7 +2283,19 @@ def selection(system=None,condition=None,traj=0,frame='ALL',pbc=True):
                 for atom in system.atom:
                     if eval(cond1):
                         sel1.append(atom.index)
+            else:
+                sel1=[]
+                cond1=' '.join(ocondition[0:ii])
+                for atom in system.atom:
+                    if eval(cond1):
+                        sel1.append(atom.index)
             if '(' not in ocondition[(ii+3):]:
+                sel2=[]
+                cond2=' '.join(ocondition[(ii+3):])
+                for atom in system.atom:
+                    if eval(cond2):
+                        sel2.append(atom.index)
+            else:
                 sel2=[]
                 cond2=' '.join(ocondition[(ii+3):])
                 for atom in system.atom:

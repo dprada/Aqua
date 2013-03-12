@@ -185,44 +185,34 @@ and :download:`GSGS.dcd <../../tutorials/systems_tut1/GSGS.dcd>`.
 
 
 
+.. _ms-tut-convert-traj:
 
 Converting a trajectory into other format
 +++++++++++++++++++++++++++++++++++++++++
 
-Right now the output formats are only dcd files.
-
-This way the original trajectory is stored in memory:
+Right now the output format is only dcd.
 
 .. sourcecode:: ipython
 
-   In [2]: ion=molecule('run_ion.gro',coors=False,verbose=False)
+   In [2]: metenk=msystem('metenk.pdb')
     
-   In [3]: ion.load_traj('traj.xtc',frame='ALL',verbose=False)
-    
-   In [4]: ion.traj[0].write('new_traj.dcd',action='Open')
-    
-   In [5]: ion.traj[0].write(frame='ALL')
-    
-   In [6]: ion.traj[0].write(action='Close')
+   In [3]: metenk.load_traj('traj_metenk.xtc')
+   
+   In [4]: metenk.info_trajs()
+   # 0 frames/models in traj 0
 
-This way the original trajectory is not stored in memory:
+   In [5]: metenk.traj[0].write('traj_metenk.dcd',action='Open')
+    
+   In [6]: while 1:
+      ...:     metenk.traj[0].reload_frame()
+      ...:     if metenk.traj[0].io_end:
+      ...:     	  metenk.traj[0].write(action='Close')
+      ...:     	  break
+      ...:     metenk.traj[0].write(frame=0)
 
-.. sourcecode:: ipython
+.. seealso:: :class:`msystem`, :class:`traj`, :meth:`msystem.load_traj`, :meth:`msystem.info_trajs`, :meth:`traj.reload_frame`, :meth:`traj.write`
 
-   In [2]: ion=molecule('run_ion.gro',coors=False,verbose=False)
-    
-   In [3]: ion.load_traj('traj.xtc',frame='Next',verbose=False)
-    
-   In [4]: ion.traj[0].write('new_traj.dcd',action='Open')
-    
-   In [5]: while ion.traj[0].io_opened:
-      ...:     ion.traj[0].write()
-      ...:     ion.traj[0].reload_frame()
-      ...: 
-   # End of file
-    
-   In [6]: ion.traj[0].write(action='Close')
-
+.. _ms-tut-selections:
 
 How to make atoms selections
 ============================
@@ -232,47 +222,58 @@ There are few special key words.
 
 .. sourcecode:: ipython
 
-   In [2]: GSGS=molecule('GSGS.pdb',verbose=False)
+   In [2]: metenk=msystem('metenk.pdb')
     
-   In [3]: list1=GSGS.selection('backbone')
+   In [3]: list1=metenk.selection('backbone')
 
-   In [4]: list2=GSGS.selection('atom.name N CA C O')
+   In [4]: list2=metenk.selection('atom.name N CA C O')
     
    In [5]: print list1; print list2
-   [0, 4, 7, 8, 9, 11, 18, 19, 20, 22, 25, 26, 27, 30, 32]
-   [0, 4, 7, 8, 9, 11, 18, 19, 20, 22, 25, 26, 27, 30, 32]
+   [0, 4, 21, 22, 23, 25, 28, 29, 30, 32, 35, 36, 37, 39, 55, 56, 57, 59, 72]
+   [0, 4, 21, 22, 23, 25, 28, 29, 30, 32, 35, 36, 37, 39, 55, 56, 57, 59, 72]
 
-   In [5]: list1=GSGS.selection('sidechain')
-   
-   In [6]: list2=GSGS.selection('(atom.resid.type Protein and not atom.name N CA C O H1 H2)')
-    
-   In [7]: print list; print list2
-   [1, 2, 3, 5, 6, 10, 12, 13, 14, 15, 16, 17, 21, 23, 24, 28, 29, 31, 33, 34, 35, 36, 37, 38]
-   [1, 2, 3, 5, 6, 10, 12, 13, 14, 15, 16, 17, 21, 23, 24, 28, 29, 31, 33, 34, 35, 36, 37, 38]
+   In [5]: metenk.selection('resid.name PHE and backbone')
+   Out[5]: [37, 39, 55, 56]
+
+   In [6]: metenk.selection('chain.name A and atom.donor')
+   Out[6]: [0, 23, 30, 37, 57]
+
+   In [7]: metenk.selection('(atom.resid.name GLY and not atom.name N CA C O H) or (atom.name O1)')	
+   Out[7]: [26, 27, 33, 34, 73]
 
 We can also make use of the expression 'within X of', X is a float number indicating a distance threshold.
 
-
 .. sourcecode:: ipython
 
-   In [2]: GSGS=molecule('GSGS.pdb',verbose=False)
-    
-   In [3]: list1=GSGS.selection('atom.name OH2 within 3.0 of atom.resid.type Protein')
+   In [8]: metenk.load_traj('traj_metenk.xtc',frame='ALL',verbose=False)
 
-.. sourcecode:: ipython
+   In [9]: list0=metenk.selection('atom.name OW within 3.0 of resid.type Protein')
 
-   In [2]: ion=molecule('run_ion.gro',coors=False,verbose=False) 
-    
-   In [3]: ion.load_traj('traj.dcd',frame='ALL',verbose=False)
-    
-   In [4]: list1=ion.selection('atom.name OW within 3.0 of atom.resid.type Ion')
+   In [10]: for ii in range(metenk.traj[0].num_frames):
+      ....:     print len(list0[ii]), 'waters below 3.0 in frame', ii
+      ....: 
+   25 waters below 3.0 in frame 0
+   30 waters below 3.0 in frame 1
+   28 waters below 3.0 in frame 2
+   ...
 
-   In [5]: for ii in range(3):
-      ...:     print len(list1[ii]),'waters below 3.0 in frame', ii
-      ...: 
-   6 waters below 3.0 in frame 0
-   6 waters below 3.0 in frame 1
-   6 waters below 3.0 in frame 2
+   In [11]: list0=metenk.selection('(atom.name CA and not resid.name TYR) within 6.0 of (atom.name CA and resid.name TYR)')
+
+   In [12]: for ii in range(metenk.traj[0].num_frames):
+      ....: 	print 'At time:', metenk.traj[0].frame[ii].time
+      ....:	for jj in list0[ii]:
+      ....:	    print '   ',metenk.atom[jj].name+'-'+str(metenk.atom[jj].pdb_index),'within 6.0 of CA-5'
+   At time: 0.0
+      CA-26 within 6.0 of CA-5
+   At time: 10.0
+      CA-26 within 6.0 of CA-5
+   At time: 20.0
+      CA-26 within 6.0 of CA-5
+      CA-33 within 6.0 of CA-5
+   ...
+
+
+.. seealso:: :meth:`msystem.selection`
 
 
 Computing distances
