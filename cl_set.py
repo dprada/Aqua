@@ -984,70 +984,110 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
             return pgaxis
 
 
-    def dihedral_angles(self,select='protein',phi=True,psi=True,omega=True,xis=False,traj=0,frame='ALL',begin=0,end=None,legend=False,verbose=False):
- 
-        setA,nlist_A,nsys_A=__read_set_opt__(self,select)
+    def ramachandran_map(self,resid='ALL',traj=0,frame='ALL',pdb_index=False,legend=False):
 
-        list_omega=[]
-        list_phi=[]
-        list_psi=[]
-        list_angs=[]
-        key_legend=[]
+        if resid in ['ALL','All','all']:
+            resid=range(self.num_residues)
+            list_phi=selection_covalent_chains(system=self,select='protein',chain=['C','N','CA','C'])
+            list_psi=selection_covalent_chains(system=self,select='protein',chain=['N','CA','C','N'])
+            num_angs=len(list_phi)
+        else:
+            if type(resid) in [int]:
+                resid=[resid]
+            num_angs=len(resid)
+            list_phi=numpy.empty((num_angs,4),dtype=float,order='F')
+            list_psi=numpy.empty((num_angs,4),dtype=float,order='F')
+            if pdb_index:
+                sel_prefix='resid.pdb_index '
+            else:
+                sel_prefix='resid.index '
 
-        if omega:
-            list_omega=selection_covalent_chains(system=self,select=setA,chain=[['CA','CH3'],'C','N',['CA','CH3']])
-            for ii in list_omega:
-                list_angs.append(ii)
-                if legend:
-                    key_legend.append(['Omega '+str(self.atom[ii[2]].resid.pdb_index),ii])
-            
-        if phi:
-            list_phi=selection_covalent_chains(system=self,select=setA,chain=['C','N','CA','C'])
-            for ii in list_phi:
-                list_angs.append(ii)
-                if legend:
-                    key_legend.append(['Phi '+str(self.atom[ii[2]].resid.pdb_index),ii])
-        if psi:
-            list_psi=selection_covalent_chains(system=self,select=setA,chain=['N','CA','C','N'])
-            for ii in list_psi:
-                list_angs.append(ii)
-                if legend:
-                    key_legend.append(['Psi '+str(self.atom[ii[1]].resid.pdb_index),ii])
-        if xis:
-            print '# Option not implemented yet: xis=True'
+            veo=self.selection(sel_prefix+' in '+str(resid)+' and atom.name CA')
+            if len(veo)!=num_angs:
+                print '# Error: residues without CA atom.'
+                return
+            for ii in range(num_angs):
+                sel_phi=sel_prefix+str(resid[ii]-1)+' '+str(resid[ii])
+                sel_psi=sel_prefix+str(resid[ii])+' '+str(resid[ii]+1)
+                list_phi[ii,:]=selection_covalent_chains(system=self,select=sel_phi,chain=['C','N','CA','C'])
+                list_psi[ii,:]=selection_covalent_chains(system=self,select=sel_psi,chain=['N','CA','C','N'])
+
+        if legend:
+            key_phi=['Phi '+str(self.atom[ii[2]].resid.pdb_index) for ii in list_phi]
+            key_psi=['Psi '+str(self.atom[ii[1]].resid.pdb_index) for ii in list_psi]
+
+
+        num_frames=__length_frame_opt__(self,traj,frame)
+        dih_angs=numpy.empty(shape=(num_frames,num_angs,2),dtype=float,order='Fortran')
+        jj=-1
+        for iframe in __read_frame_opt__(self,traj,frame):
+            jj+=1
+            dih_angs[jj,:,0]=faux.glob.dihedral_angles(iframe.coors,iframe.box,iframe.orthogonal,list_phi,num_angs,self.num_atoms)
+            dih_angs[jj,:,1]=faux.glob.dihedral_angles(iframe.coors,iframe.box,iframe.orthogonal,list_psi,num_angs,self.num_atoms)
+
+        if legend:
+            if num_frames==1:
+                if num_angs==1:
+                    return dih_angs[0,0,:],[key_phi[0],key_psi[0]]
+                else:
+                    return dih_angs[0,:,:],[key_phi,key_psi]
+            else:
+                if num_angs==1:
+                    return dih_angs[:,0,:],[key_phi[0],key_psi[0]]
+                else:
+                    return dih_angs,[key_phi,key_psi]
+        else:
+            if num_frames==1:
+                if num_angs==1:
+                    return dih_angs[0,0,:]
+                else:
+                    return dih_angs[0,:,:]
+            else:
+                if num_angs==1:
+                    return dih_angs[:,0,:]
+                else:
+                    return dih_angs
+
+
+        #if omega:
+        #    list_omega=selection_covalent_chains(system=self,select=setA,chain=[['CA','CH3'],'C','N',['CA','CH3']])
+        #    for ii in list_omega:
+        #        list_angs.append(ii)
+        #        if legend:
+        #            key_legend.append(['Omega '+str(self.atom[ii[2]].resid.pdb_index),ii])
+
+
+    def dihedral_angle(self,covalent_chain=None,traj=0,frame='ALL'):
+
+        if not covalent_chain:
+            print '# Error: Check method msystem.select_covalent_chains()'
             return
 
+        covalent_chain=numpy.array(covalent_chain,dtype=int,order='F')
+
+        if covalent_chain.shape[-1]!=4:
+            print '# Error: 4 atoms per covalent_chain'
+            return
+
+        if len(covalent_chain.shape)==1:
+            covalent_chain.resize((1,4))
+
+        num_dih_angs=covalent_chain.shape[0]
+
         list_angs=numpy.array(list_angs,dtype=int,order='F')
-        num_dih_angs=list_angs.shape[0]
 
-        if not end:
-            num_frames=__length_frame_opt__(self,traj,frame)
-            dih_angs=numpy.empty(shape=(num_frames,num_dih_angs),dtype=float,order='Fortran')
+        num_frames=__length_frame_opt__(self,traj,frame)
+        dih_angs=numpy.empty(shape=(num_frames,num_dih_angs),dtype=float,order='Fortran')
         
-            for iframe in __read_frame_opt__(self,traj,frame):
-                dih_angs[num_frames,:]=faux.glob.dihedral_angles(iframe.coors,iframe.box,iframe.orthogonal,list_angs,num_dih_angs,nsys_A)
+        jj=-1
+        for iframe in __read_frame_opt__(self,traj,frame):
+            jj+=1
+            dih_angs[jj,:]=faux.glob.dihedral_angles(iframe.coors,iframe.box,iframe.orthogonal,list_angs,num_dih_angs,self.num_atoms)
 
-        if end:
-            num_frames=end-begin+1
-            dih_angs=numpy.empty(shape=(num_frames,num_dih_angs),dtype=float,order='Fortran')
-            for ii in range(end):
-                self.traj[traj].reload_frame(frame=ii)
-                iframe=self.traj[traj].frame[0]
-                dih_angs[ii,:]=faux.glob.dihedral_angles(iframe.coors,iframe.box,iframe.orthogonal,list_angs,num_dih_angs,nsys_A)
-
-         
-         
-        #legend=0
         if num_frames==1:
-            if legend:
-                return key_legend,dih_angs[0,:]
-            else:
-                return dih_angs[0,:]
+            return dih_angs[0,:]
         else:
-            if legend:
-                return key_legend,dih_angs
-            else:
-                return dih_angs
+            return dih_angs
 
 
 #def min_distance(system,set_a,set_b=None,pbc=True,type_b='atoms'):
