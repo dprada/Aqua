@@ -8,7 +8,20 @@ First of all, lets load Aqua in our script or in a ipython session:
 
      In [1]: from aqua import *
 
-Some basic notions on python will be assumed along this tutorial. If you just landed here without any idea on python, have a look to a Python manual or tutorial first of all.
+Some basic notions on python will be assumed along this tutorial. If
+you just landed here without any idea on python, have a look to a
+Python manual or tutorial before.
+
+Some files are required to follow the tutorials:
+
+- Met-Enkephalin (`PDB: 1PLW
+  <http://www.rcsb.org/pdb/explore.do?structureId=1PLW>`_ ):
+  :download:`metenk.pdb <tutorial/metenk.pdb>` and
+  :download:`traj_metenk.xtc <tutorial/traj_metenk.xtc>`
+
+- Catabolite Activator Protein (`PDB: 2WC2
+  <http://www.rcsb.org/pdb/explore.do?structureId=2WC2>`_ ):
+  :download:`2WC2.pdb <tutorial/metenk.pdb>`.
 
 ----------------------
  
@@ -19,7 +32,7 @@ Loading/Writting the topology
 Loading
 +++++++
 
-A system can be loaded from a file (pdb,gro or psf) or downloaded from the Protein Data Bank.
+A system can be downloaded from the Protein Data Bank.
 
 .. sourcecode:: ipython
 
@@ -32,6 +45,11 @@ A system can be loaded from a file (pdb,gro or psf) or downloaded from the Prote
    # 0  waters
    # 0  ions
    # 20  frames/models in traj 0
+
+
+Or 
+
+.. sourcecode:: ipython
 
    In [3]: mol2_test=msystem('2WC2.pdb')
 

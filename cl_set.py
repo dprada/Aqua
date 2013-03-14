@@ -785,6 +785,12 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
         list_condition=selection(self,condition,traj,frame,pbc)
         return list_condition
 
+    def selection_covalent_chains(self,select=None,chain=None):
+
+        salida=selection_covalent_chains(system=self,select=None,chain=None)
+
+        return salida
+
     def selection_hbonds(self,setA='ALL',verbose=False):
      
         setA,nlist_A,nsys_A,setB,nlist_B,nsys_B,diff_system,diff_set=__read_sets_opt__(self,setA,None,None)
@@ -989,20 +995,20 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
         key_legend=[]
 
         if omega:
-            list_omega=select_covalent_chain(system=self,select=setA,chain=[['CA','CH3'],'C','N',['CA','CH3']])
+            list_omega=selection_covalent_chains(system=self,select=setA,chain=[['CA','CH3'],'C','N',['CA','CH3']])
             for ii in list_omega:
                 list_angs.append(ii)
                 if legend:
                     key_legend.append(['Omega '+str(self.atom[ii[2]].resid.pdb_index),ii])
             
         if phi:
-            list_phi=select_covalent_chain(system=self,select=setA,chain=['C','N','CA','C'])
+            list_phi=selection_covalent_chains(system=self,select=setA,chain=['C','N','CA','C'])
             for ii in list_phi:
                 list_angs.append(ii)
                 if legend:
                     key_legend.append(['Phi '+str(self.atom[ii[2]].resid.pdb_index),ii])
         if psi:
-            list_psi=select_covalent_chain(system=self,select=setA,chain=['N','CA','C','N'])
+            list_psi=selection_covalent_chains(system=self,select=setA,chain=['N','CA','C','N'])
             for ii in list_psi:
                 list_angs.append(ii)
                 if legend:
@@ -2140,7 +2146,7 @@ def hbonds_type(option=None,verbose=True):
 
 ######################################################
 
-def select_covalent_chain(system=None,select=None,chain=None):
+def selection_covalent_chains(system=None,select=None,chain=None):
 
     setC,nlist_C,nsys_C=__read_set_opt__(system,select)
  
