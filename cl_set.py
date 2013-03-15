@@ -785,9 +785,9 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
         list_condition=selection(self,condition,traj,frame,pbc)
         return list_condition
 
-    def selection_covalent_chains(self,select=None,chain=None):
+    def selection_covalent_chains(self,chain=None,select='protein'):
 
-        salida=selection_covalent_chains(system=self,select=None,chain=None)
+        salida=selection_covalent_chains(system=self,chain=chain,select=select)
 
         return salida
 
@@ -987,63 +987,98 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
     def ramachandran_map(self,resid='ALL',traj=0,frame='ALL',pdb_index=False,legend=False):
 
         if resid in ['ALL','All','all']:
-            resid=range(self.num_residues)
-            list_phi=selection_covalent_chains(system=self,select='protein',chain=['C','N','CA','C'])
-            list_psi=selection_covalent_chains(system=self,select='protein',chain=['N','CA','C','N'])
-            num_angs=len(list_phi)
+            list_phi=selection_covalent_chains(system=self,chain=['C','N','CA','C'],select='protein')
+            list_psi=selection_covalent_chains(system=self,chain=['N','CA','C','N'],select='protein')
+            
         else:
+            if pdb_index:
+                sel_prefix='resid.pdb_index in '
+            else:
+                sel_prefix='resid.index in '
             if type(resid) in [int]:
                 resid=[resid]
-            num_angs=len(resid)
-            list_phi=numpy.empty((num_angs,4),dtype=float,order='F')
-            list_psi=numpy.empty((num_angs,4),dtype=float,order='F')
-            if pdb_index:
-                sel_prefix='resid.pdb_index '
-            else:
-                sel_prefix='resid.index '
+            aux_phi={}
+            aux_psi={}
+            for ii in resid:
+                aux_phi[ii]=''
+                aux_psi[ii]=''
+                aux_phi[ii-1]=''
+                aux_psi[ii+1]=''
+            sel_phi=sel_prefix
+            sel_psi=sel_prefix
+            for ii in aux_phi.keys():
+                sel_phi+=str(ii)+' '
+            for ii in aux_psi.keys():
+                sel_psi+=str(ii)+' '
+            list_phi=selection_covalent_chains(system=self,chain=['C','N','CA','C'],select=sel_phi)
+            list_psi=selection_covalent_chains(system=self,chain=['N','CA','C','N'],select=sel_psi)
 
-            veo=self.selection(sel_prefix+' in '+str(resid)+' and atom.name CA')
-            if len(veo)!=num_angs:
-                print '# Error: residues without CA atom.'
-                return
-            for ii in range(num_angs):
-                sel_phi=sel_prefix+str(resid[ii]-1)+' '+str(resid[ii])
-                sel_psi=sel_prefix+str(resid[ii])+' '+str(resid[ii]+1)
-                list_phi[ii,:]=selection_covalent_chains(system=self,select=sel_phi,chain=['C','N','CA','C'])
-                list_psi[ii,:]=selection_covalent_chains(system=self,select=sel_psi,chain=['N','CA','C','N'])
+        aux_tot={}
+        aux_phi=[]
+        aux_psi=[]
+        for ii in list_phi:
+            jj=self.atom[ii[2]].resid.index
+            aux_tot[jj]=''
+            aux_phi.append(jj)
+        for ii in list_psi:
+            jj=self.atom[ii[1]].resid.index
+            aux_tot[jj]=''
+            aux_psi.append(jj)
 
+        list_resids=numpy.sort(aux_tot.keys())
+        num_resid=list_resids.shape[0]
+        num_phis=len(list_phi)
+        num_psis=len(list_psi)
+        aux_tot={}
+        for ii in range(num_resid):
+            aux_tot[list_resids[ii]]=ii
+        for ii in range(num_phis):
+            aux_phi[ii]=aux_tot[aux_phi[ii]]
+        for ii in range(num_psis):
+            aux_psi[ii]=aux_tot[aux_psi[ii]]
+
+        
         if legend:
-            key_phi=['Phi '+str(self.atom[ii[2]].resid.pdb_index) for ii in list_phi]
-            key_psi=['Psi '+str(self.atom[ii[1]].resid.pdb_index) for ii in list_psi]
-
+            if pdb_index:
+                key_phi=['Phi '+str(self.resid[ii].pdb_index) for ii in list_resids]
+                key_psi=['Psi '+str(self.resid[ii].pdb_index) for ii in list_resids]
+            else:
+                key_phi=['Phi '+str(ii) for ii in list_resids]
+                key_psi=['Psi '+str(ii) for ii in list_resids]
 
         num_frames=__length_frame_opt__(self,traj,frame)
-        dih_angs=numpy.empty(shape=(num_frames,num_angs,2),dtype=float,order='Fortran')
+        dih_angs=numpy.zeros(shape=(num_frames,num_resid,2),dtype=float,order='Fortran')
         jj=-1
         for iframe in __read_frame_opt__(self,traj,frame):
             jj+=1
-            dih_angs[jj,:,0]=faux.glob.dihedral_angles(iframe.coors,iframe.box,iframe.orthogonal,list_phi,num_angs,self.num_atoms)
-            dih_angs[jj,:,1]=faux.glob.dihedral_angles(iframe.coors,iframe.box,iframe.orthogonal,list_psi,num_angs,self.num_atoms)
+            if num_phis:
+                phis=faux.glob.dihedral_angles(iframe.coors,iframe.box,iframe.orthogonal,list_phi,num_phis,self.num_atoms)
+                for kk in range(num_phis):
+                    dih_angs[jj,aux_phi[kk],0]=phis[kk]
+            if num_psis:
+                psis=faux.glob.dihedral_angles(iframe.coors,iframe.box,iframe.orthogonal,list_psi,num_psis,self.num_atoms)
+                for kk in range(num_psis):
+                    dih_angs[jj,aux_psi[kk],1]=psis[kk]
 
         if legend:
             if num_frames==1:
-                if num_angs==1:
+                if num_resid==1:
                     return dih_angs[0,0,:],[key_phi[0],key_psi[0]]
                 else:
                     return dih_angs[0,:,:],[key_phi,key_psi]
             else:
-                if num_angs==1:
+                if num_resid==1:
                     return dih_angs[:,0,:],[key_phi[0],key_psi[0]]
                 else:
                     return dih_angs,[key_phi,key_psi]
         else:
             if num_frames==1:
-                if num_angs==1:
+                if num_resid==1:
                     return dih_angs[0,0,:]
                 else:
                     return dih_angs[0,:,:]
             else:
-                if num_angs==1:
+                if num_resid==1:
                     return dih_angs[:,0,:]
                 else:
                     return dih_angs
@@ -1060,7 +1095,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
     def dihedral_angle(self,covalent_chain=None,traj=0,frame='ALL'):
 
         if not covalent_chain:
-            print '# Error: Check method msystem.select_covalent_chains()'
+            print '# Error: Check method msystem.selection_covalent_chains()'
             return
 
         covalent_chain=numpy.array(covalent_chain,dtype=int,order='F')
@@ -1074,15 +1109,13 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 
         num_dih_angs=covalent_chain.shape[0]
 
-        list_angs=numpy.array(list_angs,dtype=int,order='F')
-
         num_frames=__length_frame_opt__(self,traj,frame)
         dih_angs=numpy.empty(shape=(num_frames,num_dih_angs),dtype=float,order='Fortran')
         
         jj=-1
         for iframe in __read_frame_opt__(self,traj,frame):
             jj+=1
-            dih_angs[jj,:]=faux.glob.dihedral_angles(iframe.coors,iframe.box,iframe.orthogonal,list_angs,num_dih_angs,self.num_atoms)
+            dih_angs[jj,:]=faux.glob.dihedral_angles(iframe.coors,iframe.box,iframe.orthogonal,covalent_chain,num_dih_angs,self.num_atoms)
 
         if num_frames==1:
             return dih_angs[0,:]
@@ -2186,7 +2219,7 @@ def hbonds_type(option=None,verbose=True):
 
 ######################################################
 
-def selection_covalent_chains(system=None,select=None,chain=None):
+def selection_covalent_chains(system=None,chain=None,select=None):
 
     setC,nlist_C,nsys_C=__read_set_opt__(system,select)
  
