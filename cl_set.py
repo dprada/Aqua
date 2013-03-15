@@ -1040,11 +1040,9 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
         
         if legend:
             if pdb_index:
-                key_phi=['Phi '+str(self.resid[ii].pdb_index) for ii in list_resids]
-                key_psi=['Psi '+str(self.resid[ii].pdb_index) for ii in list_resids]
+                key_angs=[['Phi '+str(self.resid[ii].pdb_index),'Psi '+str(self.resid[ii].pdb_index)] for ii in list_resids]
             else:
-                key_phi=['Phi '+str(ii) for ii in list_resids]
-                key_psi=['Psi '+str(ii) for ii in list_resids]
+                key_angs=[['Phi '+str(ii),'Psi '+str(ii)] for ii in list_resids]
 
         num_frames=__length_frame_opt__(self,traj,frame)
         dih_angs=numpy.zeros(shape=(num_frames,num_resid,2),dtype=float,order='Fortran')
@@ -1063,14 +1061,14 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
         if legend:
             if num_frames==1:
                 if num_resid==1:
-                    return dih_angs[0,0,:],[key_phi[0],key_psi[0]]
+                    return dih_angs[0,0,:],key_angs[0]
                 else:
-                    return dih_angs[0,:,:],[key_phi,key_psi]
+                    return dih_angs[0,:,:],key_angs
             else:
                 if num_resid==1:
-                    return dih_angs[:,0,:],[key_phi[0],key_psi[0]]
+                    return dih_angs[:,0,:],key_angs[0]
                 else:
-                    return dih_angs,[key_phi,key_psi]
+                    return dih_angs,key_angs
         else:
             if num_frames==1:
                 if num_resid==1:

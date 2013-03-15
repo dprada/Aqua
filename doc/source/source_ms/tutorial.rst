@@ -294,6 +294,109 @@ We can also make use of the expression 'within X of', X is a float number indica
 .. seealso:: :meth:`msystem.selection`
 
 
+Dihedral Angles
+===============
+
+.. _ms-tut-rama-map:
+
+Ramachandran Map
+++++++++++++++++
+
+.. sourcecode:: ipython
+
+   In [2]: metenk=msystem('metenk.pdb',coors=True)
+
+   In [3]: angs,keys=metenk.ramachandran_map(legend=True)
+
+   In [4]: print keys[3][0],'=',angs[3][0],'  ', keys[3][1],'=',angs[3][1]
+   Phi 3 = -1.92163955875    Psi 3 = -0.642196409677
+
+   In [5]: print metenk.ramachandran_map(resid=3)
+   [-1.92163956 -0.64219641]
+
+   In [6]: dangs,dkeys=metenk.ramachandran_map(resid=4,pdb_index=True,legend=True)
+
+   In [7]: print keys[0],'=',angs[0],'  ', keys[1],'=',angs[1]
+   Phi 4 = -1.92163955875    Psi 4 = -0.642196409677
+
+In case of having different frames to analyse coming from a trajectory:
+
+.. sourcecode:: ipython
+
+   In [8]: metenk.info_trajs()
+   # 1 frames/models in traj 0
+
+   In [9]: print metenk.traj[0].name
+   metenk.pdb
+
+   In [10]: metenk.delete_traj()
+
+   In [11]: metenk.info_trajs()
+   # No coordinates
+
+   In [12]: metenk.load_traj('traj_metenk.xtc',frame='ALL',verbose=True)
+   # 21 frames/models in traj 0
+
+   In [13]: angs,keys=metenk.ramachandran_map(resid=[3,5],frame=[0,10,20],pdb_index=True,legend=True)
+
+   In [14]: print keys[0][1],'(step=[0,10,20]) =',angs[:,0,1]
+   Psi 3 (step=[0,10,20]) = [ 0.87594459  0.64741795  1.22817325]
+
+   In [15]: angs=metenk.ramachandran_map(resid=2,frame='ALL')
+
+   In [16]: idres2=metenk.resid[2].name+str(metenk.resid[2].pdb_index)
+
+   In [17]: for ii in range(0,metenk.traj[0].num_frames,10):
+      ....: 	print idres2,'| t=', metenk.traj[0].frame[ii].time, '| [phi,psi]=', angs[ii,:]
+   GLY3 | t= 0.0 | [phi,psi]= [ 2.01215258  0.87594459]
+   GLY3 | t= 100.0 | [phi,psi]= [ 1.90493036  0.64741795]
+   GLY3 | t= 200.0 | [phi,psi]= [ 1.9432302   1.22817325]
+
+
+.. seealso:: :class:`msystem`, :class:`traj`, :class:`resid`, :meth:`msystem.load_traj`, :meth:`msystem.info_trajs`, :meth:`msystem.delete_traj`, :meth:`msystem.ramachandran_map`
+
+.. note:: Depending on how this method is used, it can result with a
+   low performance. Check the next section :ref:`ms-tut-any-dihang` for a better performance.
+
+
+.. _ms-tut-any-dihang:
+
+Computing any dihedral angle
+++++++++++++++++++++++++++++
+
+A dihedral angle can be computed with a set of 4 atoms. This way, the
+computation of dihedral angles goes beyond the analysis done with
+:meth:`msystem.ramachandran_map`.
+
+There is a method to extract sets of 4 atoms corresponding to
+consecutive covalently bound chains of atoms:
+
+.. sourcecode:: ipython
+
+   In [2]: metenk=msystem('metenk.pdb')
+
+   In [3]: phi_3=metenk.selection_covalent_chains(chain=['C','N','CA','C'],select='resid.index 2 3')
+
+   In [4]: psi_3=metenk.selection_covalent_chains(chain=['N','CA','C','N'],select='resid.index 3 4')
+
+   In [5]: xi1_3=metenk.selection_covalent_chains(chain=['N','CA','CB','CG'],select='resid.index 3')
+
+   In [5]: omegas=metenk.selection_covalent_chains(chain=[['CA','CH3'],'C','N',['CA','CH3']])
+
+   In [6]: print omegas
+   [[4, 21, 23, 25], [25, 28, 30, 32], [32, 35, 37, 39], [39, 55, 57, 59]]
+
+With this sets of 4-tuples the dihedral angles can be computed as:
+
+.. sourcecode:: ipython
+
+   In [7]: metenk.load_traj('traj_metenk.xtc',frame='ALL')
+
+   In [8]: angs_phi_3=metenk.dihedral_angle(phi_3)
+   
+
+
+
 Computing distances
 ===================
 

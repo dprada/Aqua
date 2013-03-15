@@ -18,7 +18,6 @@ function is called implicitly by construction.
 
 See topology formats for additional info.
 
-
 Selection
 +++++++++
 
@@ -194,7 +193,76 @@ Writting dcd files
 Analysis
 ========
 
+Ramachandran Map 
+++++++++++++++++ 
+
+The function computes the pairs of angles phi-psi for any list of
+residues and frames.  Since each dihedral angle is computed with atoms
+from 2 different residues, the relationship between angle and
+residue is given by the atom 'CA'.
+
+.. method:: msystem.ramachandran_map(resid='ALL',traj=0,frame='ALL',pdb_index=False,legend=False)
+
+   :arg resid: List of residue indexes or pdb indexes.
+   :type resid: int, list[int] or 'ALL'
+   :arg int traj: Index of trajectory to be analysed.
+   :arg frame: List of frame indexes.
+   :type frame: int, list[int] or 'ALL'
+   :arg bool pdb_index: Residues in input and output are identified by the pdb indexes if True.
+   :arg bool legend: Key of angles in output if True.
+   :returns: **angles**, **keys** [if legend]; List of pairs phi-psi for the corresponding residues and frames, and key legend if choosen. 
+   :rtype: 
+   	 * angles: 
+	   	   * numpy.array[num_frames,num_resids,2].
+   	           * numpy.array[num_resids,2] (if num_frames=1)
+		   * numpy.array[num_frames,2] (if num_resids=1)
+	           * numpy.array[2]	       (if num_frames=num_resids=1)
+	 * keys: 
+	   	   * list[num_resids][2]
+		   * list[num_resids][2] (if num_resids=1)
+
+
+.. seealso:: :ref:`ms-tut-rama-map`
+
+.. note:: Depending on how this method is used, it can result with a
+   low performance. Check :meth:`msystem.dihedral_angle` for a better performance.
+
+
+Covalent chains
++++++++++++++++
+
+.. method:: msystem.selection_covalent_chains(chain=None,select='protein')
+
+   :arg chain: List of atom names to find as covalently bonded chains in "select".
+   :type chain: list[str]
+   :arg select: Selection or set of atoms where the method looks for covalent chains. (see: :meth:`msystem.selection`)
+   :type select: str
+   :returns: **chains**; List of chains found. Each chain is a list of the corresponding atom indexes.
+   :rtype: 
+   	   * chains:
+			* list[num_chains][atom_indexes]
+
+.. seealso:: :ref:`ms-tut-any-dihang`
+
+
 Dihedral Angles
 +++++++++++++++
 
+The method computes the value of any list of 4 atoms defining a
+dihedral angle. The output
 
+.. method:: msystem.dihedral_angle(covalent_chain=None,traj=0,frame='ALL')
+
+   :arg covalent_chain: List of 4 atoms defining the dihedral angle, or list of lists. (see: :meth:`msystem.selection_covalent_chains`)
+   :type covalent_chain: list[int] or list[list[int]]
+   :arg int traj: Index of traj to be analysed.
+   :arg frame: List of frame indexes.
+   :type frame: int, list[int] or 'ALL'
+   :returns: **angles**; List of angle values (radians) in the same order found in input parameter covalent_chain.
+   :rtype: 
+   	   * angles:
+			* numpy.array[num_frames,num_angs].
+   	     		* numpy.array[num_angs] (if num_frames=1)
+   	     		* numpy.array[num_frames] (if num_angs=1)
+
+.. seealso:: :ref:`ms-tut-any-dihang`
