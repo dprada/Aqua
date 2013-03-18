@@ -73,6 +73,11 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#how-to-make-atoms-selections">How to make atoms selections</a></li>
+<li><a class="reference internal" href="#dihedral-angles">Dihedral Angles</a><ul>
+<li><a class="reference internal" href="#ramachandran-map">Ramachandran Map</a></li>
+<li><a class="reference internal" href="#computing-any-dihedral-angle">Computing any dihedral angle</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#computing-distances">Computing distances</a><ul>
 <li><a class="reference internal" href="#neighbors-and-ranked-contacts">Neighbors and Ranked contacts</a></li>
 </ul>
@@ -121,13 +126,23 @@
 <div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [1]: </span><span class="kn">from</span> <span class="nn">aqua</span> <span class="kn">import</span> <span class="o">*</span>
 </pre></div>
 </div>
-<p>Some basic notions on python will be assumed along this tutorial. If you just landed here without any idea on python, have a look to a Python manual or tutorial first of all.</p>
+<p>Some basic notions on python will be assumed along this tutorial. If
+you just landed here without any idea on python, have a look to a
+Python manual or tutorial before.</p>
+<p>Some files are required to follow the tutorials:</p>
+<ul class="simple">
+<li>Met-Enkephalin (<a class="reference external" href="http://www.rcsb.org/pdb/explore.do?structureId=1PLW">PDB: 1PLW</a> ):
+<a class="reference download internal" href="../_downloads/metenk.pdb"><tt class="xref download docutils literal"><span class="pre">metenk.pdb</span></tt></a> and
+<a class="reference download internal" href="../_downloads/traj_metenk.xtc"><tt class="xref download docutils literal"><span class="pre">traj_metenk.xtc</span></tt></a></li>
+<li>Catabolite Activator Protein (<a class="reference external" href="http://www.rcsb.org/pdb/explore.do?structureId=2WC2">PDB: 2WC2</a> ):
+<a class="reference download internal" href="../_downloads/metenk.pdb"><tt class="xref download docutils literal"><span class="pre">2WC2.pdb</span></tt></a>.</li>
+</ul>
 <hr class="docutils" />
 <div class="section" id="loading-writting-the-topology">
 <h2>Loading/Writting the topology<a class="headerlink" href="#loading-writting-the-topology" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="loading">
 <h3>Loading<a class="headerlink" href="#loading" title="Permalink to this headline">¶</a></h3>
-<p>A system can be loaded from a file (pdb,gro or psf) or downloaded from the Protein Data Bank.</p>
+<p>A system can be downloaded from the Protein Data Bank.</p>
 <div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [2]: </span><span class="n">mol_test</span><span class="o">=</span><span class="n">msystem</span><span class="p">(</span><span class="n">download</span><span class="o">=</span><span class="s">&#39;2WC2&#39;</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 <span class="c"># File saved as 2WC2.pdb</span>
 <span class="c"># System created from the file 2WC2.pdb :</span>
@@ -137,8 +152,10 @@
 <span class="c"># 0  waters</span>
 <span class="c"># 0  ions</span>
 <span class="c"># 20  frames/models in traj 0</span>
-
-<span class="gp">In [3]: </span><span class="n">mol2_test</span><span class="o">=</span><span class="n">msystem</span><span class="p">(</span><span class="s">&#39;2WC2.pdb&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Or</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [3]: </span><span class="n">mol2_test</span><span class="o">=</span><span class="n">msystem</span><span class="p">(</span><span class="s">&#39;2WC2.pdb&#39;</span><span class="p">)</span>
 
 <span class="gp">In [4]: </span><span class="n">mol2_test</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
 <span class="c"># System created from the file 2WC2.pdb :</span>
@@ -358,6 +375,126 @@ There are few special key words.</p>
 <div class="admonition-see-also admonition seealso">
 <p class="first admonition-title">See also</p>
 <p class="last"><a class="reference internal" href="functions.html#msystem.selection" title="msystem.selection"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.selection()</span></tt></a></p>
+</div>
+</div>
+<div class="section" id="dihedral-angles">
+<h2>Dihedral Angles<a class="headerlink" href="#dihedral-angles" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="ramachandran-map">
+<span id="ms-tut-rama-map"></span><h3>Ramachandran Map<a class="headerlink" href="#ramachandran-map" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [2]: </span><span class="n">metenk</span><span class="o">=</span><span class="n">msystem</span><span class="p">(</span><span class="s">&#39;metenk.pdb&#39;</span><span class="p">,</span><span class="n">coors</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="gp">In [3]: </span><span class="n">angs</span><span class="p">,</span><span class="n">keys</span><span class="o">=</span><span class="n">metenk</span><span class="o">.</span><span class="n">ramachandran_map</span><span class="p">(</span><span class="n">legend</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="gp">In [4]: </span><span class="k">print</span> <span class="n">keys</span><span class="p">[</span><span class="mi">3</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span><span class="s">&#39;=&#39;</span><span class="p">,</span><span class="n">angs</span><span class="p">[</span><span class="mi">3</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span><span class="s">&#39;  &#39;</span><span class="p">,</span> <span class="n">keys</span><span class="p">[</span><span class="mi">3</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span><span class="s">&#39;=&#39;</span><span class="p">,</span><span class="n">angs</span><span class="p">[</span><span class="mi">3</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+<span class="go">Phi 3 = -1.92163955875    Psi 3 = -0.642196409677</span>
+
+<span class="gp">In [5]: </span><span class="k">print</span> <span class="n">metenk</span><span class="o">.</span><span class="n">ramachandran_map</span><span class="p">(</span><span class="n">resid</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">[-1.92163956 -0.64219641]</span>
+
+<span class="gp">In [6]: </span><span class="n">dangs</span><span class="p">,</span><span class="n">dkeys</span><span class="o">=</span><span class="n">metenk</span><span class="o">.</span><span class="n">ramachandran_map</span><span class="p">(</span><span class="n">resid</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span><span class="n">pdb_index</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">legend</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="gp">In [7]: </span><span class="k">print</span> <span class="n">keys</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="s">&#39;=&#39;</span><span class="p">,</span><span class="n">angs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="s">&#39;  &#39;</span><span class="p">,</span> <span class="n">keys</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="s">&#39;=&#39;</span><span class="p">,</span><span class="n">angs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="go">Phi 4 = -1.92163955875    Psi 4 = -0.642196409677</span>
+</pre></div>
+</div>
+<p>In case of having different frames to analyse coming from a trajectory:</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [8]: </span><span class="n">metenk</span><span class="o">.</span><span class="n">info_trajs</span><span class="p">()</span>
+<span class="c"># 1 frames/models in traj 0</span>
+
+<span class="gp">In [9]: </span><span class="k">print</span> <span class="n">metenk</span><span class="o">.</span><span class="n">traj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
+<span class="go">metenk.pdb</span>
+
+<span class="gp">In [10]: </span><span class="n">metenk</span><span class="o">.</span><span class="n">delete_traj</span><span class="p">()</span>
+
+<span class="gp">In [11]: </span><span class="n">metenk</span><span class="o">.</span><span class="n">info_trajs</span><span class="p">()</span>
+<span class="c"># No coordinates</span>
+
+<span class="gp">In [12]: </span><span class="n">metenk</span><span class="o">.</span><span class="n">load_traj</span><span class="p">(</span><span class="s">&#39;traj_metenk.xtc&#39;</span><span class="p">,</span><span class="n">frame</span><span class="o">=</span><span class="s">&#39;ALL&#39;</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="c"># 21 frames/models in traj 0</span>
+
+<span class="gp">In [13]: </span><span class="n">angs</span><span class="p">,</span><span class="n">keys</span><span class="o">=</span><span class="n">metenk</span><span class="o">.</span><span class="n">ramachandran_map</span><span class="p">(</span><span class="n">resid</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">],</span><span class="n">frame</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">20</span><span class="p">],</span><span class="n">pdb_index</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">legend</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="gp">In [14]: </span><span class="k">print</span> <span class="n">keys</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span><span class="s">&#39;(step=[0,10,20]) =&#39;</span><span class="p">,</span><span class="n">angs</span><span class="p">[:,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+<span class="go">Psi 3 (step=[0,10,20]) = [ 0.87594459  0.64741795  1.22817325]</span>
+
+<span class="gp">In [15]: </span><span class="n">angs</span><span class="o">=</span><span class="n">metenk</span><span class="o">.</span><span class="n">ramachandran_map</span><span class="p">(</span><span class="n">resid</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="n">frame</span><span class="o">=</span><span class="s">&#39;ALL&#39;</span><span class="p">)</span>
+
+<span class="gp">In [16]: </span><span class="n">idres2</span><span class="o">=</span><span class="n">metenk</span><span class="o">.</span><span class="n">resid</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">metenk</span><span class="o">.</span><span class="n">resid</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">pdb_index</span><span class="p">)</span>
+
+<span class="gp">In [17]: </span><span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">metenk</span><span class="o">.</span><span class="n">traj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_frames</span><span class="p">,</span><span class="mi">10</span><span class="p">):</span>
+<span class="go">   ....:     print idres2,&#39;| t=&#39;, metenk.traj[0].frame[ii].time, &#39;| [phi,psi]=&#39;, angs[ii,:]</span>
+<span class="go">GLY3 | t= 0.0 | [phi,psi]= [ 2.01215258  0.87594459]</span>
+<span class="go">GLY3 | t= 100.0 | [phi,psi]= [ 1.90493036  0.64741795]</span>
+<span class="go">GLY3 | t= 200.0 | [phi,psi]= [ 1.9432302   1.22817325]</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="msystem.html#msystem" title="msystem"><tt class="xref py py-class docutils literal"><span class="pre">msystem</span></tt></a>, <a class="reference internal" href="coors.html#traj" title="traj"><tt class="xref py py-class docutils literal"><span class="pre">traj</span></tt></a>, <a class="reference internal" href="msystem.html#resid" title="resid"><tt class="xref py py-class docutils literal"><span class="pre">resid</span></tt></a>, <a class="reference internal" href="functions.html#msystem.load_traj" title="msystem.load_traj"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.load_traj()</span></tt></a>, <a class="reference internal" href="functions.html#msystem.info_trajs" title="msystem.info_trajs"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.info_trajs()</span></tt></a>, <a class="reference internal" href="functions.html#msystem.delete_traj" title="msystem.delete_traj"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.delete_traj()</span></tt></a>, <a class="reference internal" href="functions.html#msystem.ramachandran_map" title="msystem.ramachandran_map"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.ramachandran_map()</span></tt></a></p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Depending on how this method is used, it can result with a
+low performance. Check the next section <a class="reference internal" href="#ms-tut-any-dihang"><em>Computing any dihedral angle</em></a> for a better performance.</p>
+</div>
+</div>
+<div class="section" id="computing-any-dihedral-angle">
+<span id="ms-tut-any-dihang"></span><h3>Computing any dihedral angle<a class="headerlink" href="#computing-any-dihedral-angle" title="Permalink to this headline">¶</a></h3>
+<p>A dihedral angle can be computed with a set of 4 atoms. This way, the
+computation of dihedral angles goes beyond the analysis done with
+<a class="reference internal" href="functions.html#msystem.ramachandran_map" title="msystem.ramachandran_map"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.ramachandran_map()</span></tt></a>.</p>
+<p>There is a method to extract sets of 4 atoms corresponding to
+consecutive covalently bound chains of atoms:</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [2]: </span><span class="n">metenk</span><span class="o">=</span><span class="n">msystem</span><span class="p">(</span><span class="s">&#39;metenk.pdb&#39;</span><span class="p">)</span>
+
+<span class="gp">In [3]: </span><span class="n">phi_3</span><span class="o">=</span><span class="n">metenk</span><span class="o">.</span><span class="n">selection_covalent_chains</span><span class="p">(</span><span class="n">chain</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;C&#39;</span><span class="p">,</span><span class="s">&#39;N&#39;</span><span class="p">,</span><span class="s">&#39;CA&#39;</span><span class="p">,</span><span class="s">&#39;C&#39;</span><span class="p">],</span><span class="n">select</span><span class="o">=</span><span class="s">&#39;resid.index 2 3&#39;</span><span class="p">)</span>
+
+<span class="gp">In [4]: </span><span class="n">psi_3</span><span class="o">=</span><span class="n">metenk</span><span class="o">.</span><span class="n">selection_covalent_chains</span><span class="p">(</span><span class="n">chain</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;N&#39;</span><span class="p">,</span><span class="s">&#39;CA&#39;</span><span class="p">,</span><span class="s">&#39;C&#39;</span><span class="p">,</span><span class="s">&#39;N&#39;</span><span class="p">],</span><span class="n">select</span><span class="o">=</span><span class="s">&#39;resid.index 3 4&#39;</span><span class="p">)</span>
+
+<span class="gp">In [5]: </span><span class="n">xi1_3</span><span class="o">=</span><span class="n">metenk</span><span class="o">.</span><span class="n">selection_covalent_chains</span><span class="p">(</span><span class="n">chain</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;N&#39;</span><span class="p">,</span><span class="s">&#39;CA&#39;</span><span class="p">,</span><span class="s">&#39;CB&#39;</span><span class="p">,</span><span class="s">&#39;CG&#39;</span><span class="p">],</span><span class="n">select</span><span class="o">=</span><span class="s">&#39;resid.index 3&#39;</span><span class="p">)</span>
+
+<span class="gp">In [5]: </span><span class="n">omegas</span><span class="o">=</span><span class="n">metenk</span><span class="o">.</span><span class="n">selection_covalent_chains</span><span class="p">(</span><span class="n">chain</span><span class="o">=</span><span class="p">[[</span><span class="s">&#39;CA&#39;</span><span class="p">,</span><span class="s">&#39;CH3&#39;</span><span class="p">],</span><span class="s">&#39;C&#39;</span><span class="p">,</span><span class="s">&#39;N&#39;</span><span class="p">,[</span><span class="s">&#39;CA&#39;</span><span class="p">,</span><span class="s">&#39;CH3&#39;</span><span class="p">]])</span>
+
+<span class="gp">In [6]: </span><span class="k">print</span> <span class="n">omegas</span>
+<span class="go">[[4, 21, 23, 25], [25, 28, 30, 32], [32, 35, 37, 39], [39, 55, 57, 59]]</span>
+</pre></div>
+</div>
+<p>With this sets of 4-tuples the dihedral angles can be computed as:</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [7]: </span><span class="n">metenk</span><span class="o">.</span><span class="n">load_traj</span><span class="p">(</span><span class="s">&#39;traj_metenk.xtc&#39;</span><span class="p">,</span><span class="n">frame</span><span class="o">=</span><span class="s">&#39;ALL&#39;</span><span class="p">)</span>
+
+<span class="gp">In [8]: </span><span class="n">angs_phi_3</span><span class="o">=</span><span class="n">metenk</span><span class="o">.</span><span class="n">dihedral_angle</span><span class="p">(</span><span class="n">phi_3</span><span class="p">)</span>
+
+<span class="gp">In [9]: </span><span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">metenk</span><span class="o">.</span><span class="n">traj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_frames</span><span class="p">):</span>
+<span class="go">  ....:     print &#39;Phi 3 (step=&#39;+str(ii)+&#39;)&#39;, angs_phi_3[ii]</span>
+<span class="go">  ....:</span>
+<span class="go">Phi 3 (step=0) -1.92022469777</span>
+<span class="go">Phi 3 (step=1) -1.59101737012</span>
+<span class="go">Phi 3 (step=2) -1.61015325568</span>
+<span class="go">Phi 3 (step=3) -1.99394603011</span>
+<span class="go">...</span>
+
+<span class="gp">In [10]: </span><span class="k">print</span> <span class="n">metenk</span><span class="o">.</span><span class="n">dihedral_angle</span><span class="p">(</span><span class="n">covalent_chain</span><span class="o">=</span><span class="n">psi_3</span><span class="p">,</span><span class="n">frame</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">-0.23084216</span>
+
+<span class="gp">In [11]: </span><span class="n">ang_omegas</span><span class="o">=</span><span class="n">metenk</span><span class="o">.</span><span class="n">dihedral_angle</span><span class="p">(</span><span class="n">covalent_chain</span><span class="o">=</span><span class="n">omegas</span><span class="p">,</span><span class="n">frame</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">20</span><span class="p">])</span>
+
+<span class="gp">In [12]: </span><span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">omegas</span><span class="p">)):</span>
+<span class="go">   ....:     print &#39;omega_&#39;+str(ii+1)+&#39; (step=[0,10,20])= &#39;,str(ang_omegas[:,ii])</span>
+<span class="go">   ....:</span>
+<span class="go">omega_1 (step=[0,10,20])=  [ 3.13688483 -3.08321194 -3.07475646]</span>
+<span class="go">omega_2 (step=[0,10,20])=  [ 3.1379404   3.08377778 -3.11113559]</span>
+<span class="go">omega_3 (step=[0,10,20])=  [ 3.13383903 -3.11193193 -3.0400114 ]</span>
+<span class="go">omega_4 (step=[0,10,20])=  [ 3.13693669 -3.0892444  -3.03312968]</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="msystem.html#msystem" title="msystem"><tt class="xref py py-class docutils literal"><span class="pre">msystem</span></tt></a>, <a class="reference internal" href="coors.html#traj" title="traj"><tt class="xref py py-class docutils literal"><span class="pre">traj</span></tt></a>, <a class="reference internal" href="functions.html#msystem.load_traj" title="msystem.load_traj"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.load_traj()</span></tt></a>, <a class="reference internal" href="functions.html#msystem.selection_covalent_chains" title="msystem.selection_covalent_chains"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.selection_covalent_chains()</span></tt></a>, <a class="reference internal" href="functions.html#msystem.dihedral_angle" title="msystem.dihedral_angle"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.dihedral_angle()</span></tt></a></p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If the angles phi and psi are the goal of the analysis, the method <a class="reference internal" href="functions.html#msystem.ramachandran_map" title="msystem.ramachandran_map"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.ramachandran_map()</span></tt></a> can be another tool to be considered.</p>
+</div>
 </div>
 </div>
 <div class="section" id="computing-distances">

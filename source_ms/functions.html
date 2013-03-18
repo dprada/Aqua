@@ -81,6 +81,12 @@
 <li><a class="reference internal" href="#writting-dcd-files">Writting dcd files</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#analysis">Analysis</a><ul>
+<li><a class="reference internal" href="#ramachandran-map">Ramachandran Map</a></li>
+<li><a class="reference internal" href="#covalent-chains">Covalent chains</a></li>
+<li><a class="reference internal" href="#dihedral-angles">Dihedral Angles</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -414,6 +420,160 @@ matter if are written in capital or lower case, and the characters:
 <div class="admonition-see-also admonition seealso">
 <p class="first admonition-title">See also</p>
 <p class="last"><a class="reference internal" href="tutorial.html#ms-tut-convert-traj"><em>Converting a trajectory into other format</em></a></p>
+</div>
+</div>
+</div>
+<hr class="docutils" />
+<div class="section" id="analysis">
+<h2>Analysis<a class="headerlink" href="#analysis" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="ramachandran-map">
+<h3>Ramachandran Map<a class="headerlink" href="#ramachandran-map" title="Permalink to this headline">¶</a></h3>
+<p>The function computes the pairs of angles phi-psi for any list of
+residues and frames.  Since each dihedral angle is computed with atoms
+from 2 different residues, the relationship between angle and
+residue is given by the atom &#8216;CA&#8217;.</p>
+<dl class="method">
+<dt id="msystem.ramachandran_map">
+<tt class="descclassname">msystem.</tt><tt class="descname">ramachandran_map</tt><big>(</big><em>resid='ALL'</em>, <em>traj=0</em>, <em>frame='ALL'</em>, <em>pdb_index=False</em>, <em>legend=False</em><big>)</big><a class="headerlink" href="#msystem.ramachandran_map" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>resid</strong> (<em>int, list[int] or &#8216;ALL&#8217;</em>) &#8211; List of residue indexes or pdb indexes.</li>
+<li><strong>traj</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Index of trajectory to be analysed.</li>
+<li><strong>frame</strong> (<em>int, list[int] or &#8216;ALL&#8217;</em>) &#8211; List of frame indexes.</li>
+<li><strong>pdb_index</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Residues in input and output are identified by the pdb indexes if True.</li>
+<li><strong>legend</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Key of angles in output if True.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>angles</strong>, <strong>keys</strong> [if legend]; List of pairs phi-psi (radians) for the corresponding residues and frames, and key legend if choosen.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><ul>
+<li><dl class="first docutils">
+<dt>angles:</dt>
+<dd><ul class="first last simple">
+<li>numpy.array[num_frames,num_resids,2].</li>
+<li>numpy.array[num_resids,2] (if num_frames=1)</li>
+<li>numpy.array[num_frames,2] (if num_resids=1)</li>
+<li>numpy.array[2]            (if num_frames=num_resids=1)</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>keys:</dt>
+<dd><ul class="first last simple">
+<li>list[num_resids][2]</li>
+<li>list[num_resids][2] (if num_resids=1)</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="tutorial.html#ms-tut-rama-map"><em>Ramachandran Map</em></a></p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Depending on how this method is used, it can result with a
+low performance. Check <a class="reference internal" href="#msystem.dihedral_angle" title="msystem.dihedral_angle"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.dihedral_angle()</span></tt></a> for a better performance.</p>
+</div>
+</div>
+<div class="section" id="covalent-chains">
+<h3>Covalent chains<a class="headerlink" href="#covalent-chains" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="msystem.selection_covalent_chains">
+<tt class="descclassname">msystem.</tt><tt class="descname">selection_covalent_chains</tt><big>(</big><em>chain=None</em>, <em>select='protein'</em><big>)</big><a class="headerlink" href="#msystem.selection_covalent_chains" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>chain</strong> (<em>list[str]</em>) &#8211; List of atom names to find as covalently bonded chains in &#8220;select&#8221;.</li>
+<li><strong>select</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Selection or set of atoms where the method looks for covalent chains. (see: <a class="reference internal" href="#msystem.selection" title="msystem.selection"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.selection()</span></tt></a>)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>chains</strong>; List of chains found. Each chain is a list of the corresponding atom indexes.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><ul>
+<li><dl class="first docutils">
+<dt>chains:</dt>
+<dd><ul class="first last simple">
+<li>list[num_chains][atom_indexes]</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="tutorial.html#ms-tut-any-dihang"><em>Computing any dihedral angle</em></a></p>
+</div>
+</div>
+<div class="section" id="dihedral-angles">
+<h3>Dihedral Angles<a class="headerlink" href="#dihedral-angles" title="Permalink to this headline">¶</a></h3>
+<p>The method computes the value of any list of 4 atoms defining a
+dihedral angle. The output</p>
+<dl class="method">
+<dt id="msystem.dihedral_angle">
+<tt class="descclassname">msystem.</tt><tt class="descname">dihedral_angle</tt><big>(</big><em>covalent_chain=None</em>, <em>traj=0</em>, <em>frame='ALL'</em><big>)</big><a class="headerlink" href="#msystem.dihedral_angle" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>covalent_chain</strong> (<em>list[int] or list[list[int]]</em>) &#8211; List of 4 atoms defining the dihedral angle, or list of lists. (see: <a class="reference internal" href="#msystem.selection_covalent_chains" title="msystem.selection_covalent_chains"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.selection_covalent_chains()</span></tt></a>)</li>
+<li><strong>traj</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Index of traj to be analysed.</li>
+<li><strong>frame</strong> (<em>int, list[int] or &#8216;ALL&#8217;</em>) &#8211; List of frame indexes.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>angles</strong>; List of angle values (radians) in the same order found in input parameter covalent_chain.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><ul>
+<li><dl class="first docutils">
+<dt>angles:</dt>
+<dd><ul class="first last simple">
+<li>numpy.array[num_frames,num_angs].</li>
+<li>numpy.array[num_angs] (if num_frames=1)</li>
+<li>numpy.array[num_frames] (if num_angs=1)</li>
+<li>float (if num_angs=1 and num_frames=1)</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="tutorial.html#ms-tut-any-dihang"><em>Computing any dihedral angle</em></a></p>
 </div>
 </div>
 </div>

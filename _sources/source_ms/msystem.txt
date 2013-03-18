@@ -121,6 +121,8 @@ Atom
 
 Atoms are represented by objects of class atom with the common attributes:
 
+.. class:: atom()
+
 .. attribute:: atom.name
    
    Name of atom as in msystem.input_file. (String)
@@ -203,6 +205,7 @@ Residue
 
 Residues are represented by objects of class atom with the common attributes:
 
+.. class:: resid()
 
 .. attribute:: resid.name
    
@@ -237,6 +240,8 @@ Chain
 
 Chains are represented by objects of class chain with the common attributes:
 
+.. class:: chain()
+
 .. attribute:: chain.name
    
    Name of chain as it comes from msystem.input_file. (String)
@@ -255,6 +260,8 @@ Water
 Water molecules are represented as residues in msystem.resid. In
 addition there is an special class to include other common attributes
 of these molecules.
+
+.. class:: water()
 
 .. attribute:: water.index
 

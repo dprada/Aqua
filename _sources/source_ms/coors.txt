@@ -73,6 +73,8 @@ Frame
 
 Frames are represented by objects of class frame with common attributes and methods:
 
+.. class:: frame()
+
 .. attribute:: frame.time
 
    Time value of frame for this frame. (float)
