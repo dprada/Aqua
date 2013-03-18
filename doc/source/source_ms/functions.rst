@@ -210,7 +210,7 @@ residue is given by the atom 'CA'.
    :type frame: int, list[int] or 'ALL'
    :arg bool pdb_index: Residues in input and output are identified by the pdb indexes if True.
    :arg bool legend: Key of angles in output if True.
-   :returns: **angles**, **keys** [if legend]; List of pairs phi-psi for the corresponding residues and frames, and key legend if choosen. 
+   :returns: **angles**, **keys** [if legend]; List of pairs phi-psi (radians) for the corresponding residues and frames, and key legend if choosen. 
    :rtype: 
    	 * angles: 
 	   	   * numpy.array[num_frames,num_resids,2].
@@ -264,5 +264,6 @@ dihedral angle. The output
 			* numpy.array[num_frames,num_angs].
    	     		* numpy.array[num_angs] (if num_frames=1)
    	     		* numpy.array[num_frames] (if num_angs=1)
+			* float (if num_angs=1 and num_frames=1)
 
 .. seealso:: :ref:`ms-tut-any-dihang`

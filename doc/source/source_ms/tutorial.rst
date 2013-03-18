@@ -394,7 +394,31 @@ With this sets of 4-tuples the dihedral angles can be computed as:
 
    In [8]: angs_phi_3=metenk.dihedral_angle(phi_3)
    
+   In [9]: for ii in range(metenk.traj[0].num_frames):
+     ....:     print 'Phi 3 (step='+str(ii)+')', angs_phi_3[ii]
+     ....: 
+   Phi 3 (step=0) -1.92022469777
+   Phi 3 (step=1) -1.59101737012
+   Phi 3 (step=2) -1.61015325568
+   Phi 3 (step=3) -1.99394603011
+   ...
 
+   In [10]: print metenk.dihedral_angle(covalent_chain=psi_3,frame=10)
+   -0.23084216
+
+   In [11]: ang_omegas=metenk.dihedral_angle(covalent_chain=omegas,frame=[0,10,20])
+
+   In [12]: for ii in range(len(omegas)):
+      ....:     print 'omega_'+str(ii+1)+' (step=[0,10,20])= ',str(ang_omegas[:,ii])
+      ....: 
+   omega_1 (step=[0,10,20])=  [ 3.13688483 -3.08321194 -3.07475646]
+   omega_2 (step=[0,10,20])=  [ 3.1379404   3.08377778 -3.11113559]
+   omega_3 (step=[0,10,20])=  [ 3.13383903 -3.11193193 -3.0400114 ]
+   omega_4 (step=[0,10,20])=  [ 3.13693669 -3.0892444  -3.03312968]
+
+.. seealso:: :class:`msystem`, :class:`traj`, :meth:`msystem.load_traj`, :meth:`msystem.selection_covalent_chains`, :meth:`msystem.dihedral_angle`
+
+.. note:: If the angles phi and psi are the goal of the analysis, the method :meth:`msystem.ramachandran_map` can be another tool to be considered.
 
 
 Computing distances

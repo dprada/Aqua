@@ -1116,9 +1116,16 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
             dih_angs[jj,:]=faux.glob.dihedral_angles(iframe.coors,iframe.box,iframe.orthogonal,covalent_chain,num_dih_angs,self.num_atoms)
 
         if num_frames==1:
-            return dih_angs[0,:]
+            if num_dih_angs==1:
+                return dih_angs[0,0]
+            else:
+                return dih_angs[0,:]
         else:
-            return dih_angs
+            if num_dih_angs==1:
+                return dih_angs[:,0]
+            else:
+                return dih_angs
+
 
 
 #def min_distance(system,set_a,set_b=None,pbc=True,type_b='atoms'):
