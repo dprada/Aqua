@@ -1,3 +1,4 @@
+
 Functions
 *********
 
@@ -192,6 +193,33 @@ Writting dcd files
 
 Analysis
 ========
+
+Distances
++++++++++
+
+.. method:: msystem.distance(sel1='ALL',sel2=None,traj=0,frame='ALL',legend=False, pbc=True)
+
+   :arg sel1: List or selection of atoms
+   :type sel1: int, list[int], string.
+   :arg sel2: List or selection of atoms
+   :type sel2: int, list[int], string.
+   :arg int traj: Index of trajectory to be analysed.
+   :arg frame: List of frame indexes.
+   :type frame: int, list[int] or 'ALL'
+   :arg bool legend: Key of distances as output if True.
+   :arg bool pbc: With periodic boundary conditions if True.
+   :returns: **distances**, **keys1** [if legend], **keys2** [if legend]
+   :rtype:
+	 * distances:
+		      * numpy.array[num_frames,atoms_sel1,atoms_sel2]
+		      * numpy.array[atoms_sel1,atoms_sel2] (if num_frames=1)
+	 * keys1:
+		      * list[atoms_sel1]
+	 * keys2:
+		      * list[atoms_sel2]
+
+.. seealso:: :ref:`ms-tut-dists`
+
 
 Ramachandran Map 
 ++++++++++++++++ 

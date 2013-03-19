@@ -199,10 +199,6 @@ and :download:`GSGS.dcd <../../tutorials/systems_tut1/GSGS.dcd>`.
    In [5]: GSGS.info_trajs()
    # 1 frames/models in traj 0
 
-
-
-
-
 .. _ms-tut-convert-traj:
 
 Converting a trajectory into other format
@@ -292,6 +288,74 @@ We can also make use of the expression 'within X of', X is a float number indica
 
 
 .. seealso:: :meth:`msystem.selection`
+
+
+
+Distances
+=========
+
+.. _ms-tut-dists:
+
+Computing distances
++++++++++++++++++++
+
+The distance between a set of n1 atoms, sel1, and a set of n2 atoms,
+sel2.  If only one frame is analysed the output is a 2D matrix
+[n1,n2].  This way the distance between the i-th atom in sel1 and
+j-th in sel2 correspond to the output element [i,j].
+
+If more than one frame is analysed the output is a 3D matrix
+[n1,n2,number_frames] (following the previous notation).
+
+The method by construction is faster if n1<n2.
+
+.. sourcecode:: ipython
+
+   In [2]: metenk=msystem('metenk.pdb')
+
+   In [3]: metenk.load_traj('traj_metenk.xtc',frame='ALL')
+
+   In [4]: dists,keys1,keys2=metenk.distance('resid.pdb_index 1','resid.pdb_index 4',legend=True)
+   
+   In [5]: for ii in range(metenk.traj[0].num_frames):
+      ...:         print 'The distance between atoms index',keys1[10],'and',keys2[5],'is',dists[ii,10,5],'in frame',ii
+      ...: 
+   The distance between atoms index 10 and 42 is 7.30732658606 in frame 0
+   The distance between atoms index 10 and 42 is 7.54015357744 in frame 1
+   The distance between atoms index 10 and 42 is 7.22121193005 in frame 2
+   ...
+
+If only a sets of atoms is provided, the distance among them is computed:
+
+.. sourcecode:: ipython
+
+   In [6]: CAs=metenk.selection('atom.name CA')
+
+   In [7]: dists=metenk.distance(sel1=CAs,frame=10)
+
+   In [8]: print 'CA'+str(metenk.atom[CAs[2]].pdb_index)+'-CA'+str(metenk.atom[CAs[4]].pdb_index), dists[2,4]
+   CA33-CA60 5.81840212291
+
+.. seealso:: :class:`msystem`, :class:`traj`, :class:`atom`, :meth:`msystem.load_traj`, :meth:`msystem.info_trajs`, :meth:`msystem.selection`, :meth:`msystem.distance`
+
+
+Neighbors and Ranked contacts
++++++++++++++++++++++++++++++
+
+The function neighbs can help with its different options to approach this problems.
+Notice that the cut-off here is the limit in the ranked list of closest neighbors or a given distance.
+In the former case the output can be sorted or not by distance. 
+If only contact map is need, maybe the following section is suitable because of its efficience.
+
+Neighbors with a distance lower or equal than a certain threshold:
+
+
+
+Contact Maps
+============
+
+
+
 
 
 Dihedral Angles
@@ -420,61 +484,6 @@ With this sets of 4-tuples the dihedral angles can be computed as:
 
 .. note:: If the angles phi and psi are the goal of the analysis, the method :meth:`msystem.ramachandran_map` can be another tool to be considered.
 
-
-Computing distances
-===================
-
-The distance between a set of n1 atoms, list1, and a set of n2 atoms,
-list2.  If only one frame is analysed the output is a 2D matrix
-[n1,n2].  This way the distance between the i-th atom in list1 and
-j-th in list2 correspond to output[i,j].
-
-If more than one frame is analysed the output is a 3D matrix
-[n1,n2,number_frames] (following the previous notation).
-
-It is faster if len(list1)<len(list2).
-
-
-.. sourcecode:: ipython
-
-   In [2]: GSGS=molecule('GSGS.pdb',coors=False,verbose=False)
-    
-   In [3]: GSGS.load_traj('GSGS.dcd',frame='ALL',verbose=False)
-    
-   In [4]: list1=GSGS.selection('atom.resid.type Protein')
-    
-   In [5]: list2=GSGS.selection('atom.resid.type Water and atom.type O')
-
-   In [6]: result=GSGS.distance(list1,list2)
- 
-   In [7]: for ii in range(GSGS.traj[0].num_frames):
-      ....:    print 'The distance between atoms index',list1[1],'and',list2[3],'is',result[1,3][ii],'in frame',ii
-      ....: 
-   The distance between atoms index 1 and 48 is 24.8435076017 in frame 0
-   The distance between atoms index 1 and 48 is 23.6529328175 in frame 1
-   The distance between atoms index 1 and 48 is 24.3209230117 in frame 2
-   The distance between atoms index 1 and 48 is 21.5236312048 in frame 3
-   The distance between atoms index 1 and 48 is 25.2685193116 in frame 4
-   The distance between atoms index 1 and 48 is 28.2550958504 in frame 5
-   The distance between atoms index 1 and 48 is 26.1290587977 in frame 6
-   The distance between atoms index 1 and 48 is 20.9157208891 in frame 7
-   The distance between atoms index 1 and 48 is 21.6473615840 in frame 8
-   The distance between atoms index 1 and 48 is 18.5862638499 in frame 9
-
-Neighbors and Ranked contacts
-+++++++++++++++++++++++++++++
-
-The function neighbs can help with its different options to approach this problems.
-Notice that the cut-off here is the limit in the ranked list of closest neighbors or a given distance.
-In the former case the output can be sorted or not by distance. 
-If only contact map is need, maybe the following section is suitable because of its efficience.
-
-Neighbors with a distance lower or equal than a certain threshold:
-
-
-
-Contact Maps
-============
 
 
 

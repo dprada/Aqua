@@ -893,7 +893,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
         pass
 
 
-    def distance(self,setA='ALL',setB=None,traj=0,frame='ALL',pbc=True):
+    def distance(self,sel1='ALL',sel2=None,traj=0,frame='ALL',legend=False,pbc=True):
         
         if pbc:
             check_cell=self.traj[traj].frame[0].cell
@@ -902,7 +902,8 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                 return
             pbc=1
 
-        setA,nlist_A,nsys_A,setB,nlist_B,nsys_B,diff_syst,diff_set=__read_sets_opt__(self,setA,None,setB)
+        setA,nlist_A,nsys_A,setB,nlist_B,nsys_B,diff_syst,diff_set=__read_sets_opt__(self,sel1,None,sel2)
+
         num_frames=__length_frame_opt__(self,traj,frame)
         dists=numpy.empty(shape=(num_frames,nlist_A,nlist_B),dtype=float,order='Fortran')
 
@@ -911,10 +912,16 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
             dists[num_frames,:,:]=faux.glob.distance(diff_syst,diff_set,pbc,setA,iframe.coors,iframe.box,iframe.orthogonal,setB,iframe.coors,nlist_A,nlist_B,nsys_A,nsys_B)
             num_frames+=1
 
-        if num_frames==1:
-            return dists[0,:,:]
+        if legend:
+            if num_frames==1:
+                return dists[0,:,:], setA, setB
+            else:
+                return dists, setA, setB
         else:
-            return dists
+            if num_frames==1:
+                return dists[0,:,:]
+            else:
+                return dists
 
     def distance_image_pbc(self,setA='ALL',setB=None,traj=0,frame='ALL'):
 
@@ -1080,15 +1087,6 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                     return dih_angs[:,0,:]
                 else:
                     return dih_angs
-
-
-        #if omega:
-        #    list_omega=selection_covalent_chains(system=self,select=setA,chain=[['CA','CH3'],'C','N',['CA','CH3']])
-        #    for ii in list_omega:
-        #        list_angs.append(ii)
-        #        if legend:
-        #            key_legend.append(['Omega '+str(self.atom[ii[2]].resid.pdb_index),ii])
-
 
     def dihedral_angle(self,covalent_chain=None,traj=0,frame='ALL'):
 
