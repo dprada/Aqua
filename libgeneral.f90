@@ -113,44 +113,228 @@ SUBROUTINE PBC(vector,box,ortho)
      END DO
   ELSE
  
-     print*, 'Not implemented'
+     print*, 'Corrections on PBC not implemented with a non-cubic box.'
  
   END IF
   
 END SUBROUTINE PBC
 
 
-SUBROUTINE CENTER (pbc_opt,list_com,list_mov,coors,box,ortho,numat_com,numat_mov,numat_glob)
+SUBROUTINE CENTER_OF_MASS (pbc_opt,list_com,coors,box,ortho,numat_com,numat_glob,com)
 
   IMPLICIT NONE
 
-  INTEGER,INTENT(IN)::pbc_opt,numat_com,numat_mov,numat_glob,ortho
+  INTEGER,INTENT(IN)::pbc_opt,ortho,numat_com,numat_glob
+  DOUBLE PRECISION,DIMENSION(numat_glob,3),INTENT(IN)::coors
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box
+  INTEGER,DIMENSION(numat_com),INTENT(IN)::list_com
+  DOUBLE PRECISION,DIMENSION(3),INTENT(OUT)::com
+
+  INTEGER::ii,jj,kk,nn
+  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::pix,vect_aux,old_ref
+  DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE::comaux
+  DOUBLE PRECISION::theta,pi
+  DOUBLE PRECISION::x,y,z,Lx,Ly,Lz
+
+
+  com=0.0d0
+
+  IF (pbc_opt==0) THEN
+
+     DO ii=1,numat_com
+        jj=list_com(ii)+1
+        com(:)=com(:)+coors(jj,:)
+     END DO
+     com(:)=com(:)/(numat_com*1.0d0)
+
+  ELSE
+
+     IF (ortho==1) THEN
+
+! Bai, Linge; Breen, David (2008). "Calculating Center of Mass in an Unbounded 2D Environment".
+! Journal of Graphics, GPU, and Game Tools 13 (4): 53–60. doi:10.1080/2151237X.2008.10129266
+
+        ALLOCATE(comaux(3,2),vect_aux(3),pix(3),old_ref(3))
+        comaux=0.0d0
+        vect_aux=0.0d0
+        pi=3.1415926535897931*2.0d0
+        DO ii=1,3
+           pix(ii)=box(ii,ii)/pi
+        END DO
+        
+        DO ii=1,numat_com
+           jj=list_com(ii)+1
+           DO kk=1,3
+              theta=coors(jj,kk)/pix(kk)
+              comaux(kk,1)=comaux(kk,1)+pix(kk)*dcos(theta)
+              comaux(kk,2)=comaux(kk,2)+pix(kk)*dsin(theta)
+           END DO
+        END DO
+        
+        comaux(:,:)=comaux(:,:)/(numat_com*1.0d0)
+        
+        theta=3.1415926535897931
+
+        DO ii=1,3
+           com(ii)=datan2(-comaux(ii,2),-comaux(ii,1))+theta
+           com(ii)=pix(ii)*com(ii)
+        END DO
+
+        DEALLOCATE(comaux,pix)
+
+        ! Recompute com with new reference
+
+        old_ref=com
+        com=0.0d0
+        Lx=box(1,1) 
+        Ly=box(2,2) 
+        Lz=box(3,3) 
+        vect_aux(1)=(Lx/2.0d0)-old_ref(1)
+        vect_aux(2)=(Ly/2.0d0)-old_ref(2)
+        vect_aux(3)=(Lz/2.0d0)-old_ref(3)
+
+
+        DO ii=1,numat_com
+           jj=list_com(ii)+1
+           x=coors(jj,1)+vect_aux(1) 
+           y=coors(jj,2)+vect_aux(2) 
+           z=coors(jj,3)+vect_aux(3) 
+           IF (x<0.0d0) THEN
+              nn=CEILING(abs(x)/Lx)
+              x=x+nn*Lx
+           ELSE IF (x>=Lx) THEN
+              nn=INT(x/Lx)
+              x=x-nn*Lx
+           END IF
+           IF (y<0.0d0) THEN
+              nn=CEILING(abs(y)/Ly)
+              y=y+nn*Ly
+           ELSE IF (y>=Ly) THEN
+              nn=INT(y/Ly)
+              y=y-nn*Ly
+           END IF
+           IF (z<0.0d0) THEN
+              nn=CEILING(abs(z)/Lz)
+              z=z+nn*Lz
+           ELSE IF (z>=Lz) THEN
+              nn=INT(z/Lz)
+              z=z-nn*Lz
+           END IF
+           x=x-vect_aux(1)
+           y=y-vect_aux(2)
+           z=z-vect_aux(3)
+           com(:)=com(:)+(/x,y,z/)
+        END DO
+
+        com=com/(numat_com*1.0d0)
+
+        x=com(1)
+        y=com(2)
+        z=com(3)
+
+        IF (x<0.0d0) THEN
+           nn=CEILING(abs(x)/Lx)
+           x=x+nn*Lx
+        ELSE IF (x>=Lx) THEN
+           nn=INT(x/Lx)
+           x=x-nn*Lx
+        END IF
+        IF (y<0.0d0) THEN
+           nn=CEILING(abs(y)/Ly)
+           y=y+nn*Ly
+        ELSE IF (y>=Ly) THEN
+           nn=INT(y/Ly)
+           y=y-nn*Ly
+        END IF
+        IF (z<0.0d0) THEN
+           nn=CEILING(abs(z)/Lz)
+           z=z+nn*Lz
+        ELSE IF (z>=Lz) THEN
+           nn=INT(z/Lz)
+           z=z-nn*Lz
+        END IF
+
+        com(:)=(/x,y,z/)
+
+        DEALLOCATE(vect_aux,old_ref)
+
+     ELSE
+
+        print*,'Function not implemented for not orthorhombic unit cells.'
+
+     END IF
+
+  END IF
+
+END SUBROUTINE CENTER_OF_MASS
+
+SUBROUTINE CENTER (pbc_opt,wrap_opt,list_com,list_mov,coors,box,ortho,numat_com,numat_mov,numat_glob)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::pbc_opt,wrap_opt,numat_com,numat_mov,numat_glob,ortho
   DOUBLE PRECISION,DIMENSION(numat_glob,3),INTENT(INOUT)::coors
   DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box
   INTEGER,DIMENSION(numat_com),INTENT(IN)::list_com
   INTEGER,DIMENSION(numat_mov),INTENT(IN)::list_mov
 
-  INTEGER::ii,jj
+  INTEGER::ii,jj,kk,nn
   DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::com
+  DOUBLE PRECISION::x,y,z,Lx,Ly,Lz
+
+  Lx=box(1,1)
+  Ly=box(2,2)
+  Lz=box(3,3)
 
   ALLOCATE(com(3))
   com=0.0d0
 
-  DO ii=1,numat_com
-     jj=list_com(ii)+1
-     com(:)=com(:)+coors(jj,:)
-  END DO
-  com(:)=com(:)/(numat_com*1.0d0)
+  CALL CENTER_OF_MASS(pbc_opt,list_com,coors,box,ortho,numat_com,numat_glob,com)
 
   com(1)=box(1,1)/2.0d0-com(1)
   com(2)=box(2,2)/2.0d0-com(2)
   com(3)=box(3,3)/2.0d0-com(3)
-
-
+  
   DO ii=1,numat_glob
      jj=list_mov(ii)+1
      coors(jj,:)=coors(jj,:)+com(:)
   END DO
+
+  IF (wrap_opt==1) THEN
+     IF (ortho==1) THEN
+
+        DO ii=1,numat_glob
+           jj=list_mov(ii)+1
+           x=coors(jj,1)
+           y=coors(jj,2)
+           z=coors(jj,3)
+           IF (x<0.0d0) THEN
+              nn=CEILING(abs(x)/Lx)
+              x=x+nn*Lx
+           ELSE IF (x>=Lx) THEN
+              nn=INT(x/Lx)
+              x=x-nn*Lx
+           END IF
+           IF (y<0.0d0) THEN
+              nn=CEILING(abs(y)/Ly)
+              y=y+nn*Ly
+           ELSE IF (y>=Ly) THEN
+              nn=INT(y/Ly)
+              y=y-nn*Ly
+           END IF
+           IF (z<0.0d0) THEN
+              nn=CEILING(abs(z)/Lz)
+              z=z+nn*Lz
+           ELSE IF (z>=Lz) THEN
+              nn=INT(z/Lz)
+              z=z-nn*Lz
+           END IF
+           coors(jj,:)=(/x,y,z/)
+        END DO
+
+     END IF
+  END IF
+
 
   DEALLOCATE(com)
 
@@ -931,11 +1115,11 @@ DEALLOCATE(llist1,llist2)
 END SUBROUTINE DISTANCE_IMAGES
 
 
-SUBROUTINE RADIUS_GYRATION (list1,coors1,box1,ortho1,n1,natom1,val_Rg)
+SUBROUTINE RADIUS_GYRATION (pbc_opt,list1,coors1,box1,ortho1,n1,natom1,val_Rg)
 
 IMPLICIT NONE
 
-INTEGER,INTENT(IN)::ortho1
+INTEGER,INTENT(IN)::ortho1,pbc_opt
 integer,intent(in)::n1,natom1
 INTEGER,DIMENSION(n1),INTENT(IN)::list1
 double precision,dimension(natom1,3),intent(in)::coors1
@@ -944,27 +1128,34 @@ double precision,INTENT(OUT)::val_Rg
 
 integer::ii,ai
 double precision,dimension(:),allocatable:: cdm,vect_aux
-integer,dimension(:),allocatable::llist1
 
-ALLOCATE(llist1(n1),cdm(3),vect_aux(3))
-llist1=list1+1
+ALLOCATE(cdm(3),vect_aux(3))
 
 val_Rg=0.0d0
 cdm=0.0d0
 
-DO ii=1,n1
-   ai=llist1(ii)
-   cdm=cdm+coors1(ai,:)
-END DO
-cdm=cdm/(n1*1.0d0)
+CALL CENTER_OF_MASS (pbc_opt,list1,coors1,box1,ortho1,n1,natom1,cdm)
 
-DO ii=1,n1
-   ai=llist1(ii)
-   vect_aux=(coors1(ai,:)-cdm)
-   val_Rg=val_Rg+dot_product(vect_aux,vect_aux)
-END DO
+IF (pbc_opt==0) THEN
 
-DEALLOCATE(llist1,cdm,vect_aux)
+   DO ii=1,n1
+      ai=list1(ii)+1
+      vect_aux=(coors1(ai,:)-cdm)
+      val_Rg=val_Rg+dot_product(vect_aux,vect_aux)
+   END DO
+
+ELSE
+
+   DO ii=1,n1
+      ai=list1(ii)+1
+      vect_aux=(coors1(ai,:)-cdm)
+      CALL PBC(vect_aux,box1,ortho1)
+      val_Rg=val_Rg+dot_product(vect_aux,vect_aux)
+   END DO
+
+END IF
+
+DEALLOCATE(cdm,vect_aux)
 val_Rg=sqrt(val_Rg/(1.0d0*n1))
 
 END SUBROUTINE RADIUS_GYRATION

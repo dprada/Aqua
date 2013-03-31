@@ -13,6 +13,7 @@ residue={
 'GLY'     : 'GLY'    ,
 'HIS'     : 'HIS'    ,
 'HSD'     : 'HIS'    ,
+'HYP'     : 'HYP'    ,
 'ILE'     : 'ILE'    ,
 'LEU'     : 'LEU'    ,
 'LYS'     : 'LYS'    ,
@@ -388,6 +389,46 @@ covalent_bonds['HIS']=[
 ['atNE2' ,'atHE2'  ], 
 ['atC'   ,'atO'    ] 
 ]
+
+### HYP:
+
+residue_atoms['HYP']=[
+'atN',
+'atCA', 
+'atHA', 
+'atCB', 
+'atHB1',
+'atHB2',
+'atCG', 
+'atHG1',
+'atOD1',
+'atHD1',
+'atCD2', 
+'atHD21',
+'atHD22',
+'atC',
+'atO'
+]
+
+covalent_bonds['HYP']=[
+['atN',   'atCA'   ], 
+['atCA',  'atHA'   ], 
+['atCA',  'atCB'   ], 
+['atCA',  'atC'    ], 
+['atCB',  'atHB1'  ], 
+['atCB',  'atHB2'  ], 
+['atCB',  'atCG'   ], 
+['atCG',  'atHG1'  ], 
+['atCG',  'atOD1'  ],
+['atOD1',  'atHD1'  ],
+['atCG',  'atCD2'   ], 
+['atCD2',  'atHD21' ], 
+['atCD2',  'atHD22' ], 
+['atCD2',  'atN'   ], 
+['atC',   'atO'    ] 
+]
+
+
 
 ### ILE:
 

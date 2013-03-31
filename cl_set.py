@@ -118,7 +118,13 @@ class cl_unit(labels_unit):                     # Attributes of an atom
         self.bfactor=0.0                # B-Factor
         self.acceptor=False             # True or false 
         self.donor=False                # True or false
-        self.polarizability=False       # True of falsel
+        self.polarizability=False       # True of false
+
+    def info(self,pdb=True):
+        if pdb:
+            return self.name+'-'+str(self.pdb_index)+'/'+self.resid.name+'-'+str(self.resid.pdb_index)
+        else:
+            return self.name+'-'+str(self.index)+'/'+self.resid.name+'-'+str(self.resid.index)
 
 ####
 #### Class residue (set of atoms)
@@ -861,7 +867,30 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 
         pass
 
-    def center(self,select='ALL',center_of=None,mass_weighted=False,traj=0,frame=0,pbc=True,wrap=True):
+    def center_of_mass(self,select='ALL',mass_weighted=False,traj=0,frame=0,pbc=False):
+
+        pbc_opt=0
+        if pbc:
+            pbc_opt=1
+
+        setcom,nlist_setcom,numsys=__read_set_opt__(self,select)
+
+        num_frames=__length_frame_opt__(self,traj,frame)
+        com=numpy.empty(shape=(num_frames,3),dtype=float,order='Fortran')
+
+        num_frames=0
+        for iframe in __read_frame_opt__(self,traj,frame):
+            com[num_frames,:]=faux.glob.center_of_mass(pbc_opt,setcom,iframe.coors,iframe.box,iframe.orthogonal,\
+                                 nlist_setcom,numsys)
+            num_frames+=1
+
+        if num_frames==1:
+            return com[0,:]
+        else:
+            return com
+
+
+    def center(self,center_of=None,select='ALL',mass_weighted=False,traj=0,frame=0,pbc=True,wrap=True):
 
         ## I have to correct here the split molecules.
 
@@ -877,14 +906,16 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
         if pbc:
             pbc_opt=1        
 
+        wrap_opt=0
+        if wrap:
+            wrap_opt=1
+
         setcom,nlist_setcom,numsys=__read_set_opt__(self,center_of)
         setmov,nlist_setmov,numsys=__read_set_opt__(self,select)
 
         for iframe in __read_frame_opt__(self,traj,frame):
-            faux.glob.center(pbc_opt,setcom,setmov,iframe.coors,iframe.box,iframe.orthogonal,\
+            faux.glob.center(pbc_opt,wrap_opt,setcom,setmov,iframe.coors,iframe.box,iframe.orthogonal,\
                                  nlist_setcom,nlist_setmov,numsys)
-            if wrap: 
-                iframe.wrap()
             
         pass
 
@@ -941,15 +972,19 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
         else:
             return min_dists, ind_atoms_min,min_image
 
-    def radius_gyration(self,setA='ALL',traj=0,frame='ALL'):
+    def radius_gyration(self,setA='ALL',traj=0,frame='ALL',pbc=False):
 
         setA,nlist_A,nsys_A=__read_set_opt__(self,setA)
         num_frames=__length_frame_opt__(self,traj,frame)
         rgs=numpy.empty(shape=(num_frames),dtype=float,order='Fortran')
 
+        pbc_opt=0
+        if pbc:
+            pbc_opt=1
+
         num_frames=0
         for iframe in __read_frame_opt__(self,traj,frame):
-            rgs[num_frames]=faux.glob.radius_gyration(setA,iframe.coors,iframe.box,iframe.orthogonal,nlist_A,nsys_A)
+            rgs[num_frames]=faux.glob.radius_gyration(pbc_opt,setA,iframe.coors,iframe.box,iframe.orthogonal,nlist_A,nsys_A)
             num_frames+=1
 
         if num_frames==1:
@@ -2277,7 +2312,7 @@ def selection(system=None,condition=None,traj=0,frame='ALL',pbc=True):
     # attributes syntaxis:
 
     dict_selects={
-        'backbone':  '(atom.name N CA C O)',
+        'backbone':  '(atom.resid.type Protein and atom.name N CA C O CH3)',
         'sidechain': '(atom.resid.type Protein and not atom.name N CA C O H1 H2)',
         'protein':   '(atom.resid.type Protein)',
         'water':     '(atom.resid.type Water)',

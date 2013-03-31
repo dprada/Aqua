@@ -35,7 +35,8 @@ donors=[
 
 donors_exception={
 'atNE2' : { 'HIS' : [ 'Without H' , False ]},
-'atND1' : { 'HIS' : [ 'Without H' , False ]}
+'atND1' : { 'HIS' : [ 'Without H' , False ]},
+'atOD1' : { 'HYP' : [ 'Always' , True ]}
 }
 # !! y que pasa con las ASPH?
 
@@ -50,7 +51,7 @@ acceptors=[
 'atOY'   ,   # O for the main chain (In ACEMD terminal)
 'atOT1'   ,   # O for terminals
 'atOT2'   ,   # O for terminals
-'atOD1' ,   # O for ASN and ASP
+'atOD1' ,   # O for ASN and ASP and HYP
 'atOD2' ,   # O for ASP
 'atOE1' ,   # O for GLN and GLU
 'atOE2' ,   # O for GLU
