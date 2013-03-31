@@ -120,11 +120,17 @@ class cl_unit(labels_unit):                     # Attributes of an atom
         self.donor=False                # True or false
         self.polarizability=False       # True of false
 
-    def info(self,pdb=True):
-        if pdb:
-            return self.name+'-'+str(self.pdb_index)+'/'+self.resid.name+'-'+str(self.resid.pdb_index)
+    def info(self,resid=True,pdb=True):
+        if resid:
+            if pdb:
+                return self.name+'-'+str(self.pdb_index)+'/'+self.resid.name+'-'+str(self.resid.pdb_index)
+            else:
+                return self.name+'-'+str(self.index)+'/'+self.resid.name+'-'+str(self.resid.index)
         else:
-            return self.name+'-'+str(self.index)+'/'+self.resid.name+'-'+str(self.resid.index)
+            if pdb:
+                return self.name+'-'+str(self.pdb_index)
+            else:
+                return self.name+'-'+str(self.index)
 
 ####
 #### Class residue (set of atoms)
@@ -141,6 +147,12 @@ class cl_residue(labels_set):           # Attributes of a residue (inherits from
         self.__int_dict_atoms__={}         # Dictionary with internal atom names and indexes
 
         pass
+
+    def info(self,pdb=True):
+        if pdb:
+            return self.name+'-'+str(self.pdb_index)
+        else:
+            return self.name+'-'+str(self.index)
 
 
 ####

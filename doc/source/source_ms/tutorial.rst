@@ -276,14 +276,14 @@ We can also make use of the expression 'within X of', X is a float number indica
    In [12]: for ii in range(metenk.traj[0].num_frames):
       ....: 	print 'At time:', metenk.traj[0].frame[ii].time
       ....:	for jj in list0[ii]:
-      ....:	    print '   ',metenk.atom[jj].name+'-'+str(metenk.atom[jj].pdb_index),'within 6.0 of CA-5'
+      ....:	    print '   ',metenk.atom[jj].info(),'within 6.0 of',metenk.atom[4].info()
    At time: 0.0
-      CA-26 within 6.0 of CA-5
+      CA-26/GLY-2 within 6.0 of CA-5/TYR-1
    At time: 10.0
-      CA-26 within 6.0 of CA-5
+      CA-26/GLY-2 within 6.0 of CA-5/TYR-1
    At time: 20.0
-      CA-26 within 6.0 of CA-5
-      CA-33 within 6.0 of CA-5
+      CA-26/GLY-2 within 6.0 of CA-5/TYR-1
+      CA-33/GLY-3 within 6.0 of CA-5/TYR-1
    ...
 
 
@@ -333,8 +333,8 @@ If only a sets of atoms is provided, the distance among them is computed:
 
    In [7]: dists=metenk.distance(sel1=CAs,frame=10)
 
-   In [8]: print 'CA'+str(metenk.atom[CAs[2]].pdb_index)+'-CA'+str(metenk.atom[CAs[4]].pdb_index), dists[2,4]
-   CA33-CA60 5.81840212291
+   In [8]: print metenk.atom[CAs[2]].info(),'--',metenk.atom[CAs[4]].info(), dists[2,4]
+   CA-33/GLY-3 -- CA-60/MET-5 5.81840212291
 
 .. seealso:: :class:`msystem`, :class:`traj`, :class:`atom`, :meth:`msystem.load_traj`, :meth:`msystem.info_trajs`, :meth:`msystem.selection`, :meth:`msystem.distance`
 
@@ -408,13 +408,11 @@ In case of having different frames to analyse coming from a trajectory:
 
    In [15]: angs=metenk.ramachandran_map(resid=2,frame='ALL')
 
-   In [16]: idres2=metenk.resid[2].name+str(metenk.resid[2].pdb_index)
-
-   In [17]: for ii in range(0,metenk.traj[0].num_frames,10):
-      ....: 	print idres2,'| t=', metenk.traj[0].frame[ii].time, '| [phi,psi]=', angs[ii,:]
-   GLY3 | t= 0.0 | [phi,psi]= [ 2.01215258  0.87594459]
-   GLY3 | t= 100.0 | [phi,psi]= [ 1.90493036  0.64741795]
-   GLY3 | t= 200.0 | [phi,psi]= [ 1.9432302   1.22817325]
+   In [16]: for ii in range(0,metenk.traj[0].num_frames,10):
+      ....: 	print metenk.resid[2].info(),'| t=', metenk.traj[0].frame[ii].time, '| [phi,psi]=', angs[ii,:]
+   GLY-3 | t= 0.0 | [phi,psi]= [ 2.01215258  0.87594459]
+   GLY-3 | t= 100.0 | [phi,psi]= [ 1.90493036  0.64741795]
+   GLY-3 | t= 200.0 | [phi,psi]= [ 1.9432302   1.22817325]
 
 
 .. seealso:: :class:`msystem`, :class:`traj`, :class:`resid`, :meth:`msystem.load_traj`, :meth:`msystem.info_trajs`, :meth:`msystem.delete_traj`, :meth:`msystem.ramachandran_map`
