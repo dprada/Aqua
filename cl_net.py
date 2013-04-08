@@ -5,6 +5,8 @@ import cl_math as pyn_math
 import numpy
 import copy
 from os import system
+from sys import exit
+import subprocess
 
 #####################################################################################
 ##### Networks
@@ -1303,11 +1305,16 @@ class network():
                             print >> fff, ii,jj,kk
                     fff.close()
 
+                # Check whether mcl exists
+                if system("type mcl > /dev/null") != 0:
+                    print "# Error. Can't find mcl (Markov Cluster Algorithm)."
+                    exit()
+
                 comando='mcl .input_mcl --abc -I '+str(granularity)+' -o .output_mcl > /dev/null 2>&1'
                 salida=system(comando)
 
                 if salida!=0:
-                    print '#Error'
+                    print '# Error'
                     exit()
                 
                 fff=open('.output_mcl','r')
