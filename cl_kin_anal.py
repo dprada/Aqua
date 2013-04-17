@@ -378,6 +378,7 @@ class kinetic_analysis():
                 traj_inp=pyn_math.standard_traj(self.traj,particles=self.particles,dimensions=self.dimensions)
                 lt_mean=f_kin_anal.life_time_dist(opt_norm,opt_segm,traj_inp,state,segments,traj_inp.shape[0],traj_inp.shape[1],traj_inp.shape[2],num_states)
 
+        
         elif traj in ['CLUSTERS','Clusters','clusters']:
             traj_inp=pyn_math.standard_traj(self.traj_clusters,particles=self.particles,dimensions=1)
             lt_mean=f_kin_anal.life_time_dist(opt_norm,opt_segm,traj_inp,state,segments,traj_inp.shape[0],traj_inp.shape[1],traj_inp.shape[2],num_states)
