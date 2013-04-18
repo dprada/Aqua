@@ -47,7 +47,8 @@ Now, the trajectory is stored in the object kin_test:
    In [3]: print 'Column', kin_test.file_column, 'in file', kin_test.file_name
    Column 1 in file traj.oup
 
-   In [4]: print kin_test.num_particles, 'particles  with', kin_test.dimensions, 'dimension', ':', kin_test.length, 'time steps.'
+   In [4]: print kin_test.num_particles, 'particles  with', kin_test.dimensions,\
+      ...:       'dimension', ':', kin_test.length, 'time steps.'
    1 particles with 1 dimension: 999901 time steps.
 
    In [5]: print kin_test.traj[:]
@@ -57,7 +58,8 @@ Since the trajectory is a numpy.ndarray, we can take adventage of its numpy intr
 
 .. sourcecode:: ipython
 
-   In [6]: print 'Min.:',kin_test.traj.min(),'   Mean:', kin_test.traj.mean() ,'   Max.:', kin_test.traj.max()
+   In [6]: print 'Min.:',kin_test.traj.min(),'   Mean:', kin_test.traj.mean() ,\
+      ...:       '   Max.:', kin_test.traj.max()
    Min.: -11.4344662381    Mean: -3.40808122446    Max.: 2.78106514618
 
 The histogram can be obtained with the following command:
@@ -172,7 +174,8 @@ can be written with the transition probabilities:
       ....:    ww=kin_test.network_clusters.node[ii].weight
       ....:        for jj in range(3):
       ....:            if ii!=jj :
-      ....:                print 'P'+str(jj)+str(ii)+'=', kin_test.network_clusters.node[ii].link[jj]/ww
+      ....:                print 'P'+str(jj)+str(ii)+'=', \
+      ....:                      kin_test.network_clusters.node[ii].link[jj]/ww
       ....: 
    P10= 0.00134372002214
    P20= 0.000153059499211
@@ -293,13 +296,16 @@ cluster 0 (green) to cluster 2 and from cluster 1 (orange) to cluster 2.
 
 .. sourcecode:: ipython
 
-   In [19]: fptx2,fpty2=kin_test.first_passage_time(traj='clusters',to_state=2,norm=False,verbose=True)
+   In [19]: fptx2,fpty2=kin_test.first_passage_time(traj='clusters',to_state=2,
+      ....:   norm=False,verbose=True)
    # Mean first passage time: 700.403755073 frames.
 
-   In [20]: fptx02,fpty02=kin_test.first_passage_time(traj='clusters',from_state=0,to_state=2,norm=False,verbose=True)
+   In [20]: fptx02,fpty02=kin_test.first_passage_time(traj='clusters',from_state=0,to_state=2,\
+      ....:   norm=False,verbose=True)
    # Mean first passage time: 1175.03303483 frames.
 
-   In [21]: fptx12,fpty12=kin_test.first_passage_time(traj='clusters',from_state=1,to_state=2,norm=False,verbose=True)
+   In [21]: fptx12,fpty12=kin_test.first_passage_time(traj='clusters',from_state=1,to_state=2,\
+      ....:   norm=False,verbose=True)
    # Mean first passage time: 124.958081567 frames.
 
 
@@ -325,13 +331,16 @@ transition probabilities.
 
    In [23]: bw=kinetic_1D_analysis(bw_traj,verbose=False)
 
-   In [24]: fptbwx2, fptbwy2= bw.first_passage_time(to_state=2,norm=False,verbose=True)
+   In [24]: fptbwx2, fptbwy2= bw.first_passage_time(to_state=2,\
+      ....:   norm=False,verbose=True)
    # Mean first passage time: 430.700895225 frames.
 
-   In [25]: fptbwx02,fptbwy02=bw.first_passage_time(from_state=0,to_state=2,norm=False,verbose=True)	
+   In [25]: fptbwx02,fptbwy02=bw.first_passage_time(from_state=0,to_state=2,\
+      ....:   norm=False,verbose=True)	
    # Mean first passage time: 751.240082388 frames.
 
-   In [26]: fptbwx12,fptbwy12=bw.first_passage_time(from_state=1,to_state=2,norm=False,verbose=True)
+   In [26]: fptbwx12,fptbwy12=bw.first_passage_time(from_state=1,to_state=2,\
+      ....:   norm=False,verbose=True)
    # Mean first passage time: 36.4134420305 frames.
 
 
@@ -376,10 +385,12 @@ passing by cluster 1.
 
 .. sourcecode:: ipython
 
-   In [27]: fcptx012,fcpty012=kin_test.first_committed_passage_time(traj='clusters',states=[0,1,2],commitment=[True,True,True],norm=False,verbose=True)
+   In [27]: fcptx012,fcpty012=kin_test.first_committed_passage_time(traj='clusters',\
+      ....:   states=[0,1,2],commitment=[True,True,True],norm=False,verbose=True)
    # Mean first passage time: 888.282178077 frames.
 
-   In [28]: fcptx0no12,fcpty0no12=kin_test.first_committed_passage_time(traj='clusters',states=[0,1,2],commitment=[True,False,True],norm=False,verbose=True)
+   In [28]: fcptx0no12,fcpty0no12=kin_test.first_committed_passage_time(traj='clusters',\
+      ....:   states=[0,1,2],commitment=[True,False,True],norm=False,verbose=True)
    # Mean first passage time: 861.446234118 frames.
 
 .. figure:: ../../tutorials/kinetic_1D_analysis/fcpt_bad_0to2.png
@@ -394,10 +405,12 @@ The kinetic model shows also a similar behavior:
 
 .. sourcecode:: ipython
 
-   In [29]: fcptbwx012,fcptbwy012=bw.first_committed_passage_time(states=[0,1,2],commitment=[True,True,True],norm=False,verbose=True)
+   In [29]: fcptbwx012,fcptbwy012=bw.first_committed_passage_time(states=[0,1,2],\
+      ....:   commitment=[True,True,True],norm=False,verbose=True)
    # Mean first passage time: 705.085477589 frames.
 
-   In [30]: fcptbwx0no12,fcptbwy0no12=bw.first_committed_passage_time(states=[0,1,2],commitment=[True,False,True],norm=False,verbose=True)
+   In [30]: fcptbwx0no12,fcptbwy0no12=bw.first_committed_passage_time(states=[0,1,2],\
+      ....:   commitment=[True,False,True],norm=False,verbose=True)
    # Mean first passage time: 682.339500433 frames.
 
 .. figure:: ../../tutorials/kinetic_1D_analysis/fcpt_bad_0to2_model.png
@@ -465,7 +478,8 @@ to discard this events the option 'no_return' is required:
 
 .. sourcecode:: ipython
 
-   In [33]: tt02x,tt02y=kin_test.trip_time(traj='clusters',from_state=0,to_state=2,no_return=True,verbose=True)
+   In [33]: tt02x,tt02y=kin_test.trip_time(traj='clusters',from_state=0,to_state=2,\
+      ....:   no_return=True,verbose=True)
    # Mean first passage time: 10.895183175 frames.
 
    In [34]: ttbw02x,ttbw02y=bw.trip_time(from_state=0,to_state=2,no_return=True,verbose=True)
@@ -498,10 +512,12 @@ cluster.
 
 .. sourcecode:: ipython
 
-   In [35]: tt012x,tt012y=kin_test.committed_trip_time(traj='clusters',states=[0,1,2],commitment=[True,True,True],no_return=True,verbose=True)
+   In [35]: tt012x,tt012y=kin_test.committed_trip_time(traj='clusters',states=[0,1,2],\
+      ....:   commitment=[True,True,True],no_return=True,verbose=True)
    # Mean first passage time: 12.2196153846 frames.
 
-   In [36]: tt0no12x,tt0no12y=kin_test.committed_trip_time(traj='clusters',states=[0,1,2],commitment=[True,False,True],no_return=True,verbose=True)
+   In [36]: tt0no12x,tt0no12y=kin_test.committed_trip_time(traj='clusters',states=[0,1,2],\
+      ....:   commitment=[True,False,True],no_return=True,verbose=True)
    # Mean first passage time: 1.0 frames.
 
 .. figure:: ../../tutorials/kinetic_1D_analysis/ctt_bad_0to2.png
@@ -520,10 +536,12 @@ it is not properly built up.
 
 .. sourcecode:: ipython
 
-   In [37]: ttbw012x,ttbw012y=bw.committed_trip_time(states=[0,1,2],commitment=[True,True,True],no_return=True,verbose=True)
+   In [37]: ttbw012x,ttbw012y=bw.committed_trip_time(states=[0,1,2],\
+      ....:   commitment=[True,True,True],no_return=True,verbose=True)
    # Mean first passage time: 17.24049217 frames.
 
-   In [38]: ttbw0no12x,ttbw0no12y=bw.committed_trip_time(states=[0,1,2],commitment=[True,False,True],no_return=True,verbose=True)
+   In [38]: ttbw0no12x,ttbw0no12y=bw.committed_trip_time(states=[0,1,2],\
+      ....:   commitment=[True,False,True],no_return=True,verbose=True)
    # Mean first passage time: 1.0 frames.
 
 .. figure:: ../../tutorials/kinetic_1D_analysis/ctt_bad_0to2_model.png
@@ -631,13 +649,16 @@ Long life times comparable with long traj.
 
 .. sourcecode:: ipython
 
-   In [78]: fptx2,fpty2=kin_test.first_passage_time(traj='clusters',to_state=2,norm=False,verbose=True)
+   In [78]: fptx2,fpty2=kin_test.first_passage_time(traj='clusters',\
+      ....:   to_state=2,norm=False,verbose=True)
    # Mean first passage time: 3123.39159882 frames.
 
-   In [79]: fptx02,fpty02=kin_test.first_passage_time(traj='clusters',from_state=0,to_state=2,norm=False,verbose=True)
+   In [79]: fptx02,fpty02=kin_test.first_passage_time(traj='clusters',\
+      ....:   from_state=0,to_state=2,norm=False,verbose=True)
    # Mean first passage time: 995.111802212 frames.
 
-   In [80]: fptx12,fpty12=kin_test.first_passage_time(traj='clusters',from_state=1,to_state=2,norm=False,verbose=True)
+   In [80]: fptx12,fpty12=kin_test.first_passage_time(traj='clusters',\
+      ....:   from_state=1,to_state=2,norm=False,verbose=True)
    # Mean first passage time: 5863.2847721 frames.
 
 
@@ -660,10 +681,12 @@ First committed_passage_time:
 
 .. sourcecode:: ipython
 
-   In [136]: fcptx012,fcpty012=kin_test.first_committed_passage_time(traj='clusters',states=[0,1,2],commitment=[True,True,True],norm=False,verbose=True)
+   In [136]: fcptx012,fcpty012=kin_test.first_committed_passage_time(traj='clusters',\
+       ....:   states=[0,1,2],commitment=[True,True,True],norm=False,verbose=True)
    # Mean first passage time: 0.0 frames.
 
-   In [137]: fcptx0no12,fcpty0no12=kin_test.first_committed_passage_time(traj='clusters',states=[0,1,2],commitment=[True,False,True],norm=False,verbose=True)
+   In [137]: fcptx0no12,fcpty0no12=kin_test.first_committed_passage_time(traj='clusters',\
+       ....:   states=[0,1,2],commitment=[True,False,True],norm=False,verbose=True)
    # Mean first passage time: 995.111802212 frames.
 
 

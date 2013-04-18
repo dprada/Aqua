@@ -220,8 +220,8 @@ Right now the output format is only dcd.
    In [6]: while 1:
       ...:     metenk.traj[0].reload_frame()
       ...:     if metenk.traj[0].io_end:
-      ...:     	  metenk.traj[0].write(action='Close')
-      ...:     	  break
+      ...:          metenk.traj[0].write(action='Close')
+      ...:          break
       ...:     metenk.traj[0].write(frame=0)
 
 .. seealso:: :class:`msystem`, :class:`traj`, :meth:`msystem.load_traj`, :meth:`msystem.info_trajs`, :meth:`traj.reload_frame`, :meth:`traj.write`
@@ -252,7 +252,7 @@ There are few special key words.
    In [6]: metenk.selection('chain.name A and atom.donor')
    Out[6]: [0, 23, 30, 37, 57]
 
-   In [7]: metenk.selection('(atom.resid.name GLY and not atom.name N CA C O H) or (atom.name O1)')	
+   In [7]: metenk.selection('(atom.resid.name GLY and not atom.name N CA C O H) or (atom.name O1)')   
    Out[7]: [26, 27, 33, 34, 73]
 
 We can also make use of the expression 'within X of', X is a float number indicating a distance threshold.
@@ -271,12 +271,13 @@ We can also make use of the expression 'within X of', X is a float number indica
    28 waters below 3.0 in frame 2
    ...
 
-   In [11]: list0=metenk.selection('(atom.name CA and not resid.name TYR) within 6.0 of (atom.name CA and resid.name TYR)')
+   In [11]: list0=metenk.selection('(atom.name CA and not resid.name TYR) \
+      ....:    within 6.0 of (atom.name CA and resid.name TYR)')
 
    In [12]: for ii in range(metenk.traj[0].num_frames):
-      ....: 	print 'At time:', metenk.traj[0].frame[ii].time
-      ....:	for jj in list0[ii]:
-      ....:	    print '   ',metenk.atom[jj].info(),'within 6.0 of',metenk.atom[4].info()
+      ....:    print 'At time:', metenk.traj[0].frame[ii].time
+      ....: for jj in list0[ii]:
+      ....:     print '   ',metenk.atom[jj].info(),'within 6.0 of',metenk.atom[4].info()
    At time: 0.0
       CA-26/GLY-2 within 6.0 of CA-5/TYR-1
    At time: 10.0
@@ -318,7 +319,8 @@ The method by construction is faster if n1<n2.
    In [4]: dists,keys1,keys2=metenk.distance('resid.pdb_index 1','resid.pdb_index 4',legend=True)
    
    In [5]: for ii in range(metenk.traj[0].num_frames):
-      ...:         print 'The distance between atoms index',keys1[10],'and',keys2[5],'is',dists[ii,10,5],'in frame',ii
+      ...:         print 'The distance between atoms index',keys1[10],\
+      ...:               'and',keys2[5],'is',dists[ii,10,5],'in frame',ii
       ...: 
    The distance between atoms index 10 and 42 is 7.30732658606 in frame 0
    The distance between atoms index 10 and 42 is 7.54015357744 in frame 1
@@ -409,7 +411,8 @@ In case of having different frames to analyse coming from a trajectory:
    In [15]: angs=metenk.ramachandran_map(resid=2,frame='ALL')
 
    In [16]: for ii in range(0,metenk.traj[0].num_frames,10):
-      ....: 	print metenk.resid[2].info(),'| t=', metenk.traj[0].frame[ii].time, '| [phi,psi]=', angs[ii,:]
+      ....:    print metenk.resid[2].info(),'| t=', metenk.traj[0].frame[ii].time, \
+      ....:          '| [phi,psi]=', angs[ii,:]
    GLY-3 | t= 0.0 | [phi,psi]= [ 2.01215258  0.87594459]
    GLY-3 | t= 100.0 | [phi,psi]= [ 1.90493036  0.64741795]
    GLY-3 | t= 200.0 | [phi,psi]= [ 1.9432302   1.22817325]
