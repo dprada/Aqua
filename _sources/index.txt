@@ -3,22 +3,15 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to the tentative Aqua's documentation!
+Welcome to the tentative AquaLab's documentation!
 ===================================================
 
-The whole project **Aqua** is public available at
+The whole project **AquaLab** is public available at
 https://github.com/dprada/Aqua.git .  There is not stable version yet,
 for this reason the use of these libraries it is under your
-responsability. Find more info here.
+responsability. Find more info here, but be aware, somesections are under construction.
 
 Overview, license and future references.
-
-
-**Be aware, some sections are...**
-
-.. image:: _static/Under_Construction.jpg
-   :align: center
-   :scale: 70 %
 
 
 Introduction

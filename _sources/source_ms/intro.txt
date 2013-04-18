@@ -27,9 +27,7 @@ example with the Methionine-Enkephaline coming from the 1PLW pdb.
 
      In [3]: idS=metenk.selection('atom.type S')
 
-     In [4]: print 'The atom',metenk.atom[idS[0]].name+'-'+str(metenk.atom[idS[0]].pdb_index)+'/'+\
-        ...: metenk.atom[idS[0]].resid.name+'-'+str(metenk.atom[idS[0]].resid.pdb_index),\
- 	...: 'has the internal index:', idS[0]
+     In [4]: print 'The atom',metenk.atom[idS[0]].info(),'has the internal index:', idS[0]
      The atom SD-68/MET-5 has the internal index: 67
 
      In [5]: metenk.info_trajs()

@@ -10,7 +10,7 @@
     
     <title>Introduction &mdash; Aqua 0.1 documentation</title>
     
-    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
@@ -56,7 +56,7 @@
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
             <p class="logo"><a href="../index.html">
-              <img class="logo" src="../_static/logo.gif" alt="Logo"/>
+              <img class="logo" src="../_static/logo_aqualab2.png" alt="Logo"/>
             </a></p>
   <h3><a href="../index.html">Table Of Contents</a></h3>
   <ul>
@@ -125,9 +125,7 @@ example with the Methionine-Enkephaline coming from the 1PLW pdb.</p>
 
 <span class="gp">In [3]: </span><span class="n">idS</span><span class="o">=</span><span class="n">metenk</span><span class="o">.</span><span class="n">selection</span><span class="p">(</span><span class="s">&#39;atom.type S&#39;</span><span class="p">)</span>
 
-<span class="gp">In [4]: </span><span class="k">print</span> <span class="s">&#39;The atom&#39;</span><span class="p">,</span><span class="n">metenk</span><span class="o">.</span><span class="n">atom</span><span class="p">[</span><span class="n">idS</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s">&#39;-&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">metenk</span><span class="o">.</span><span class="n">atom</span><span class="p">[</span><span class="n">idS</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">pdb_index</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;/&#39;</span><span class="o">+</span>\
-<span class="go">   ...: metenk.atom[idS[0]].resid.name+&#39;-&#39;+str(metenk.atom[idS[0]].resid.pdb_index),\</span>
-<span class="go">   ...: &#39;has the internal index:&#39;, idS[0]</span>
+<span class="gp">In [4]: </span><span class="k">print</span> <span class="s">&#39;The atom&#39;</span><span class="p">,</span><span class="n">metenk</span><span class="o">.</span><span class="n">atom</span><span class="p">[</span><span class="n">idS</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">info</span><span class="p">(),</span><span class="s">&#39;has the internal index:&#39;</span><span class="p">,</span> <span class="n">idS</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 <span class="go">The atom SD-68/MET-5 has the internal index: 67</span>
 
 <span class="gp">In [5]: </span><span class="n">metenk</span><span class="o">.</span><span class="n">info_trajs</span><span class="p">()</span>

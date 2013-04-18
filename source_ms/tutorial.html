@@ -10,7 +10,7 @@
     
     <title>Tutorials &mdash; Aqua 0.1 documentation</title>
     
-    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
@@ -56,7 +56,7 @@
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
             <p class="logo"><a href="../index.html">
-              <img class="logo" src="../_static/logo.gif" alt="Logo"/>
+              <img class="logo" src="../_static/logo_aqualab2.png" alt="Logo"/>
             </a></p>
   <h3><a href="../index.html">Table Of Contents</a></h3>
   <ul>
@@ -73,16 +73,17 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#how-to-make-atoms-selections">How to make atoms selections</a></li>
+<li><a class="reference internal" href="#distances">Distances</a><ul>
+<li><a class="reference internal" href="#computing-distances">Computing distances</a></li>
+<li><a class="reference internal" href="#neighbors-and-ranked-contacts">Neighbors and Ranked contacts</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#contact-maps">Contact Maps</a></li>
 <li><a class="reference internal" href="#dihedral-angles">Dihedral Angles</a><ul>
 <li><a class="reference internal" href="#ramachandran-map">Ramachandran Map</a></li>
 <li><a class="reference internal" href="#computing-any-dihedral-angle">Computing any dihedral angle</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#computing-distances">Computing distances</a><ul>
-<li><a class="reference internal" href="#neighbors-and-ranked-contacts">Neighbors and Ranked contacts</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#contact-maps">Contact Maps</a></li>
 <li><a class="reference internal" href="#radial-distribution-funcions">Radial Distribution Funcions</a></li>
 </ul>
 </li>
@@ -361,14 +362,14 @@ There are few special key words.</p>
 <span class="gp">In [12]: </span><span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">metenk</span><span class="o">.</span><span class="n">traj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_frames</span><span class="p">):</span>
 <span class="go">   ....:     print &#39;At time:&#39;, metenk.traj[0].frame[ii].time</span>
 <span class="go">   ....:     for jj in list0[ii]:</span>
-<span class="go">   ....:         print &#39;   &#39;,metenk.atom[jj].name+&#39;-&#39;+str(metenk.atom[jj].pdb_index),&#39;within 6.0 of CA-5&#39;</span>
+<span class="go">   ....:         print &#39;   &#39;,metenk.atom[jj].info(),&#39;within 6.0 of&#39;,metenk.atom[4].info()</span>
 <span class="go">At time: 0.0</span>
-<span class="go">   CA-26 within 6.0 of CA-5</span>
+<span class="go">   CA-26/GLY-2 within 6.0 of CA-5/TYR-1</span>
 <span class="go">At time: 10.0</span>
-<span class="go">   CA-26 within 6.0 of CA-5</span>
+<span class="go">   CA-26/GLY-2 within 6.0 of CA-5/TYR-1</span>
 <span class="go">At time: 20.0</span>
-<span class="go">   CA-26 within 6.0 of CA-5</span>
-<span class="go">   CA-33 within 6.0 of CA-5</span>
+<span class="go">   CA-26/GLY-2 within 6.0 of CA-5/TYR-1</span>
+<span class="go">   CA-33/GLY-3 within 6.0 of CA-5/TYR-1</span>
 <span class="go">...</span>
 </pre></div>
 </div>
@@ -376,6 +377,58 @@ There are few special key words.</p>
 <p class="first admonition-title">See also</p>
 <p class="last"><a class="reference internal" href="functions.html#msystem.selection" title="msystem.selection"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.selection()</span></tt></a></p>
 </div>
+</div>
+<div class="section" id="distances">
+<h2>Distances<a class="headerlink" href="#distances" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="computing-distances">
+<span id="ms-tut-dists"></span><h3>Computing distances<a class="headerlink" href="#computing-distances" title="Permalink to this headline">¶</a></h3>
+<p>The distance between a set of n1 atoms, sel1, and a set of n2 atoms,
+sel2.  If only one frame is analysed the output is a 2D matrix
+[n1,n2].  This way the distance between the i-th atom in sel1 and
+j-th in sel2 correspond to the output element [i,j].</p>
+<p>If more than one frame is analysed the output is a 3D matrix
+[n1,n2,number_frames] (following the previous notation).</p>
+<p>The method by construction is faster if n1&lt;n2.</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [2]: </span><span class="n">metenk</span><span class="o">=</span><span class="n">msystem</span><span class="p">(</span><span class="s">&#39;metenk.pdb&#39;</span><span class="p">)</span>
+
+<span class="gp">In [3]: </span><span class="n">metenk</span><span class="o">.</span><span class="n">load_traj</span><span class="p">(</span><span class="s">&#39;traj_metenk.xtc&#39;</span><span class="p">,</span><span class="n">frame</span><span class="o">=</span><span class="s">&#39;ALL&#39;</span><span class="p">)</span>
+
+<span class="gp">In [4]: </span><span class="n">dists</span><span class="p">,</span><span class="n">keys1</span><span class="p">,</span><span class="n">keys2</span><span class="o">=</span><span class="n">metenk</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="s">&#39;resid.pdb_index 1&#39;</span><span class="p">,</span><span class="s">&#39;resid.pdb_index 4&#39;</span><span class="p">,</span><span class="n">legend</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="gp">In [5]: </span><span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">metenk</span><span class="o">.</span><span class="n">traj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_frames</span><span class="p">):</span>
+<span class="go">   ...:         print &#39;The distance between atoms index&#39;,keys1[10],&#39;and&#39;,keys2[5],&#39;is&#39;,dists[ii,10,5],&#39;in frame&#39;,ii</span>
+<span class="go">   ...:</span>
+<span class="go">The distance between atoms index 10 and 42 is 7.30732658606 in frame 0</span>
+<span class="go">The distance between atoms index 10 and 42 is 7.54015357744 in frame 1</span>
+<span class="go">The distance between atoms index 10 and 42 is 7.22121193005 in frame 2</span>
+<span class="go">...</span>
+</pre></div>
+</div>
+<p>If only a sets of atoms is provided, the distance among them is computed:</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [6]: </span><span class="n">CAs</span><span class="o">=</span><span class="n">metenk</span><span class="o">.</span><span class="n">selection</span><span class="p">(</span><span class="s">&#39;atom.name CA&#39;</span><span class="p">)</span>
+
+<span class="gp">In [7]: </span><span class="n">dists</span><span class="o">=</span><span class="n">metenk</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="n">sel1</span><span class="o">=</span><span class="n">CAs</span><span class="p">,</span><span class="n">frame</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="gp">In [8]: </span><span class="k">print</span> <span class="n">metenk</span><span class="o">.</span><span class="n">atom</span><span class="p">[</span><span class="n">CAs</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span><span class="o">.</span><span class="n">info</span><span class="p">(),</span><span class="s">&#39;--&#39;</span><span class="p">,</span><span class="n">metenk</span><span class="o">.</span><span class="n">atom</span><span class="p">[</span><span class="n">CAs</span><span class="p">[</span><span class="mi">4</span><span class="p">]]</span><span class="o">.</span><span class="n">info</span><span class="p">(),</span> <span class="n">dists</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">]</span>
+<span class="go">CA-33/GLY-3 -- CA-60/MET-5 5.81840212291</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="msystem.html#msystem" title="msystem"><tt class="xref py py-class docutils literal"><span class="pre">msystem</span></tt></a>, <a class="reference internal" href="coors.html#traj" title="traj"><tt class="xref py py-class docutils literal"><span class="pre">traj</span></tt></a>, <tt class="xref py py-class docutils literal"><span class="pre">atom</span></tt>, <a class="reference internal" href="functions.html#msystem.load_traj" title="msystem.load_traj"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.load_traj()</span></tt></a>, <a class="reference internal" href="functions.html#msystem.info_trajs" title="msystem.info_trajs"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.info_trajs()</span></tt></a>, <a class="reference internal" href="functions.html#msystem.selection" title="msystem.selection"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.selection()</span></tt></a>, <a class="reference internal" href="functions.html#msystem.distance" title="msystem.distance"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.distance()</span></tt></a></p>
+</div>
+</div>
+<div class="section" id="neighbors-and-ranked-contacts">
+<h3>Neighbors and Ranked contacts<a class="headerlink" href="#neighbors-and-ranked-contacts" title="Permalink to this headline">¶</a></h3>
+<p>The function neighbs can help with its different options to approach this problems.
+Notice that the cut-off here is the limit in the ranked list of closest neighbors or a given distance.
+In the former case the output can be sorted or not by distance.
+If only contact map is need, maybe the following section is suitable because of its efficience.</p>
+<p>Neighbors with a distance lower or equal than a certain threshold:</p>
+</div>
+</div>
+<div class="section" id="contact-maps">
+<h2>Contact Maps<a class="headerlink" href="#contact-maps" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="dihedral-angles">
 <h2>Dihedral Angles<a class="headerlink" href="#dihedral-angles" title="Permalink to this headline">¶</a></h2>
@@ -419,13 +472,11 @@ There are few special key words.</p>
 
 <span class="gp">In [15]: </span><span class="n">angs</span><span class="o">=</span><span class="n">metenk</span><span class="o">.</span><span class="n">ramachandran_map</span><span class="p">(</span><span class="n">resid</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="n">frame</span><span class="o">=</span><span class="s">&#39;ALL&#39;</span><span class="p">)</span>
 
-<span class="gp">In [16]: </span><span class="n">idres2</span><span class="o">=</span><span class="n">metenk</span><span class="o">.</span><span class="n">resid</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">metenk</span><span class="o">.</span><span class="n">resid</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">pdb_index</span><span class="p">)</span>
-
-<span class="gp">In [17]: </span><span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">metenk</span><span class="o">.</span><span class="n">traj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_frames</span><span class="p">,</span><span class="mi">10</span><span class="p">):</span>
-<span class="go">   ....:     print idres2,&#39;| t=&#39;, metenk.traj[0].frame[ii].time, &#39;| [phi,psi]=&#39;, angs[ii,:]</span>
-<span class="go">GLY3 | t= 0.0 | [phi,psi]= [ 2.01215258  0.87594459]</span>
-<span class="go">GLY3 | t= 100.0 | [phi,psi]= [ 1.90493036  0.64741795]</span>
-<span class="go">GLY3 | t= 200.0 | [phi,psi]= [ 1.9432302   1.22817325]</span>
+<span class="gp">In [16]: </span><span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">metenk</span><span class="o">.</span><span class="n">traj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_frames</span><span class="p">,</span><span class="mi">10</span><span class="p">):</span>
+<span class="go">   ....:     print metenk.resid[2].info(),&#39;| t=&#39;, metenk.traj[0].frame[ii].time, &#39;| [phi,psi]=&#39;, angs[ii,:]</span>
+<span class="go">GLY-3 | t= 0.0 | [phi,psi]= [ 2.01215258  0.87594459]</span>
+<span class="go">GLY-3 | t= 100.0 | [phi,psi]= [ 1.90493036  0.64741795]</span>
+<span class="go">GLY-3 | t= 200.0 | [phi,psi]= [ 1.9432302   1.22817325]</span>
 </pre></div>
 </div>
 <div class="admonition-see-also admonition seealso">
@@ -496,52 +547,6 @@ consecutive covalently bound chains of atoms:</p>
 <p class="last">If the angles phi and psi are the goal of the analysis, the method <a class="reference internal" href="functions.html#msystem.ramachandran_map" title="msystem.ramachandran_map"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.ramachandran_map()</span></tt></a> can be another tool to be considered.</p>
 </div>
 </div>
-</div>
-<div class="section" id="computing-distances">
-<h2>Computing distances<a class="headerlink" href="#computing-distances" title="Permalink to this headline">¶</a></h2>
-<p>The distance between a set of n1 atoms, list1, and a set of n2 atoms,
-list2.  If only one frame is analysed the output is a 2D matrix
-[n1,n2].  This way the distance between the i-th atom in list1 and
-j-th in list2 correspond to output[i,j].</p>
-<p>If more than one frame is analysed the output is a 3D matrix
-[n1,n2,number_frames] (following the previous notation).</p>
-<p>It is faster if len(list1)&lt;len(list2).</p>
-<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [2]: </span><span class="n">GSGS</span><span class="o">=</span><span class="n">molecule</span><span class="p">(</span><span class="s">&#39;GSGS.pdb&#39;</span><span class="p">,</span><span class="n">coors</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-
-<span class="gp">In [3]: </span><span class="n">GSGS</span><span class="o">.</span><span class="n">load_traj</span><span class="p">(</span><span class="s">&#39;GSGS.dcd&#39;</span><span class="p">,</span><span class="n">frame</span><span class="o">=</span><span class="s">&#39;ALL&#39;</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-
-<span class="gp">In [4]: </span><span class="n">list1</span><span class="o">=</span><span class="n">GSGS</span><span class="o">.</span><span class="n">selection</span><span class="p">(</span><span class="s">&#39;atom.resid.type Protein&#39;</span><span class="p">)</span>
-
-<span class="gp">In [5]: </span><span class="n">list2</span><span class="o">=</span><span class="n">GSGS</span><span class="o">.</span><span class="n">selection</span><span class="p">(</span><span class="s">&#39;atom.resid.type Water and atom.type O&#39;</span><span class="p">)</span>
-
-<span class="gp">In [6]: </span><span class="n">result</span><span class="o">=</span><span class="n">GSGS</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="n">list1</span><span class="p">,</span><span class="n">list2</span><span class="p">)</span>
-
-<span class="gp">In [7]: </span><span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">GSGS</span><span class="o">.</span><span class="n">traj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_frames</span><span class="p">):</span>
-<span class="go">   ....:    print &#39;The distance between atoms index&#39;,list1[1],&#39;and&#39;,list2[3],&#39;is&#39;,result[1,3][ii],&#39;in frame&#39;,ii</span>
-<span class="go">   ....:</span>
-<span class="go">The distance between atoms index 1 and 48 is 24.8435076017 in frame 0</span>
-<span class="go">The distance between atoms index 1 and 48 is 23.6529328175 in frame 1</span>
-<span class="go">The distance between atoms index 1 and 48 is 24.3209230117 in frame 2</span>
-<span class="go">The distance between atoms index 1 and 48 is 21.5236312048 in frame 3</span>
-<span class="go">The distance between atoms index 1 and 48 is 25.2685193116 in frame 4</span>
-<span class="go">The distance between atoms index 1 and 48 is 28.2550958504 in frame 5</span>
-<span class="go">The distance between atoms index 1 and 48 is 26.1290587977 in frame 6</span>
-<span class="go">The distance between atoms index 1 and 48 is 20.9157208891 in frame 7</span>
-<span class="go">The distance between atoms index 1 and 48 is 21.6473615840 in frame 8</span>
-<span class="go">The distance between atoms index 1 and 48 is 18.5862638499 in frame 9</span>
-</pre></div>
-</div>
-<div class="section" id="neighbors-and-ranked-contacts">
-<h3>Neighbors and Ranked contacts<a class="headerlink" href="#neighbors-and-ranked-contacts" title="Permalink to this headline">¶</a></h3>
-<p>The function neighbs can help with its different options to approach this problems.
-Notice that the cut-off here is the limit in the ranked list of closest neighbors or a given distance.
-In the former case the output can be sorted or not by distance.
-If only contact map is need, maybe the following section is suitable because of its efficience.</p>
-<p>Neighbors with a distance lower or equal than a certain threshold:</p>
-</div>
-</div>
-<div class="section" id="contact-maps">
-<h2>Contact Maps<a class="headerlink" href="#contact-maps" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="radial-distribution-funcions">
 <h2>Radial Distribution Funcions<a class="headerlink" href="#radial-distribution-funcions" title="Permalink to this headline">¶</a></h2>
