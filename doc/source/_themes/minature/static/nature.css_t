@@ -70,10 +70,27 @@ div.related {
 div.related a {
     color: #E2F3CC;
 }
- 
+
+
 div.sphinxsidebar {
     font-size: 0.75em;
     line-height: 1.5em;
+    width: 300px;
+}
+
+div.sphinxsidebar {
+    margin: 0;
+    padding: 0.5em 15px 15px 0;
+    width: {{ theme_sidebarwidth|toint - 20 }}px;
+    float: right;
+    font-size: 1em;
+    text-align: left;
+}
+
+div.sphinxsidebar {
+    font-size: 0.75em;
+    line-height: 1.5em;
+    width: 300px;
 }
 
 div.sphinxsidebarwrapper{
@@ -128,7 +145,8 @@ div.sphinxsidebar input {
 div.sphinxsidebar input[type=text]{
     margin-left: 20px;
 }
- 
+
+
 /* -- body styles ----------------------------------------------------------- */
  
 a {
