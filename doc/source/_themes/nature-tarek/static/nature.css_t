@@ -1,12 +1,6 @@
-/* AQUALAB
- * nature.css_t
- * ~~~~~~~~~~~~
- *
- * Sphinx stylesheet -- nature theme.
- *
- * :copyright: Copyright 2007-2011 by the Sphinx team, see AUTHORS.
- * :license: BSD, see LICENSE for details.
- *
+/**
+ * Sphinx stylesheet -- default theme
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
  
 @import url("basic.css");
@@ -28,10 +22,10 @@ div.documentwrapper {
 }
 
 div.bodywrapper {
-    margin: 0 0 0 {{ theme_sidebarwidth|toint }}px;
+    margin: 0 0 0 300px;
 }
 
-hr {
+hr{
     border: 1px solid #B1B4B6;
 }
  
@@ -42,25 +36,24 @@ div.document {
 div.body {
     background-color: #ffffff;
     color: #3E4349;
-    padding: 0 30px 30px 30px;
+    padding: 1em 30px 30px 30px;
     font-size: 0.9em;
 }
  
 div.footer {
-    color: #dd0000;
+    color: #555;
     width: 100%;
     padding: 13px 0;
     text-align: center;
-    font-size: 82.5%;
+    font-size: 75%;
 }
  
 div.footer a {
-    color: #dd0000;
-    text-decoration: underline;
+    color: #444444;
 }
  
 div.related {
-    background-color: #3b3b3b;
+    background-color: #6BA81E;
     line-height: 36px;
     color: #ffffff;
     text-shadow: 0px 1px 0 #444444;
@@ -76,8 +69,9 @@ div.related .right {
 }
 
 div.sphinxsidebar {
-    font-size: 0.8em;
+    font-size: 0.9em;
     line-height: 1.5em;
+    width: 300px;
 }
 
 div.sphinxsidebarwrapper{
@@ -87,27 +81,20 @@ div.sphinxsidebarwrapper{
 div.sphinxsidebar h3,
 div.sphinxsidebar h4 {
     font-family: Arial, sans-serif;
-    color: #dd0000;
+    color: #222222;
     font-size: 1.2em;
     font-weight: bold;
     margin: 0;
     padding: 5px 10px;
-    background-color: #c4c4c4;
-    text-shadow: 1px 1px 0 #c4c4c4
+    text-shadow: 1px 1px 0 white
 }
 
-div.sphinxsidebar h4{
-    font-size: 1.2em;
-}
- 
 div.sphinxsidebar h3 a {
-    color: #dd0000;
-    font-weight: bold;
+    color: #444444;
 }
- 
- 
+
 div.sphinxsidebar p {
-    color: #888;
+    color: #888888;
     padding: 5px 20px;
     margin: 0.5em 0px;
 }
@@ -116,20 +103,24 @@ div.sphinxsidebar p.topless {
 }
  
 div.sphinxsidebar ul {
-    margin: 10px 20px;
+    margin: 10px 10px 10px 20px;
     padding: 0;
-    color: #444444;
+    color: #000000;
 }
  
 div.sphinxsidebar a {
     color: #444444;
-    font-size: 1.0em;
 }
- 
+
+div.sphinxsidebar a:hover {
+    color: #E32E00;
+}
+
 div.sphinxsidebar input {
-    border: 1px solid #ccc;
+    border: 1px solid #cccccc;
     font-family: sans-serif;
     font-size: 1.1em;
+    padding: 0.15em 0.3em;
 }
 
 div.sphinxsidebar input[type=text]{
@@ -145,7 +136,6 @@ a {
  
 a:hover {
     color: #E32E00;
-    text-decoration: underline;
 }
  
 div.body h1,
@@ -158,33 +148,32 @@ div.body h6 {
     font-weight: normal;
     color: #212224;
     margin: 30px 0px 10px 0px;
-    padding: 5px 0 5px 10px;
-    text-shadow: 0px 1px 0 #ffc9c9
-    border-bottom: 1px solid #dd0000;
+    padding: 5px 0 5px 0px;
+    text-shadow: 0px 1px 0 white;
+    border-bottom: 1px solid #C8D5E3;
 }
  
-div.body h1 { border-bottom: 2.5px solid #ff0000; margin-top: 2; font-size: 200%; }
-div.body h2 { border-bottom: 1px solid #C8D5E3; font-size: 150%; }
-div.body h3 { border-top: 1px solid #C8D5E3; font-size: 120%; font-weight: bold;}
+div.body h1 { margin-top: 0; font-size: 200%; }
+div.body h2 { font-size: 150%; }
+div.body h3 { font-size: 120%; }
 div.body h4 { font-size: 110%; }
 div.body h5 { font-size: 100%; }
 div.body h6 { font-size: 100%; }
-
-
+ 
 a.headerlink {
-    color: #dd0000;
+    color: #c60f0f;
     font-size: 0.8em;
     padding: 0 4px 0 4px;
     text-decoration: none;
 }
  
 a.headerlink:hover {
-    background-color: #dd0000;
+    background-color: #c60f0f;
     color: white;
 }
  
 div.body p, div.body dd, div.body li {
-    line-height: 1.5em;
+    line-height: 1.8em;
 }
  
 div.admonition p.admonition-title + p {
@@ -196,23 +185,23 @@ div.highlight{
 }
 
 div.note {
-    background-color: #f8a1a1;
-    border: 1px solid #f57c7c;
+    background-color: #eeeeee;
+    border: 1px solid #cccccc;
 }
  
 div.seealso {
-    background-color: #fbc6c6;
-    border: 1px solid #f8a1a1;
+    background-color: #ffffcc;
+    border: 1px solid #ffff66;
 }
  
 div.topic {
     background-color: #fafafa;
+    border-width: 0;
 }
  
 div.warning {
-    background-color: #f13434;
-    border: 1px solid #f66;
-    color: white;
+    background-color: #ffe4e4;
+    border: 1px solid #ff6666;
 }
  
 p.admonition-title {
@@ -225,53 +214,23 @@ p.admonition-title:after {
  
 pre {
     padding: 10px;
-    background-color: White;
-    color: #222;
-    line-height: 1.2em;
-    border: 1px solid #ffa2a2;
+    background-color: #fafafa;
+    color: #222222;
+    line-height: 1.5em;
     font-size: 1.1em;
     margin: 1.5em 0 1.5em 0;
-    -webkit-box-shadow: 1px 1px 1px #d8d8d8;
-    -moz-box-shadow: 1px 1px 1px #d8d8d8;
-    font-family: monospace;
+    -webkit-box-shadow: 0px 0px 4px #d8d8d8;
+    -moz-box-shadow: 0px 0px 4px #d8d8d8;
+    box-shadow: 0px 0px 4px #d8d8d8;
 }
  
 tt {
-    background-color: #ecf0f3;
-    color: #222;
-    /* padding: 1px 2px; */
+    color: #222222;
+    padding: 1px 2px;
     font-size: 1.2em;
-    /*font-family: 'DejaVu Sans Mono', Consolas, 'Lucida Console', monospace;*/
+    font-family: monospace;
 }
 
-.viewcode-back {
-    font-family: Arial, sans-serif;
+#table-of-contents ul {
+    padding-left: 2em;
 }
-
-div.viewcode-block:target {
-    background-color: #f4debf;
-    border-top: 1px solid #ac9;
-    border-bottom: 1px solid #ac9;
-}
-
-
-/* -- tables ---------------------------------------------------------------- */
-
-table.docutils td, table.docutils th {
-    padding: 0.5em 1em;
-    border-bottom: 1px solid #ccc;
-}
-tr.field { border-bottom: 1px solid #ccc }
-
-table.docutils th {
-  vertical-align: middle;
-  background: #ddd }
-table.field-list th { vertical-align: top }
-table.docutils td { background: #f1f1f1 }
-
-table.footnote td { background: transparent }
-
-
-
-.viewcode-back {
-  font-family: Arial, sans-serif }
