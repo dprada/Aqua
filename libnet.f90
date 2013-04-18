@@ -2036,12 +2036,14 @@ SUBROUTINE cfep_pfold3 (opt_bins,plot,node_index,A,B,T_ind,T_tau,T_start,length,
   DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::valores
   double precision::lim_top,val_aux
 
+  PRINT*, 'SIIII'
+
   AA=A+1
   BB=B+1
 
   plot=0.0d0
   node_index=0
-  print*,'entra'
+
   ALLOCATE(Pe(N_nodes))
   Pe=0.0d0
   DO i=1,N_nodes
@@ -2059,7 +2061,7 @@ SUBROUTINE cfep_pfold3 (opt_bins,plot,node_index,A,B,T_ind,T_tau,T_start,length,
 
 
   DO times=1,num_iter
-     print*,times
+     print*, times
      Pf2(AA)=1.0d0
      Pf2(BB)=0.0d0
      Pf=Pf2
@@ -2078,7 +2080,7 @@ SUBROUTINE cfep_pfold3 (opt_bins,plot,node_index,A,B,T_ind,T_tau,T_start,length,
   Pf=Pf2
   
   DEALLOCATE(Pf2)
-  print*,'listo'
+
   IF (opt_bins==1) THEN
 
      ALLOCATE(filtro(N_nodes),filtro2(N_nodes))
@@ -2135,10 +2137,11 @@ SUBROUTINE cfep_pfold3 (opt_bins,plot,node_index,A,B,T_ind,T_tau,T_start,length,
   ELSE
 
      Z=sum(Pe(:),dim=1)
-     print*,'entra'
 
      ALLOCATE(orderpf(N_nodes))
+     print*,'buckets'
      CALL sort_by_buckets (orderpf,0.0d0,1.0d0,100,2500,Pf,N_nodes)
+     print*,'sale'
 
 !!$     print*,'ahi va viejo'
 !!$
@@ -2170,8 +2173,6 @@ SUBROUTINE cfep_pfold3 (opt_bins,plot,node_index,A,B,T_ind,T_tau,T_start,length,
 !!$
 !!$     END DO
 
-     print*,'ahi va nuevo'
-
      aux=0.0d0
      plot(N_nodes,1)=aux
      DO i=N_nodes-1,1,-1
@@ -2185,7 +2186,7 @@ SUBROUTINE cfep_pfold3 (opt_bins,plot,node_index,A,B,T_ind,T_tau,T_start,length,
      END DO
 
      DO i=1,N_nodes
-        print*,i
+        print*, i
         g=orderpf(i)
         aux_de_pf=Pf(g)
         DO j=T_start(g)+1,T_start(g+1)
@@ -2236,7 +2237,8 @@ SUBROUTINE cfep_pfold3 (opt_bins,plot,node_index,A,B,T_ind,T_tau,T_start,length,
 
      DO i=1,N_nodes
         plot(i,1)=plot(i,1)/Z
-        plot(i,2)=-300.0d0*0.0020d0*log(plot(i,2)/Z)
+        !plot(i,2)=-300.0d0*0.0020d0*log(plot(i,2)/Z)
+        plot(i,2)=plot(i,2)/Z
      END DO
 
   END IF

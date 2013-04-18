@@ -378,12 +378,13 @@ class kinetic_analysis():
                 traj_inp=pyn_math.standard_traj(self.traj,particles=self.particles,dimensions=self.dimensions)
                 lt_mean=f_kin_anal.life_time_dist(opt_norm,opt_segm,traj_inp,state,segments,traj_inp.shape[0],traj_inp.shape[1],traj_inp.shape[2],num_states)
 
+        
         elif traj in ['CLUSTERS','Clusters','clusters']:
             traj_inp=pyn_math.standard_traj(self.traj_clusters,particles=self.particles,dimensions=1)
-            lt_mean=f_kin_anal.life_time_dist(opt_norm,traj_inp,state,traj_inp.shape[0],traj_inp.shape[1],traj_inp.shape[2],num_states)
+            lt_mean=f_kin_anal.life_time_dist(opt_norm,opt_segm,traj_inp,state,segments,traj_inp.shape[0],traj_inp.shape[1],traj_inp.shape[2],num_states)
         elif traj in ['NODES','Nodes','nodes']:
             traj_inp=pyn_math.standard_traj(self.traj_nodes,particles=self.particles,dimensions=1)
-            lt_mean=f_kin_anal.life_time_dist(opt_norm,traj_inp,state,traj_inp.shape[0],traj_inp.shape[1],traj_inp.shape[2],num_states)
+            lt_mean=f_kin_anal.life_time_dist(opt_norm,opt_segm,traj_inp,state,segments,traj_inp.shape[0],traj_inp.shape[1],traj_inp.shape[2],num_states)
         else:
             print '# A readable traj is needed'
             return
@@ -1027,7 +1028,6 @@ class kinetic_analysis():
             del(num_nodes,new_num_frames,aux_list)
          
             self.__type_clusters__='prada2'
-
 
 
     def berezovska2012(self,window=None,ksi=0.5,granularity=1.2,bins=20,segment=None,delta=None,clusters=True,verbose=False):
