@@ -1,0 +1,10 @@
+@ directed=True
+# node node weight
+
+Francesco   Diego      2
+Diego	    Roman      4
+Diego	    Steffano   2
+Diego	    Liliana    3
+Roman	    Francesco  1
+Liliana     Diego      6
+Roman	    Steffano   2
