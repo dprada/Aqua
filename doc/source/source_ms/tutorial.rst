@@ -220,8 +220,8 @@ Right now the output format is only dcd.
    In [6]: while 1:
       ...:     metenk.traj[0].reload_frame()
       ...:     if metenk.traj[0].io_end:
-      ...:          metenk.traj[0].write(action='Close')
-      ...:          break
+      ...:         metenk.traj[0].write(action='Close')
+      ...:         break
       ...:     metenk.traj[0].write(frame=0)
 
 .. seealso:: :class:`msystem`, :class:`traj`, :meth:`msystem.load_traj`, :meth:`msystem.info_trajs`, :meth:`traj.reload_frame`, :meth:`traj.write`
@@ -252,7 +252,7 @@ There are few special key words.
    In [6]: metenk.selection('chain.name A and atom.donor')
    Out[6]: [0, 23, 30, 37, 57]
 
-   In [7]: metenk.selection('(atom.resid.name GLY and not atom.name N CA C O H) or (atom.name O1)')   
+   In [7]: metenk.selection('(atom.resid.name GLY and not atom.name N CA C O H) or (atom.name O1)')  
    Out[7]: [26, 27, 33, 34, 73]
 
 We can also make use of the expression 'within X of', X is a float number indicating a distance threshold.
