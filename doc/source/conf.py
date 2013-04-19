@@ -117,6 +117,7 @@ pygments_style = 'sphinx'
 #minature:
 html_theme = 'minature'
 
+
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #html_theme = 'nature-mod'
@@ -128,6 +129,7 @@ html_theme = 'minature'
 
 # Add any paths that contain custom themes here, relative to this directory.
 html_theme_path = ['_themes']
+html_sidebars = {'index': 'indexsidebar.html'}
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -175,7 +177,7 @@ html_use_smartypants = True
 #html_split_index = False
 
 # If true, links to the reST sources are added to the pages.
-#html_show_sourcelink = True
+html_show_sourcelink = False
 
 # If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
 #html_show_sphinx = True
