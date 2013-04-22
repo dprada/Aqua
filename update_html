@@ -1,4 +1,4 @@
-# git rm -r *.html *.inv *.js _downloads/* _images/* _sources/* _static/* _themes/*
+#git rm -r *.html *.inv *.js _downloads/* _images/* _sources/* _static/*
 
 cp -r doc/html/* .
 
