@@ -6,7 +6,7 @@ from aqua import *
 
 ### To create a system from a file (pdb,gro):
 
-prot=molecule(input_file=None,download=None,coors=True,verbose=True)
+prot=msystem(input_file=None,download=None,coors=True,verbose=True)
 prot=molecule('AAA.pdb')
 prot=molecule(download='AAA')
 
