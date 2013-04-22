@@ -1,0 +1,656 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Functions &mdash; AquaLab 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="AquaLab 0.1 documentation" href="../index.html" />
+    <link rel="next" title="Tutorials" href="tutorial.html" />
+    <link rel="prev" title="Trajectories" href="coors.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="tutorial.html" title="Tutorials"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="coors.html" title="Trajectories"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">AquaLab 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="functions">
+<h1>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="topology">
+<h2>Topology<a class="headerlink" href="#topology" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="loading">
+<h3>Loading<a class="headerlink" href="#loading" title="Permalink to this headline">¶</a></h3>
+<p>This function should be avoided by the user if there is not a clear
+reason. When a new object of class msystem is initialized this
+function is called implicitly by construction.</p>
+<dl class="method">
+<dt id="msystem.load_topol">
+<tt class="descclassname">msystem.</tt><tt class="descname">load_topol</tt><big>(</big><em>name_file</em><big>)</big><a class="headerlink" href="#msystem.load_topol" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name_file</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Name of input file with topology</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<p>See topology formats for additional info.</p>
+</div>
+<div class="section" id="selection">
+<h3>Selection<a class="headerlink" href="#selection" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="msystem.selection">
+<tt class="descclassname">msystem.</tt><tt class="descname">selection</tt><big>(</big><em>condition=None</em><span class="optional">[</span>, <em>traj=0</em>, <em>frame='ALL'</em>, <em>pbc=True</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#msystem.selection" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>condition</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Logical sentence with selection.</li>
+<li><strong>traj</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Index of trajectory to analyse if a condition over coordinates needs to be evaluated.</li>
+<li><strong>frame</strong> (<em>list, int or str</em>) &#8211; Index of frame to analyse if a condition over coordinates needs to be evaluated.</li>
+<li><strong>pbc</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Periodic Boundary Conditions if a condition over coordinates needs to be evaluated.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list of atom indexes.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list of integers.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<div class="section" id="syntaxis">
+<h4>Syntaxis<a class="headerlink" href="#syntaxis" title="Permalink to this headline">¶</a></h4>
+<p>The syntaxis used by the function msystem.selection() is given by the
+classes atom, resid and chain.  In addition, boolean operations can be
+done using the words: &#8220;AND&#8221;, &#8220;OR&#8221;, &#8220;NOT&#8221;, &#8220;IN&#8221;, &#8220;WITHIN&#8221;, &#8220;OF&#8221;; no
+matter if are written in capital or lower case, and the characters:
+&#8220;[&#8221;, &#8220;]&#8221;, &#8220;(&#8221;, &#8221;)&#8221; and &#8221;,&#8221;.</p>
+<p>Some special words can be used although they have an easy translation:</p>
+<blockquote>
+<div><ul class="simple">
+<li>&#8220;backbone&#8221;:  &#8216;(atom.name N CA C O)&#8217;</li>
+<li>&#8220;sidechain&#8221;: &#8216;(resid.type Protein and not atom.name N CA C O H1 H2)&#8217;</li>
+<li>&#8220;protein&#8221;:   &#8216;(resid.type Protein)&#8217;</li>
+<li>&#8220;water&#8221;:     &#8216;(resid.type Water)&#8217;</li>
+</ul>
+</div></blockquote>
+<p>Find some examples in section Tutorial-Syntaxis.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="tutorial.html#ms-tut-selections"><em>How to make atoms selections</em></a></p>
+</div>
+</div>
+</div>
+<div class="section" id="info">
+<h3>Info<a class="headerlink" href="#info" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="msystem.info">
+<tt class="descclassname">msystem.</tt><tt class="descname">info</tt><big>(</big><big>)</big><a class="headerlink" href="#msystem.info" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Prints out:</th><td class="field-body">General information of the molecular system.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="writting-pdb-files">
+<h3>Writting pdb files<a class="headerlink" href="#writting-pdb-files" title="Permalink to this headline">¶</a></h3>
+<p>xxx</p>
+</div>
+</div>
+<hr class="docutils" />
+<div class="section" id="trajectories">
+<h2>Trajectories<a class="headerlink" href="#trajectories" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="load-trajectory">
+<h3>Load Trajectory<a class="headerlink" href="#load-trajectory" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="msystem.load_traj">
+<tt class="descclassname">msystem.</tt><tt class="descname">load_traj</tt><big>(</big><em>file_input=None</em><span class="optional">[</span>, <em>frame=None</em>, <em>begin=None</em>, <em>end=None</em>, <em>increment=1</em>, <em>units='frames'</em>, <em>verbose=False</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#msystem.load_traj" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>file_input</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Name of trajectory file in the following formats: pdb, gro, xtc, trr, dcd.</li>
+<li><strong>frame</strong> (<em>int or list.</em>) &#8211; Index of frames to be loaded.</li>
+<li><strong>begin</strong> (<em>int.</em>) &#8211; Frame to start the loading process.</li>
+<li><strong>end</strong> (<em>int.</em>) &#8211; Frame to finish the loading process.</li>
+<li><strong>increment</strong> (<em>int.</em>) &#8211; Interval to load frames.</li>
+<li><strong>units</strong> (<em>str.</em>) &#8211; Units for &#8220;begin&#8221;, &#8220;end&#8221; and &#8220;increment&#8221;. [only units=&#8217;frames&#8217; available]</li>
+<li><strong>verbose</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Prints out general information.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">None</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Prints out:</th><td class="field-body"><p class="first last">general information if verbose=True.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="info-trajectories">
+<h3>Info Trajectories<a class="headerlink" href="#info-trajectories" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="msystem.info_trajs">
+<tt class="descclassname">msystem.</tt><tt class="descname">info_trajs</tt><big>(</big><big>)</big><a class="headerlink" href="#msystem.info_trajs" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Prints out:</th><td class="field-body">General information of the whole set of trajectories loaded.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="delete-trajectory">
+<h3>Delete Trajectory<a class="headerlink" href="#delete-trajectory" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="msystem.delete_traj">
+<tt class="descclassname">msystem.</tt><tt class="descname">delete_traj</tt><big>(</big><em>index='ALL'</em><big>)</big><a class="headerlink" href="#msystem.delete_traj" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>index</strong> &#8211; index of trajectory to be deleted in the list msystem.traj</li>
+<li><strong>index</strong> &#8211; int or &#8216;ALL&#8217;</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="load-frames">
+<h3>Load Frames<a class="headerlink" href="#load-frames" title="Permalink to this headline">¶</a></h3>
+<p>To append a new frame to the list traj.frame:</p>
+<dl class="method">
+<dt id="traj.upload_frame">
+<tt class="descclassname">traj.</tt><tt class="descname">upload_frame</tt><big>(</big><em>frame='next'</em><span class="optional">[</span>, <em>begin=None</em>, <em>end=None</em>, <em>increment=1</em>, <em>units=None</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#traj.upload_frame" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>frame</strong> (<em>int or list or &#8216;next&#8217; or &#8216;all&#8217;.</em>) &#8211; Index of frames to be loaded.</li>
+<li><strong>begin</strong> (<em>int.</em>) &#8211; Frame to start the loading process.</li>
+<li><strong>end</strong> (<em>int.</em>) &#8211; Frame to finish the loading process.</li>
+<li><strong>increment</strong> (<em>int.</em>) &#8211; Interval to load frames.</li>
+<li><strong>units</strong> (<em>str.</em>) &#8211; Units for &#8220;begin&#8221;, &#8220;end&#8221; and &#8220;increment&#8221;. [only units=&#8217;frames&#8217; available]</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<p>To rewrite an old frame of the traj.frame list with a new frame:</p>
+<dl class="method">
+<dt id="traj.reload_frame">
+<tt class="descclassname">traj.</tt><tt class="descname">reload_frame</tt><big>(</big><em>frame='next'</em>, <em>old=0</em><big>)</big><a class="headerlink" href="#traj.reload_frame" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>frame</strong> (<em>int or &#8216;next&#8217;.</em>) &#8211; Index of frames to be loaded.</li>
+<li><strong>old</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Index of frame in the list traj.frame to be rewritten.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="info-frames">
+<h3>Info Frames<a class="headerlink" href="#info-frames" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="traj.info">
+<tt class="descclassname">traj.</tt><tt class="descname">info</tt><big>(</big><big>)</big><a class="headerlink" href="#traj.info" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Prints out:</th><td class="field-body">General information of the whole set of the trajectory.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="delete-frames">
+<h3>Delete Frames<a class="headerlink" href="#delete-frames" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="traj.delete_frame">
+<tt class="descclassname">traj.</tt><tt class="descname">delete_frame</tt><big>(</big><em>frame='ALL'</em><span class="optional">[</span>, <em>begin=None</em>, <em>end=None</em>, <em>increment=1</em>, <em>units=None</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#traj.delete_frame" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>frame</strong> (<em>int or list or &#8216;ALL&#8217;.</em>) &#8211; Index of frame in the list traj.frame to be deleted.</li>
+<li><strong>begin</strong> (<em>int.</em>) &#8211; Frame to start the deleting process. [not available yet]</li>
+<li><strong>end</strong> (<em>int.</em>) &#8211; Frame to finish the deleting process. [not available yet]</li>
+<li><strong>increment</strong> (<em>int.</em>) &#8211; Interval to delete frames. [not available yet]</li>
+<li><strong>units</strong> (<em>str.</em>) &#8211; Units for &#8220;begin&#8221;, &#8220;end&#8221; and &#8220;increment&#8221;. [only units=&#8217;frames&#8217; available]</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">.</p>
+</div>
+</div>
+<div class="section" id="writting-dcd-files">
+<h3>Writting dcd files<a class="headerlink" href="#writting-dcd-files" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="traj.write">
+<tt class="descclassname">traj.</tt><tt class="descname">write</tt><big>(</big><em>file_name=None</em>, <em>frame='ALL'</em>, <em>begin=None</em>, <em>end=None</em>, <em>increment=1</em>, <em>units=None</em>, <em>action=None</em><big>)</big><a class="headerlink" href="#traj.write" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>file_name</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Name of new trajectory file.</li>
+<li><strong>frame</strong> (<em>int or list or &#8216;ALL&#8217;</em>) &#8211; Indexes of frames to be written in the new trajectory file.</li>
+<li><strong>begin</strong> (<em>int.</em>) &#8211; Frame to start the deleting process. [not available yet]</li>
+<li><strong>end</strong> (<em>int.</em>) &#8211; Frame to finish the deleting process. [not available yet]</li>
+<li><strong>increment</strong> (<em>int.</em>) &#8211; Interval to delete frames. [not available yet]</li>
+<li><strong>units</strong> (<em>str.</em>) &#8211; Units for &#8220;begin&#8221;, &#8220;end&#8221; and &#8220;increment&#8221;. [only units=&#8217;frames&#8217; available]</li>
+<li><strong>action</strong> (<em>str.</em>) &#8211; &#8220;OPEN&#8221; or &#8220;CLOSE&#8221; to open or close a file without writting, None to writte frames in the opened new trajectory file.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="tutorial.html#ms-tut-convert-traj"><em>Converting a trajectory into other format</em></a></p>
+</div>
+</div>
+</div>
+<hr class="docutils" />
+<div class="section" id="analysis">
+<h2>Analysis<a class="headerlink" href="#analysis" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="distances">
+<h3>Distances<a class="headerlink" href="#distances" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="msystem.distance">
+<tt class="descclassname">msystem.</tt><tt class="descname">distance</tt><big>(</big><em>sel1='ALL'</em>, <em>sel2=None</em>, <em>traj=0</em>, <em>frame='ALL'</em>, <em>legend=False</em>, <em>pbc=True</em><big>)</big><a class="headerlink" href="#msystem.distance" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sel1</strong> (<em>int, list[int], string.</em>) &#8211; List or selection of atoms</li>
+<li><strong>sel2</strong> (<em>int, list[int], string.</em>) &#8211; List or selection of atoms</li>
+<li><strong>traj</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Index of trajectory to be analysed.</li>
+<li><strong>frame</strong> (<em>int, list[int] or &#8216;ALL&#8217;</em>) &#8211; List of frame indexes.</li>
+<li><strong>legend</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Key of distances as output if True.</li>
+<li><strong>pbc</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; With periodic boundary conditions if True.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>distances</strong>, <strong>keys1</strong> [if legend], <strong>keys2</strong> [if legend]</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><ul>
+<li><dl class="first docutils">
+<dt>distances:</dt>
+<dd><ul class="first last simple">
+<li>numpy.array[num_frames,atoms_sel1,atoms_sel2]</li>
+<li>numpy.array[atoms_sel1,atoms_sel2] (if num_frames=1)</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>keys1:</dt>
+<dd><ul class="first last simple">
+<li>list[atoms_sel1]</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>keys2:</dt>
+<dd><ul class="first last simple">
+<li>list[atoms_sel2]</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="tutorial.html#ms-tut-dists"><em>Computing distances</em></a></p>
+</div>
+</div>
+<div class="section" id="ramachandran-map">
+<h3>Ramachandran Map<a class="headerlink" href="#ramachandran-map" title="Permalink to this headline">¶</a></h3>
+<p>The function computes the pairs of angles phi-psi for any list of
+residues and frames.  Since each dihedral angle is computed with atoms
+from 2 different residues, the relationship between angle and
+residue is given by the atom &#8216;CA&#8217;.</p>
+<dl class="method">
+<dt id="msystem.ramachandran_map">
+<tt class="descclassname">msystem.</tt><tt class="descname">ramachandran_map</tt><big>(</big><em>resid='ALL'</em>, <em>traj=0</em>, <em>frame='ALL'</em>, <em>pdb_index=False</em>, <em>legend=False</em><big>)</big><a class="headerlink" href="#msystem.ramachandran_map" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>resid</strong> (<em>int, list[int] or &#8216;ALL&#8217;</em>) &#8211; List of residue indexes or pdb indexes.</li>
+<li><strong>traj</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Index of trajectory to be analysed.</li>
+<li><strong>frame</strong> (<em>int, list[int] or &#8216;ALL&#8217;</em>) &#8211; List of frame indexes.</li>
+<li><strong>pdb_index</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Residues in input and output are identified by the pdb indexes if True.</li>
+<li><strong>legend</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Key of angles in output if True.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>angles</strong>, <strong>keys</strong> [if legend]; List of pairs phi-psi (radians) for the corresponding residues and frames, and key legend if choosen.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><ul>
+<li><dl class="first docutils">
+<dt>angles:</dt>
+<dd><ul class="first last simple">
+<li>numpy.array[num_frames,num_resids,2].</li>
+<li>numpy.array[num_resids,2] (if num_frames=1)</li>
+<li>numpy.array[num_frames,2] (if num_resids=1)</li>
+<li>numpy.array[2]            (if num_frames=num_resids=1)</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>keys:</dt>
+<dd><ul class="first last simple">
+<li>list[num_resids][2]</li>
+<li>list[num_resids][2] (if num_resids=1)</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="tutorial.html#ms-tut-rama-map"><em>Ramachandran Map</em></a></p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Depending on how this method is used, it can result with a
+low performance. Check <a class="reference internal" href="#msystem.dihedral_angle" title="msystem.dihedral_angle"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.dihedral_angle()</span></tt></a> for a better performance.</p>
+</div>
+</div>
+<div class="section" id="covalent-chains">
+<h3>Covalent chains<a class="headerlink" href="#covalent-chains" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="msystem.selection_covalent_chains">
+<tt class="descclassname">msystem.</tt><tt class="descname">selection_covalent_chains</tt><big>(</big><em>chain=None</em>, <em>select='protein'</em><big>)</big><a class="headerlink" href="#msystem.selection_covalent_chains" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>chain</strong> (<em>list[str]</em>) &#8211; List of atom names to find as covalently bonded chains in &#8220;select&#8221;.</li>
+<li><strong>select</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Selection or set of atoms where the method looks for covalent chains. (see: <a class="reference internal" href="#msystem.selection" title="msystem.selection"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.selection()</span></tt></a>)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>chains</strong>; List of chains found. Each chain is a list of the corresponding atom indexes.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><ul>
+<li><dl class="first docutils">
+<dt>chains:</dt>
+<dd><ul class="first last simple">
+<li>list[num_chains][atom_indexes]</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="tutorial.html#ms-tut-any-dihang"><em>Computing any dihedral angle</em></a></p>
+</div>
+</div>
+<div class="section" id="dihedral-angles">
+<h3>Dihedral Angles<a class="headerlink" href="#dihedral-angles" title="Permalink to this headline">¶</a></h3>
+<p>The method computes the value of any list of 4 atoms defining a
+dihedral angle. The output</p>
+<dl class="method">
+<dt id="msystem.dihedral_angle">
+<tt class="descclassname">msystem.</tt><tt class="descname">dihedral_angle</tt><big>(</big><em>covalent_chain=None</em>, <em>traj=0</em>, <em>frame='ALL'</em><big>)</big><a class="headerlink" href="#msystem.dihedral_angle" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>covalent_chain</strong> (<em>list[int] or list[list[int]]</em>) &#8211; List of 4 atoms defining the dihedral angle, or list of lists. (see: <a class="reference internal" href="#msystem.selection_covalent_chains" title="msystem.selection_covalent_chains"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.selection_covalent_chains()</span></tt></a>)</li>
+<li><strong>traj</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Index of traj to be analysed.</li>
+<li><strong>frame</strong> (<em>int, list[int] or &#8216;ALL&#8217;</em>) &#8211; List of frame indexes.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>angles</strong>; List of angle values (radians) in the same order found in input parameter covalent_chain.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><ul>
+<li><dl class="first docutils">
+<dt>angles:</dt>
+<dd><ul class="first last simple">
+<li>numpy.array[num_frames,num_angs].</li>
+<li>numpy.array[num_angs] (if num_frames=1)</li>
+<li>numpy.array[num_frames] (if num_angs=1)</li>
+<li>float (if num_angs=1 and num_frames=1)</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="tutorial.html#ms-tut-any-dihang"><em>Computing any dihedral angle</em></a></p>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo_medium.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Functions</a><ul>
+<li><a class="reference internal" href="#topology">Topology</a><ul>
+<li><a class="reference internal" href="#loading">Loading</a></li>
+<li><a class="reference internal" href="#selection">Selection</a><ul>
+<li><a class="reference internal" href="#syntaxis">Syntaxis</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#info">Info</a></li>
+<li><a class="reference internal" href="#writting-pdb-files">Writting pdb files</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#trajectories">Trajectories</a><ul>
+<li><a class="reference internal" href="#load-trajectory">Load Trajectory</a></li>
+<li><a class="reference internal" href="#info-trajectories">Info Trajectories</a></li>
+<li><a class="reference internal" href="#delete-trajectory">Delete Trajectory</a></li>
+<li><a class="reference internal" href="#load-frames">Load Frames</a></li>
+<li><a class="reference internal" href="#info-frames">Info Frames</a></li>
+<li><a class="reference internal" href="#delete-frames">Delete Frames</a></li>
+<li><a class="reference internal" href="#writting-dcd-files">Writting dcd files</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#analysis">Analysis</a><ul>
+<li><a class="reference internal" href="#distances">Distances</a></li>
+<li><a class="reference internal" href="#ramachandran-map">Ramachandran Map</a></li>
+<li><a class="reference internal" href="#covalent-chains">Covalent chains</a></li>
+<li><a class="reference internal" href="#dihedral-angles">Dihedral Angles</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="coors.html"
+                        title="previous chapter">Trajectories</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="tutorial.html"
+                        title="next chapter">Tutorials</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="tutorial.html" title="Tutorials"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="coors.html" title="Trajectories"
+             >previous</a> |</li>
+        <li><a href="../index.html">AquaLab 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Diego Prada-Gracia.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

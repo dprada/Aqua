@@ -1,0 +1,206 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Kinetic Analysis &mdash; AquaLab 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="AquaLab 0.1 documentation" href="../index.html" />
+    <link rel="next" title="Tutorial Kinetic Analysis" href="tutorial_kinetic_analysis.html" />
+    <link rel="prev" title="Tutorials" href="../source_ms/tutorial.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="tutorial_kinetic_analysis.html" title="Tutorial Kinetic Analysis"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../source_ms/tutorial.html" title="Tutorials"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">AquaLab 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="kinetic-analysis">
+<h1>Kinetic Analysis<a class="headerlink" href="#kinetic-analysis" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="d-trajectories">
+<h2>1D trajectories<a class="headerlink" href="#d-trajectories" title="Permalink to this headline">¶</a></h2>
+<p>bla, bla, bla</p>
+<p>Ejemplos de committed:</p>
+<p>El primer y ultimo indice solo pueden aparecer una vez.</p>
+<p>aa=kinetic_1D_analysis([1,0,1,0,2])
+aa.first_committed_passage_time(states=[1,2],commitment=[True,True])
+(array([ 0.]), array([ 0.]))
+aa.first_committed_passage_time(states=[1,0,2],commitment=[True,True,True])
+(array([ 2.]), array([ 1.]))
+aa.first_committed_passage_time(states=[1,0,2],commitment=[True,False,True])
+(array([ 0.]), array([ 0.]))
+aa.first_committed_passage_time(states=[1,3,2],commitment=[True,True,True])
+(array([ 0.]), array([ 0.]))
+aa.first_committed_passage_time(states=[1,3,2],commitment=[True,False,True])
+(array([ 2.,  4.]), array([ 1.,  1.]))</p>
+<p>aa=kinetic_1D_analysis([1,1,1,2,1,1,1,0,1,2,1,1,3,2])
+aa.first_committed_passage_time(states=[1,2],commitment=[True,True])
+(array([ 1.,  2.,  3.]), array([ 2.,  1.,  1.]))
+aa.first_committed_passage_time(states=[1,0,2],commitment=[True,True,True])
+(array([ 0.]), array([ 0.]))
+aa.first_committed_passage_time(states=[1,0,2],commitment=[True,False,True])
+(array([ 1.,  2.,  3.]), array([ 2.,  2.,  2.]))
+aa.first_committed_passage_time(states=[1,3,2],commitment=[True,True,True])
+(array([ 2.,  3.]), array([ 1.,  1.]))
+aa.first_committed_passage_time(states=[1,3,2],commitment=[True,False,True])
+(array([ 1.,  2.,  3.,  4.,  5.]), array([ 2.,  1.,  2.,  1.,  1.]))
+aa.first_committed_passage_time(states=[1,4,2],commitment=[True,True,True])
+(array([ 0.]), array([ 0.]))
+aa.first_committed_passage_time(states=[1,4,2],commitment=[True,False,True])
+(array([ 1.,  2.,  3.,  4.,  5.]), array([ 2.,  2.,  3.,  1.,  1.]))</p>
+<p>aa=kinetic_1D_analysis([1,3,1,2,1,0,1,0,1,2,1,0,0,2])
+aa.first_committed_passage_time(states=[1,2],commitment=[True,True])
+(array([ 1.]), array([ 2.]))
+aa.first_committed_passage_time(states=[1,0,2],commitment=[True,True,True])
+(array([ 3.]), array([ 1.]))
+aa.first_committed_passage_time(states=[1,0,2],commitment=[True,False,True])
+(array([ 1.,  3.]), array([ 2.,  1.]))
+aa.first_committed_passage_time(states=[1,3,2],commitment=[True,True,True])
+(array([ 0.]), array([ 0.]))
+aa.first_committed_passage_time(states=[1,3,2],commitment=[True,False,True])
+(array([ 1.,  3.,  5.]), array([ 2.,  2.,  1.]))
+aa.first_committed_passage_time(states=[1,4,2],commitment=[True,True,True])
+(array([ 0.]), array([ 0.]))
+aa.first_committed_passage_time(states=[1,4,2],commitment=[True,False,True])
+(array([ 1.,  3.,  5.]), array([ 2.,  3.,  1.]))</p>
+<p>&#8212; noreturn</p>
+<p>aa=kinetic_1D_analysis([1,0,1,0,2])
+aa.first_committed_passage_time(states=[1,2],commitment=[True,True],no_return=True)
+(array([ 0.]), array([ 0.]))
+aa.first_committed_passage_time(states=[1,0,2],commitment=[True,True,True],no_return=True)
+(array([ 2.]), array([ 1.]))
+aa.first_committed_passage_time(states=[1,0,2],commitment=[True,False,True],no_return=True)
+(array([ 0.]), array([ 0.]))
+aa.first_committed_passage_time(states=[1,3,2],commitment=[True,True,True],no_return=True)
+(array([ 0.]), array([ 0.]))
+aa.first_committed_passage_time(states=[1,3,2],commitment=[True,False,True],no_return=True)
+(array([ 2.]), array([ 1.]))</p>
+<p>aa=kinetic_1D_analysis([1,1,1,2,1,1,1,0,1,2,1,1,3,2])
+aa.first_committed_passage_time(states=[1,2],commitment=[True,True],no_return=True)
+(array([ 1.,  2.,  3.]), array([ 2.,  1.,  1.]))
+aa.first_committed_passage_time(states=[1,0,2],commitment=[True,True,True],no_return=True)
+(array([ 0.]), array([ 0.]))
+aa.first_committed_passage_time(states=[1,0,2],commitment=[True,False,True],no_return=True)
+(array([ 1.,  2.,  3.]), array([ 2.,  2.,  2.]))
+aa.first_committed_passage_time(states=[1,3,2],commitment=[True,True,True],no_return=True)
+(array([ 2.,  3.]), array([ 1.,  1.]))
+aa.first_committed_passage_time(states=[1,3,2],commitment=[True,False,True],no_return=True)
+(array([ 1.,  2.,  3.]), array([ 2.,  1.,  1.]))
+aa.first_committed_passage_time(states=[1,4,2],commitment=[True,True,True],no_return=True)
+(array([ 0.]), array([ 0.]))
+aa.first_committed_passage_time(states=[1,4,2],commitment=[True,False,True],no_return=True)
+(array([ 1.,  2.,  3.]), array([ 2.,  2.,  2.]))</p>
+<p>aa=kinetic_1D_analysis([1,3,1,2,1,0,1,0,1,2,1,0,0,2])
+aa.first_committed_passage_time(states=[1,2],commitment=[True,True],no_return=True)
+(array([ 1.]), array([ 2.]))
+aa.first_committed_passage_time(states=[1,0,2],commitment=[True,True,True],no_return=True)
+(array([ 3.]), array([ 1.]))
+aa.first_committed_passage_time(states=[1,0,2],commitment=[True,False,True],no_return=True)
+(array([ 1.]), array([ 2.]))
+aa.first_committed_passage_time(states=[1,3,2],commitment=[True,True,True],no_return=True)
+(array([ 0.]), array([ 0.]))
+aa.first_committed_passage_time(states=[1,3,2],commitment=[True,False,True],no_return=True)
+(array([ 1.,  3.]), array([ 2.,  1.]))
+aa.first_committed_passage_time(states=[1,4,2],commitment=[True,True,True],no_return=True)
+(array([ 0.]), array([ 0.]))
+aa.first_committed_passage_time(states=[1,4,2],commitment=[True,False,True],no_return=True)
+(array([ 1.,  3.]), array([ 2.,  1.]))</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo_medium.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Kinetic Analysis</a><ul>
+<li><a class="reference internal" href="#d-trajectories">1D trajectories</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../source_ms/tutorial.html"
+                        title="previous chapter">Tutorials</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="tutorial_kinetic_analysis.html"
+                        title="next chapter">Tutorial Kinetic Analysis</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="tutorial_kinetic_analysis.html" title="Tutorial Kinetic Analysis"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../source_ms/tutorial.html" title="Tutorials"
+             >previous</a> |</li>
+        <li><a href="../index.html">AquaLab 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Diego Prada-Gracia.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

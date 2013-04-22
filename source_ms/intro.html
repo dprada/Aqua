@@ -1,0 +1,187 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Introduction &mdash; AquaLab 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="AquaLab 0.1 documentation" href="../index.html" />
+    <link rel="next" title="Molecular system" href="msystem.html" />
+    <link rel="prev" title="Getting Started" href="../source_intro/getting_started.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="msystem.html" title="Molecular system"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../source_intro/getting_started.html" title="Getting Started"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">AquaLab 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="a-quick-view">
+<h2>A quick view<a class="headerlink" href="#a-quick-view" title="Permalink to this headline">¶</a></h2>
+<p>General description with a general list of what can be done and a first example on whats a molecule.</p>
+<div class="section" id="example">
+<h3>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
+<p>Download the files <a class="reference download internal" href="../_downloads/metenk.pdb"><tt class="xref download docutils literal"><span class="pre">metenk.pdb</span></tt></a> and
+<a class="reference download internal" href="../_downloads/traj_metenk.xtc"><tt class="xref download docutils literal"><span class="pre">traj_metenk.xtc</span></tt></a> to run a short
+example with the Methionine-Enkephaline coming from the 1PLW pdb.</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span class="gp">In [1]: </span><span class="kn">from</span> <span class="nn">aqua</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="gp">In [2]: </span><span class="n">metenk</span><span class="o">=</span><span class="n">msystem</span><span class="p">(</span><span class="s">&#39;metenk.pdb&#39;</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="c"># System created from the file metenk.pdb :</span>
+<span class="c"># 6015  atoms</span>
+<span class="c"># 1490  residues</span>
+<span class="c"># 2  chains</span>
+<span class="c"># 1485  waters</span>
+<span class="c"># 0  ions</span>
+
+<span class="gp">In [3]: </span><span class="n">idS</span><span class="o">=</span><span class="n">metenk</span><span class="o">.</span><span class="n">selection</span><span class="p">(</span><span class="s">&#39;atom.type S&#39;</span><span class="p">)</span>
+
+<span class="gp">In [4]: </span><span class="k">print</span> <span class="s">&#39;The atom&#39;</span><span class="p">,</span><span class="n">metenk</span><span class="o">.</span><span class="n">atom</span><span class="p">[</span><span class="n">idS</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">info</span><span class="p">(),</span><span class="s">&#39;has the internal index:&#39;</span><span class="p">,</span> <span class="n">idS</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">The atom SD-68/MET-5 has the internal index: 67</span>
+
+<span class="gp">In [5]: </span><span class="n">metenk</span><span class="o">.</span><span class="n">info_trajs</span><span class="p">()</span>
+<span class="c"># No coordinates</span>
+
+<span class="gp">In [6]: </span><span class="n">metenk</span><span class="o">.</span><span class="n">load_traj</span><span class="p">(</span><span class="s">&#39;traj_metenk.xtc&#39;</span><span class="p">,</span><span class="n">frame</span><span class="o">=</span><span class="s">&#39;ALL&#39;</span><span class="p">,</span><span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="c"># 21 frames/models in traj 0</span>
+
+<span class="gp">In [7]: </span><span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="n">metenk</span><span class="o">.</span><span class="n">traj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">frame</span><span class="p">:</span>
+<span class="go">   ...:     print &#39;# Step&#39;,ii.step,&#39;(t=&#39;+str(ii.time)+&#39;)&#39;,&#39;SD-68/MET-5 at&#39;, ii.coors[idS[0]]</span>
+<span class="go">   ...:</span>
+<span class="go">Step 0 (t=0.0) SD-68/MET-5 at [ 19.8200016   12.90999985    19.6400013 ]</span>
+<span class="go">Step 5000 (t=10.0) SD-68/MET-5 at [ 19.87000084    13.27000046  19.44000053]</span>
+<span class="go">Step 10000 (t=20.0) SD-68/MET-5 at [ 20.09000015    12.96000004  18.93000031]</span>
+<span class="go">...</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="msystem.html#msystem" title="msystem"><tt class="xref py py-class docutils literal"><span class="pre">msystem</span></tt></a>, <tt class="xref py py-class docutils literal"><span class="pre">atom</span></tt> , <a class="reference internal" href="functions.html#msystem.selection" title="msystem.selection"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.selection()</span></tt></a>, <a class="reference internal" href="functions.html#msystem.load_traj" title="msystem.load_traj"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.load_traj()</span></tt></a>, <a class="reference internal" href="functions.html#msystem.info_trajs" title="msystem.info_trajs"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.info_trajs()</span></tt></a>, <a class="reference internal" href="coors.html#traj" title="traj"><tt class="xref py py-class docutils literal"><span class="pre">traj</span></tt></a>, <tt class="xref py py-class docutils literal"><span class="pre">frame</span></tt></p>
+</div>
+</div>
+</div>
+<div class="section" id="units">
+<h2>Units<a class="headerlink" href="#units" title="Permalink to this headline">¶</a></h2>
+<p><strong>Aqua</strong> works with the following units no matter the input data.</p>
+<ul class="simple">
+<li>Length: Angstroms</li>
+<li>Angles: Degrees</li>
+<li>Time:   Picoseconds</li>
+</ul>
+</div>
+<div class="section" id="periodic-box-and-cell">
+<h2>Periodic Box and Cell<a class="headerlink" href="#periodic-box-and-cell" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt><strong>Aqua</strong> sets the coordinates of a molecular system always in the</dt>
+<dd>positive cuadrant. This way any atom is placed is found in
+{[0,Lx),[0,Ly),[0,Lz)}, where Lx, Ly and Lz are the dimensions of
+the cubic box. It implies that <strong>molecules can be split if they are
+over the box edges</strong>.</dd>
+<dt><strong>Aqua</strong> works with cubic boxes at the moment. Orthorombic cells with</dt>
+<dd>angles different from 90 degrees are not supported yet.</dd>
+</dl>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/logo_medium.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Introduction</a><ul>
+<li><a class="reference internal" href="#a-quick-view">A quick view</a><ul>
+<li><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#units">Units</a></li>
+<li><a class="reference internal" href="#periodic-box-and-cell">Periodic Box and Cell</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../source_intro/getting_started.html"
+                        title="previous chapter">Getting Started</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="msystem.html"
+                        title="next chapter">Molecular system</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="msystem.html" title="Molecular system"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../source_intro/getting_started.html" title="Getting Started"
+             >previous</a> |</li>
+        <li><a href="../index.html">AquaLab 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Diego Prada-Gracia.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
