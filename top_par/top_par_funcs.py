@@ -2,7 +2,7 @@
 
 user_topol=[]
 
-def add_topol(self,file_topol):
+def add_topol(self,file_topol,verbose=False):
 
    newtop= __import__(file_topol)
    
@@ -43,3 +43,8 @@ def add_topol(self,file_topol):
 
    self.residue_atoms[newtop.residue_name]=new_list_ats
    self.covalent_bonds[newtop.residue_name]=new_cov_bonds
+
+   if verbose:
+      print '# New topology:',newtop.residue_name
+      print '#',newtop.residue_type,'with', len(newtop.atoms),'atoms and', len(newtop.covalent_bonds),'covalent bonds.'
+

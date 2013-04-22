@@ -12,6 +12,6 @@ from top_par_funcs import *
 from residue_top import *
 
 #### List of new topologies made by the user:
-user_topol.append('top_par_template')
+#user_topol.append('top_par_template')
 
 

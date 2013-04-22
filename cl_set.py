@@ -1,7 +1,7 @@
 ####################################
 # GENERAL COMMENTS
 
-NAME_VERSION="Aqua 0.2"
+NAME_VERSION="Aqua 0.1"
 
 #
 # This module requires:
@@ -743,6 +743,27 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
         fff.close()
         return A
 
+    def add_donors(self,select=None,verbose=False):
+        setdon,nlist,numsys=__read_set_opt__(self,select)
+        for ii in setdon:
+            self.atom[ii].donor=True
+            with_h=False
+            for jj in self.atom.covalent_bonds:
+                if self.atom[jj].type=='H':
+                    self.donors[0].append(ii)
+                    self.donors[1].append(jj)
+            if not with_h:
+                print '# No H atom bonded to',self.atom[ii].info()
+        if verbose:
+            print '#',nlist,'donors added.'
+
+    def add_acceptors(self,select=None,verbose=False):
+        setacc,nlist,numsys=__read_set_opt__(self,select)
+        for ii in setacc:
+            self.atom[ii].acceptor=True
+            self.acceptors.append(ii)
+        if verbose:
+            print '#',nlist,'acceptors added.'
 
     # To handle coordinates
 
@@ -2268,6 +2289,16 @@ def hbonds_type(option=None,verbose=True):
 
 
 ######################################################
+
+def add_user_topol(file_topol=None,verbose=False):
+
+    if file_topol.endswith('.py'):
+        file_topol.replace('.py','')
+
+    tp.add_topol(tp,file_topol,verbose)
+
+######################################################
+
 
 def selection_covalent_chains(system=None,chain=None,select=None):
 

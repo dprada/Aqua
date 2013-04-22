@@ -2,6 +2,8 @@
 Functions
 *********
 
+
+
 Topology
 ========
 
@@ -18,6 +20,23 @@ function is called implicitly by construction.
    :return: None
 
 See topology formats for additional info.
+
+Top_Par defined by user
++++++++++++++++++++++++
+
+AquaLab gives with this function the posibility to include user
+defined topologies and parameters.  A python script as the one found
+in
+:download:`Aqua/top_par/top_par_template.py<../source_faqs/static_ms/top_par_template.py>`
+needs to be included in the working directory to be read with:
+
+.. method:: add_user_topol(file_topol=None,verbose=False)
+
+   :arg str file_topol: Name of input file with top_par defined by the user.
+   :arg bool verbose: Prints out general information.
+   :return: None
+   :prints out: General information if verbose=True.
+
 
 Selection
 +++++++++
@@ -52,6 +71,24 @@ Find some examples in section Tutorial-Syntaxis.
 
 .. seealso:: :ref:`ms-tut-selections`
 
+Donors and Acceptors
+++++++++++++++++++++
+
+.. method:: msystem.add_donors(select=None,verbose=False)
+
+   :arg select: List or selection of atoms
+   :type select: int, list[int], string.
+   :arg bool verbose: Prints out general information.
+   :return: None
+   :prints out: General information if verbose=True.
+
+.. method:: msystem.add_acceptors(select=None,verbose=False)
+
+   :arg select: List or selection of atoms
+   :type select: int, list[int], string.
+   :arg bool verbose: Prints out general information.
+   :return: None
+   :prints out: General information if verbose=True.
 
 Info
 ++++
@@ -60,6 +97,8 @@ Info
 
    :return: None
    :prints out: General information of the molecular system.
+
+
 
 Writting pdb files
 ++++++++++++++++++

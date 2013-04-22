@@ -15,7 +15,7 @@ proceed:
 
 1. Create your own psf file to initialize the :class:`msystem`. If the
    psf file does not include a list of donors and acceptors, they have to
-   be set up (see...).
+   be set up with :meth:`msystem.add_donors` and :meth:`msystem.add_acceptors`.
 
 2. Find a template to create a new topology in
    :download:`Aqua/top_par/top_par_template.py<static_ms/top_par_template.py>`. Include
@@ -28,7 +28,7 @@ proceed:
    :download:`Aqua/top_par/top_par_template.py<static_ms/top_par_template.py>`. Include
    in your working directory an edited copy with the description of
    your molecular system. Run your script loading the new topology
-   with xxx before initializing the :class:`msystem`.
+   with :meth:`add_user_topol` before initializing the :class:`msystem`.
 
 
 
