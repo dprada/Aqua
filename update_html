@@ -3,8 +3,8 @@
 cp -r doc/html/* .
 
 touch .nojekyll
-git add .nojekyll *.html *.inv *.js _downloads/* _images/* _sources/* _static/* _themes/*
+git add .nojekyll *.html *.inv *.js _downloads/* _images/* _sources/* _static/* 
 git add source_csn/* source_faqs/* source_intro/* source_kl/* source_ms/*
-git commit -a -m 'Updating Documentation.'
-git push 
+#git commit -a -m 'Updating Documentation.'
+#git push 
 
