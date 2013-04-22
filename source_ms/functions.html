@@ -76,6 +76,37 @@ function is called implicitly by construction.</p>
 
 <p>See topology formats for additional info.</p>
 </div>
+<div class="section" id="top-par-defined-by-user">
+<h3>Top_Par defined by user<a class="headerlink" href="#top-par-defined-by-user" title="Permalink to this headline">¶</a></h3>
+<p>AquaLab gives with this function the posibility to include user
+defined topologies and parameters.  A python script as the one found
+in
+<a class="reference download internal" href="../_downloads/top_par_template1.py"><tt class="xref download docutils literal"><span class="pre">Aqua/top_par/top_par_template.py</span></tt></a>
+needs to be included in the working directory to be read with:</p>
+<dl class="method">
+<dt id="add_user_topol">
+<tt class="descname">add_user_topol</tt><big>(</big><em>file_topol=None</em>, <em>verbose=False</em><big>)</big><a class="headerlink" href="#add_user_topol" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>file_topol</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Name of input file with top_par defined by the user.</li>
+<li><strong>verbose</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Prints out general information.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">None</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Prints out:</th><td class="field-body"><p class="first last">General information if verbose=True.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
 <div class="section" id="selection">
 <h3>Selection<a class="headerlink" href="#selection" title="Permalink to this headline">¶</a></h3>
 <dl class="method">
@@ -125,6 +156,55 @@ matter if are written in capital or lower case, and the characters:
 <p class="last"><a class="reference internal" href="tutorial.html#ms-tut-selections"><em>How to make atoms selections</em></a></p>
 </div>
 </div>
+</div>
+<div class="section" id="donors-and-acceptors">
+<h3>Donors and Acceptors<a class="headerlink" href="#donors-and-acceptors" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="msystem.add_donors">
+<tt class="descclassname">msystem.</tt><tt class="descname">add_donors</tt><big>(</big><em>select=None</em>, <em>verbose=False</em><big>)</big><a class="headerlink" href="#msystem.add_donors" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>select</strong> (<em>int, list[int], string.</em>) &#8211; List or selection of atoms</li>
+<li><strong>verbose</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Prints out general information.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">None</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Prints out:</th><td class="field-body"><p class="first last">General information if verbose=True.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="msystem.add_acceptors">
+<tt class="descclassname">msystem.</tt><tt class="descname">add_acceptors</tt><big>(</big><em>select=None</em>, <em>verbose=False</em><big>)</big><a class="headerlink" href="#msystem.add_acceptors" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>select</strong> (<em>int, list[int], string.</em>) &#8211; List or selection of atoms</li>
+<li><strong>verbose</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Prints out general information.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">None</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Prints out:</th><td class="field-body"><p class="first last">General information if verbose=True.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
 <div class="section" id="info">
 <h3>Info<a class="headerlink" href="#info" title="Permalink to this headline">¶</a></h3>
@@ -581,10 +661,12 @@ dihedral angle. The output</p>
 <li><a class="reference internal" href="#">Functions</a><ul>
 <li><a class="reference internal" href="#topology">Topology</a><ul>
 <li><a class="reference internal" href="#loading">Loading</a></li>
+<li><a class="reference internal" href="#top-par-defined-by-user">Top_Par defined by user</a></li>
 <li><a class="reference internal" href="#selection">Selection</a><ul>
 <li><a class="reference internal" href="#syntaxis">Syntaxis</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#donors-and-acceptors">Donors and Acceptors</a></li>
 <li><a class="reference internal" href="#info">Info</a></li>
 <li><a class="reference internal" href="#writting-pdb-files">Writting pdb files</a></li>
 </ul>

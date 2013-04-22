@@ -52,6 +52,32 @@
             
   <div class="section" id="molecular-systems">
 <h1>Molecular Systems<a class="headerlink" href="#molecular-systems" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="the-topology-of-my-molecular-system-is-not-recognized-by-aqualab">
+<h2>The topology of my molecular system is not recognized by AquaLab.<a class="headerlink" href="#the-topology-of-my-molecular-system-is-not-recognized-by-aqualab" title="Permalink to this headline">¶</a></h2>
+<p>When a <a class="reference internal" href="../source_ms/msystem.html#msystem" title="msystem"><tt class="xref py py-class docutils literal"><span class="pre">msystem</span></tt></a> is initialized with a pdb or gro file, the topology
+-covalent bonds- and the properties of atoms are taken from the data
+stored in the directory Aqua/top_par. These pre-defined topologies have
+been implemented according to the residue and atom names found in the
+most popular water and protein models included in GROMACS, CHARMM or NAMD.</p>
+<p>If your system is not described by AquaLab there are three ways to
+proceed:</p>
+<ol class="arabic simple">
+<li>Create your own psf file to initialize the <a class="reference internal" href="../source_ms/msystem.html#msystem" title="msystem"><tt class="xref py py-class docutils literal"><span class="pre">msystem</span></tt></a>. If the
+psf file does not include a list of donors and acceptors, they have to
+be set up with <a class="reference internal" href="../source_ms/functions.html#msystem.add_donors" title="msystem.add_donors"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.add_donors()</span></tt></a> and <a class="reference internal" href="../source_ms/functions.html#msystem.add_acceptors" title="msystem.add_acceptors"><tt class="xref py py-meth docutils literal"><span class="pre">msystem.add_acceptors()</span></tt></a>.</li>
+<li>Find a template to create a new topology in
+<a class="reference download internal" href="../_downloads/top_par_template.py"><tt class="xref download docutils literal"><span class="pre">Aqua/top_par/top_par_template.py</span></tt></a>. Include
+an edited copy with the description of your molecular system in the
+directory Aqua/top_par. And add to the file Aqua/top_par/top_par.py
+the line: &#8220;user_topol.append(&#8216;your_top_par_file_name&#8217;)&#8221;. It is time
+now to run your script calling <a class="reference internal" href="../source_ms/msystem.html#msystem" title="msystem"><tt class="xref py py-class docutils literal"><span class="pre">msystem</span></tt></a>.</li>
+<li>Find a template to create a new topology in the file
+<a class="reference download internal" href="../_downloads/top_par_template.py"><tt class="xref download docutils literal"><span class="pre">Aqua/top_par/top_par_template.py</span></tt></a>. Include
+in your working directory an edited copy with the description of
+your molecular system. Run your script loading the new topology
+with <a class="reference internal" href="../source_ms/functions.html#add_user_topol" title="add_user_topol"><tt class="xref py py-meth docutils literal"><span class="pre">add_user_topol()</span></tt></a> before initializing the <a class="reference internal" href="../source_ms/msystem.html#msystem" title="msystem"><tt class="xref py py-class docutils literal"><span class="pre">msystem</span></tt></a>.</li>
+</ol>
+</div>
 </div>
 
 
@@ -63,6 +89,14 @@
             <p class="logo"><a href="../index.html">
               <img class="logo" src="../_static/logo_medium.png" alt="Logo"/>
             </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Molecular Systems</a><ul>
+<li><a class="reference internal" href="#the-topology-of-my-molecular-system-is-not-recognized-by-aqualab">The topology of my molecular system is not recognized by AquaLab.</a></li>
+</ul>
+</li>
+</ul>
+
   <h4>Previous topic</h4>
   <p class="topless"><a href="../source_csn/tutorial.html"
                         title="previous chapter">Tutorials</a></p>
