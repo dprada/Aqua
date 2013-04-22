@@ -1,15 +1,16 @@
-###########################################################
-### Template to create a new topology with new parameters.
-###########################################################
+############################################################
+### Template to create a new topology with new parameters. #
+### ------------------------------------------------------ #
+###   This is an example with the molecule Fluoroethanol   #
+###              thanks to Tristan Bereau                  #
+############################################################
 
-##### THIS IS AN EXAMPLE WITH FLUOROETHANOL
+### Name of molecule in pdb and type (residue_types.py)
 
-## name of molecule in pdb and type (residue_types.py)
-
-residue_name='LIG'
+residue_name='LIG'        # Same residue or molecule name found in your pdb or gro file. 
 residue_type='Molecule'   # Molecule, Ligand, Protein, Water, Ion, DNA, ...
 
-## Atoms:
+### Atoms:
 
 atoms={
 #'atom_name' : 'atom_type' ,
@@ -46,7 +47,7 @@ acceptors=[
 'F1'
 ]
 
-## Bonds:
+### Bonds:
 
 covalent_bonds=[
 ['C1'   ,'C2'    ],
