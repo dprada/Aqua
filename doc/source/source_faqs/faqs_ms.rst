@@ -1,5 +1,5 @@
-Molecular Systems
-+++++++++++++++++
+FAQs: Molecular Systems
++++++++++++++++++++++++
 
 The topology of my molecular system is not recognized by AquaLab.
 =================================================================

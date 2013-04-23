@@ -1187,7 +1187,7 @@ class network():
         return
 
 
-    def cfep(self,mode='pfold',A=0,B=0,num_bins=100000,num_iter=200000):
+    def cfep(self,mode='pfold',A=0,B=0,num_bins=10000,num_iter=20000,KbT=(0.0019872*300.0)):
 
         if self.Ts==False:
 
@@ -1349,10 +1349,17 @@ class network():
                         Clust[pfff[ii]].append(ii)
 
         aux=numpy.array(Clust.keys(),dtype=int)
+        aux_rep=numpy.zeros(aux.shape[0],dtype=int)
         weight_clusts=numpy.zeros((self.num_clusters),dtype=float)
         for ii in range(aux.shape[0]):
+            wrep=0.0
+            jjrep=0
             for jj in Clust[aux[ii]]:
                 weight_clusts[ii]+=self.node[jj].weight
+                if wrep<self.node[jj].weight:
+                    jjrep=jj
+                    wrep=self.node[jj].weight
+            aux_rep[ii]=jjrep
 
         tosort=weight_clusts.argsort(kind="mergesort")
 
@@ -1361,8 +1368,9 @@ class network():
         for ii in range(tosort.shape[0]-1,-1,-1):
             kk=tosort[ii]
             jj=aux[kk]
+            jjrep=aux_rep[kk]
             temp=cl_cluster()
-            temp.label=self.node[jj].label
+            temp.label=self.node[jjrep].label
             temp.nodes=Clust[jj]
             temp.num_nodes=len(temp.nodes)
             temp.weight=weight_clusts[kk]
