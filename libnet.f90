@@ -1997,7 +1997,7 @@ SUBROUTINE cfep_pfold2 (opt_bins,plot,node_index,A,B,T_ind,T_tau,T_start,length,
 
 END SUBROUTINE cfep_pfold2
 
-SUBROUTINE cfep_pfold3 (opt_bins,plot,values,node_index,A,B,T_ind,T_tau,T_start,length,num_iter,N_nodes,Ktot,KbT)
+SUBROUTINE cfep_pfold3 (opt_bins,plot,values,node_index,A,B,T_ind,T_tau,T_start,length,num_iter,KbT,N_nodes,Ktot)
 
   implicit none
 
@@ -2064,7 +2064,7 @@ SUBROUTINE cfep_pfold3 (opt_bins,plot,values,node_index,A,B,T_ind,T_tau,T_start,
 
 
   DO times=1,num_iter
-     print*, times
+
      Pf2(AA)=1.0d0
      Pf2(BB)=0.0d0
      Pf=Pf2
@@ -2143,9 +2143,9 @@ SUBROUTINE cfep_pfold3 (opt_bins,plot,values,node_index,A,B,T_ind,T_tau,T_start,
      Z=sum(Pe(:),dim=1)
 
      ALLOCATE(orderpf(N_nodes))
-     print*,'buckets'
+
      CALL sort_by_buckets (orderpf,0.0d0,1.0d0,100,2500,Pf,N_nodes)
-     print*,'sale'
+
 
 !!$     print*,'ahi va viejo'
 !!$
@@ -2190,7 +2190,7 @@ SUBROUTINE cfep_pfold3 (opt_bins,plot,values,node_index,A,B,T_ind,T_tau,T_start,
      END DO
 
      DO i=1,N_nodes
-        print*, i
+
         g=orderpf(i)
         aux_de_pf=Pf(g)
         DO j=T_start(g)+1,T_start(g+1)

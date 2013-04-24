@@ -1187,7 +1187,7 @@ class network():
         return
 
 
-    def cfep(self,mode='pfold',A=0,B=0,num_bins=10000,num_iter=20000,KbT=(0.0019872*300.0)):
+    def cfep(self,mode='pfold',A=0,B=0,num_bins=0,num_iter=20000,KbT=(0.0019872*300.0)):
 
         if self.Ts==False:
 
@@ -1199,8 +1199,8 @@ class network():
             if num_bins<1:
                 num_bins=self.num_nodes
                 opt_bins=0
-            cfep_out,pfold_vals,key_cfep=f_net.cfep_pfold3(opt_bins,A,B,self.T_ind,self.T_wl,self.T_start,num_bins,num_iter,self.num_nodes,self.k_total,KbT)
-            return cfep[0,:],cfep[1,:],cfep[2,:],key_cfep,pfold_vals
+            cfep_out,pfold_vals,key_cfep=f_net.cfep_pfold3(opt_bins,A,B,self.T_ind,self.T_wl,self.T_start,num_bins,num_iter,KbT,self.num_nodes,self.k_total)
+            return cfep_out[0,:],cfep_out[1,:],cfep_out[2,:],key_cfep,pfold_vals
 
         if mode=='mfpt':
 
