@@ -41,13 +41,13 @@ class pyn_traj_file():
         print '# Opened:',self.io
         print '# Position:',self.iopos
         print '# End:',self.ioend
-        if self.frames==None:
-            print '# Frames: Needed!!!'
-        else:
-            print '# Frames:', self.frames
-        print '# Particles:', self.particles
-        print '# Dimensions:', self.dimensions
-        print '# Data type:', self.dtype.__name__
+        #if self.frames==None:
+        #    print '# Frames: Needed!!!'
+        #else:
+        #    print '# Frames:', self.frames
+        #print '# Particles:', self.particles
+        #print '# Dimensions:', self.dimensions
+        #print '# Data type:', self.dtype.__name__
 
     def open(self):
 

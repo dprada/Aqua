@@ -129,7 +129,8 @@ CFEPs
                mode='mfpt'.  
    :arg int B: Index of node with Pfold=0.0 if
                mode='pfold'. Not required if mode='mfpt'.  
-   :arg int num_binds: Number of bins to discretize the X coord (Za/Z). If num_binds=0, a
+   :arg int num_binds: Number of bins to discretize the X coord (Za/Z). If num_bins=0, a
                        point [X,Y] is computed every ranked node according to the Pfold or mfpt value.
    :arg int num_iter: Number of iterations to compute the Pfold or mfpt values for each node.
    :arg float KbT: Value of KbT. (Kb=0.0019872 kcal/mol/K or Kb=0.0083144 kJ/mol/K)
+   :returns: xcfep,ycfep,zcfep,node_vals,node_x

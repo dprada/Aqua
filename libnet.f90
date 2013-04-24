@@ -1997,7 +1997,7 @@ SUBROUTINE cfep_pfold2 (opt_bins,plot,node_index,A,B,T_ind,T_tau,T_start,length,
 
 END SUBROUTINE cfep_pfold2
 
-SUBROUTINE cfep_pfold3 (opt_bins,plot,node_index,A,B,T_ind,T_tau,T_start,length,num_iter,N_nodes,Ktot)
+SUBROUTINE cfep_pfold3 (opt_bins,plot,values,node_index,A,B,T_ind,T_tau,T_start,length,num_iter,N_nodes,Ktot,KbT)
 
   implicit none
 
@@ -2010,8 +2010,10 @@ SUBROUTINE cfep_pfold3 (opt_bins,plot,node_index,A,B,T_ind,T_tau,T_start,length,
   INTEGER,DIMENSION(Ktot),INTENT(IN)::T_ind
   DOUBLE PRECISION,DIMENSION(Ktot),INTENT(IN)::T_tau
   INTEGER,DIMENSION(N_nodes+1),INTENT(IN)::T_start
+  DOUBLE PRECISION,INTENT(IN)::KbT
 
   DOUBLE PRECISION,DIMENSION(length,3),INTENT(OUT)::plot
+  DOUBLE PRECISION,DIMENSION(N_nodes),INTENT(OUT)::values
   INTEGER,DIMENSION(N_nodes),INTENT(OUT)::node_index
 
   DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::Pe
@@ -2033,7 +2035,7 @@ SUBROUTINE cfep_pfold3 (opt_bins,plot,node_index,A,B,T_ind,T_tau,T_start,length,
   logical::interr
   TYPE(int_pointer),DIMENSION(:),POINTER::buckets
   INTEGER,DIMENSION(:),ALLOCATABLE::occup_buckets,orden
-  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::valores
+  !DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::values
   double precision::lim_top,val_aux
 
   PRINT*, 'SIIII'
@@ -2041,6 +2043,7 @@ SUBROUTINE cfep_pfold3 (opt_bins,plot,node_index,A,B,T_ind,T_tau,T_start,length,
   AA=A+1
   BB=B+1
 
+  values=0.0d0
   plot=0.0d0
   node_index=0
 
@@ -2078,7 +2081,8 @@ SUBROUTINE cfep_pfold3 (opt_bins,plot,node_index,A,B,T_ind,T_tau,T_start,length,
   Pf2(AA)=1.0d0
   Pf2(BB)=0.0d0
   Pf=Pf2
-  
+  values=Pf2
+
   DEALLOCATE(Pf2)
 
   IF (opt_bins==1) THEN
@@ -2232,12 +2236,12 @@ SUBROUTINE cfep_pfold3 (opt_bins,plot,node_index,A,B,T_ind,T_tau,T_start,length,
            END IF
         END DO
         plot(i,3)=aux_de_pf
-        node_index(i)=g-1
+        node_index(g)=i-1   ! lo he cambiado
      END DO
 
      DO i=1,N_nodes
         plot(i,1)=plot(i,1)/Z
-        !plot(i,2)=-300.0d0*0.0020d0*log(plot(i,2)/Z)
+        !plot(i,2)=-KbT*log(plot(i,2)/Z)
         plot(i,2)=plot(i,2)/Z
      END DO
 
