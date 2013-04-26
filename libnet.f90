@@ -2038,8 +2038,6 @@ SUBROUTINE cfep_pfold3 (opt_bins,plot,values,node_index,A,B,T_ind,T_tau,T_start,
   !DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::values
   double precision::lim_top,val_aux
 
-  PRINT*, 'SIIII'
-
   AA=A+1
   BB=B+1
 
@@ -2241,8 +2239,7 @@ SUBROUTINE cfep_pfold3 (opt_bins,plot,values,node_index,A,B,T_ind,T_tau,T_start,
 
      DO i=1,N_nodes
         plot(i,1)=plot(i,1)/Z
-        !plot(i,2)=-KbT*log(plot(i,2)/Z)
-        plot(i,2)=plot(i,2)/Z
+        plot(i,2)=-KbT*log(plot(i,2)/Z)
      END DO
 
   END IF
