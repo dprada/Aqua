@@ -204,6 +204,22 @@ Delete Frames
 
 .. seealso:: .
 
+Converting trajectories
++++++++++++++++++++++++
+
+This function works temporary with the following output formats: dcd.
+
+.. method:: traj.convert(file_name=None,frame='ALL',verbose=False):
+
+   :arg str file_name: Name of new trajectory file.
+   :arg frame: Indexes of frames to be written in the new trajectory file.
+   :type frame: int or list or 'ALL'
+   :arg bool verbose: Prints out general information.
+   :return: None
+   :prints out: General information if verbose=True.
+
+.. seealso:: :ref:`ms-tut-convert-traj`
+
 
 Writting dcd files
 ++++++++++++++++++

@@ -1,4 +1,5 @@
 import io_formats as io
+from os import path
 
 # io_w_vars/io_vars[0]: Number of atoms
 # io_w_vars/io_vars[1]: delta_t
@@ -18,8 +19,8 @@ import io_formats as io
 # io_w_vars/io_vars[22] : if fluctuating charges are present  (INT)
 # io_w_vars/io_vars[23] : if trajectory is the result of merge without consistency checks  (INT)
 
-class cl_traj():
-    def __init__(self,file_input=None,frame=None,begin=None,end=None,increment=1,units=None,verbose=True):
+class traj():
+    def __init__(self,file_input=None,frame=None,begin=None,end=None,increment=1,units=None,verbose=False):
 
         self.io_file=None
         self.io_opened=0
@@ -205,6 +206,39 @@ class cl_traj():
                 pass
 
         pass
+
+    def convert(self,file_name=None,frame='ALL',verbose=False):
+
+        if self.io_w_opened: print '# There is a file opened to write'; return
+        self.io_w_type=file_name.split('.')[1]
+        self.io_w_name=file_name
+        self.io_w_vars     = [0 for ii in range(30)]
+        self.io_w_vars[20] = 1     # 1 if crystal lattice information is present in the frames (INT)
+        self.io_w_vars[0]  = self.io_vars[0]  # Num Atoms
+        self.io_w_vars[1]  = 1.000000 # delta_t (by the moment 1.0d0) 
+        self.io_w_vars[12] = 1 # delta steps to save the data
+        self.io_w_vars[29] = 1001 # id number to identify pynoramix traj. 
+        self.io_w_file,self.io_err=getattr(io,'coor_'+self.io_w_type).open_traj_write(file_name,self.io_w_vars,self.name)
+        if self.io_err: print '# Error opening the file'; return
+        self.io_w_opened=1
+
+        while 1:
+            self.reload_frame()
+            if self.io_end:
+                frames_out=self.io_w_vars[10]
+                self.io_w_vars[13]=self.io_w_vars[10]  # Number of integration steps in the run to create this file  (INT)
+                self.io_err=getattr(io,'coor_'+self.io_w_type).close_traj_write(self.io_w_file,self.io_w_vars)
+                if self.io_err: print '# Error closing the file'; return
+                self.io_w_file=None
+                self.io_w_name=None
+                self.io_w_type=None
+                self.io_w_opened=0
+                self.io_w_vars=[0 for ii in range(30)]
+                break
+            self.io_w_vars[10]+=1
+            self.io_err=getattr(io,'coor_'+self.io_w_type).write_frame(self.io_w_file,self.frame[0])
+        
+        print '#', frames_out,'frames written in',file_name
 
 
     def write(self,file_name=None,frame='ALL',begin=None,end=None,increment=1,units=None,action=None):

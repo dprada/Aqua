@@ -787,7 +787,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 
     def load_traj (self,file_input=None,frame=None,begin=None,end=None,increment=1,units='frames',verbose=False):
 
-        temp_traj=cl_traj(file_input,frame,begin,end,increment,units,verbose=False)
+        temp_traj=traj(file_input,frame,begin,end,increment,units,verbose=False)
         if verbose:
             temp_traj.info(index=len(self.traj))
         self.traj.append(temp_traj)

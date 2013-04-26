@@ -204,7 +204,22 @@ and :download:`GSGS.dcd <../../tutorials/systems_tut1/GSGS.dcd>`.
 Converting a trajectory into other format
 +++++++++++++++++++++++++++++++++++++++++
 
-Right now the output format is only dcd.
+Two functions help us to write a trajectory into a file:
+:meth:`traj.write` and :meth:`traj.convert`.
+In the current version these two functions only works the output formats: dcd.
+
+If some frames of an existing trajectory file need to be converted
+into other format, the following simple script is enough:
+
+.. sourcecode:: ipython
+
+   In [2]: md=traj('traj_metenk.xtc')
+
+   In [3]: md.convert('traj_metenk.dcd',frame='ALL',verbose=True)
+   # 21 frames written in traj_metenk.dcd
+
+
+A more elaborate subroutine does the same using :meth:`traj.write`:
 
 .. sourcecode:: ipython
 
@@ -224,7 +239,10 @@ Right now the output format is only dcd.
       ...:     	  break
       ...:     metenk.traj[0].write(frame=0)
 
-.. seealso:: :class:`msystem`, :class:`traj`, :meth:`msystem.load_traj`, :meth:`msystem.info_trajs`, :meth:`traj.reload_frame`, :meth:`traj.write`
+This former approach can be used to write a set frames produced by the
+user in consequence of an analysis.
+
+.. seealso:: :class:`msystem`, :class:`traj`, :meth:`msystem.convert`, :meth:`msystem.load_traj`, :meth:`msystem.info_trajs`, :meth:`traj.reload_frame`, :meth:`traj.write`
 
 .. _ms-tut-selections:
 
