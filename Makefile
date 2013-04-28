@@ -110,8 +110,9 @@ ifeq ($(FCOMP),gfortran)
 LAPACK_LIBS= -llapack
 endif
 
-# Correction of libxdrfile name:
+# Correction of libxdrfile and libtngfile names:
 lxdrlib = libxdrfile.so.4.0.0
+ltnglib = libtrajng.so
 ifeq ($(PLATF_TYPE),Mac)
 lxdrlib = libxdrfile.4.0.0.dylib
 endif
@@ -133,7 +134,7 @@ PWD=$(shell pwd)
 SOUT=1>> $(PWD)/INSTALL.log 2>> $(PWD)/INSTALL.log
 CHECK=0
 
-default: options pre f90_libraries io_formats/libxdrfile.so fin
+default: options pre f90_libraries io_formats/libxdrfile.so io_formats/libtngfile.so fin
 
 options:
 	@ echo "-----------------------------------------------"
@@ -165,6 +166,17 @@ io_formats/libxdrfile.so: xdrfile-1.1.1.tar.gz
 	@ if grep ': FAILED' INSTALL.log 1>/dev/null ; then echo '> Error: check the file INSTALL.log'; fi
 	@ if ! grep ': FAILED' INSTALL.log 1>/dev/null ; then echo '> io_formats/libxdrfile.so ...   OK';\
 	cp xdrfiles/lib/$(lxdrlib) io_formats/libxdrfile.so; rm -r xdrfiles; fi
+
+io_formats/libtngfile.so: trajng-0.6.1.tar.gz
+	@ echo '>>>>>> Installing the tng library...' > INSTALL.log
+	@ tar -zxvf trajng-0.6.1.tar.gz 1>/dev/null 2>/dev/null
+	@ cd trajng-0.6.1/ ; /bin/bash ./configure CONFIG_SHELL=/bin/bash --prefix=$(PWD)/tngfiles $(SOUT)
+	@ cd trajng-0.6.1/ ; make $(SOUT)
+	@ cd trajng-0.6.1/ ; make install $(SOUT)
+	@ rm -r trajng-0.6.1
+	@ if grep ': FAILED' INSTALL.log 1>/dev/null ; then echo '> Error: check the file INSTALL.log'; fi
+	@ if ! grep ': FAILED' INSTALL.log 1>/dev/null ; then echo '> io_formats/libtngfile.so ...   OK';\
+	cd tngfiles/lib; ar -x libtrajng.a; gcc -shared *.o -o $(ltnglib); cd ../../; cp tngfiles/lib/$(ltnglib) io_formats/libtngfile.so; rm -r tngfiles; fi
 
 f90_libraries: libgeneral.so libwater.so libenm.so libnet.so libmath.so libanaltrajs.so \
 	libkinanal.so libmss.so io_formats/libdcdfile.so io_formats/libbinfile.so io_formats/libcell2box.so
