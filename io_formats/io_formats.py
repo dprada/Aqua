@@ -5,3 +5,4 @@ import coor_xtc as coor_xtc
 import coor_trr as coor_trr
 import coor_bin as coor_bin # Should be deprecated
 import coor_dcd as coor_dcd
+import coor_tng as coor_tng
