@@ -170,7 +170,7 @@ io_formats/libxdrfile.so: xdrfile-1.1.1.tar.gz
 io_formats/libtngfile.so: trajng-0.6.1.tar.gz
 	@ echo '>>>>>> Installing the tng library...' > INSTALL.log
 	@ tar -zxvf trajng-0.6.1.tar.gz 1>/dev/null 2>/dev/null
-	@ cd trajng-0.6.1/ ; /bin/bash ./configure CONFIG_SHELL=/bin/bash --prefix=$(PWD)/tngfiles $(SOUT)
+	@ cd trajng-0.6.1/ ; /bin/bash ./configure CONFIG_SHELL=/bin/bash --prefix=$(PWD)/tngfiles CFLAGS=-fPIC  $(SOUT)
 	@ cd trajng-0.6.1/ ; make $(SOUT)
 	@ cd trajng-0.6.1/ ; make install $(SOUT)
 	@ rm -r trajng-0.6.1

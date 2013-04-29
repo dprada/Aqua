@@ -1233,7 +1233,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
         return xxx,rdf_tot
 
 
-    def neighbs_old(self,setA=None,setB=None,ranking=1,dist=None,traj=0,frame=0,pbc=True):
+    def neighbors(self,setA=None,setB=None,ranking=1,dist=None,traj=0,frame=0,pbc=True):
      
         setA,nlist_A,nsys_A,setB,nlist_B,nsys_B,diff_syst,diff_set=__read_sets_opt__(self,setA,None,setB)
         num_frames=__length_frame_opt__(self,traj,frame)
@@ -1459,8 +1459,52 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 
         elif faux.hbonds.definition == 2 : 
             faux.hbonds.roh2_param= roh_param**2
-            print 'Not implemented yet'
-            pass
+
+            if infile:
+                print 'Not implemented yet'
+                pass
+
+            else:
+
+                if optimize:
+                    gg=0
+                    hbout=[]
+                    for iframe in __read_frame_opt__(self,traj,frame):
+                        if (gg==0): 
+                            self.verlet_list_grid_ns(r1=roh_param,r2=roh_param,rcell=roh_param,iframe=iframe)
+                        else:
+                            self.verlet_list_grid_ns(r1=roh_param,r2=roh_param,rcell=roh_param,iframe=iframe,update=True)
+
+                        faux.hbonds.get_hbonds_roo_ang_ns_list( opt_diff_set, opt_pbc, \
+                                           acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
+                                           iframe.coors,iframe.box,iframe.orthogonal, \
+                                           acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
+                                           nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
+                                           nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
+                                           self.num_atoms)
+
+                        hbout.append([ccopy.deepcopy(faux.glob.hbs_out),ccopy.deepcopy(faux.glob.hbs_vals_out)])
+                        gg+=1
+                else:
+                    hbout=[]
+                    gg=0
+                    for iframe in __read_frame_opt__(self,traj,frame):
+                        faux.hbonds.get_hbonds_roo_ang( opt_diff_set, opt_pbc, \
+                                                        acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
+                                                        iframe.coors,iframe.box,iframe.orthogonal, \
+                                                        acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
+                                                        nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
+                                                        nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
+                                                        self.num_atoms)
+                        hbout.append([ccopy.deepcopy(faux.glob.hbs_out),ccopy.deepcopy(faux.glob.hbs_vals_out)])
+                        gg+=1
+
+            if gg==1:
+                return hbout[0]
+            else:
+                return hbout
+
+                
 
         elif faux.hbonds.definition == 3 : # ROO_ANG
             faux.hbonds.roo2_param, faux.hbonds.cos_angooh_param= roo_param**2, numpy.cos(numpy.radians(angooh_param))

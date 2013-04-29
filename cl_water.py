@@ -88,7 +88,7 @@ def hbonds_water(definition=None,system1=None,system2=None,frame=None,sk_param=0
     f_water.main.nw=system1.num_waters
     f_water.main.initialize_coors_memory()
 
-    __coors2fortran(system1,frame=0)
+    coors2fortran(system1,frame=0)
 
     f_water.hbonds.initialize_hbonds_memory()
 
@@ -223,12 +223,12 @@ def mss_water (system=None,output_array=None,definition='Skinner',sk_param=0.008
 
 def coors2fortran(system,frame=None):
 
-    f_water.main.lbox[:,:]=system.frame[frame].box[:,:]
+    f_water.main.lbox[:,:]=system.traj[0].frame[frame].box[:,:]
 
     for jj in range(system.num_waters):
-        f_water.main.xarr[jj,0,:]=system.frame[frame].coors[system.water[jj].O.index,:]
-        f_water.main.xarr[jj,1,:]=system.frame[frame].coors[system.water[jj].H1.index,:]
-        f_water.main.xarr[jj,2,:]=system.frame[frame].coors[system.water[jj].H2.index,:]
+        f_water.main.xarr[jj,0,:]=system.traj[0].frame[frame].coors[system.water[jj].O.index,:]
+        f_water.main.xarr[jj,1,:]=system.traj[0].frame[frame].coors[system.water[jj].H1.index,:]
+        f_water.main.xarr[jj,2,:]=system.traj[0].frame[frame].coors[system.water[jj].H2.index,:]
         
     pass
     

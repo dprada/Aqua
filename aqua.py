@@ -27,7 +27,7 @@ from cl_anal_trajs import *
 from cl_kin_anal import *
 
 # Water:
-#from cl_water import *
+from cl_water import *
 
 # Networks:
 from cl_net import *
