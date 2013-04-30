@@ -1193,6 +1193,47 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                 return dih_angs
 
 
+    def lrmsd_fit(self,selection_ref=None,traj_ref=None,frame_ref=None,selection=None,traj=None,frame='ALL',new=False):
+     
+        setA,n_A,natoms_A,setB,n_B,natoms_B,diff_system,diff_set=__read_sets_opt__(self,selection_ref,None,selection)
+
+        if n_A!=n_B :
+            print '# Error: Different number of atoms'
+            return
+
+        num_frames=__length_frame_opt__(self,traj,frame)
+        coors_reference=self.traj[traj_ref].frame[frame_ref].coors
+        rmsd_traj=numpy.zeros((num_frames),dtype=float,order='F')
+
+        jj=0
+        if new:
+            fitted_traj=traj()
+        for iframe in __read_frame_opt__(self,traj,frame):
+            rot,center_ref,center_orig,rmsd,g=faux.glob.min_rmsd(coors_reference,iframe.coors,setA,setB,n_A,natoms_A,n_B,natoms_B)
+            coors_new=faux.glob.rot_trans(iframe.coors,rot,center_orig,center_ref,natoms_B)
+            rmsd_traj[jj]=rmsd
+            jj+=1
+            if new:
+                pass
+            else:
+                iframe.coors=coors_new.copy()
+
+        if new:
+            #fitted_set=copy.deepcopy(self)
+            #fitted_set.frame[0].coors=coors_new
+            #fitted_set.pdb_header="Mensaje del fitteo"
+            #fitted_set.rmsd=rmsd
+            return 'To be implemented.'
+        else:
+            #self.frame[0].coors=copy.deepcopy(coors_new)
+            #self.rmsd=rmsd
+            return rmsd_traj
+
+        #print '# RMSD fitting:',rmsd
+            # Use coors_new
+     
+
+
 
 #def min_distance(system,set_a,set_b=None,pbc=True,type_b='atoms'):
 # 
@@ -1240,13 +1281,13 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 
         if dist==None:
             neighbs=[]
-            neighbs=numpy.empty(shape=(nlist_A,ranking,num_frames),dtype=int,order='Fortran')
+            neighbs=numpy.empty(shape=(num_frames,nlist_A,ranking),dtype=int,order='Fortran')
             num_frames=0
             for iframe in __read_frame_opt__(self,traj,frame):
-                neighbs[:,:][num_frames]=faux.glob.neighbs_ranking(diff_syst,diff_set,pbc,ranking,setA,iframe.coors,iframe.box,iframe.orthogonal,setB,iframe.coors,nlist_A,nlist_B,nsys_A,nsys_B)
+                neighbs[num_frames,:,:]=faux.glob.neighbs_ranking(diff_syst,diff_set,pbc,ranking,setA,iframe.coors,iframe.box,iframe.orthogonal,setB,iframe.coors,nlist_A,nlist_B,nsys_A,nsys_B)
                 num_frames+=1
             if num_frames==1:
-                return neighbs[:,:][0]
+                return neighbs[0][:,:]
             else:
                 return neighbs
             
@@ -2095,33 +2136,6 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
     #    #    #pylab.matshow(contact_map==False)
     #    #    return pylab.show()
 
-    #def lrmsd_fit(self,set_ref=None,traj_ref=None,frame_ref=None,selection=None,traj=None,frame=None,new=False):
-    # 
-    #    setA,n_A,natoms_A,setB,n_B,natoms_B,diff_system=__read_sets_opt__(self,set_ref,None,selection)
-    # 
-    #    if n_A!=n_B :
-    #        print '# Error: Different number of atoms'
-    #        return
-    # 
-    #    rot,center_ref,center_orig,rmsd,g=f.aux_funcs_general.min_rmsd(coors_reference,coors_original,len(coors_original))
-    #    coors_new=f.aux_funcs_general.rot_trans(coors_original,rot,center_orig,center_ref,len(coors_original))
-    # 
-    #    
-    #    if new:
-    #        fitted_set=copy.deepcopy(self)
-    #        fitted_set.frame[0].coors=coors_new
-    #         fitted_set.pdb_header="Mensaje del fitteo"
-    #        fitted_set.rmsd=rmsd
-    # 
-    #        return fitted_set
-    #    else:
-    #        self.frame[0].coors=copy.deepcopy(coors_new)
-    #        self.rmsd=rmsd
-    # 
-    #    print '# RMSD fitting:',rmsd
-    #        # Use coors_new
-    # 
-    #    return
 
     #def displ_vector(self,set_reference=None):
     # 
