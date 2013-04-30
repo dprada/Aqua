@@ -13,6 +13,8 @@ residue={
 'GLY'     : 'GLY'    ,
 'HIS'     : 'HIS'    ,
 'HSD'     : 'HIS'    ,
+'HSE'     : 'HIS'    ,
+'HSP'     : 'HIS'    ,
 'HYP'     : 'HYP'    ,
 'ILE'     : 'ILE'    ,
 'LEU'     : 'LEU'    ,
