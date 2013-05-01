@@ -175,11 +175,11 @@ SUBROUTINE read (funit,natom,with_cell,pos_i,pos_o,cell,coors,io_err,io_end)
 
 END SUBROUTINE read
 
-SUBROUTINE open_write(len_ch,file_name,i_vars,i_natom,i_delta_t,origin_name,funit)
+SUBROUTINE open_write(len_ch,file_name,i_vars,i_natom,i_delta_t,funit)
 
   IMPLICIT NONE
   INTEGER,INTENT(IN)::len_ch,i_natom
-  CHARACTER(80),INTENT(IN)::file_name,origin_name
+  CHARACTER(80),INTENT(IN)::file_name
   INTEGER,DIMENSION(20),INTENT(IN)::i_vars
   DOUBLE PRECISION,INTENT(IN)::i_delta_t
   INTEGER,INTENT(OUT)::funit
@@ -212,8 +212,8 @@ SUBROUTINE open_write(len_ch,file_name,i_vars,i_natom,i_delta_t,origin_name,funi
   NATOM=i_natom
   NTITLE=2
   ALLOCATE(TITLE(2))
-  TITLE(1)='REMARK TRAJECTORY CREATED BY PYNORAMIX 0.1'
-  TITLE(2)='REMARK FROM THE ORIGINAL TRAJECTORY NAMED '//TRIM(origin_name)
+  TITLE(1)='REMARK TRAJECTORY CREATED BY AQUALAB 0.1'
+  TITLE(2)='REMARK ...'
 
   WRITE(funit) DCD_TYPE, DCD_VARS
   WRITE(funit) NTITLE,TITLE(:)

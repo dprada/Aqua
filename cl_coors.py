@@ -1,23 +1,23 @@
 import io_formats as io
 from os import path
 
-# io_w_vars/io_vars[0]: Number of atoms
-# io_w_vars/io_vars[1]: delta_t
-# io_w_vars/io_vars[2]: pos_header
-# io_w_vars/io_vars[3]: pos_frame
-# -----
-# io_w_vars/io_vars[10] : Number of frames in the file  (INT)
-# io_w_vars/io_vars[11] : Number of previous integration steps  (INT)
-# io_w_vars/io_vars[12] : Frequency (integration steps) to save this file  (INT)
-# io_w_vars/io_vars[13] : Number of integration steps in the run to create this file  (INT)
-# io_w_vars/io_vars[14] : Frequency of coordinate saving  (INT)
-# io_w_vars/io_vars[17] : Number of degrees of freedom during the run  (INT)
-# io_w_vars/io_vars[18] : Number of fixed atoms  (INT)
-# io_w_vars/io_vars[19] : Timestep in AKMA-units. Bit-copy from the 32-bit real number  (INT)
-# io_w_vars/io_vars[20] : if crystal lattice information is present in the frames  (INT)
-# io_w_vars/io_vars[21] : if this is a 4D trajectory  (INT)
-# io_w_vars/io_vars[22] : if fluctuating charges are present  (INT)
-# io_w_vars/io_vars[23] : if trajectory is the result of merge without consistency checks  (INT)
+# io_vars[0]: Number of atoms
+# io_vars[1]: delta_t
+# io_vars[2]: pos_header
+# io_vars[3]: pos_frame
+# ---
+# io_vars[10] : Number of frames in the file  (INT)
+# io_vars[11] : Number of previous integration steps  (INT)
+# io_vars[12] : Frequency (integration steps) to save this file  (INT)
+# io_vars[13] : Number of integration steps in the run to create this file  (INT)
+# io_vars[14] : Frequency of coordinate saving  (INT)
+# io_vars[17] : Number of degrees of freedom during the run  (INT)
+# io_vars[18] : Number of fixed atoms  (INT)
+# io_vars[19] : Timestep in AKMA-units. Bit-copy from the 32-bit real number  (INT)
+# io_vars[20] : if crystal lattice information is present in the frames  (INT)
+# io_vars[21] : if this is a 4D trajectory  (INT)
+# io_vars[22] : if fluctuating charges are present  (INT)
+# io_vars[23] : if trajectory is the result of merge without consistency checks  (INT)
 
 class traj():
     def __init__(self,file_input=None,frame=None,wrap=True,verbose=False):
@@ -28,11 +28,6 @@ class traj():
         self.io_err=0
         self.io_pos=None
         self.io_vars=[0 for ii in range(30)]
-        self.io_w_file=None
-        self.io_w_name=None
-        self.io_w_type=None
-        self.io_w_opened=0
-        self.io_w_vars=[0 for ii in range(30)]
 
         self.name=None
         self.type=None
@@ -178,36 +173,16 @@ class traj():
 
     def convert(self,file_name=None,frame='ALL',wrap=True,verbose=False):
 
-        if self.io_w_opened: print '# There is a file opened to write'; return
-        self.io_w_type=file_name.split('.')[1]
-        self.io_w_name=file_name
-        self.io_w_vars     = [0 for ii in range(30)]
-        self.io_w_vars[20] = 1     # 1 if crystal lattice information is present in the frames (INT)
-        self.io_w_vars[0]  = self.io_vars[0]  # Num Atoms
-        self.io_w_vars[1]  = 1.000000 # delta_t (by the moment 1.0d0) 
-        self.io_w_vars[12] = 1 # delta steps to save the data
-        self.io_w_vars[29] = 1001 # id number to identify pynoramix traj. 
-        self.io_w_file,self.io_err=getattr(io,'coor_'+self.io_w_type).open_traj_write(file_name,self.io_w_vars,self.name)
-        if self.io_err: print '# Error opening the file'; return
-        self.io_w_opened=1
+        temp_wtraj=wtraj(file_name)
+        if temp_wtraj.io_err:
+            return
 
         while 1:
-            self.reload_frame(wrap)
+            self.reload_frame(wrap=wrap)
             if self.io_end:
-                frames_out=self.io_w_vars[10]
-                self.io_w_vars[13]=self.io_w_vars[10]  # Number of integration steps in the run to create this file  (INT)
-                self.io_err=getattr(io,'coor_'+self.io_w_type).close_traj_write(self.io_w_file,self.io_w_vars)
-                if self.io_err: print '# Error closing the file'; return
-                self.io_w_file=None
-                self.io_w_name=None
-                self.io_w_type=None
-                self.io_w_opened=0
-                self.io_w_vars=[0 for ii in range(30)]
+                temp_wtraj.close(verbose)
                 break
-            self.io_w_vars[10]+=1
-            self.io_err=getattr(io,'coor_'+self.io_w_type).write_frame(self.io_w_file,self.frame[0])
-        
-        print '#', frames_out,'frames written in',file_name
+            temp_wtraj.write(self.frame[0])
 
 
 class wtraj():
@@ -219,23 +194,13 @@ class wtraj():
         self.io_err=0
         self.io_pos=None
         self.io_vars=[0 for ii in range(30)]
-        self.io_w_file=None
-        self.io_w_name=None
-        self.io_w_type=None
-        self.io_w_opened=0
-        self.io_w_vars=[0 for ii in range(30)]
 
         self.name=None
         self.type=None
         self.title=None
-        self.num_frames=0
-        self.total_frames=0
         self.precision=None
-        self.frame=[]
 
         if file_name!=None:
-            self.name=file_name
-            self.type=file_name.split('.')[-1]
             self.open(file_name)
 
         if verbose:
@@ -243,40 +208,46 @@ class wtraj():
 
     def open(self,file_name):
 
-        if self.io_w_opened: print '# There is a file opened to write'; return
-        self.io_w_type=file_name.split('.')[1]
-        self.io_w_name=file_name
-        self.io_w_vars     = [0 for ii in range(30)]
-        self.io_w_vars[20] = 1     # 1 if crystal lattice information is present in the frames (INT)
-        self.io_w_vars[0]  = self.io_vars[0]  # Num Atoms
-        self.io_w_vars[1]  = 1.000000 # delta_t (by the moment 1.0d0) 
-        self.io_w_vars[12] = 1 # delta steps to save the data
-        self.io_w_vars[29] = 1001 # id number to identify pynoramix traj. 
-        self.io_w_file,self.io_err=getattr(io,'coor_'+self.io_w_type).open_traj_write(file_name,self.io_w_vars,self.name)
-        if self.io_err: print '# Error opening the file'; return
-        self.io_w_opened=1
+        if path.exists(file_name):
+            print '# File',file_name,'already exists.'
+            self.io_err=1
+            return
+
+        if self.io_opened: print '# This file is already opened.'; self.io_err=1; return
+        self.name=file_name
+        self.type=file_name.split('.')[-1]
+        self.io_vars     = [0 for ii in range(30)]
+        self.io_vars[20] = 1     # 1 if crystal lattice information is present in the frames (INT)
+        self.io_vars[0]  = self.io_vars[0]  # Num Atoms
+        self.io_vars[1]  = 1.000000 # delta_t (by the moment 1.0d0) 
+        self.io_vars[12] = 1 # delta steps to save the data
+        self.io_vars[29] = 1007 # id number to identify AquaLab traj. 
 
 
     def info(self):
 
-        if not self.io_w_opened:
+        if not self.io_opened:
             print '# No file opened to be written.'
             return
         else:
-            print '# File',self.io_w_name,'opened to be written.'
+            print '# File',self.name,'opened to be written.'
             return
 
     def write(self,frame=None):
-        self.io_w_vars[10]+=1
-        self.io_err=getattr(io,'coor_'+self.io_w_type).write_frame(self.io_w_file,frame)
+        if not self.io_opened:
+            self.io_vars[0]=frame.coors.shape[0]
+            self.io_file,self.io_err=getattr(io,'coor_'+self.type).open_traj_write(self.name,self.io_vars)
+            if self.io_err: print '# Error writting header of file.'; return
+            self.io_opened=1
+        self.io_vars[10]+=1
+        self.io_err=getattr(io,'coor_'+self.type).write_frame(self.io_file,frame)
+        if self.io_err: print '# Error writting frame in file.'
 
-    def close(self):
-        self.io_w_vars[13]=self.io_w_vars[10]  # Number of integration steps in the run to create this file  (INT)
-        self.io_err=getattr(io,'coor_'+self.io_w_type).close_traj_write(self.io_w_file,self.io_w_vars)
+    def close(self,verbose=False):
+        self.io_vars[13]=self.io_vars[10]  # Number of integration steps in the run to create this file  (INT)
+        self.io_err=getattr(io,'coor_'+self.type).close_traj_write(self.io_file,self.io_vars)
         if self.io_err: print '# Error closing the file'; return
-        self.io_w_file=None
-        self.io_w_name=None
-        self.io_w_type=None
-        self.io_w_opened=0
-        self.io_w_vars=[0 for ii in range(30)]
+        self.io_opened=0
+        if verbose: '#',self.io_vars[10],'frames written in',self.name
+
         
