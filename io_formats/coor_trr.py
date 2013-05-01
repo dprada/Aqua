@@ -49,11 +49,11 @@ def open_traj_read(file_name):
 
     return funit,io_vars,io_pos,io_err
 
-def read_all(file_unit,io_vars=None,io_pos=None):
+def read_all(file_unit,io_vars=None,io_pos=None,wrap=True):
 
     temp=[]
     while 1:
-        temp_frame,io_pos,io_err,io_end=read_next(file_unit,io_vars,io_pos)
+        temp_frame,io_pos,io_err,io_end=read_next(file_unit,io_vars,io_pos,wrap)
         if io_end or io_err:
             break
         temp.append(temp_frame)
@@ -61,7 +61,7 @@ def read_all(file_unit,io_vars=None,io_pos=None):
     return temp,io_err,io_end
 
 
-def read_next (file_unit,io_vars=None,io_pos=None):
+def read_next (file_unit,io_vars=None,io_pos=None,wrap=True):
 
     io_err=0
     io_end=0
@@ -92,13 +92,15 @@ def read_next (file_unit,io_vars=None,io_pos=None):
         temp_frame.box=array(temp_frame.box,order='Fortran')
         temp_frame.box=10.0*temp_frame.box
         temp_frame.box2cell()
-        temp_frame.wrap()
+        if wrap:
+            temp_frame.wrap()
 
     return temp_frame,io_pos,io_err,io_end
 
         
-def read_frame(file_unit,frame,io_vars=None,io_pos=None):
+def read_frame(file_unit,frame,io_vars=None,io_pos=None,wrap=True):
 
+    print '# Not implemented'
     io_err=1
     io_end=0
     return None,io_pos,io_err,io_end

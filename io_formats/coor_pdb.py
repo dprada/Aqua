@@ -67,7 +67,7 @@ def open_traj_read(file_name):
 ### 
 ###    return temp,io_err,io_end # io_file,io_err,io_end
 
-def read_all(file_unit,io_vars=None,io_pos=None):
+def read_all(file_unit,io_vars=None,io_pos=None,wrap=True):
 
     io_err=0
     io_end=0
@@ -97,7 +97,8 @@ def read_all(file_unit,io_vars=None,io_pos=None):
                 frame.cell[1,2] = cell_pdb[2]
                 frame.coors=array(frame.coors,order='Fortran')
                 frame.cell2box()
-                frame.wrap()
+                if wrap:
+                    frame.wrap()
                 temp.append(frame)
                 read_new=False
                 frame=cl_frame()
@@ -111,7 +112,8 @@ def read_all(file_unit,io_vars=None,io_pos=None):
                 frame.cell[1,2] = cell_pdb[2]
                 frame.coors=array(frame.coors,order='Fortran')
                 frame.cell2box()
-                frame.wrap()
+                if wrap:
+                    frame.wrap()
                 temp.append(frame)
             else:
                 del(frame)
@@ -125,10 +127,12 @@ def read_next(file_unit,io_vars=None,io_pos=None):
     io_err=1
     io_end=0
 
+    print '# Not implemented'
     return None,io_pos,io_err,io_end  # frame,io_pos,io_err,io_end
 
 def read_frame(file_unit,frame,io_vars=None,io_pos=None):
 
+    print '# Not implemented'
     return None,io_pos,io_err,io_end  # frame,io_pos,io_err,io_end
 
 def close_traj(file_unit):

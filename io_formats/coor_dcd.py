@@ -60,20 +60,18 @@ def open_traj_read(file_name):
     return funit,io_vars,io_pos,io_err  # io_file,io_vars,io_pos,io_err
 
 
-def read_all(file_unit,io_vars=None,io_pos=None):
+def read_all(file_unit,io_vars=None,io_pos=None,wrap=True):
 
     temp=[]
     while 1:
-        temp_frame,io_pos,io_err,io_end=read_next(file_unit,io_vars,io_pos)
+        temp_frame,io_pos,io_err,io_end=read_next(file_unit,io_vars,io_pos,wrap)
         if io_end or io_err:
             break
-        temp_frame.cell2box()
-        temp_frame.wrap()
         temp.append(temp_frame)
 
     return temp,io_err,io_end   # io_file,io_err,io_end
 
-def read_next(file_unit,io_vars=None,io_pos=None):
+def read_next(file_unit,io_vars=None,io_pos=None,wrap=True):
 
     temp_frame=cl_frame()
     #temp_frame.coors=empty((natoms,3),dtype=float32)
@@ -81,16 +79,18 @@ def read_next(file_unit,io_vars=None,io_pos=None):
 
     io_pos,temp_frame.cell,temp_frame.coors,io_err,io_end=libdcd.read(file_unit,io_vars[0],io_vars[20],io_pos)
     temp_frame.cell2box()
-    temp_frame.wrap()
+    if wrap:
+        temp_frame.wrap()
     return temp_frame,io_pos,io_err,io_end  # frame,io_pos,io_err,io_end
 
-def read_frame(file_unit,frame,io_vars=None,io_pos=None):
+def read_frame(file_unit,frame,io_vars=None,io_pos=None,wrap=True):
 
     temp_frame=cl_frame()
     io_pos=io_vars[2]+frame*io_vars[3]
     io_pos,temp_frame.cell,temp_frame.coors,io_err,io_end=libdcd.read(file_unit,io_vars[0],io_vars[20],io_pos)
     temp_frame.cell2box()
-    temp_frame.wrap()
+    if wrap:
+        temp_frame.wrap()
     #temp_frame.time=
     #temp_frame.step=
     return temp_frame,io_pos,io_err,io_end  # frame,io_pos,io_err,io_end

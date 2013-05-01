@@ -187,7 +187,7 @@ class cl_water(labels_set):             # Attributes of a water molecule
 class msystem(labels_set):               # The suptra-estructure: System (waters+cofactors+proteins...)
 
     
-    def __init__(self,input_file=None,download=None,coors=False,with_bonds=True,missing_atoms=True,verbose=False):
+    def __init__(self,input_file=None,download=None,coors=False,with_bonds=True,missing_atoms=True,wrap=True,verbose=False):
 
 
         # If download:
@@ -525,7 +525,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
             ### Loading coordinates
             if self.file_topol_type in ['psf']: coors=False
             if coors:
-                self.load_traj(self.file_topol,frame='ALL',verbose=False)
+                self.load_traj(self.file_topol,frame='ALL',wrap=wrap,verbose=False)
 
 
             if verbose:
@@ -785,9 +785,9 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 
         pass
 
-    def load_traj (self,file_input=None,frame=None,begin=None,end=None,increment=1,units='frames',verbose=False):
+    def load_traj (self,file_input=None,frame=None,wrap=True,verbose=False):
 
-        temp_traj=traj(file_input,frame,begin,end,increment,units,verbose=False)
+        temp_traj=traj(file_input,frame,wrap,verbose=False)
         if verbose:
             temp_traj.info(index=len(self.traj))
         self.traj.append(temp_traj)
