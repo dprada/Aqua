@@ -1966,6 +1966,28 @@ END SUBROUTINE WATER_ANGLE_BISECTOR_ATOM
 !!$
 !!$END SUBROUTINE NEIGHBS_DIST1
 
+subroutine rmsd(rmsd_val,struct_ref,struct,list,nlist,ntot)
+
+  INTEGER,INTENT(IN)::nlist,ntot
+  INTEGER,DIMENSION(nlist)::list
+  DOUBLE PRECISION,DIMENSION(ntot,3),INTENT(IN)::struct_ref,struct
+  DOUBLE PRECISION,INTENT(OUT)::rmsd_val
+
+  DOUBLE PRECISION::val_aux
+  DOUBLE PRECISION,DIMENSION(3)::vect_aux
+  INTEGER::ii,jj
+
+  rmsd_val=0.0d0
+  DO ii=1,nlist
+     jj=list(ii)+1
+     vect_aux(:)=struct_ref(jj,:)-struct(jj,:)
+     val_aux=dot_product(vect_aux(:),vect_aux(:))
+     rmsd_val=rmsd_val+val_aux
+  END DO
+  rmsd_val=rmsd_val/(nlist*1.0d0)
+  rmsd_val=sqrt(rmsd_val)
+
+end subroutine rmsd
 
 subroutine min_rmsd(U,center_ref,center_2,rmsd,g,struct_ref,struct_2,list_ref,list_2,nref,totnref,n2,totn2)
 

@@ -1192,6 +1192,21 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
             else:
                 return dih_angs
 
+    def rmsd(self,selection=None,traj_ref=None,frame_ref=None,traj=None,frame='ALL'):
+
+         setA,n_A,natoms_A=__read_set_opt__(self,selection)
+
+         num_frames=__length_frame_opt__(self,traj,frame)
+         coors_reference=self.traj[traj_ref].frame[frame_ref].coors
+         rmsd_vals=numpy.zeros((num_frames),dtype=float,order='F')
+
+         jj=0
+         for iframe in __read_frame_opt__(self,traj,frame):
+             rmsd_val=faux.glob.rmsd(coors_reference,iframe.coors,setA,n_A,natoms_A)
+             rmsd_vals[jj]=rmsd_val
+             jj+=1
+
+         return rmsd_vals
 
     def lrmsd_fit(self,selection_ref=None,traj_ref=None,frame_ref=None,selection=None,traj=None,frame='ALL',new=False):
      
@@ -1310,6 +1325,30 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                 return neighbs[0]
             else:
                 return neighbs
+
+    def contact_map (self,setA=None,setB=None,dist=None,traj=0,frame=0,pbc=True):
+     
+        setA,nlist_A,nsys_A,setB,nlist_B,nsys_B,diff_syst,diff_set=__read_sets_opt__(self,setA,None,setB)
+        num_frames=__length_frame_opt__(self,traj,frame)
+
+        c_map=numpy.empty(shape=(num_frames,nlist_A,nlist_B),dtype=int,order='Fortran')
+        num_frames=0
+        for iframe in __read_frame_opt__(self,traj,frame):
+            c_map[num_frames][:,:],aa,bb=faux.glob.neighbs_dist(diff_syst,diff_set,pbc,dist,setA,iframe.coors,iframe.box,iframe.orthogonal,setB,iframe.coors,nlist_A,nlist_B,nsys_A,nsys_B)
+            num_frames+=1
+            del(aa); del(bb)
+
+        if num_frames==1:
+            return c_map[0][:,:]
+        else:
+            return c_map
+     
+        #def plot_contact_map(contact_map):
+        #    
+        #    pylab.gray()
+        #    pylab.imshow(contact_map==False,origin='lower',interpolation=None) # Would be better not to interpolate
+        #    #pylab.matshow(contact_map==False)
+        #    return pylab.show()
 
 
 
@@ -2163,9 +2202,9 @@ def __read_frame_opt__ (syst=None,traj=0,frame=None):
     if frame in ['ALL','All','all']:
         return syst.traj[traj].frame
     elif type(frame) in [numpy.int32,int]:
-        return [syst.traj[0].frame[ii] for ii in [frame]]
+        return [syst.traj[traj].frame[ii] for ii in [frame]]
     elif type(frame) in [list,tuple]:
-        return [syst.traj[0].frame[ii] for ii in frame]
+        return [syst.traj[traj].frame[ii] for ii in frame]
 
 def __length_frame_opt__ (syst=None,traj=0,frame=None):
 
