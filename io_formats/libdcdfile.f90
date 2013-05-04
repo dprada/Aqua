@@ -247,6 +247,35 @@ SUBROUTINE write(funit,cell,coors,i_natom)
 
 END SUBROUTINE write
 
+SUBROUTINE write_sel(funit,cell,coors,sel,i_natom,i_nsel)
+
+  IMPLICIT NONE
+  INTEGER,INTENT(IN)::funit,i_natom,i_nsel
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::cell
+  DOUBLE PRECISION,DIMENSION(i_natom,3),INTENT(IN)::coors
+  INTEGER,DIMENSION(i_nsel),INTENT(IN)::sel
+
+  REAL*8,ALLOCATABLE,DIMENSION(:,:)::cell_buffer
+  REAL(KIND=4),ALLOCATABLE,DIMENSION(:,:)::buffer
+  INTEGER::ii
+
+  ALLOCATE(buffer(i_nsel,3),cell_buffer(3,3))
+  cell_buffer=cell                      !!! MMM.... There is something to be fixed here
+
+  WRITE(funit) cell_buffer(1,1), cell_buffer(1,2), cell_buffer(2,2), cell_buffer(1,3), cell_buffer(2,3), cell_buffer(3,3)
+
+  DO ii=1,i_nsel
+     buffer(ii,:)=real(coors(sel(ii)+1,:))
+  END DO
+  WRITE(funit) buffer(:,1)
+  WRITE(funit) buffer(:,2)
+  WRITE(funit) buffer(:,3)
+
+  DEALLOCATE(buffer)
+
+END SUBROUTINE write_sel
+
+
 SUBROUTINE close(funit,io_err)
 
   IMPLICIT NONE

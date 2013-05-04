@@ -233,14 +233,29 @@ class wtraj():
             print '# File',self.name,'opened to be written.'
             return
 
-    def write(self,frame=None):
-        if not self.io_opened:
-            self.io_vars[0]=frame.coors.shape[0]
-            self.io_file,self.io_err=getattr(io,'coor_'+self.type).open_traj_write(self.name,self.io_vars)
-            if self.io_err: print '# Error writting header of file.'; return
-            self.io_opened=1
-        self.io_vars[10]+=1
-        self.io_err=getattr(io,'coor_'+self.type).write_frame(self.io_file,frame)
+    def write(self,frame=None,sel='ALL'):
+        if sel in ['ALL','All','all']:
+            if not self.io_opened:
+                self.io_vars[0]=frame.coors.shape[0]
+                self.io_file,self.io_err=getattr(io,'coor_'+self.type).open_traj_write(self.name,self.io_vars)
+                if self.io_err: print '# Error writting header of file.'; return
+                self.io_opened=1
+            self.io_vars[10]+=1
+            self.io_err=getattr(io,'coor_'+self.type).write_frame(self.io_file,frame)
+        else:
+            if type(sel) in [list,tuple]:
+                sel=numpy.array(sel,dtype=int,order='F')
+                if not self.io_opened:
+                    self.io_vars[0]=len(sel)
+                    self.io_file,self.io_err=getattr(io,'coor_'+self.type).open_traj_write(self.name,self.io_vars)
+                    if self.io_err: print '# Error writting header of file.'; return
+                    self.io_opened=1
+                self.io_vars[10]+=1
+                self.io_err=getattr(io,'coor_'+self.type).write_frame_sel(self.io_file,frame,sel)
+            else:
+                print '# Input selection as list of atom indexes needed.'
+                self.io_err=1
+
         if self.io_err: print '# Error writting frame in file.'
 
     def close(self,verbose=False):

@@ -115,6 +115,11 @@ def write_frame(file_unit,temp_frame):
     io_err=libdcd.write(file_unit,temp_frame.cell,temp_frame.coors,len(temp_frame.coors))
     return io_err
 
+def write_frame_sel(file_unit,temp_frame,sel):
+
+    io_err=libdcd.write_sel(file_unit,temp_frame.cell,temp_frame.coors,sel,len(temp_frame.coors),len(sel))
+    return io_err
+
 def close_traj_write(file_unit,io_vars):
 
     io_err=0
