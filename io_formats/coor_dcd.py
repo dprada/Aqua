@@ -117,6 +117,7 @@ def write_frame(file_unit,temp_frame):
 
 def write_frame_sel(file_unit,temp_frame,sel):
 
+    sel=array(sel,dtype=int,order='F')
     io_err=libdcd.write_sel(file_unit,temp_frame.cell,temp_frame.coors,sel,len(temp_frame.coors),len(sel))
     return io_err
 
