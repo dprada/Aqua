@@ -51,10 +51,13 @@ class pyn_traj_file():
 
     def open(self):
 
-        if self.dtype==int:
+        if self.binary:
             self.unit=len(pyn_math.pyn_f90units)+100
             pyn_math.pyn_f90units.append(self.unit)
-            libbin.fopen_read(self.unit,self.name)
+            if self.opt=='w':
+                libbin.fopen_write(self.unit,self.name)
+            elif self.opt=='r':
+                libbin.fopen_read(self.unit,self.name)
         else:
             self.file=open(self.name,self.opt)
 
@@ -105,6 +108,15 @@ class pyn_traj_file():
         else:
             return libbin.check_float_length(self.binary,self.unit,self.particles,self.dimensions)
 
+    def write_frame (self,frame=None):
+
+        if type(frame)==numpy.ndarray:
+            if 'int'==frame.dtype:
+                libbin.write_int_frame(self.unit,frame,self.particles,self.dimensions)
+            else:
+                print '# not implemented yet.'
+        else:
+            print 'frame needs to be a numpy.ndarray'
 
 class kinetic_analysis():
 

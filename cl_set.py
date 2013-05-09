@@ -669,8 +669,10 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                     self.atom[b2].covalent_bonds.append(b1)
                 aa+=bb
 
-    def write_pdb (self,filename=None):
+    def write_pdb (self,filename=None,traj=0,frame=0,sel='ALL'):
         
+        select,nlist,nsys=__read_set_opt__(self,sel)
+
         if filename==None:
             print 'Enter filename: '
             print '      foo.write_pdb("foo.pdb")'
@@ -692,7 +694,8 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
             dct_aux={'ATOM': 'ATOM  ', 'HETATM': 'HETATM'}
             
             new_index=0
-            for ii in range(self.num_atoms):
+            for jj in range(nlist):
+                ii=select[jj]
                 new_index+=1
                 a=dct_aux[self.atom[ii].type_pdb]              # 1-6
                 a+="%5d" % (new_index)                         # 7-11
@@ -706,17 +709,17 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                 a+="%4d" % self.atom[ii].resid.pdb_index       # 23-26
                 a+=' '                                         # 27
                 a+='   '                                       # 28-30
-                a+="%8.3f" % float(self.frame[0].coors[ii][0])   # 31-38
-                a+="%8.3f" % float(self.frame[0].coors[ii][1])   # 39-46
-                a+="%8.3f" % float(self.frame[0].coors[ii][2])   # 47-54
+                a+="%8.3f" % float(self.traj[traj].frame[frame].coors[ii][0])   # 31-38
+                a+="%8.3f" % float(self.traj[traj].frame[frame].coors[ii][1])   # 39-46
+                a+="%8.3f" % float(self.traj[traj].frame[frame].coors[ii][2])   # 47-54
                 a+="%6.2f" % self.atom[ii].occup               # 55-60
                 a+="%6.2f" % self.atom[ii].bfactor             # 61-66
                 a+='          '                                # 67-76
                 a+="%2s" % self.atom[ii].elem_symb             # 77-78
                 a+="%2s" % self.atom[ii].charge                # 79-80
-                a+='\n' 
+                #a+='\n' 
                 fff.write(str(a))         
-                if ii<(self.num_atoms-1):
+                if ii<(nlist-1):
                     if self.atom[ii].type_pdb!=self.atom[ii+1].type_pdb or self.atom[ii].chain.name!=self.atom[ii+1].chain.name :
                         new_index+=1
                         a="TER   "
@@ -725,9 +728,9 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                         a+='  '
                         a+=' '                                         
                         a+="%3s" % self.atom[ii].resid.name            
-                        a+='\n' 
+                        #a+='\n' 
                         fff.write(str(a))
-            a='END   '+'\n'
+            a='END   '#+'\n'
             fff.write(str(a))
             fff.close()
         return None

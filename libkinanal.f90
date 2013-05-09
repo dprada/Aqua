@@ -12,6 +12,18 @@ MODULE BINDATA
     
   END SUBROUTINE fopen_read
   
+
+  SUBROUTINE fopen_write(funit,file_name)
+    
+    IMPLICIT NONE
+    CHARACTER(80),INTENT(IN)::file_name
+    INTEGER,INTENT(IN)::funit
+    
+    OPEN(unit=funit,FILE=TRIM(file_name),STATUS='new',action='WRITE',form='unformatted',access='stream')
+    
+  END SUBROUTINE fopen_write
+  
+
   SUBROUTINE fclose(funit)
     
     IMPLICIT NONE
@@ -21,6 +33,7 @@ MODULE BINDATA
     
   END SUBROUTINE fclose
   
+
   SUBROUTINE read_float_frame(opt_bin,funit,frame,num_parts,dimensions,coors)
     
     INTEGER,INTENT(IN)::funit,frame,num_parts,dimensions,opt_bin
@@ -35,7 +48,7 @@ MODULE BINDATA
     end if
 
   END SUBROUTINE read_float_frame
-  
+
   SUBROUTINE read_float_coor(funit,frame,particle,dim,num_parts,dimensions,coor)
     
     INTEGER,INTENT(IN)::funit,frame,num_parts,dimensions
@@ -63,6 +76,17 @@ MODULE BINDATA
     END IF
 
   END SUBROUTINE read_int_frame
+
+  SUBROUTINE write_int_frame(funit,coors,num_parts,dimensions)
+    
+    INTEGER,INTENT(IN)::funit,num_parts,dimensions
+    INTEGER,DIMENSION(num_parts,dimensions),INTENT(IN)::coors
+    
+
+    WRITE(funit) coors(:,:)
+
+
+  END SUBROUTINE write_int_frame
   
   SUBROUTINE read_int_coor(funit,frame,particle,dim,num_parts,dimensions,coor)
     
