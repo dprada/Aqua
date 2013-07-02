@@ -1446,6 +1446,8 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
         if faux.hbonds.definition == 0 : 
             return
         
+
+        # Skinner
         elif faux.hbonds.definition == 1 : 
             faux.hbonds.sk_param=sk_param
             cut_cell=-0.343*numpy.log(sk_param/7.10)+0.10
@@ -1540,6 +1542,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                 return hbout
 
 
+        # R(o,h)
         elif faux.hbonds.definition == 2 : 
             faux.hbonds.roh2_param= roh_param**2
 
@@ -1588,8 +1591,8 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                 return hbout
 
                 
-
-        elif faux.hbonds.definition == 3 : # ROO_ANG
+        # R(o,o)-Ang(o,o,h)
+        elif faux.hbonds.definition == 3 :
             faux.hbonds.roo2_param, faux.hbonds.cos_angooh_param= roo_param**2, numpy.cos(numpy.radians(angooh_param))
 
             if infile:
@@ -1678,18 +1681,21 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
             else:
                 return hbout
 
+        # Donor-Acceptor-Number
         elif faux.hbonds.definition == 4 : 
             if not (allwat_A and allwat_B):
                 print '# This type of hbond only works for water molecules.'
             print 'Not implemented yet'
             pass
 
+        # Topological
         elif faux.hbonds.definition == 5 : 
             if not (allwat_A and allwat_B):
                 print '# This type of hbond only works for water molecules.'
             print 'Not implemented yet'
             pass
 
+        # Donor-Number-Ang(o,o,h)
         elif faux.hbonds.definition == 6 : 
             faux.hbonds.cos_angooh_param= numpy.cos(numpy.radians(angooh_param))
             if not (allwat_A and allwat_B):
@@ -1697,6 +1703,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
             print 'Not implemented yet'
             pass
 
+        # Nearest-Neighbour
         elif faux.hbonds.definition == 7 : 
             if not (allwat_A and allwat_B):
                 print '# This type of hbond only works for water molecules.'
