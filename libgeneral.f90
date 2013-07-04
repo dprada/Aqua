@@ -2357,364 +2357,6 @@ SUBROUTINE GET_HBONDS (effic,diff_syst,diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,d
 
      SELECT CASE (definition)
 
-     CASE (1) ! Skinner                                                                                  !SK 
-        !!!! Source: R. Kumar, J. R. Schmidt and J. L. Skinner. J. Chem. Phys. 126, 204107 (2007)        !SK 
-        ALLOCATE(vect_perp(nB_acc,3))                                                                    !SK 
-        DO ii=1,nB_acc                                                                                   !SK
-           acc=acc_B(jj)+1                                                                               !SK
-           jj=acc_sH_B(ii)+1                                                                             !SK
-           acc_H1=acc_H_B(jj)                                                                            !SK 
-           acc_H2=acc_H_B(jj+1)                                                                          !SK 
-           pos_acc=coors2(acc,:)                                                                         !SK 
-           aux_vect_1=coors2(acc_H1,:)-pos_acc(:)                                                        !SK 
-           aux_vect_2=coors2(acc_H2,:)-pos_acc(:)                                                        !SK 
-           CALL PERPENDICULAR_NORMED_VECT (aux_vect_1,aux_vect_2,aux_vect_3)                             !SK 
-           vect_perp(ii,:)=aux_vect_3                                                                    !SK 
-        END DO                                                                                           !SK 
-                                                                                                         !SK 
-        DO ii=1,nA_don                                                                                   !SK 
-           DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)                                                           !SK 
-              don_h=don_H_A(hh)+1                                                                        !SK 
-              pos_h=coors1(don_h,:)                                                                      !SK 
-              gg=0                                                                                       !SK 
-              DO jj=1,nB_acc                                                                             !SK
-                 acc=acc_B(jj)+1                                                                         !SK 
-                 vect_h_acc=pos_h(:)-coors2(acc,:)                                                       !SK 
-                 IF (pbc_opt==1) CALL PBC(vect_h_acc,box1,ortho1)                                           !SK 
-                 dist_h_acc=sqrt(dot_product(vect_h_acc,vect_h_acc))                                     !SK 
-                 aux_cos=dot_product(vect_perp(jj,:),vect_h_acc(:))/dist_h_acc                           !SK 
-                 if (aux_cos>=1.0d0) aux_cos=1.0d0                                                       !SK 
-                 if (aux_cos<=-1.0d0) aux_cos=-1.0d0                                                     !SK 
-                 aux_cos=acos(aux_cos)                                                                   !SK 
-                 aux_cos=aux_cos*(90/pi)                                                                 !SK 
-                 IF (aux_cos>90) THEN                                                                    !SK 
-                    print*,'aquiii error 3.14',aux_cos                                                   !SK 
-                    STOP                                                                                 !SK 
-                 END IF                                                                                  !SK 
-                 IF (aux_cos<0) THEN                                                                     !SK 
-                    print*,'aquiii error 3.14',aux_cos                                                   !SK 
-                    STOP                                                                                 !SK 
-                 END IF                                                                                  !SK 
-                 sk_val=exp(-dist_h_acc/0.3430d0)*(7.10d0-0.050d0*aux_cos+0.000210d0*aux_cos**2)         !SK 
-                 IF (sk_val>sk_param) THEN                                                               !SK 
-                    gg=gg+1                                                                              !SK 
-                    IF (gg>lim_hbs) THEN                                                                 !SK 
-                       ALLOCATE(aux2_box_ind(lim_hbs),aux2_box_val(lim_hbs))                             !SK 
-                       aux2_box_ind=aux_box_ind                                                          !SK 
-                       aux2_box_val=aux_box_val                                                          !SK 
-                       DEALLOCATE(aux_box_ind,aux_box_val,filtro)                                        !SK 
-                       ALLOCATE(aux_box_ind(gg),aux_box_val(gg),filtro(gg))                              !SK 
-                       aux_box_ind(1:lim_hbs)=aux2_box_ind                                               !SK 
-                       aux_box_val(1:lim_hbs)=aux2_box_val                                               !SK 
-                       filtro=.FALSE.
-                       DEALLOCATE(aux2_box_ind,aux2_box_val)                                             !SK 
-                       lim_hbs=gg                                                                        !SK 
-                    END IF                                                                               !SK 
-                    aux_box_ind(gg)=acc_B(jj)                                                            !SK 
-                    aux_box_val(gg)=sk_val                                                               !SK 
-                 END IF                                                                                  !SK 
-              END DO                                                                                     !SK 
-                                                                                                         !SK 
-              IF (gg>0) THEN                                                                             !SK 
-                 ALLOCATE(hbs_a_ind(hh)%i1(gg),hbs_a_val(hh)%d1(gg))                                     !SK 
-                 filtro(1:gg)=.TRUE.                                                                     !SK 
-                 DO jj=1,gg                                                                              !SK 
-                    ll=MAXLOC(aux_box_val(:),DIM=1,MASK=filtro)                                          !SK 
-                    filtro(ll)=.FALSE.                                                                   !SK 
-                    hbs_a_ind(hh)%i1(jj)=aux_box_ind(ll)                                                 !SK 
-                    hbs_a_val(hh)%d1(jj)=aux_box_val(ll)                                                 !SK 
-                 END DO                                                                                  !SK 
-              END IF                                                                                     !SK 
-                                                                                                         !SK 
-              num_hbs_a(hh)=gg                                                                           !SK 
-                                                                                                         !SK 
-           END DO                                                                                        !SK 
-        END DO                                                                                           !SK 
-        DEALLOCATE(vect_perp)                                                                            !SK 
-                                                                                                         !SK 
-        IF (diff_set==1) THEN                                                                               !SK 
-                                                                                                         !SK 
-           DO ii=1,nA_acc                                                                                !SK 
-              acc=acc_A(jj)+1                                                                            !SK
-              jj=acc_sH_A(ii)+1                                                                          !SK
-              acc_H1=acc_H_A(jj)                                                                         !SK 
-              acc_H2=acc_H_A(jj+1)                                                                       !SK 
-              pos_acc=coors1(acc,:)                                                                      !SK 
-              aux_vect_1=coors1(acc_H1,:)-pos_acc(:)                                                     !SK 
-              aux_vect_2=coors1(acc_H2,:)-pos_acc(:)                                                     !SK 
-              CALL PERPENDICULAR_NORMED_VECT (aux_vect_1,aux_vect_2,aux_vect_3)                          !SK 
-              vect_perp(ii,:)=aux_vect_3                                                                 !SK 
-           END DO                                                                                        !SK 
-                                                                                                         !SK 
-           DO ii=1,nB_don                                                                                !SK 
-              DO hh=don_sH_B(ii)+1,don_sH_B(ii+1)                                                        !SK 
-                 don_h=don_H_B(hh)+1                                                                     !SK 
-                 pos_h=coors2(don_h,:)                                                                   !SK 
-                 gg=0                                                                                    !SK 
-                 DO jj=1,nA_acc                                                                          !SK 
-                    acc=acc_A(jj)+1                                                                      !SK 
-                    vect_h_acc=pos_h(:)-coors1(acc,:)                                                    !SK 
-                    IF (pbc_opt==1) CALL PBC(vect_h_acc,box1,ortho1)                                        !SK 
-                    dist_h_acc=sqrt(dot_product(vect_h_acc,vect_h_acc))                                  !SK 
-                    aux_cos=dot_product(vect_perp(jj,:),vect_h_acc(:))/dist_h_acc                        !SK 
-                    if (aux_cos>=1.0d0) aux_cos=1.0d0                                                    !SK 
-                    if (aux_cos<=-1.0d0) aux_cos=-1.0d0                                                  !SK 
-                    aux_cos=acos(aux_cos)                                                                !SK 
-                    aux_cos=aux_cos*(90/pi)                                                              !SK 
-                    IF (aux_cos>90) THEN                                                                 !SK 
-                       print*,'aquiii error 3.14',aux_cos                                                !SK 
-                       STOP                                                                              !SK 
-                    END IF                                                                               !SK 
-                    IF (aux_cos<0) THEN                                                                  !SK 
-                       print*,'aquiii error 3.14',aux_cos                                                !SK 
-                       STOP                                                                              !SK 
-                    END IF                                                                               !SK 
-                    sk_val=exp(-dist_h_acc/0.3430d0)*(7.10d0-0.050d0*aux_cos+0.000210d0*aux_cos**2)      !SK 
-                    IF (sk_val>sk_param) THEN                                                            !SK 
-                       gg=gg+1                                                                           !SK 
-                       IF (gg>lim_hbs) THEN                                                              !SK 
-                          ALLOCATE(aux2_box_ind(lim_hbs),aux2_box_val(lim_hbs))                          !SK 
-                          aux2_box_ind=aux_box_ind                                                       !SK 
-                          aux2_box_val=aux_box_val                                                       !SK 
-                          DEALLOCATE(aux_box_ind,aux_box_val,filtro)                                     !SK 
-                          ALLOCATE(aux_box_ind(gg),aux_box_val(gg),filtro(gg))                           !SK 
-                          aux_box_ind(1:lim_hbs)=aux2_box_ind                                            !SK 
-                          aux_box_val(1:lim_hbs)=aux2_box_val                                            !SK 
-                          filtro=.FALSE.
-                          DEALLOCATE(aux2_box_ind,aux2_box_val)                                          !SK 
-                          lim_hbs=gg                                                                     !SK 
-                       END IF                                                                            !SK 
-                       aux_box_ind(gg)=acc_A(jj)                                                         !SK 
-                       aux_box_val(gg)=sk_val                                                            !SK 
-                    END IF                                                                               !SK 
-                 END DO                                                                                  !SK 
-                                                                                                         !SK 
-                 IF (gg>0) THEN                                                                          !SK 
-                    ALLOCATE(hbs_b_ind(hh)%i1(gg),hbs_b_val(hh)%d1(gg))                                  !SK 
-                    filtro(1:gg)=.TRUE.                                                                  !SK 
-                    DO jj=1,gg                                                                           !SK 
-                       ll=MAXLOC(aux_box_val(:),DIM=1,MASK=filtro)                                       !SK 
-                       filtro(ll)=.FALSE.                                                                !SK 
-                       hbs_b_ind(hh)%i1(jj)=aux_box_ind(ll)                                              !SK 
-                       hbs_b_val(hh)%d1(jj)=aux_box_val(ll)                                              !SK 
-                    END DO                                                                               !SK 
-                 END IF                                                                                  !SK 
-                                                                                                         !SK 
-                 num_hbs_b(hh)=gg                                                                        !SK 
-                                                                                                         !SK 
-              END DO                                                                                     !SK 
-           END DO                                                                                        !SK 
-           DEALLOCATE(vect_perp)                                                                         !SK 
-                                                                                                         !SK 
-        END IF                                                                                           !SK 
-
-     CASE (2) ! R(o,h)                                                                   !ROH 
-        !!!! Source: V. J. Buch. J. Chem. Phys. 96, 3814-3823 (1992)                     !ROH 
-        DO ii=1,nA_don                                                                   !ROH
-           DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)                                           !ROH 
-              don_h=don_H_A(hh)+1                                                        !ROH 
-              pos_h=coors1(don_h,:)                                                      !ROH 
-              gg=0                                                                       !ROH 
-              DO jj=1,nB_acc                                                             !ROH 
-                 acc=acc_B(jj)+1                                                         !ROH 
-                 vect_h_acc=coors2(acc,:)-pos_h(:)                                       !ROH 
-                 IF (pbc_opt==1) CALL PBC(vect_h_acc,box1,ortho1)                           !ROH 
-                 dist2_h_acc=dot_product(vect_h_acc,vect_h_acc)                          !ROH 
-                 IF (dist2_h_acc<roh2_param) THEN                                          !ROH 
-                    gg=gg+1                                                              !ROH 
-                    IF (gg>lim_hbs) THEN                                                 !ROH 
-                       ALLOCATE(aux2_box_ind(lim_hbs),aux2_box_val(lim_hbs))             !ROH 
-                       aux2_box_ind=aux_box_ind                                          !ROH 
-                       aux2_box_val=aux_box_val                                          !ROH 
-                       DEALLOCATE(aux_box_ind,aux_box_val,filtro)                        !ROH 
-                       ALLOCATE(aux_box_ind(gg),aux_box_val(gg),filtro(gg))              !ROH 
-                       aux_box_ind(1:lim_hbs)=aux2_box_ind                               !ROH 
-                       aux_box_val(1:lim_hbs)=aux2_box_val                               !ROH 
-                       filtro=.FALSE.
-                       DEALLOCATE(aux2_box_ind,aux2_box_val)                             !ROH 
-                       lim_hbs=gg                                                        !ROH 
-                    END IF                                                               !ROH 
-                    aux_box_ind(gg)=acc_B(jj)                                            !ROH 
-                    aux_box_val(gg)=dist2_h_acc                                           !ROH 
-                 END IF                                                                  !ROH 
-              END DO                                                                     !ROH 
-                                                                                         !ROH 
-              IF (gg>0) THEN                                                             !ROH 
-                 ALLOCATE(hbs_a_ind(hh)%i1(gg),hbs_a_val(hh)%d1(gg))                     !ROH 
-                 filtro(1:gg)=.TRUE.                                                     !ROH 
-                 DO jj=1,gg                                                              !ROH 
-                    ll=MAXLOC(aux_box_val(:),DIM=1,MASK=filtro)                          !ROH 
-                    filtro(ll)=.FALSE.                                                   !ROH 
-                    hbs_a_ind(hh)%i1(jj)=aux_box_ind(ll)                                 !ROH 
-                    hbs_a_val(hh)%d1(jj)=aux_box_val(ll)                                 !ROH 
-                 END DO                                                                  !ROH 
-              END IF                                                                     !ROH 
-                                                                                         !ROH 
-              num_hbs_a(hh)=gg                                                           !ROH 
-                                                                                         !ROH 
-           END DO                                                                        !ROH 
-        END DO                                                                           !ROH 
-                                                                                         !ROH 
-                                                                                         !ROH 
-        IF (diff_set==1) THEN                                                               !ROH 
-                                                                                         !ROH 
-           DO ii=1,num_don_B                                                             !ROH 
-              DO hh=don_sH_B(ii)+1,don_sH_B(ii+1)                                        !ROH 
-                 don_h=don_H_B(hh)+1                                                     !ROH 
-                 pos_h=coors2(don_h,:)                                                   !ROH 
-                 gg=0                                                                    !ROH 
-                 DO jj=1,num_acc_A                                                       !ROH 
-                    acc=acc_A(jj)+1                                                      !ROH 
-                    vect_h_acc=coors1(acc,:)-pos_h(:)                                    !ROH 
-                    IF (pbc_opt==1) CALL PBC(vect_h_acc,box1,ortho1)                        !ROH 
-                    dist2_h_acc=dot_product(vect_h_acc,vect_h_acc)                  !ROH 
-                    IF (dist2_h_acc<roh2_param) THEN                                       !ROH 
-                       gg=gg+1                                                           !ROH 
-                       IF (gg>lim_hbs) THEN                                              !ROH 
-                          ALLOCATE(aux2_box_ind(lim_hbs),aux2_box_val(lim_hbs))          !ROH 
-                          aux2_box_ind=aux_box_ind                                       !ROH 
-                          aux2_box_val=aux_box_val                                       !ROH 
-                          DEALLOCATE(aux_box_ind,aux_box_val,filtro)                     !ROH 
-                          ALLOCATE(aux_box_ind(gg),aux_box_val(gg),filtro(gg))           !ROH 
-                          aux_box_ind(1:lim_hbs)=aux2_box_ind                            !ROH 
-                          aux_box_val(1:lim_hbs)=aux2_box_val                            !ROH 
-                          filtro=.FALSE.
-                          DEALLOCATE(aux2_box_ind,aux2_box_val)                          !ROH 
-                          lim_hbs=gg                                                     !ROH 
-                       END IF                                                            !ROH 
-                       aux_box_ind(gg)=acc_A(jj)                                         !ROH 
-                       aux_box_val(gg)=dist2_h_acc                                        !ROH 
-                    END IF                                                               !ROH 
-                 END DO                                                                  !ROH 
-                                                                                         !ROH 
-                 IF (gg>0) THEN                                                          !ROH 
-                    ALLOCATE(hbs_b_ind(hh)%i1(gg),hbs_b_val(hh)%d1(gg))                  !ROH 
-                    filtro(1:gg)=.TRUE.                                                  !ROH 
-                    DO jj=1,gg                                                           !ROH 
-                       ll=MAXLOC(aux_box_val(:),DIM=1,MASK=filtro)                       !ROH 
-                       filtro(ll)=.FALSE.                                                !ROH 
-                       hbs_b_ind(hh)%i1(jj)=aux_box_ind(ll)                              !ROH 
-                       hbs_b_val(hh)%d1(jj)=aux_box_val(ll)                              !ROH 
-                    END DO                                                               !ROH 
-                 END IF                                                                  !ROH 
-                                                                                         !ROH 
-                 num_hbs_b(hh)=gg                                                        !ROH 
-                                                                                         !ROH 
-              END DO                                                                     !ROH 
-           END DO                                                                        !ROH 
-                                                                                         !ROH 
-        END IF
-
-
-     CASE (3) ! R(o,o)-Ang(o,o,h)                                                                        !ROO_ANG 
-        !!!! Source: A. Luzar, D. Chandler. Phys. Rev. Lett. 76, 928-931 (1996)                          !ROO_ANG 
-!!$        DO ii=1,nA_don                                                                                   !ROO_ANG 
-!!$           don=don_A(ii)+1                                                                               !ROO_ANG 
-!!$           pos_don=coors1(don,:)                                                                         !ROO_ANG 
-!!$           DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)                                                           !ROO_ANG 
-!!$              don_h=don_H_A(hh)+1                                                                        !ROO_ANG 
-!!$              vect_don_h=coors1(don_h,:)-pos_don                                                         !ROO_ANG
-!!$              dist2_don_h=dot_product(vect_don_h,vect_don_h)                                             !ROO_ANG
-!!$              gg=0                                                                                       !ROO_ANG 
-!!$              DO jj=1,nB_acc                                                                             !ROO_ANG 
-!!$                 acc=acc_B(jj)+1                                                                         !ROO_ANG 
-!!$                 vect_don_acc=coors2(acc,:)-pos_don(:)                                                   !ROO_ANG 
-!!$                 IF (pbc_opt==1) CALL PBC(vect_don_acc,box1,ortho1)                                         !ROO_ANG 
-!!$                 dist2_don_acc=dot_product(vect_don_acc,vect_don_acc)                                    !ROO_ANG
-!!$                 IF (dist2_don_acc<roo2_param) THEN                                                      !ROO_ANG 
-!!$                    aux_cos=dot_product(vect_don_h,vect_don_acc)/(sqrt(dist2_don_acc*dist2_don_h))       !ROO_ANG
-!!$                    IF (aux_cos>cos_angooh_param) THEN                                                   !ROO_ANG
-!!$                       gg=gg+1                                                                           !ROO_ANG 
-!!$                       IF (gg>lim_hbs) THEN                                                              !ROO_ANG 
-!!$                          ALLOCATE(aux2_box_ind(lim_hbs),aux2_box_val(lim_hbs))                          !ROO_ANG 
-!!$                          aux2_box_ind=aux_box_ind                                                       !ROO_ANG 
-!!$                          aux2_box_val=aux_box_val                                                       !ROO_ANG 
-!!$                          DEALLOCATE(aux_box_ind,aux_box_val,filtro)                                     !ROO_ANG 
-!!$                          ALLOCATE(aux_box_ind(gg),aux_box_val(gg),filtro(gg))                           !ROO_ANG 
-!!$                          aux_box_ind(1:lim_hbs)=aux2_box_ind                                            !ROO_ANG 
-!!$                          aux_box_val(1:lim_hbs)=aux2_box_val                                            !ROO_ANG 
-!!$                          filtro=.FALSE.                                                                 !ROO_ANG
-!!$                          DEALLOCATE(aux2_box_ind,aux2_box_val)                                          !ROO_ANG 
-!!$                          lim_hbs=gg                                                                     !ROO_ANG 
-!!$                       END IF                                                                            !ROO_ANG 
-!!$                       aux_box_ind(gg)=acc_B(jj)                                                         !ROO_ANG 
-!!$                       aux_box_val(gg)=dist2_don_acc                                                     !ROO_ANG 
-!!$                    END IF                                                                               !ROO_ANG 
-!!$                 END IF                                                                                  !ROO_ANG
-!!$              END DO                                                                                     !ROO_ANG 
-!!$                                                                                                         !ROO_ANG 
-!!$              IF (gg>0) THEN                                                                             !ROO_ANG 
-!!$                 ALLOCATE(hbs_a_ind(hh)%i1(gg),hbs_a_val(hh)%d1(gg))                                     !ROO_ANG 
-!!$                 filtro(1:gg)=.TRUE.                                                                     !ROO_ANG 
-!!$                 DO jj=1,gg                                                                              !ROO_ANG 
-!!$                    ll=MAXLOC(aux_box_val(:),DIM=1,MASK=filtro)                                          !ROO_ANG 
-!!$                    filtro(ll)=.FALSE.                                                                   !ROO_ANG 
-!!$                    hbs_a_ind(hh)%i1(jj)=aux_box_ind(ll)                                                 !ROO_ANG 
-!!$                    hbs_a_val(hh)%d1(jj)=aux_box_val(ll)                                                 !ROO_ANG 
-!!$                 END DO                                                                                  !ROO_ANG 
-!!$              END IF                                                                                     !ROO_ANG 
-!!$                                                                                                         !ROO_ANG 
-!!$              num_hbs_a(hh)=gg                                                                           !ROO_ANG 
-!!$                                                                                                         !ROO_ANG 
-!!$           END DO                                                                                        !ROO_ANG 
-!!$        END DO                                                                                           !ROO_ANG 
-!!$                                                                                                         !ROO_ANG 
-!!$                                                                                                         !ROO_ANG 
-!!$        IF (diff_set==1) THEN                                                                               !ROO_ANG 
-!!$                                                                                                         !ROO_ANG 
-!!$           DO ii=1,nB_don                                                                                !ROO_ANG 
-!!$              don=don_B(ii)+1                                                                            !ROO_ANG 
-!!$              pos_don=coors2(don,:)                                                                      !ROO_ANG 
-!!$              DO hh=don_sH_B(ii)+1,don_sH_B(ii+1)                                                        !ROO_ANG 
-!!$                 don_h=don_H_B(hh)+1                                                                     !ROO_ANG 
-!!$                 vect_don_h=coors2(don_h,:)-pos_don                                                      !ROO_ANG
-!!$                 dist2_don_h=dot_product(vect_don_h,vect_don_h)                                          !ROO_ANG
-!!$                 gg=0                                                                                    !ROO_ANG 
-!!$                 DO jj=1,nA_acc                                                                          !ROO_ANG 
-!!$                    acc=acc_A(jj)+1                                                                      !ROO_ANG 
-!!$                    vect_don_acc=coors1(acc,:)-pos_don(:)                                                !ROO_ANG 
-!!$                    IF (pbc_opt==1) CALL PBC(vect_don_acc,box1,ortho1)                                      !ROO_ANG 
-!!$                    dist2_don_acc=dot_product(vect_don_acc,vect_don_acc)                                 !ROO_ANG
-!!$                    IF (dist2_don_acc<roo2_param) THEN                                                     !ROO_ANG
-!!$                       aux_cos=dot_product(vect_don_h,vect_don_acc)/(sqrt(dist2_don_acc*dist2_don_h))    !ROO_ANG
-!!$                       IF (aux_cos>cos_angooh_param) THEN                                                !ROO_ANG
-!!$                          gg=gg+1                                                                        !ROO_ANG 
-!!$                          IF (gg>lim_hbs) THEN                                                           !ROO_ANG 
-!!$                             ALLOCATE(aux2_box_ind(lim_hbs),aux2_box_val(lim_hbs))                       !ROO_ANG 
-!!$                             aux2_box_ind=aux_box_ind                                                    !ROO_ANG 
-!!$                             aux2_box_val=aux_box_val                                                    !ROO_ANG 
-!!$                             DEALLOCATE(aux_box_ind,aux_box_val,filtro)                                  !ROO_ANG 
-!!$                             ALLOCATE(aux_box_ind(gg),aux_box_val(gg),filtro(gg))                        !ROO_ANG 
-!!$                             aux_box_ind(1:lim_hbs)=aux2_box_ind                                         !ROO_ANG 
-!!$                             aux_box_val(1:lim_hbs)=aux2_box_val                                         !ROO_ANG 
-!!$                             filtro=.FALSE.                                                              !ROO_ANG
-!!$                             DEALLOCATE(aux2_box_ind,aux2_box_val)                                       !ROO_ANG 
-!!$                             lim_hbs=gg                                                                  !ROO_ANG 
-!!$                          END IF                                                                         !ROO_ANG 
-!!$                          aux_box_ind(gg)=acc_A(jj)                                                      !ROO_ANG 
-!!$                          aux_box_val(gg)=dist2_don_acc                                                  !ROO_ANG
-!!$                       END IF                                                                            !ROO_ANG 
-!!$                    END IF                                                                               !ROO_ANG
-!!$                 END DO                                                                                  !ROO_ANG 
-!!$                                                                                                         !ROO_ANG 
-!!$                 IF (gg>0) THEN                                                                          !ROO_ANG 
-!!$                    ALLOCATE(hbs_b_ind(hh)%i1(gg),hbs_b_val(hh)%d1(gg))                                  !ROO_ANG 
-!!$                    filtro(1:gg)=.TRUE.                                                                  !ROO_ANG 
-!!$                    DO jj=1,gg                                                                           !ROO_ANG 
-!!$                       ll=MAXLOC(aux_box_val(:),DIM=1,MASK=filtro)                                       !ROO_ANG 
-!!$                       filtro(ll)=.FALSE.                                                                !ROO_ANG 
-!!$                       hbs_b_ind(hh)%i1(jj)=aux_box_ind(ll)                                              !ROO_ANG 
-!!$                       hbs_b_val(hh)%d1(jj)=aux_box_val(ll)                                              !ROO_ANG 
-!!$                    END DO                                                                               !ROO_ANG 
-!!$                 END IF                                                                                  !ROO_ANG 
-!!$                                                                                                         !ROO_ANG 
-!!$                 num_hbs_b(hh)=gg                                                                        !ROO_ANG 
-!!$                                                                                                         !ROO_ANG 
-!!$              END DO                                                                                     !ROO_ANG 
-!!$           END DO                                                                                        !ROO_ANG 
-!!$                                                                                                         !ROO_ANG 
-!!$        END IF                                                                                           !ROO_ANG
-
 
      !!!CASE (4) ! Donor-Acceptor-Number
      !!!   !!!! Source: A. D. Hammerich, V. J. Buch. J. Chem. Phys. 128, 111101 (2008)
@@ -3933,5 +3575,691 @@ SUBROUTINE GET_HBONDS_SKINNER_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,d
   DEALLOCATE(num_hbs_a,num_hbs_b)
 
 END SUBROUTINE GET_HBONDS_SKINNER_NS_LIST
+
+
+SUBROUTINE GET_HBONDS_ROH_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,ortho, &
+     acc_B,acc_sH_B,acc_H_B,don_B,don_sH_B,don_H_B,nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, &
+     nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H,numat_glob)
+
+  TYPE iarray_pointer
+     INTEGER,DIMENSION(:),POINTER::i1
+  END TYPE iarray_pointer
+  TYPE darray_pointer
+     DOUBLE PRECISION,DIMENSION(:),POINTER::d1
+  END TYPE darray_pointer
+
+  INTEGER,INTENT(IN)::diff_set,pbc_opt,ortho,numat_glob
+  INTEGER,INTENT(IN)::nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H
+  INTEGER,INTENT(IN)::nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H
+  INTEGER,DIMENSION(nA_acc),INTENT(IN)    ::acc_A
+  INTEGER,DIMENSION(nB_acc),INTENT(IN)    ::acc_B
+  INTEGER,DIMENSION(nA_don),INTENT(IN)    ::don_A
+  INTEGER,DIMENSION(nB_don),INTENT(IN)    ::don_B
+  INTEGER,DIMENSION(nA_acc_sH),INTENT(IN) ::acc_sH_A
+  INTEGER,DIMENSION(nB_acc_sH),INTENT(IN) ::acc_sH_B
+  INTEGER,DIMENSION(nA_acc_H),INTENT(IN)  ::acc_H_A
+  INTEGER,DIMENSION(nB_acc_H),INTENT(IN)  ::acc_H_B
+  INTEGER,DIMENSION(nA_don_sH),INTENT(IN) ::don_sH_A
+  INTEGER,DIMENSION(nB_don_sH),INTENT(IN) ::don_sH_B
+  INTEGER,DIMENSION(nA_don_H),INTENT(IN)  ::don_H_A
+  INTEGER,DIMENSION(nB_don_H),INTENT(IN)  ::don_H_B
+  DOUBLE PRECISION,DIMENSION(numat_glob,3),intent(in)::coors
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box
+
+
+  TYPE(iarray_pointer),DIMENSION(:),POINTER::hbs_a_ind,hbs_b_ind 
+  TYPE(darray_pointer),DIMENSION(:),POINTER::hbs_a_val,hbs_b_val 
+  INTEGER,DIMENSION(:),ALLOCATABLE::num_hbs_a,num_hbs_b
+
+  INTEGER::ii,jj,gg
+  INTEGER::don,don_h,acc
+  INTEGER::lim_hbs
+
+  DOUBLE PRECISION,DIMENSION(3)::pos_acc,pos_don,pos_h
+  DOUBLE PRECISION,DIMENSION(3)::vect_don_acc,vect_h_acc,vect_don_h
+  DOUBLE PRECISION,DIMENSION(3)::aux_vect_1,aux_vect_2,aux_vect_3
+  DOUBLE PRECISION::dist_h_acc,dist_don_acc,dist_don_h,aux_cos,sk_val
+  DOUBLE PRECISION::dist2_h_acc,dist2_don_acc,dist2_don_h
+
+  INTEGER::acc_H1,acc_H2
+  DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE::vect_perp
+
+  INTEGER,DIMENSION(:),ALLOCATABLE::aux_box_ind,aux2_box_ind
+  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::aux_box_val,aux2_box_val
+
+  LOGICAL,DIMENSION(:),ALLOCATABLE::filtro
+
+  lim_hbs=3
+
+  ALLOCATE(aux_box_ind(lim_hbs),aux_box_val(lim_hbs),filtro(lim_hbs))
+  filtro=.FALSE.
+
+  ALLOCATE(hbs_a_ind(nA_don_H),hbs_a_val(nA_don_H))
+  ALLOCATE(hbs_b_ind(nB_don_H),hbs_b_val(nB_don_H))
+  ALLOCATE(num_hbs_a(nA_don_H),num_hbs_b(nB_don_H))
+
+  num_hbs_a=0
+  num_hbs_b=0
+
+  !!!! Source: V. J. Buch. J. Chem. Phys. 96, 3814-3823 (1992)
+
+
+  !CALL EXTRACT_NS_LIST_SETS(diff_set,don_A,acc_B,nA_don,nB_acc,numat_glob)
+  CALL EXTRACT_NS_LIST_SETS(diff_set,don_H_A,acc_B,nA_don_H,nB_acc,numat_glob)
+
+  DO ii=1,nA_don
+     don=don_A(ii)+1
+     DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)
+        don_h=don_H_A(hh)+1
+        pos_h=coors(don_h,:)
+        gg=0
+        DO jj=1,ver_ic_dim(don_h)
+           IF (filt_sets_ns_ind(don_h,jj)) THEN
+              acc=ver_ic_ind(don_h,jj)
+              IF (don/=acc) THEN
+                 vect_h_acc=coors(acc,:)-pos_h(:)
+                 IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho)
+                 dist2_h_acc=dot_product(vect_h_acc,vect_h_acc)
+                 IF (dist2_h_acc<roh2_param) THEN
+                    gg=gg+1
+                    IF (gg>lim_hbs) THEN
+                       ALLOCATE(aux2_box_ind(lim_hbs),aux2_box_val(lim_hbs))
+                       aux2_box_ind=aux_box_ind
+                       aux2_box_val=aux_box_val
+                       DEALLOCATE(aux_box_ind,aux_box_val)
+                       ALLOCATE(aux_box_ind(gg),aux_box_val(gg))
+                       aux_box_ind(1:lim_hbs)=aux2_box_ind
+                       aux_box_val(1:lim_hbs)=aux2_box_val
+                       DEALLOCATE(aux2_box_ind,aux2_box_val)
+                       lim_hbs=gg
+                    END IF
+                    aux_box_ind(gg)=acc-1
+                    aux_box_val(gg)=dist2_h_acc
+                 END IF
+              END IF
+           END IF
+        END DO
+        IF (gg>0) THEN
+           ALLOCATE(hbs_a_ind(hh)%i1(gg),hbs_a_val(hh)%d1(gg))
+           filtro(1:gg)=.TRUE.
+           DO jj=1,gg
+              ll=MAXLOC(aux_box_val(:),DIM=1,MASK=filtro)
+              filtro(ll)=.FALSE.
+              hbs_a_ind(hh)%i1(jj)=aux_box_ind(ll)
+              hbs_a_val(hh)%d1(jj)=aux_box_val(ll)
+           END DO
+        END IF
+
+        num_hbs_a(hh)=gg
+
+     END DO
+  END DO
+
+  IF (diff_set==1) THEN
+
+!     CALL EXTRACT_NS_LIST_SETS(diff_set,don_B,acc_A,nB_don,nA_acc,numat_glob)
+     CALL EXTRACT_NS_LIST_SETS(diff_set,don_H_B,acc_A,nB_don_H,nA_acc,numat_glob)
+     DO ii=1,nB_don
+        DO hh=don_sH_B(ii)+1,don_sH_B(ii+1)
+           don_h=don_H_B(hh)+1
+           pos_h=coors(don_h,:)
+           gg=0
+           DO jj=1,ver_ic_dim(don_h)
+              IF (filt_sets_ns_ind(don_h,jj)) THEN
+                 acc=ver_ic_ind(don_h,jj)
+                 vect_h_acc=coors(acc,:)-pos_h(:)
+                 IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho)
+                 dist2_h_acc=dot_product(vect_h_acc,vect_h_acc)
+                 IF (dist2_h_acc<roh2_param) THEN
+                    gg=gg+1
+                    IF (gg>lim_hbs) THEN
+                       ALLOCATE(aux2_box_ind(lim_hbs),aux2_box_val(lim_hbs))
+                       aux2_box_ind=aux_box_ind
+                       aux2_box_val=aux_box_val
+                       DEALLOCATE(aux_box_ind,aux_box_val)
+                       ALLOCATE(aux_box_ind(gg),aux_box_val(gg))
+                       aux_box_ind(1:lim_hbs)=aux2_box_ind
+                       aux_box_val(1:lim_hbs)=aux2_box_val
+                       DEALLOCATE(aux2_box_ind,aux2_box_val)
+                       lim_hbs=gg
+                    END IF
+                    aux_box_ind(gg)=acc-1
+                    aux_box_val(gg)=dist2_h_acc
+                 END IF
+              END IF
+           END DO
+           IF (gg>0) THEN
+              ALLOCATE(hbs_b_ind(hh)%i1(gg),hbs_b_val(hh)%d1(gg))
+              filtro(1:gg)=.TRUE.
+              DO jj=1,gg
+                 ll=MAXLOC(aux_box_val(:),DIM=1,MASK=filtro)
+                 filtro(ll)=.FALSE.
+                 hbs_b_ind(hh)%i1(jj)=aux_box_ind(ll)
+                 hbs_b_val(hh)%d1(jj)=aux_box_val(ll)
+              END DO
+           END IF
+           
+           num_hbs_b(hh)=gg
+           
+        END DO
+     END DO
+  END IF
+
+  IF (ALLOCATED(hbs_out)) DEALLOCATE(hbs_out)
+  IF (ALLOCATED(hbs_vals_out)) DEALLOCATE(hbs_vals_out)
+
+
+  IF (diff_set==1) THEN
+     ii=SUM(num_hbs_a)+SUM(num_hbs_b)
+     ALLOCATE(hbs_out(ii,3),hbs_vals_out(ii))
+     gg=0
+     DO ii=1,nA_don
+        DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)
+           IF (num_hbs_a(hh)>0) THEN
+              DO jj=1,num_hbs_a(hh)
+                 gg=gg+1
+                 hbs_out(gg,1)=don_A(ii)
+                 hbs_out(gg,2)=don_H_A(hh)
+                 hbs_out(gg,3)=hbs_a_ind(hh)%i1(jj)
+                 hbs_vals_out(gg)=sqrt(hbs_a_val(hh)%d1(jj))
+              END DO
+              DEALLOCATE(hbs_a_ind(hh)%i1,hbs_a_val(hh)%d1)
+           END IF
+        END DO
+     END DO
+     DO ii=1,nB_don
+        DO hh=don_sH_B(ii)+1,don_sH_B(ii+1)
+           IF (num_hbs_b(hh)>0) THEN
+              DO jj=1,num_hbs_b(hh)
+                 gg=gg+1
+                 hbs_out(gg,1)=don_B(ii)
+                 hbs_out(gg,2)=don_H_B(hh)
+                 hbs_out(gg,3)=hbs_b_ind(hh)%i1(jj)
+                 hbs_vals_out(gg)=sqrt(hbs_b_val(hh)%d1(jj))
+              END DO
+              DEALLOCATE(hbs_b_ind(hh)%i1,hbs_b_val(hh)%d1)
+           END IF
+        END DO
+     END DO
+  ELSE
+     ii=SUM(num_hbs_a)
+     ALLOCATE(hbs_out(ii,3),hbs_vals_out(ii))
+     gg=0
+     DO ii=1,nA_don
+        DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)
+           IF (num_hbs_a(hh)>0) THEN
+              DO jj=1,num_hbs_a(hh)
+                 gg=gg+1
+                 hbs_out(gg,1)=don_A(ii)
+                 hbs_out(gg,2)=don_H_A(hh)
+                 hbs_out(gg,3)=hbs_a_ind(hh)%i1(jj)
+                 hbs_vals_out(gg)=sqrt(hbs_a_val(hh)%d1(jj))
+              END DO
+              DEALLOCATE(hbs_a_ind(hh)%i1,hbs_a_val(hh)%d1)
+           END IF
+        END DO
+     END DO
+  END IF
+
+  DEALLOCATE(aux_box_ind,aux_box_val,filtro)
+  DEALLOCATE(hbs_a_ind,hbs_a_val)
+  DEALLOCATE(hbs_b_ind,hbs_b_val)
+  DEALLOCATE(num_hbs_a,num_hbs_b)
+
+END SUBROUTINE GET_HBONDS_ROH_NS_LIST
+
+
+SUBROUTINE GET_HBONDS_ROH (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,ortho, &
+     acc_B,acc_sH_B,acc_H_B,don_B,don_sH_B,don_H_B,nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, &
+     nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H,numat_glob)
+
+  TYPE iarray_pointer
+     INTEGER,DIMENSION(:),POINTER::i1
+  END TYPE iarray_pointer
+  TYPE darray_pointer
+     DOUBLE PRECISION,DIMENSION(:),POINTER::d1
+  END TYPE darray_pointer
+
+  INTEGER,INTENT(IN)::diff_set,pbc_opt,ortho,numat_glob
+  INTEGER,INTENT(IN)::nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H
+  INTEGER,INTENT(IN)::nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H
+  INTEGER,DIMENSION(nA_acc),INTENT(IN)    ::acc_A
+  INTEGER,DIMENSION(nB_acc),INTENT(IN)    ::acc_B
+  INTEGER,DIMENSION(nA_don),INTENT(IN)    ::don_A
+  INTEGER,DIMENSION(nB_don),INTENT(IN)    ::don_B
+  INTEGER,DIMENSION(nA_acc_sH),INTENT(IN) ::acc_sH_A
+  INTEGER,DIMENSION(nB_acc_sH),INTENT(IN) ::acc_sH_B
+  INTEGER,DIMENSION(nA_acc_H),INTENT(IN)  ::acc_H_A
+  INTEGER,DIMENSION(nB_acc_H),INTENT(IN)  ::acc_H_B
+  INTEGER,DIMENSION(nA_don_sH),INTENT(IN) ::don_sH_A
+  INTEGER,DIMENSION(nB_don_sH),INTENT(IN) ::don_sH_B
+  INTEGER,DIMENSION(nA_don_H),INTENT(IN)  ::don_H_A
+  INTEGER,DIMENSION(nB_don_H),INTENT(IN)  ::don_H_B
+  DOUBLE PRECISION,DIMENSION(numat_glob,3),intent(in)::coors
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box
+
+
+  TYPE(iarray_pointer),DIMENSION(:),POINTER::hbs_a_ind,hbs_b_ind 
+  TYPE(darray_pointer),DIMENSION(:),POINTER::hbs_a_val,hbs_b_val 
+  INTEGER,DIMENSION(:),ALLOCATABLE::num_hbs_a,num_hbs_b
+
+  INTEGER::ii,jj,gg
+  INTEGER::don,don_h,acc
+  INTEGER::lim_hbs
+
+  DOUBLE PRECISION,DIMENSION(3)::pos_acc,pos_don,pos_h
+  DOUBLE PRECISION,DIMENSION(3)::vect_don_acc,vect_h_acc,vect_don_h
+  DOUBLE PRECISION,DIMENSION(3)::aux_vect_1,aux_vect_2,aux_vect_3
+  DOUBLE PRECISION::dist_h_acc,dist_don_acc,dist_don_h,aux_cos,sk_val
+  DOUBLE PRECISION::dist2_h_acc,dist2_don_acc,dist2_don_h
+
+  INTEGER::acc_H1,acc_H2
+  DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE::vect_perp
+
+  INTEGER,DIMENSION(:),ALLOCATABLE::aux_box_ind,aux2_box_ind
+  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::aux_box_val,aux2_box_val
+
+  LOGICAL,DIMENSION(:),ALLOCATABLE::filtro
+
+  lim_hbs=3
+
+  ALLOCATE(aux_box_ind(lim_hbs),aux_box_val(lim_hbs),filtro(lim_hbs))
+  filtro=.FALSE.
+
+  ALLOCATE(hbs_a_ind(nA_don_H),hbs_a_val(nA_don_H))
+  ALLOCATE(hbs_b_ind(nB_don_H),hbs_b_val(nB_don_H))
+  ALLOCATE(num_hbs_a(nA_don_H),num_hbs_b(nB_don_H))
+
+  num_hbs_a=0
+  num_hbs_b=0
+
+  !!!! Source: V. J. Buch. J. Chem. Phys. 96, 3814-3823 (1992)
+
+  DO ii=1,nA_don
+     don=don_A(ii)+1
+     DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)
+        don_h=don_H_A(hh)+1
+        pos_h=coors(don_h,:)
+        gg=0
+        DO jj=1,nB_acc
+           acc=acc_B(jj)+1
+           IF (acc/=don) THEN
+              vect_h_acc=coors(acc,:)-pos_h(:)
+              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho)
+              dist2_h_acc=dot_product(vect_h_acc,vect_h_acc)
+              IF (dist2_h_acc<roh2_param) THEN
+                 gg=gg+1
+                 IF (gg>lim_hbs) THEN
+                    ALLOCATE(aux2_box_ind(lim_hbs),aux2_box_val(lim_hbs))
+                    aux2_box_ind=aux_box_ind
+                    aux2_box_val=aux_box_val
+                    DEALLOCATE(aux_box_ind,aux_box_val)
+                    ALLOCATE(aux_box_ind(gg),aux_box_val(gg))
+                    aux_box_ind(1:lim_hbs)=aux2_box_ind
+                    aux_box_val(1:lim_hbs)=aux2_box_val
+                    DEALLOCATE(aux2_box_ind,aux2_box_val)
+                    lim_hbs=gg
+                 END IF
+                 aux_box_ind(gg)=acc-1
+                 aux_box_val(gg)=dist2_h_acc
+              END IF
+           END IF
+        END DO
+        IF (gg>0) THEN
+           ALLOCATE(hbs_a_ind(hh)%i1(gg),hbs_a_val(hh)%d1(gg))
+           filtro(1:gg)=.TRUE.
+           DO jj=1,gg
+              ll=MAXLOC(aux_box_val(:),DIM=1,MASK=filtro)
+              filtro(ll)=.FALSE.
+              hbs_a_ind(hh)%i1(jj)=aux_box_ind(ll)
+              hbs_a_val(hh)%d1(jj)=aux_box_val(ll)
+           END DO
+        END IF
+
+        num_hbs_a(hh)=gg
+
+     END DO
+  END DO
+
+  IF (diff_set==1) THEN
+     DO ii=1,nB_don
+        DO hh=don_sH_B(ii)+1,don_sH_B(ii+1)
+           don_h=don_H_B(hh)+1
+           pos_h=coors(don_h,:)
+           gg=0
+           DO jj=1,nA_acc
+              acc=acc_A(jj)+1
+              vect_h_acc=coors(acc,:)-pos_h(:)
+              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho)
+              dist2_h_acc=dot_product(vect_h_acc,vect_h_acc)
+              IF (dist2_h_acc<roh2_param) THEN
+                 gg=gg+1
+                 IF (gg>lim_hbs) THEN
+                    ALLOCATE(aux2_box_ind(lim_hbs),aux2_box_val(lim_hbs))
+                    aux2_box_ind=aux_box_ind
+                    aux2_box_val=aux_box_val
+                    DEALLOCATE(aux_box_ind,aux_box_val)
+                    ALLOCATE(aux_box_ind(gg),aux_box_val(gg))
+                    aux_box_ind(1:lim_hbs)=aux2_box_ind
+                    aux_box_val(1:lim_hbs)=aux2_box_val
+                    DEALLOCATE(aux2_box_ind,aux2_box_val)
+                    lim_hbs=gg
+                 END IF
+                 aux_box_ind(gg)=acc-1
+                 aux_box_val(gg)=dist2_h_acc
+              END IF
+           END DO
+           IF (gg>0) THEN
+              ALLOCATE(hbs_b_ind(hh)%i1(gg),hbs_b_val(hh)%d1(gg))
+              filtro(1:gg)=.TRUE.
+              DO jj=1,gg
+                 ll=MAXLOC(aux_box_val(:),DIM=1,MASK=filtro)
+                 filtro(ll)=.FALSE.
+                 hbs_b_ind(hh)%i1(jj)=aux_box_ind(ll)
+                 hbs_b_val(hh)%d1(jj)=aux_box_val(ll)
+              END DO
+           END IF
+           
+           num_hbs_b(hh)=gg
+           
+        END DO
+     END DO
+  END IF
+
+  IF (ALLOCATED(hbs_out)) DEALLOCATE(hbs_out)
+  IF (ALLOCATED(hbs_vals_out)) DEALLOCATE(hbs_vals_out)
+
+  IF (diff_set==1) THEN
+     ii=SUM(num_hbs_a)+SUM(num_hbs_b)
+     ALLOCATE(hbs_out(ii,3),hbs_vals_out(ii))
+     gg=0
+     DO ii=1,nA_don
+        DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)
+           IF (num_hbs_a(hh)>0) THEN
+              DO jj=1,num_hbs_a(hh)
+                 gg=gg+1
+                 hbs_out(gg,1)=don_A(ii)
+                 hbs_out(gg,2)=don_H_A(hh)
+                 hbs_out(gg,3)=hbs_a_ind(hh)%i1(jj)
+                 hbs_vals_out(gg)=sqrt(hbs_a_val(hh)%d1(jj))
+              END DO
+              DEALLOCATE(hbs_a_ind(hh)%i1,hbs_a_val(hh)%d1)
+           END IF
+        END DO
+     END DO
+     DO ii=1,nB_don
+        DO hh=don_sH_B(ii)+1,don_sH_B(ii+1)
+           IF (num_hbs_b(hh)>0) THEN
+              DO jj=1,num_hbs_b(hh)
+                 gg=gg+1
+                 hbs_out(gg,1)=don_B(ii)
+                 hbs_out(gg,2)=don_H_B(hh)
+                 hbs_out(gg,3)=hbs_b_ind(hh)%i1(jj)
+                 hbs_vals_out(gg)=sqrt(hbs_b_val(hh)%d1(jj))
+              END DO
+              DEALLOCATE(hbs_b_ind(hh)%i1,hbs_b_val(hh)%d1)
+           END IF
+        END DO
+     END DO
+  ELSE
+     ii=SUM(num_hbs_a)
+     ALLOCATE(hbs_out(ii,3),hbs_vals_out(ii))
+     gg=0
+     DO ii=1,nA_don
+        DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)
+           IF (num_hbs_a(hh)>0) THEN
+              DO jj=1,num_hbs_a(hh)
+                 gg=gg+1
+                 hbs_out(gg,1)=don_A(ii)
+                 hbs_out(gg,2)=don_H_A(hh)
+                 hbs_out(gg,3)=hbs_a_ind(hh)%i1(jj)
+                 hbs_vals_out(gg)=sqrt(hbs_a_val(hh)%d1(jj))
+              END DO
+              DEALLOCATE(hbs_a_ind(hh)%i1,hbs_a_val(hh)%d1)
+           END IF
+        END DO
+     END DO
+  END IF
+
+  DEALLOCATE(aux_box_ind,aux_box_val,filtro)
+  DEALLOCATE(hbs_a_ind,hbs_a_val)
+  DEALLOCATE(hbs_b_ind,hbs_b_val)
+  DEALLOCATE(num_hbs_a,num_hbs_b)
+
+END SUBROUTINE GET_HBONDS_ROH
+
+
+
+SUBROUTINE GET_HBONDS_DON_ACC_NUM (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,ortho, &
+     acc_B,acc_sH_B,acc_H_B,don_B,don_sH_B,don_H_B,nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, &
+     nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H,numat_glob)
+
+  TYPE iarray_pointer
+     INTEGER,DIMENSION(:),POINTER::i1
+  END TYPE iarray_pointer
+  TYPE darray_pointer
+     DOUBLE PRECISION,DIMENSION(:),POINTER::d1
+  END TYPE darray_pointer
+
+  INTEGER,INTENT(IN)::diff_set,pbc_opt,ortho,numat_glob
+  INTEGER,INTENT(IN)::nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H
+  INTEGER,INTENT(IN)::nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H
+  INTEGER,DIMENSION(nA_acc),INTENT(IN)    ::acc_A
+  INTEGER,DIMENSION(nB_acc),INTENT(IN)    ::acc_B
+  INTEGER,DIMENSION(nA_don),INTENT(IN)    ::don_A
+  INTEGER,DIMENSION(nB_don),INTENT(IN)    ::don_B
+  INTEGER,DIMENSION(nA_acc_sH),INTENT(IN) ::acc_sH_A
+  INTEGER,DIMENSION(nB_acc_sH),INTENT(IN) ::acc_sH_B
+  INTEGER,DIMENSION(nA_acc_H),INTENT(IN)  ::acc_H_A
+  INTEGER,DIMENSION(nB_acc_H),INTENT(IN)  ::acc_H_B
+  INTEGER,DIMENSION(nA_don_sH),INTENT(IN) ::don_sH_A
+  INTEGER,DIMENSION(nB_don_sH),INTENT(IN) ::don_sH_B
+  INTEGER,DIMENSION(nA_don_H),INTENT(IN)  ::don_H_A
+  INTEGER,DIMENSION(nB_don_H),INTENT(IN)  ::don_H_B
+  DOUBLE PRECISION,DIMENSION(numat_glob,3),intent(in)::coors
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box
+
+
+  TYPE(iarray_pointer),DIMENSION(:),POINTER::hbs_a_ind,hbs_b_ind 
+  TYPE(darray_pointer),DIMENSION(:),POINTER::hbs_a_val,hbs_b_val 
+  INTEGER,DIMENSION(:),ALLOCATABLE::num_hbs_a,num_hbs_b
+
+  INTEGER::ii,jj,gg
+  INTEGER::don,don_h,acc
+  INTEGER::lim_hbs
+
+  DOUBLE PRECISION,DIMENSION(3)::pos_acc,pos_don,pos_h
+  DOUBLE PRECISION,DIMENSION(3)::vect_don_acc,vect_h_acc,vect_don_h
+  DOUBLE PRECISION,DIMENSION(3)::aux_vect_1,aux_vect_2,aux_vect_3
+  DOUBLE PRECISION::dist_h_acc,dist_don_acc,dist_don_h,aux_cos,sk_val
+  DOUBLE PRECISION::dist2_h_acc,dist2_don_acc,dist2_don_h
+
+  INTEGER::acc_H1,acc_H2
+  DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE::vect_perp
+
+  INTEGER,DIMENSION(:),ALLOCATABLE::aux_box_ind,aux2_box_ind
+  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::aux_box_val,aux2_box_val
+
+  LOGICAL,DIMENSION(:),ALLOCATABLE::filtro
+
+  lim_hbs=3
+
+  ALLOCATE(aux_box_ind(lim_hbs),aux_box_val(lim_hbs),filtro(lim_hbs))
+  filtro=.FALSE.
+
+  ALLOCATE(hbs_a_ind(nA_don_H),hbs_a_val(nA_don_H))
+  ALLOCATE(hbs_b_ind(nB_don_H),hbs_b_val(nB_don_H))
+  ALLOCATE(num_hbs_a(nA_don_H),num_hbs_b(nB_don_H))
+
+  num_hbs_a=0
+  num_hbs_b=0
+
+  IF (ortho==1) THEN
+     Lbox=box(1,1)*2+box(2,2)*2+box(3,3)*2
+  ELSE
+     Lbox=10000.0d0
+  END DO
+
+  !!!! Source: A. D. Hammerich, V. J. Buch. J. Chem. Phys. 128, 111101 (2008)
+
+  DO ii=1,nA_don
+     don=don_A(ii)+1
+     DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)
+        don_h=don_H_A(hh)+1
+        pos_h=coors(don_h,:)
+        gg=0
+        dist_max=Lbox
+        DO jj=1,nB_acc
+           acc=acc_B(jj)+1
+           IF (acc/=don) THEN
+              vect_h_acc=coors(acc,:)-pos_h(:)
+              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho)
+              dist2_h_acc=dot_product(vect_h_acc,vect_h_acc)
+              IF (dist2_h_acc<dist_max) THEN
+
+
+                 gg=gg+1
+                 IF (gg>lim_hbs) THEN
+                    ALLOCATE(aux2_box_ind(lim_hbs),aux2_box_val(lim_hbs))
+                    aux2_box_ind=aux_box_ind
+                    aux2_box_val=aux_box_val
+                    DEALLOCATE(aux_box_ind,aux_box_val)
+                    ALLOCATE(aux_box_ind(gg),aux_box_val(gg))
+                    aux_box_ind(1:lim_hbs)=aux2_box_ind
+                    aux_box_val(1:lim_hbs)=aux2_box_val
+                    DEALLOCATE(aux2_box_ind,aux2_box_val)
+                    lim_hbs=gg
+                 END IF
+                 aux_box_ind(gg)=acc-1
+                 aux_box_val(gg)=dist2_h_acc
+              END IF
+           END IF
+        END DO
+        IF (gg>0) THEN
+           ALLOCATE(hbs_a_ind(hh)%i1(gg),hbs_a_val(hh)%d1(gg))
+           filtro(1:gg)=.TRUE.
+           DO jj=1,gg
+              ll=MAXLOC(aux_box_val(:),DIM=1,MASK=filtro)
+              filtro(ll)=.FALSE.
+              hbs_a_ind(hh)%i1(jj)=aux_box_ind(ll)
+              hbs_a_val(hh)%d1(jj)=aux_box_val(ll)
+           END DO
+        END IF
+
+        num_hbs_a(hh)=gg
+
+     END DO
+  END DO
+
+  IF (diff_set==1) THEN
+     DO ii=1,nB_don
+        DO hh=don_sH_B(ii)+1,don_sH_B(ii+1)
+           don_h=don_H_B(hh)+1
+           pos_h=coors(don_h,:)
+           gg=0
+           DO jj=1,nA_acc
+              acc=acc_A(jj)+1
+              vect_h_acc=coors(acc,:)-pos_h(:)
+              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho)
+              dist2_h_acc=dot_product(vect_h_acc,vect_h_acc)
+              IF (dist2_h_acc<roh2_param) THEN
+                 gg=gg+1
+                 IF (gg>lim_hbs) THEN
+                    ALLOCATE(aux2_box_ind(lim_hbs),aux2_box_val(lim_hbs))
+                    aux2_box_ind=aux_box_ind
+                    aux2_box_val=aux_box_val
+                    DEALLOCATE(aux_box_ind,aux_box_val)
+                    ALLOCATE(aux_box_ind(gg),aux_box_val(gg))
+                    aux_box_ind(1:lim_hbs)=aux2_box_ind
+                    aux_box_val(1:lim_hbs)=aux2_box_val
+                    DEALLOCATE(aux2_box_ind,aux2_box_val)
+                    lim_hbs=gg
+                 END IF
+                 aux_box_ind(gg)=acc-1
+                 aux_box_val(gg)=dist2_h_acc
+              END IF
+           END DO
+           IF (gg>0) THEN
+              ALLOCATE(hbs_b_ind(hh)%i1(gg),hbs_b_val(hh)%d1(gg))
+              filtro(1:gg)=.TRUE.
+              DO jj=1,gg
+                 ll=MAXLOC(aux_box_val(:),DIM=1,MASK=filtro)
+                 filtro(ll)=.FALSE.
+                 hbs_b_ind(hh)%i1(jj)=aux_box_ind(ll)
+                 hbs_b_val(hh)%d1(jj)=aux_box_val(ll)
+              END DO
+           END IF
+           
+           num_hbs_b(hh)=gg
+           
+        END DO
+     END DO
+  END IF
+
+  IF (ALLOCATED(hbs_out)) DEALLOCATE(hbs_out)
+  IF (ALLOCATED(hbs_vals_out)) DEALLOCATE(hbs_vals_out)
+
+  IF (diff_set==1) THEN
+     ii=SUM(num_hbs_a)+SUM(num_hbs_b)
+     ALLOCATE(hbs_out(ii,3),hbs_vals_out(ii))
+     gg=0
+     DO ii=1,nA_don
+        DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)
+           IF (num_hbs_a(hh)>0) THEN
+              DO jj=1,num_hbs_a(hh)
+                 gg=gg+1
+                 hbs_out(gg,1)=don_A(ii)
+                 hbs_out(gg,2)=don_H_A(hh)
+                 hbs_out(gg,3)=hbs_a_ind(hh)%i1(jj)
+                 hbs_vals_out(gg)=sqrt(hbs_a_val(hh)%d1(jj))
+              END DO
+              DEALLOCATE(hbs_a_ind(hh)%i1,hbs_a_val(hh)%d1)
+           END IF
+        END DO
+     END DO
+     DO ii=1,nB_don
+        DO hh=don_sH_B(ii)+1,don_sH_B(ii+1)
+           IF (num_hbs_b(hh)>0) THEN
+              DO jj=1,num_hbs_b(hh)
+                 gg=gg+1
+                 hbs_out(gg,1)=don_B(ii)
+                 hbs_out(gg,2)=don_H_B(hh)
+                 hbs_out(gg,3)=hbs_b_ind(hh)%i1(jj)
+                 hbs_vals_out(gg)=sqrt(hbs_b_val(hh)%d1(jj))
+              END DO
+              DEALLOCATE(hbs_b_ind(hh)%i1,hbs_b_val(hh)%d1)
+           END IF
+        END DO
+     END DO
+  ELSE
+     ii=SUM(num_hbs_a)
+     ALLOCATE(hbs_out(ii,3),hbs_vals_out(ii))
+     gg=0
+     DO ii=1,nA_don
+        DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)
+           IF (num_hbs_a(hh)>0) THEN
+              DO jj=1,num_hbs_a(hh)
+                 gg=gg+1
+                 hbs_out(gg,1)=don_A(ii)
+                 hbs_out(gg,2)=don_H_A(hh)
+                 hbs_out(gg,3)=hbs_a_ind(hh)%i1(jj)
+                 hbs_vals_out(gg)=sqrt(hbs_a_val(hh)%d1(jj))
+              END DO
+              DEALLOCATE(hbs_a_ind(hh)%i1,hbs_a_val(hh)%d1)
+           END IF
+        END DO
+     END DO
+  END IF
+
+  DEALLOCATE(aux_box_ind,aux_box_val,filtro)
+  DEALLOCATE(hbs_a_ind,hbs_a_val)
+  DEALLOCATE(hbs_b_ind,hbs_b_val)
+  DEALLOCATE(num_hbs_a,num_hbs_b)
+
+END SUBROUTINE GET_HBONDS_DON_ACC_NUM
+
+
+
+
 
 END MODULE HBONDS

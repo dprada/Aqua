@@ -1561,7 +1561,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                         else:
                             self.verlet_list_grid_ns(r1=roh_param,r2=roh_param,rcell=roh_param,iframe=iframe,update=True)
 
-                        faux.hbonds.get_hbonds_roo_ang_ns_list( opt_diff_set, opt_pbc, \
+                        faux.hbonds.get_hbonds_roh_ns_list( opt_diff_set, opt_pbc, \
                                            acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
                                            iframe.coors,iframe.box,iframe.orthogonal, \
                                            acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
@@ -1575,7 +1575,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                     hbout=[]
                     gg=0
                     for iframe in __read_frame_opt__(self,traj,frame):
-                        faux.hbonds.get_hbonds_roo_ang( opt_diff_set, opt_pbc, \
+                        faux.hbonds.get_hbonds_roh( opt_diff_set, opt_pbc, \
                                                         acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
                                                         iframe.coors,iframe.box,iframe.orthogonal, \
                                                         acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
@@ -1685,8 +1685,52 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
         elif faux.hbonds.definition == 4 : 
             if not (allwat_A and allwat_B):
                 print '# This type of hbond only works for water molecules.'
-            print 'Not implemented yet'
-            pass
+                return
+
+            if infile:
+                print 'Not implemented yet'
+                pass
+
+            else:
+
+                if optimize:
+                    gg=0
+                    hbout=[]
+                    for iframe in __read_frame_opt__(self,traj,frame):
+                        if (gg==0): 
+                            self.verlet_list_grid_ns(r1=roh_param,r2=roh_param,rcell=roh_param,iframe=iframe)
+                        else:
+                            self.verlet_list_grid_ns(r1=roh_param,r2=roh_param,rcell=roh_param,iframe=iframe,update=True)
+
+                        faux.hbonds.get_hbonds_don_acc_num_list( opt_diff_set, opt_pbc, \
+                                           acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
+                                           iframe.coors,iframe.box,iframe.orthogonal, \
+                                           acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
+                                           nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
+                                           nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
+                                           self.num_atoms)
+
+                        hbout.append([ccopy.deepcopy(faux.glob.hbs_out),ccopy.deepcopy(faux.glob.hbs_vals_out)])
+                        gg+=1
+                else:
+                    hbout=[]
+                    gg=0
+                    for iframe in __read_frame_opt__(self,traj,frame):
+                        faux.hbonds.get_hbonds_don_acc_num( opt_diff_set, opt_pbc, \
+                                                        acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
+                                                        iframe.coors,iframe.box,iframe.orthogonal, \
+                                                        acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
+                                                        nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
+                                                        nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
+                                                        self.num_atoms)
+                        hbout.append([ccopy.deepcopy(faux.glob.hbs_out),ccopy.deepcopy(faux.glob.hbs_vals_out)])
+                        gg+=1
+
+            if gg==1:
+                return hbout[0]
+            else:
+                return hbout
+
 
         # Topological
         elif faux.hbonds.definition == 5 : 
