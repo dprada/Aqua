@@ -1710,6 +1710,99 @@ SUBROUTINE WATER_ANGLE_BISECTOR_ATOM (opt_pbc,list_atoms,list_wats,coors,box,ort
 END SUBROUTINE WATER_ANGLE_BISECTOR_ATOM
 
 
+SUBROUTINE RELATIVE_WATER_POSITION (diff_syst,diff_set,pbc_opt,pairs,coors,box,ortho,numpairs,natom,cars)
+
+IMPLICIT NONE
+
+INTEGER,INTENT(IN)::diff_syst,diff_set,pbc_opt,ortho
+integer,intent(in)::numpairs,natom
+INTEGER,DIMENSION(numpairs,6),INTENT(IN)::pairs
+double precision,dimension(natom,3),intent(in)::coors
+double precision,DIMENSION(3,3),INTENT(IN)::box
+double precision,dimension(numpairs,6),intent(out)::cars
+
+INTEGER::ii
+INTEGER::O1,H11,H12,O2,H21,H22
+DOUBLE PRECISION::valaux,doo,phi,theta1,xi1,theta2,xi2,sign,pi
+DOUBLE PRECISION,DIMENSION(3)::vo1o2,voh1,voh2,D1,D2,vhs1,vhs2,vectaux1,vectaux2,vectaux
+
+pi=3.1415926535897931
+cars=0.0d0
+
+DO ii=1,numpairs
+
+   O1 =pairs(ii,1)+1 
+   H11=pairs(ii,2)+1 
+   H12=pairs(ii,3)+1 
+   O2 =pairs(ii,4)+1 
+   H21=pairs(ii,5)+1 
+   H22=pairs(ii,6)+1 
+
+   vo1o2=coors(O2,:)-coors(O1,:)
+   CALL PBC (vo1o2,box,ortho)
+   voh1=coors(H11,:)-coors(O1,:)
+   voh2=coors(H12,:)-coors(O1,:)
+   CALL PBC (voh1,box,ortho)
+   CALL PBC (voh2,box,ortho)
+   D1=(voh1+voh2)/2.0
+   voh1=coors(H21,:)-coors(O2,:)
+   voh2=coors(H22,:)-coors(O2,:)
+   CALL PBC (voh1,box,ortho)
+   CALL PBC (voh2,box,ortho)
+   D2=(voh1+voh2)/2.0
+   vhs1=coors(H12,:)-coors(H11,:)
+   vhs2=coors(H22,:)-coors(H21,:)
+
+   doo=sqrt(dot_product(vo1o2,vo1o2))
+
+   CALL NORMALIZE_VECT (vo1o2)
+   CALL NORMALIZE_VECT (D1)
+   CALL NORMALIZE_VECT (D2)
+   CALL NORMALIZE_VECT (vhs1)
+   CALL NORMALIZE_VECT (vhs2)
+
+   valaux=dot_product(D1,vo1o2)
+   theta1=dacos(valaux)
+   valaux=dot_product(D2,-vo1o2)
+   theta2=dacos(valaux)
+   
+   CALL PERPENDICULAR_NORMED_VECT (vo1o2,D1,vectaux1)
+   CALL PERPENDICULAR_NORMED_VECT (D2,-vo1o2,vectaux2)
+   CALL PERPENDICULAR_NORMED_VECT (vectaux1,vectaux2,vectaux)
+   sign=dot_product(vectaux,vo1o2)
+   valaux=dot_product(vectaux1,vectaux2)
+   phi=dacos(valaux)
+   IF (sign<=0.0d0) THEN
+      phi=2*pi-phi
+   END IF
+
+   valaux=dot_product(vhs1,vectaux1)
+   CALL PERPENDICULAR_NORMED_VECT (vhs1,vectaux1,vectaux)
+   sign=dot_product(vectaux,D1)
+   xi1=acos(valaux)
+   IF (sign<=0.0d0) THEN
+      xi1=2*pi-xi1
+   END IF
+
+   valaux=dot_product(vhs2,vectaux2)
+   CALL PERPENDICULAR_NORMED_VECT (vhs2,vectaux2,vectaux)
+   sign=dot_product(vectaux,D2)
+   xi2=acos(valaux)
+   IF (sign<=0.0d0) THEN
+      xi2=2*pi-xi2
+   END IF
+
+   cars(ii,:)=(/doo,phi,theta1,theta2,xi1,xi2/)
+
+   !aa[5]+pi,aa[4]-pi (cuando permutas)
+
+END DO
+
+
+END SUBROUTINE RELATIVE_WATER_POSITION
+
+
+
 
 !!$SUBROUTINE min_dist_atoms (pbc_opt,eq_opt,coors,box,ortho,list_a,list_b,N_tot,N_a,N_b,ind_a,ind_b,min_dist)
 !!$

@@ -1393,6 +1393,36 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                     faux.glob.make_cell_ns(rcell,r2,iframe.box,self.num_atoms)
                     faux.glob.make_verlet_list_grid_ns(r1,r2,pbc_opt,iframe.coors,iframe.box,iframe.volume,iframe.orthogonal,self.num_atoms)
         
+    def relative_water_position(self,pairs=None,pbc=True,verbose=False):
+
+        traj=0
+        frame=0
+
+        pbc_opt=0
+        if pbc:
+            check_cell=self.traj[traj].frame[0].cell
+            if check_cell[0,1]!=90 or check_cell[0,2]!=90 or check_cell[1,2]!=90:
+                print '# PBC not implemented for not orthorhombic boxes'
+                return
+            pbc_opt=1
+
+        numpairs=len(pairs)
+        atsinds=numpy.empty((numpairs,6),dtype=int,order='Fortran')
+        for ii in range(numpairs):
+            w1=pairs[ii][0]; w2=pairs[ii][1]
+            atsinds[ii,0]=self.water[w1].O.index
+            atsinds[ii,1]=self.water[w1].H1.index
+            atsinds[ii,2]=self.water[w1].H2.index
+            atsinds[ii,3]=self.water[w2].O.index
+            atsinds[ii,4]=self.water[w2].H1.index
+            atsinds[ii,5]=self.water[w2].H2.index
+
+        iframe=self.traj[0].frame[0]
+        diff_syst=0
+        diff_set=1
+        carvars=faux.glob.relative_water_position(diff_syst,diff_set,pbc_opt,atsinds,iframe.coors,iframe.box,iframe.orthogonal,numpairs,self.num_atoms)
+
+        return carvars
 
 
     def hbonds (self,definition=None,set_A=None,set_B=None,acc_don_A=None,acc_don_B=None,traj=0,frame=0,sk_param=0.00850,roh_param=2.3000,roo_param=3.50,angooh_param=30.0,optimize=False,pbc=True,infile=False,verbose=False):
