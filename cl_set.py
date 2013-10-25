@@ -332,9 +332,9 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                             residue.__int_dict_atoms__[self.atom[ii].__int_name__]=ii
 
             ### Setting up the subsets.
-
+            num_wat=0
             for residue in self.resid[:]:
-             
+                
                 if residue.type=='Water':       ### Waters
                     
                     if without_hs:
@@ -351,6 +351,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                     temp_water.__int_name__=residue.__int_name__
                     for aa in residue.list_atoms:
                         self.atom[aa].resid.__int_name__=residue.__int_name__
+                        self.atom[aa].resid.water=num_wat
              
                     if 'atO' in residue.__int_dict_atoms__.keys():
                         xxx=residue.__int_dict_atoms__.pop('atO')
@@ -373,6 +374,8 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                             aa[2].name=self.atom[xxx].name
              
                     self.water.append(temp_water)
+                    residue.water=num_wat
+                    num_wat+=1
              
                 if residue.type=='Ion':        ### Ions
                     temp_residue=cl_residue()
@@ -382,7 +385,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                     temp_residue.name=residue.name
                     self.ion.append(temp_residue)
 
-
+            del(num_wat)
             ### Setting up the local attributes
             if self.file_topol_type not in ['psf']:
                 # Topology and Covalent bonds
