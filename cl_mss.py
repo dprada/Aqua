@@ -9,7 +9,10 @@ class adnode():
         self.index=None
         self.acceptors=[]
         self.donors=[]
-
+        self.num_acc=0
+        self.num_don=0
+        self.shell1st_acc=[]
+        self.shell1st_don=[]
 
 class mss():
 
@@ -32,14 +35,16 @@ class mss():
                 self.list_water.append(ii)
 
         self.at2node={}
-        self.at2accdon={}
         for ii in range(self.num_nodes):
-            for jj in self.node[ii].donors:
-                self.at2node[jj]=ii
-                self.at2accdon[jj]='donor'
-            for jj in self.node[ii].acceptors:
-                self.at2node[jj]=ii
-                self.at2accdon[jj]='acceptor'
+            node=self.node[ii]
+            node.num_don=len(node.donors)
+            node.num_acc=len(node.acceptors)
+            for jj in range(node.num_don):
+                self.at2node[node.donors[jj]]=[ii,'donor',jj]
+                node.shell1st_don.append([])
+            for jj in range(node.num_acc):
+                self.at2node[node.acceptors[jj]]=[ii,'acceptor',jj]
+                node.shell1st_acc.append([])
 
         if verbose:
             self.info()
@@ -131,3 +136,13 @@ class mss():
                 self.node.append(aux_dict[ii])
             
             del(aux_dict,aux_keys,con_ASP,con_GLU,con_Term)
+
+    def build_shell1st(self,hbonds=None,bonds=None):
+
+        for hb in hbonds[0]:
+            atdon=hb[1]
+            atacc=hb[2]
+            idon=self.at2node[atdon]
+            iacc=self.at2node[atacc]
+            self.node[idon[0]].shell1st_don[idon[2]].append(atacc)
+            self.node[iacc[0]].shell1st_acc[iacc[2]].append(atdon)
