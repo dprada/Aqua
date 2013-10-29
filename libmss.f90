@@ -1067,4 +1067,11 @@ SUBROUTINE addbonds (tipo,mss,mss_ind,bonds,num_wats,num_bonds)
 
 END SUBROUTINE addbonds
 
+
+
+
+
+
+
+
 END MODULE GLOB

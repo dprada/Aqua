@@ -232,7 +232,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 
         # > Physical and Chemical properties
         self.acceptors=[]               # list of acceptors
-        self.donors=[[],[]]             # list of [donors,donor_hydrogen]
+        self.donors=[]             # list of [donors,donor_hydrogen]
         self.dimensionality=0           # dimensionality (num_atoms*3)
 
         # > Coordinates and Trajectory
@@ -507,8 +507,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                      if atom.donor:
                          for ii in atom.covalent_bonds:
                              if self.atom[ii].type=='H':
-                                 self.donors[0].append(atom.index)
-                                 self.donors[1].append(ii)
+                                 self.donors.append([atom.index,ii])
                   
                  self.acceptors=numpy.array(self.acceptors,dtype=int,order='Fortran')
                  self.donors=numpy.array(self.donors,dtype=int,order='Fortran')
@@ -751,13 +750,14 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 
     def add_donors(self,select=None,verbose=False):
         setdon,nlist,numsys=__read_set_opt__(self,select)
+        self.donors=list(self.donors)
         for ii in setdon:
             self.atom[ii].donor=True
             with_h=False
             for jj in self.atom.covalent_bonds:
                 if self.atom[jj].type=='H':
-                    self.donors[0].append(ii)
-                    self.donors[1].append(jj)
+                    self.donors.append([ii,jj])
+            self.donors=numpy.array(self.donors,dtype=int,order='Fortran')
             if not with_h:
                 print '# No H atom bonded to',self.atom[ii].info()
         if verbose:
@@ -765,9 +765,11 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 
     def add_acceptors(self,select=None,verbose=False):
         setacc,nlist,numsys=__read_set_opt__(self,select)
+        self.acceptors=list(self.acceptors)
         for ii in setacc:
             self.atom[ii].acceptor=True
             self.acceptors.append(ii)
+        self.acceptors=numpy.array(self.acceptors,dtype=int,order='Fortran')
         if verbose:
             print '#',nlist,'acceptors added.'
 
@@ -1936,7 +1938,6 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                 mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
 
                 return mss,mss_ind
-
 
 
     def mss_hbonds_wation(self,definition=1,hbonds=None,bonds=None,tipo=1,verbose=True):
