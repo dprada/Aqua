@@ -11,6 +11,9 @@ class shell1st():
         self.don_val=[]
         self.acc_num=[]
         self.don_num=[]
+        self.mss=[]
+        self.mss_ind=[]
+
 
 class adnode():
 
@@ -200,6 +203,11 @@ class mss():
 
         self.reset()
 
+        if self.hbtype in ['R(o,o)-Ang(o,o,h)']:
+            rever=False
+        elif self.hbtype in ['Skinner']:
+            rever=True
+
         filt_aux_don=numpy.zeros((self.don_num),dtype=int)
         filt_aux_acc=numpy.zeros((self.acc_num),dtype=int)
 
@@ -220,13 +228,13 @@ class mss():
         for ii in numpy.nonzero(filt_aux_don>1)[0]:
             idon=self.don2node[self.don_list[ii]]
             tups = zip(self.node[idon[0]].shell1st.don_val[idon[1]], self.node[idon[0]].shell1st.don[idon[1]])
-            tups.sort() 
+            tups.sort(reverse=rever) 
             [self.node[idon[0]].shell1st.don_val[idon[1]], self.node[idon[0]].shell1st.don[idon[1]]]=zip(*tups)
          
         for ii in numpy.nonzero(filt_aux_acc>1)[0]:
             iacc=self.acc2node[self.acc_list[ii]]
             tups = zip(self.node[iacc[0]].shell1st.acc_val[iacc[1]], self.node[iacc[0]].shell1st.acc[iacc[1]])
-            tups.sort()
+            tups.sort(reverse=rever)
             [self.node[iacc[0]].shell1st.acc_val[iacc[1]], self.node[iacc[0]].shell1st.acc[iacc[1]]]=zip(*tups)
 
         del(filt_aux_don,filt_aux_acc)
@@ -247,13 +255,18 @@ class mss():
 
     def build_mss(self):
 
-        if self.hbtype in ['R(o,o)-Ang(o,o,h)']:
-            reverse=False
-        elif self.hbtype in ['Skinner']:
-            reverse=True
-
         for node in self.node:
             if node.type=='Water':   # Puedo hacer una lista previa con las aguas y otra con la proteina
-                node.mss_ind=numpy.zeros((16),dtype=int,order='Fortran')
-                #if 
-        
+                mss=numpy.zeros((4),dtype=int,order='Fortran')
+                mss_ind=numpy.zeros((4),dtype=int,order='Fortran')
+                if node.shell1st.don_num[0]:
+                    mss_ind[0]=node.shell1st.don[0][0]; mss[0]=2
+                if node.shell1st.don_num[1]:
+                    mss_ind[1]=node.shell1st.don[1][0]; mss[1]=3
+                if node.shell1st.acc_num[0]==1:
+                    mss_ind[2]=node.shell1st.acc[0][0]; mss[2]=4
+                elif node.shell1st.acc_num[0]==2:
+                    mss_ind[2]=node.shell1st.acc[0][0]; mss[2]=4
+                    mss_ind[3]=node.shell1st.acc[0][1]; mss[3]=5
+                node.shell1st.mss=mss; node.shell1st.mss_ind=mss_ind 
+                
