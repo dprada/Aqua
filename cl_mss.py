@@ -58,6 +58,7 @@ class mss():
 
         for ii in range(self.num_nodes):
             node=self.node[ii]
+            node.index=ii
             node.num_don=len(node.donors)
             node.num_acc=len(node.acceptors)
             for jj in range(node.num_don):
@@ -110,7 +111,7 @@ class mss():
                     tmp_adnode=adnode()
                     tmp_adnode.type=self.msystem.atom[ii[0]].resid.type
                     tmp_adnode.name=self.msystem.atom[ii[0]].resid.name
-                    tmp_adnode.index=self.msystem.atom[ii[0]].resid.index
+                    #tmp_adnode.index=self.msystem.atom[ii[0]].resid.index
                     if tmp_adnode.type=='Water':
                         tmp_adnode.water=self.msystem.atom[ii[0]].resid.water
                     aux_dict[ii[0]]=tmp_adnode
@@ -121,7 +122,7 @@ class mss():
                     tmp_adnode=adnode()
                     tmp_adnode.type=self.msystem.atom[ii].resid.type
                     tmp_adnode.name=self.msystem.atom[ii].resid.name
-                    tmp_adnode.index=self.msystem.atom[ii].resid.index
+                    #tmp_adnode.index=self.msystem.atom[ii].resid.index
                     if tmp_adnode.type=='Water':
                         tmp_adnode.water=self.msystem.atom[ii].resid.water
                     aux_dict[ii]=tmp_adnode
@@ -144,7 +145,7 @@ class mss():
                     tmp_adnode=adnode()
                     tmp_adnode.type=self.msystem.atom[ii[0]].resid.type
                     tmp_adnode.name=self.msystem.atom[ii[0]].resid.name
-                    tmp_adnode.index=self.msystem.atom[ii[0]].resid.index
+                    #tmp_adnode.index=self.msystem.atom[ii[0]].resid.index
                     if tmp_adnode.type=='Water':
                         tmp_adnode.water=self.msystem.atom[ii[0]].resid.water
                     aux_dict[ii[0]]=tmp_adnode
@@ -155,7 +156,7 @@ class mss():
                     tmp_adnode=adnode()
                     tmp_adnode.type=self.msystem.atom[ii].resid.type
                     tmp_adnode.name=self.msystem.atom[ii].resid.name
-                    tmp_adnode.index=self.msystem.atom[ii].resid.index
+                    #tmp_adnode.index=self.msystem.atom[ii].resid.index
                     if tmp_adnode.type=='Water':
                         tmp_adnode.water=self.msystem.atom[ii].resid.water
                     aux_dict[ii]=tmp_adnode
@@ -203,7 +204,7 @@ class mss():
 
         self.reset()
 
-        if self.hbtype in ['R(o,o)-Ang(o,o,h)']:
+        if self.hbtype in ['R(o,o)-Ang(o,o,h)','R(o,h)']:
             rever=False
         elif self.hbtype in ['Skinner']:
             rever=True
@@ -253,20 +254,35 @@ class mss():
         #            [node.shell1st.don_val[ii], node.shell1st.don[ii]]=zip(*tups)
 
 
-    def build_mss(self):
+    def build_mss_slow_antes(self):
 
-        for node in self.node:
-            if node.type=='Water':   # Puedo hacer una lista previa con las aguas y otra con la proteina
-                mss=numpy.zeros((4),dtype=int,order='Fortran')
-                mss_ind=numpy.zeros((4),dtype=int,order='Fortran')
-                if node.shell1st.don_num[0]:
-                    mss_ind[0]=node.shell1st.don[0][0]; mss[0]=2
-                if node.shell1st.don_num[1]:
-                    mss_ind[1]=node.shell1st.don[1][0]; mss[1]=3
-                if node.shell1st.acc_num[0]==1:
-                    mss_ind[2]=node.shell1st.acc[0][0]; mss[2]=4
-                elif node.shell1st.acc_num[0]==2:
-                    mss_ind[2]=node.shell1st.acc[0][0]; mss[2]=4
-                    mss_ind[3]=node.shell1st.acc[0][1]; mss[3]=5
-                node.shell1st.mss=mss; node.shell1st.mss_ind=mss_ind 
+        #for node in self.node:
+        #    if node.type=='Water':   # Puedo hacer una lista previa con las aguas y otra con la proteina
+        #        mss=numpy.zeros((4),dtype=int,order='Fortran')
+        #        mss_ind=numpy.zeros((4),dtype=int,order='Fortran')
+        #        if node.shell1st.don_num[0]:
+        #            mss_ind[0]=node.shell1st.don[0][0]; mss[0]=2
+        #        if node.shell1st.don_num[1]:
+        #            mss_ind[1]=node.shell1st.don[1][0]; mss[1]=3
+        #        if node.shell1st.acc_num[0]==1:
+        #            mss_ind[2]=node.shell1st.acc[0][0]; mss[2]=4
+        #        elif node.shell1st.acc_num[0]==2:
+        #            mss_ind[2]=node.shell1st.acc[0][0]; mss[2]=4
+        #            mss_ind[3]=node.shell1st.acc[0][1]; mss[3]=5
+        #        node.shell1st.mss=mss; node.shell1st.mss_ind=mss_ind 
                 
+        for node in self.node:
+            if node.type=='Water':
+                mss_ind=numpy.zeros((16),dtype=int)
+                mss_filt=numpy.zeros((16),dtype=bool)
+                if node.shell1st.don_num[0]:
+                    ii=self.acc2node[node.shell1st.don[0][0]]
+                    mss_filt[0]=True
+                    mss_ind[0]=self.
+
+                node.mss[0:4]=node.shell1st.mss[:]
+                node.mss_ind[0:4]=node.shell1st.mss_ind[:]
+                if node.mss[0]:
+                    jj.node.acceptor[0]
+                    ii=self.at2node[node.mss_ind[0]]
+                    node.mss_ind[4:6]=
