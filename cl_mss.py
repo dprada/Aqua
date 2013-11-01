@@ -277,9 +277,64 @@ class mss():
                 mss_filt=numpy.zeros((16),dtype=bool)
                 if node.shell1st.don_num[0]:
                     ii=self.acc2node[node.shell1st.don[0][0]]
+                    nodeh1=self.node[ii[0]]
                     mss_filt[0]=True
-                    mss_ind[0]=self.
-
+                    mss_ind[0]=ii[0]
+                    if nodeh1.type=='Water':
+                        if nodeh1.shell1st.don_num[0]:
+                            jj=self.acc2node[nodeh1.shell1st.don[0][0]]
+                            mss_filt[4]=True
+                            mss_ind[4]=jj[0]
+                        if nodeh1.shell1st.don_num[1]:
+                            jj=self.acc2node[nodeh1.shell1st.don[1][0]]
+                            mss_filt[5]=True
+                            mss_ind[5]=jj[0]
+                        if nodeh1.shell1st.acc_num[0]>1:
+                            kk=self.don2node[nodeh1.shell1st.acc[0][0]]
+                            ll=self.don2node[nodeh1.shell1st.acc[0][1]]
+                            if kk==node.index or ll==node.index:
+                                if kk==node.index:
+                                    mss_filt[6]=True
+                                    mss_ind[6]=ll
+                                else:
+                                    mss_filt[6]=True
+                                    mss_ind[6]=kk
+                            else:
+                                mss_filt[6]=True
+                                mss_ind[6]=kk
+                if node.shell1st.don_num[1]:
+                    ii=self.acc2node[node.shell1st.don[1][0]]
+                    nodeh2=self.node[ii[0]]
+                    mss_filt[0]=True
+                    mss_ind[0]=ii[0]
+                    if nodeh2.type=='Water':
+                        if nodeh2.shell1st.don_num[0]:
+                            jj=self.acc2node[nodeh2.shell1st.don[0][0]]
+                            mss_filt[4]=True
+                            mss_ind[4]=jj[0]
+                        if nodeh2.shell1st.don_num[1]:
+                            jj=self.acc2node[nodeh2.shell1st.don[1][0]]
+                            mss_filt[5]=True
+                            mss_ind[5]=jj[0]
+                        if nodeh2.shell1st.acc_num[0]>1:
+                            kk=self.don2node[nodeh2.shell1st.acc[0][0]]
+                            ll=self.don2node[nodeh2.shell1st.acc[0][1]]
+                            if kk==node.index or ll==node.index:
+                                if kk==node.index:
+                                    mss_filt[6]=True
+                                    mss_ind[6]=ll
+                                else:
+                                    mss_filt[6]=True
+                                    mss_ind[6]=kk
+                            else:
+                                mss_filt[6]=True
+                                mss_ind[6]=kk
+                if node.shell1st
+                                
+                            
+                        
+         
+         
                 node.mss[0:4]=node.shell1st.mss[:]
                 node.mss_ind[0:4]=node.shell1st.mss_ind[:]
                 if node.mss[0]:
