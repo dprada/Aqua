@@ -7,6 +7,8 @@ class shell1st():
 
         self.acc=[]
         self.don=[]
+        self.acc_node=[]
+        self.don_node=[]
         self.acc_val=[]
         self.don_val=[]
         self.acc_num=[]
@@ -24,8 +26,8 @@ class adnode():
         self.index=None
         self.acceptors=[]
         self.donors=[]
-        self.num_acc=0
-        self.num_don=0
+        self.acc_num=0
+        self.don_num=0
         self.shell1st=shell1st()
         self.mss=[]
         self.mss_ind=[]
@@ -59,15 +61,15 @@ class mss():
         for ii in range(self.num_nodes):
             node=self.node[ii]
             node.index=ii
-            node.num_don=len(node.donors)
-            node.num_acc=len(node.acceptors)
-            for jj in range(node.num_don):
+            node.don_num=len(node.donors)
+            node.acc_num=len(node.acceptors)
+            for jj in range(node.don_num):
                 self.at2node[node.donors[jj]]=[ii,'donor',jj]
                 self.don2node[node.donors[jj]]=[ii,jj]
                 node.shell1st.don.append([])
                 node.shell1st.don_val.append([])
                 node.shell1st.don_num.append(0)
-            for jj in range(node.num_acc):
+            for jj in range(node.acc_num):
                 self.at2node[node.acceptors[jj]]=[ii,'acceptor',jj]
                 self.acc2node[node.acceptors[jj]]=[ii,jj]
                 node.shell1st.acc.append([])
@@ -187,12 +189,14 @@ class mss():
     def reset(self):
 
         for node in self.node:
-            node.shell1st.don=[ [] for ii in range(node.num_don)]
-            node.shell1st.acc=[ [] for ii in range(node.num_acc)]
-            node.shell1st.don_val=[ [] for ii in range(node.num_don)]
-            node.shell1st.acc_val=[ [] for ii in range(node.num_acc)]
-            node.shell1st.don_num=[ 0 for ii in range(node.num_don)]
-            node.shell1st.acc_num=[ 0 for ii in range(node.num_acc)]
+            node.shell1st.don=[ [] for ii in range(node.don_num)]
+            node.shell1st.acc=[ [] for ii in range(node.acc_num)]
+            node.shell1st.don_val=[ [] for ii in range(node.don_num)]
+            node.shell1st.acc_val=[ [] for ii in range(node.acc_num)]
+            node.shell1st.don_node=[ [] for ii in range(node.don_num)]
+            node.shell1st.acc_node=[ [] for ii in range(node.acc_num)]
+            node.shell1st.don_num=[ 0 for ii in range(node.don_num)]
+            node.shell1st.acc_num=[ 0 for ii in range(node.acc_num)]
             node.mss=[]
             node.mss_ind=[]
 
@@ -219,6 +223,8 @@ class mss():
             iacc=self.acc2node[atacc]
             self.node[idon[0]].shell1st.don[idon[1]].append(atacc)
             self.node[iacc[0]].shell1st.acc[iacc[1]].append(atdon)
+            self.node[idon[0]].shell1st.don_node[idon[1]].append(iacc)
+            self.node[iacc[0]].shell1st.acc_node[iacc[1]].append(idon)
             self.node[idon[0]].shell1st.don_val[idon[1]].append(hb_val)
             self.node[iacc[0]].shell1st.acc_val[iacc[1]].append(hb_val)
             self.node[idon[0]].shell1st.don_num[idon[1]]+=1
@@ -228,31 +234,59 @@ class mss():
 
         for ii in numpy.nonzero(filt_aux_don>1)[0]:
             idon=self.don2node[self.don_list[ii]]
-            tups = zip(self.node[idon[0]].shell1st.don_val[idon[1]], self.node[idon[0]].shell1st.don[idon[1]])
+            ishell1st=self.node[idon[0]].shell1st
+            tups = zip(ishell1st.don_val[idon[1]], ishell1st.don[idon[1]], ishell1st.don_node[idon[1]])
             tups.sort(reverse=rever) 
-            [self.node[idon[0]].shell1st.don_val[idon[1]], self.node[idon[0]].shell1st.don[idon[1]]]=zip(*tups)
+            [ishell1st.don_val[idon[1]], ishell1st.don[idon[1]], ishell1st.don_node[idon[1]]]=zip(*tups)
          
         for ii in numpy.nonzero(filt_aux_acc>1)[0]:
             iacc=self.acc2node[self.acc_list[ii]]
-            tups = zip(self.node[iacc[0]].shell1st.acc_val[iacc[1]], self.node[iacc[0]].shell1st.acc[iacc[1]])
+            ishell1st=self.node[iacc[0]].shell1st
+            tups = zip(ishell1st.acc_val[iacc[1]], ishell1st.acc[iacc[1]], ishell1st.acc_node[iacc[1]])
             tups.sort(reverse=rever)
-            [self.node[iacc[0]].shell1st.acc_val[iacc[1]], self.node[iacc[0]].shell1st.acc[iacc[1]]]=zip(*tups)
+            [ishell1st.acc_val[iacc[1]], ishell1st.acc[iacc[1]], ishell1st.acc_node[iacc[1]]]=zip(*tups)
 
         del(filt_aux_don,filt_aux_acc)
 
         # is this faster?
         #for node in self.node:
-        #    for ii in range(node.num_acc):
+        #    for ii in range(node.acc_num):
         #        if node.shell1st.acc_num[ii]>1:
         #            tups = zip(node.shell1st.acc_val[ii], node.shell1st.acc[ii])
         #            tups.sort()
         #            [node.shell1st.acc_val[ii], node.shell1st.acc[ii]]=zip(*tups)
-        #    for ii in range(node.num_don):
+        #    for ii in range(node.don_num):
         #        if node.shell1st.don_num[ii]>1:
         #            tups = zip(node.shell1st.don_val[ii], node.shell1st.don[ii])
         #            tups.sort()
         #            [node.shell1st.don_val[ii], node.shell1st.don[ii]]=zip(*tups)
 
+
+    def build_mss(self):
+
+        for node in self.node:
+            mss=[]
+            inddon=[]
+            indacc=[]
+            mss.extend([node.don_num,node.acc_num])
+            mss.extend(node.shell1st.don_num)
+            mss.extend(node.shell1st.acc_num)
+            for ii in range(node.don_num):
+                for jj in range(node.shell1st.don_num[ii]):
+                    mss.append(node.shell1st.don_node[ii][jj][0])
+            for ii in range(node.acc_num):
+                for jj in range(node.shell1st.acc_num[ii]):
+                    mss.append(node.shell1st.acc_node[ii][jj][0])            
+            node.shell1st.mss=mss
+
+        for node in self.node:
+            node.mss.append(node.index)
+            node.mss.extend(node.shell1st.mss)
+            ii=sum(node.shell1st.mss[0:2])+2
+            jj=sum(node.shell1st.mss[2:ii])+ii
+            for kk in node.shell1st.mss[ii:jj]:
+                node.mss.extend(self.node[kk].shell1st.mss)
+            
 
     def build_mss_slow_antes(self):
 
@@ -271,73 +305,74 @@ class mss():
         #            mss_ind[3]=node.shell1st.acc[0][1]; mss[3]=5
         #        node.shell1st.mss=mss; node.shell1st.mss_ind=mss_ind 
                 
-        for node in self.node:
-            if node.type=='Water':
-                mss_ind=numpy.zeros((16),dtype=int)
-                mss_filt=numpy.zeros((16),dtype=bool)
-                if node.shell1st.don_num[0]:
-                    ii=self.acc2node[node.shell1st.don[0][0]]
-                    nodeh1=self.node[ii[0]]
-                    mss_filt[0]=True
-                    mss_ind[0]=ii[0]
-                    if nodeh1.type=='Water':
-                        if nodeh1.shell1st.don_num[0]:
-                            jj=self.acc2node[nodeh1.shell1st.don[0][0]]
-                            mss_filt[4]=True
-                            mss_ind[4]=jj[0]
-                        if nodeh1.shell1st.don_num[1]:
-                            jj=self.acc2node[nodeh1.shell1st.don[1][0]]
-                            mss_filt[5]=True
-                            mss_ind[5]=jj[0]
-                        if nodeh1.shell1st.acc_num[0]>1:
-                            kk=self.don2node[nodeh1.shell1st.acc[0][0]]
-                            ll=self.don2node[nodeh1.shell1st.acc[0][1]]
-                            if kk==node.index or ll==node.index:
-                                if kk==node.index:
-                                    mss_filt[6]=True
-                                    mss_ind[6]=ll
-                                else:
-                                    mss_filt[6]=True
-                                    mss_ind[6]=kk
-                            else:
-                                mss_filt[6]=True
-                                mss_ind[6]=kk
-                if node.shell1st.don_num[1]:
-                    ii=self.acc2node[node.shell1st.don[1][0]]
-                    nodeh2=self.node[ii[0]]
-                    mss_filt[0]=True
-                    mss_ind[0]=ii[0]
-                    if nodeh2.type=='Water':
-                        if nodeh2.shell1st.don_num[0]:
-                            jj=self.acc2node[nodeh2.shell1st.don[0][0]]
-                            mss_filt[4]=True
-                            mss_ind[4]=jj[0]
-                        if nodeh2.shell1st.don_num[1]:
-                            jj=self.acc2node[nodeh2.shell1st.don[1][0]]
-                            mss_filt[5]=True
-                            mss_ind[5]=jj[0]
-                        if nodeh2.shell1st.acc_num[0]>1:
-                            kk=self.don2node[nodeh2.shell1st.acc[0][0]]
-                            ll=self.don2node[nodeh2.shell1st.acc[0][1]]
-                            if kk==node.index or ll==node.index:
-                                if kk==node.index:
-                                    mss_filt[6]=True
-                                    mss_ind[6]=ll
-                                else:
-                                    mss_filt[6]=True
-                                    mss_ind[6]=kk
-                            else:
-                                mss_filt[6]=True
-                                mss_ind[6]=kk
-                if node.shell1st
-                                
-                            
-                        
-         
-         
-                node.mss[0:4]=node.shell1st.mss[:]
-                node.mss_ind[0:4]=node.shell1st.mss_ind[:]
-                if node.mss[0]:
-                    jj.node.acceptor[0]
-                    ii=self.at2node[node.mss_ind[0]]
-                    node.mss_ind[4:6]=
+        #for node in self.node:
+        #    if node.type=='Water':
+        #        mss_ind=numpy.zeros((16),dtype=int)
+        #        mss_filt=numpy.zeros((16),dtype=bool)
+        #        if node.shell1st.don_num[0]:
+        #            ii=self.acc2node[node.shell1st.don[0][0]]
+        #            nodeh1=self.node[ii[0]]
+        #            mss_filt[0]=True
+        #            mss_ind[0]=ii[0]
+        #            if nodeh1.type=='Water':
+        #                if nodeh1.shell1st.don_num[0]:
+        #                    jj=self.acc2node[nodeh1.shell1st.don[0][0]]
+        #                    mss_filt[4]=True
+        #                    mss_ind[4]=jj[0]
+        #                if nodeh1.shell1st.don_num[1]:
+        #                    jj=self.acc2node[nodeh1.shell1st.don[1][0]]
+        #                    mss_filt[5]=True
+        #                    mss_ind[5]=jj[0]
+        #                if nodeh1.shell1st.acc_num[0]>1:
+        #                    kk=self.don2node[nodeh1.shell1st.acc[0][0]]
+        #                    ll=self.don2node[nodeh1.shell1st.acc[0][1]]
+        #                    if kk==node.index or ll==node.index:
+        #                        if kk==node.index:
+        #                            mss_filt[6]=True
+        #                            mss_ind[6]=ll
+        #                        else:
+        #                            mss_filt[6]=True
+        #                            mss_ind[6]=kk
+        #                    else:
+        #                        mss_filt[6]=True
+        #                        mss_ind[6]=kk
+        #        if node.shell1st.don_num[1]:
+        #            ii=self.acc2node[node.shell1st.don[1][0]]
+        #            nodeh2=self.node[ii[0]]
+        #            mss_filt[0]=True
+        #            mss_ind[0]=ii[0]
+        #            if nodeh2.type=='Water':
+        #                if nodeh2.shell1st.don_num[0]:
+        #                    jj=self.acc2node[nodeh2.shell1st.don[0][0]]
+        #                    mss_filt[4]=True
+        #                    mss_ind[4]=jj[0]
+        #                if nodeh2.shell1st.don_num[1]:
+        #                    jj=self.acc2node[nodeh2.shell1st.don[1][0]]
+        #                    mss_filt[5]=True
+        #                    mss_ind[5]=jj[0]
+        #                if nodeh2.shell1st.acc_num[0]>1:
+        #                    kk=self.don2node[nodeh2.shell1st.acc[0][0]]
+        #                    ll=self.don2node[nodeh2.shell1st.acc[0][1]]
+        #                    if kk==node.index or ll==node.index:
+        #                        if kk==node.index:
+        #                            mss_filt[6]=True
+        #                            mss_ind[6]=ll
+        #                        else:
+        #                            mss_filt[6]=True
+        #                            mss_ind[6]=kk
+        #                    else:
+        #                        mss_filt[6]=True
+        #                        mss_ind[6]=kk
+        #        if node.shell1st
+        #                        
+        #                    
+        #                
+        # 
+        # 
+        #        node.mss[0:4]=node.shell1st.mss[:]
+        #        node.mss_ind[0:4]=node.shell1st.mss_ind[:]
+        #        if node.mss[0]:
+        #            jj.node.acceptor[0]
+        #            ii=self.at2node[node.mss_ind[0]]
+        #            node.mss_ind[4:6]=
+        pass
