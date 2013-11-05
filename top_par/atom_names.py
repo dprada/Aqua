@@ -4,7 +4,41 @@ atom={
 'H1'   : 'atH1'   ,
 'H2'   : 'atH2'   ,
 '2HH'  : 'atH2'   ,    # pymol.pdb
-'H3'   : 'atH3'   ,
+'H3'   : 'atH3'   ,    # lipid AOT 
+'H4'   : 'atH4'   ,    # lipid AOT 
+'H5'   : 'atH5'   ,    # lipid AOT 
+'H6'   : 'atH6'   ,    # lipid AOT 
+'H7'   : 'atH7'   ,    # lipid AOT 
+'H8'   : 'atH8'   ,    # lipid AOT 
+'H9'   : 'atH9'   ,    # lipid AOT 
+'H10'  : 'atH10'  ,    # lipid AOT 
+'H11'  : 'atH11'  ,    # lipid AOT 
+'H12'  : 'atH12'  ,    # lipid AOT 
+'H13'  : 'atH13'  ,    # lipid AOT 
+'H14'  : 'atH14'  ,    # lipid AOT 
+'H15'  : 'atH15'  ,    # lipid AOT 
+'H16'  : 'atH16'  ,    # lipid AOT 
+'H17'  : 'atH17'  ,    # lipid AOT 
+'H18'  : 'atH18'  ,    # lipid AOT 
+'H19'  : 'atH19'  ,    # lipid AOT 
+'H20'  : 'atH20'  ,    # lipid AOT 
+'H21'  : 'atH21'  ,    # lipid AOT 
+'H22'  : 'atH22'  ,    # lipid AOT 
+'H23'  : 'atH23'  ,    # lipid AOT 
+'H24'  : 'atH24'  ,    # lipid AOT 
+'H25'  : 'atH25'  ,    # lipid AOT 
+'H26'  : 'atH26'  ,    # lipid AOT 
+'H27'  : 'atH27'  ,    # lipid AOT 
+'H28'  : 'atH28'  ,    # lipid AOT 
+'H29'  : 'atH29'  ,    # lipid AOT 
+'H30'  : 'atH30'  ,    # lipid AOT 
+'H31'  : 'atH31'  ,    # lipid AOT 
+'H32'  : 'atH32'  ,    # lipid AOT 
+'H33'  : 'atH33'  ,    # lipid AOT 
+'H34'  : 'atH34'  ,    # lipid AOT 
+'H35'  : 'atH35'  ,    # lipid AOT 
+'H36'  : 'atH36'  ,    # lipid AOT 
+'H37'  : 'atH37'  ,    # lipid AOT 
 'HA'   : 'atHA'   ,
 'HA1'  : 'atHA1'  ,
 'HA2'  : 'atHA2'  ,
@@ -96,6 +130,26 @@ atom={
 'HT2'  : 'atHT2'  ,    # for terminal
 'HT3'  : 'atHT3'  ,    # for terminal
 'C'    : 'atC'    ,
+'C1'   : 'atC1'   ,    # lipid AOT
+'C2'   : 'atC2'   ,    # lipid AOT
+'C3'   : 'atC3'   ,    # lipid AOT
+'C4'   : 'atC4'   ,    # lipid AOT
+'C5'   : 'atC5'   ,    # lipid AOT
+'C6'   : 'atC6'   ,    # lipid AOT
+'C7'   : 'atC7'   ,    # lipid AOT
+'C8'   : 'atC8'   ,    # lipid AOT
+'C9'   : 'atC9'   ,    # lipid AOT
+'C10'  : 'atC10'  ,    # lipid AOT
+'C11'  : 'atC11'  ,    # lipid AOT
+'C12'  : 'atC12'  ,    # lipid AOT
+'C13'  : 'atC13'  ,    # lipid AOT
+'C14'  : 'atC14'  ,    # lipid AOT
+'C15'  : 'atC15'  ,    # lipid AOT
+'C16'  : 'atC16'  ,    # lipid AOT
+'C17'  : 'atC17'  ,    # lipid AOT
+'C18'  : 'atC18'  ,    # lipid AOT
+'C19'  : 'atC19'  ,    # lipid AOT
+'C20'  : 'atC20'  ,    # lipid AOT
 'CA'   : 'atCA'   ,
 'CAY'  : 'atCAY'  ,    # ACEMD (ACE Terminal)
 'CAT'  : 'atCAT'  ,    # ACEMD (NME Terminal)
@@ -134,14 +188,20 @@ atom={
 'OG'   : 'atOG'   ,
 'OG1'  : 'atOG1'  ,
 'OH'   : 'atOH'   ,
-'OY'   : 'atOY'    ,   # ACEMD (ACE Terminal)
+'OY'   : 'atOY'   ,   # ACEMD (ACE Terminal)
 'O1'   : 'atOT1'  ,    # terminal .pdb
 'O2'   : 'atOT2'  ,    # terminal .pdb
+'O3'   : 'atO3'   ,    # terminal .pdb
+'O4'   : 'atO4'   ,    # terminal .pdb
+'OS1'  : 'atOS1'  ,    # lipid AOT  
+'OS2'  : 'atOS2'  ,    # lipid AOT 
+'OS3'  : 'atOS3'  ,    # lipid AOT 
 'OT1'  : 'atOT1'  ,    # terminal charmm.pdb
 'OT2'  : 'atOT2'  ,    # terminal charmm.pdb
 'OC1'  : 'atOT1'  ,    # terminal .pdb
 'OC2'  : 'atOT2'  ,    # terminal .pdb
 'OXT'  : 'atOXT'  ,    # terminal
+'S'    : 'atS'    ,    # lipid AOT
 'SD'   : 'atSD'   ,
 'SG'   : 'atSG'   ,
 
@@ -171,7 +231,41 @@ atom_type={
 'atH'   : 'H'   , 
 'atH1'  : 'H'   , 
 'atH2'  : 'H'   , 
-'atH3'  : 'H'   , 
+'atH3'  : 'H'   ,
+'atH4'  : 'H'   ,
+'atH5'  : 'H'   ,
+'atH6'  : 'H'   ,
+'atH7'  : 'H'   ,
+'atH8'  : 'H'   ,
+'atH9'  : 'H'   ,
+'atH10' : 'H'   ,
+'atH11' : 'H'   ,
+'atH12' : 'H'   ,
+'atH13' : 'H'   ,
+'atH14' : 'H'   ,
+'atH15' : 'H'   ,
+'atH16' : 'H'   ,
+'atH17' : 'H'   ,
+'atH18' : 'H'   ,
+'atH19' : 'H'   ,
+'atH20' : 'H'   ,
+'atH21' : 'H'   ,
+'atH22' : 'H'   ,
+'atH23' : 'H'   ,
+'atH24' : 'H'   ,
+'atH25' : 'H'   ,
+'atH26' : 'H'   ,
+'atH27' : 'H'   ,
+'atH28' : 'H'   ,
+'atH29' : 'H'   ,
+'atH30' : 'H'   ,
+'atH31' : 'H'   ,
+'atH32' : 'H'   ,
+'atH33' : 'H'   ,
+'atH34' : 'H'   ,
+'atH35' : 'H'   ,
+'atH36' : 'H'   ,
+'atH37' : 'H'   , 
 'atHA'  : 'H'   , 
 'atHA1' : 'H'   , 
 'atHA2' : 'H'   , 
@@ -224,6 +318,26 @@ atom_type={
 'atHZ2' : 'H'   , 
 'atHZ3' : 'H'   , 
 'atC'   : 'C'   , 
+'atC1'  : 'C'   , 
+'atC2'  : 'C'   , 
+'atC3'  : 'C'   , 
+'atC4'  : 'C'   , 
+'atC5'  : 'C'   , 
+'atC6'  : 'C'   , 
+'atC7'  : 'C'   , 
+'atC8'  : 'C'   , 
+'atC9'  : 'C'   , 
+'atC10' : 'C'   , 
+'atC11' : 'C'   , 
+'atC12' : 'C'   , 
+'atC13' : 'C'   , 
+'atC14' : 'C'   , 
+'atC15' : 'C'   , 
+'atC16' : 'C'   , 
+'atC17' : 'C'   , 
+'atC18' : 'C'   , 
+'atC19' : 'C'   , 
+'atC20' : 'C'   , 
 'atCA'  : 'C'   ,
 'atCAT' : 'C'   ,
 'atCAY' : 'C'   ,
@@ -255,7 +369,9 @@ atom_type={
 'atNZ'  : 'N'   , 
 'atO'   : 'O'   , 
 'atO1'  : 'O'   , 
-'atO2'  : 'O'   , 
+'atO2'  : 'O'   ,
+'atO3'  : 'O'   , 
+'atO4'  : 'O'   ,
 'atOD1' : 'O'   , 
 'atOD2' : 'O'   , 
 'atOE1' : 'O'   , 
@@ -263,11 +379,15 @@ atom_type={
 'atOG'  : 'O'   , 
 'atOG1' : 'O'   , 
 'atOH'  : 'O'   , 
+'atOS1' : 'O'   ,
+'atOS2' : 'O'   ,
+'atOS3' : 'O'   ,
 'atOT1' : 'O'   , 
 'atOT2' : 'O'   , 
-'atOTX' : 'O'   , 
+'atOTX' : 'O'   ,
 'atOXT' : 'O'   ,
 'atOY'  : 'O'   ,
+'atS'   : 'S'   ,
 'atSD'  : 'S'   , 
 'atSG'  : 'S'   , 
 

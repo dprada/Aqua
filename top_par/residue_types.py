@@ -175,6 +175,7 @@ residue_type={
 'RUN'  :   'RNA',  
 'RCN'  :   'RNA',  
 'RGN'  :   'RNA',  
+'AOT'  :   'Lipid',
 'SOL'  :   'Water', 
 'WAT'  :   'Water', 
 'wat'  :   'Water', 
