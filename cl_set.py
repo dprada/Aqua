@@ -965,7 +965,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
         pass
 
 
-    def distance(self,sel1='ALL',sel2=None,traj=0,frame='ALL',legend=False,pbc=True):
+    def distance(self,sel1='ALL',sel2=None,points=None,traj=0,frame='ALL',legend=False,pbc=True):
         
         if pbc:
             check_cell=self.traj[traj].frame[0].cell
@@ -974,26 +974,58 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                 return
             pbc=1
 
-        setA,nlist_A,nsys_A,setB,nlist_B,nsys_B,diff_syst,diff_set=__read_sets_opt__(self,sel1,None,sel2)
-
         num_frames=__length_frame_opt__(self,traj,frame)
-        dists=numpy.empty(shape=(num_frames,nlist_A,nlist_B),dtype=float,order='Fortran')
 
-        num_frames=0
-        for iframe in __read_frame_opt__(self,traj,frame):
-            dists[num_frames,:,:]=faux.glob.distance(diff_syst,diff_set,pbc,setA,iframe.coors,iframe.box,iframe.orthogonal,setB,iframe.coors,nlist_A,nlist_B,nsys_A,nsys_B)
-            num_frames+=1
+        if points!=None:
+            if type(points)==numpy.ndarray:
+                setA,nlist_A,nsys_A=__read_set_opt__(self,sel1)
+                points_aux=ccopy.deepcopy(points)
+                if len(points.shape)==1:
+                    num_points=1
+                    points_aux.resize((1,3))
+                elif points.shape[1]!=3:
+                    print '# points needs to be a numpy.array with shape (3) or (N,3)'
+                    return
+                dists=numpy.empty(shape=(num_frames,nlist_A,num_points),dtype=float,order='Fortran')
+                num_frames=0
+                for iframe in __read_frame_opt__(self,traj,frame):
+                    dists[num_frames,:,:]=faux.glob.distance_p(pbc,setA,iframe.coors,iframe.box,iframe.orthogonal,points_aux,nlist_A,num_points,nsys_A)
+                    num_frames+=1
 
-        if legend:
-            if num_frames==1:
-                return dists[0,:,:], setA, setB
+                if num_frames==1:
+                    if num_points==1:
+                        return dists[0,:,0]
+                    else:
+                        return dists[0,:,0]
+                else:
+                    if num_points==1:
+                        return dists[:,:,0]
+                    else:
+                        return dists
             else:
-                return dists, setA, setB
+                print '# points needs to be a numpy.array with shape [3] or [N,3]'
         else:
-            if num_frames==1:
-                return dists[0,:,:]
+
+            setA,nlist_A,nsys_A,setB,nlist_B,nsys_B,diff_syst,diff_set=__read_sets_opt__(self,sel1,None,sel2)
+            
+            dists=numpy.empty(shape=(num_frames,nlist_A,nlist_B),dtype=float,order='Fortran')
+            
+            num_frames=0
+            for iframe in __read_frame_opt__(self,traj,frame):
+                dists[num_frames,:,:]=faux.glob.distance(diff_syst,diff_set,pbc,setA,iframe.coors,iframe.box,iframe.orthogonal,setB,iframe.coors,nlist_A,nlist_B,nsys_A,nsys_B)
+                num_frames+=1
+
+            if legend:
+                if num_frames==1:
+                    return dists[0,:,:], setA, setB
+                else:
+                    return dists, setA, setB
             else:
-                return dists
+                if num_frames==1:
+                    return dists[0,:,:]
+                else:
+                    return dists
+
 
     def distance_image_pbc(self,setA='ALL',setB=None,traj=0,frame='ALL'):
 
@@ -2588,6 +2620,8 @@ def selection(system=None,condition=None,traj=0,frame='ALL',pbc=True):
         'sidechain': '(atom.resid.type Protein and not atom.name N CA C O H1 H2)',
         'protein':   '(atom.resid.type Protein)',
         'water':     '(atom.resid.type Water)',
+        'ion':       '(atom.resid.type Ion)',
+        'lipid':     '(atom.resid.type Lipid)'
         }
 
     for ii,jj in dict_selects.iteritems():

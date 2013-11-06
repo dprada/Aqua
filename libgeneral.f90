@@ -996,6 +996,56 @@ DEALLOCATE(llist1,llist2)
 
 END SUBROUTINE DISTANCE
 
+SUBROUTINE DISTANCE_P (pbc_opt,list1,coors1,box1,ortho1,points,n1,num_points,natom1,matrix)
+
+IMPLICIT NONE
+
+INTEGER,INTENT(IN)::pbc_opt,ortho1
+integer,intent(in)::n1,natom1,num_points
+INTEGER,DIMENSION(n1),INTENT(IN)::list1
+double precision,dimension(natom1,3),intent(in)::coors1
+double precision,DIMENSION(3,3),INTENT(IN)::box1
+double precision,dimension(num_points,3),intent(in)::points
+double precision,dimension(n1,num_points),intent(out)::matrix
+integer::i,j,ai,aj
+double precision,dimension(:),allocatable::vect,vect_aux
+integer,dimension(:),allocatable::llist1
+double precision::val_aux
+
+ALLOCATE(vect(3),vect_aux(3))
+ALLOCATE(llist1(n1))
+llist1=list1+1
+
+matrix=0.0d0
+
+IF (pbc_opt==1) THEN
+   do i=1,n1
+      ai=llist1(i)
+      vect_aux=coors1(ai,:)
+      do j=1,num_points
+         vect=(points(aj,:)-vect_aux)
+         CALL PBC (vect,box1,ortho1)
+         val_aux=sqrt(dot_product(vect,vect))
+         matrix(i,j)=val_aux
+      end do
+   end do
+ELSE
+   do i=1,n1
+      ai=llist1(i)
+      vect_aux=coors1(ai,:)
+      do j=1,num_points
+         vect=(points(aj,:)-vect_aux)
+         val_aux=sqrt(dot_product(vect,vect))
+         matrix(i,j)=val_aux
+      end do
+   end do
+END IF
+
+DEALLOCATE(vect,vect_aux)
+DEALLOCATE(llist1)
+
+END SUBROUTINE DISTANCE_P
+
 
 SUBROUTINE DISTANCE_IMAGES (diff_syst,diff_set,list1,coors1,box1,ortho1,list2,coors2,&
                             n1,n2,natom1,natom2,min_dists,ind_atoms_min,min_image)
