@@ -138,7 +138,7 @@ class mss():
             
             del(aux_dict,aux_keys)
 
-        if self.type=='chains+COn':
+        if self.type=='chains+XOn':
             
             aux_dict={}
             aa=0
