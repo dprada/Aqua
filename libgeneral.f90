@@ -1577,7 +1577,12 @@ SUBROUTINE translate_list (sort,list,filter,distances,dim_out,n_list,trans_inds)
   IF (sort==1) THEN
 
      ALLOCATE(ifilter(n_list))
-     ifilter=filter
+     ifilter=.FALSE.
+     DO ii=1,n_list
+        IF (filter(ii)==1) THEN
+           ifilter(ii)=.TRUE.
+        END IF
+     END DO
 
      DO ii=1,dim_out
         gg=MINLOC(distances(:),DIM=1,MASK=ifilter(:))
@@ -2443,8 +2448,8 @@ SUBROUTINE GET_HBONDS (effic,diff_syst,diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,d
   END TYPE darray_pointer
 
   INTEGER,INTENT(IN)::effic,diff_syst,diff_set,pbc_opt,ortho1
-  INTEGER,INTENT(IN)::nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H
-  INTEGER,INTENT(IN)::nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H
+  INTEGER,INTENT(IN)::nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H,natomA 
+  INTEGER,INTENT(IN)::nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H,natomB 
   INTEGER,DIMENSION(nA_acc),INTENT(IN)    ::acc_A
   INTEGER,DIMENSION(nB_acc),INTENT(IN)    ::acc_B
   INTEGER,DIMENSION(nA_don),INTENT(IN)    ::don_A
@@ -2686,7 +2691,7 @@ SUBROUTINE GET_HBONDS_ROO_ANG_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,d
   TYPE(darray_pointer),DIMENSION(:),POINTER::hbs_a_val,hbs_b_val 
   INTEGER,DIMENSION(:),ALLOCATABLE::num_hbs_a,num_hbs_b
 
-  INTEGER::ii,jj,gg
+  INTEGER::ii,jj,gg,hh
   INTEGER::don,don_h,acc
   INTEGER::lim_hbs
 
@@ -2924,7 +2929,7 @@ SUBROUTINE GET_HBONDS_ROO_ANG (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don
   TYPE(darray_pointer),DIMENSION(:),POINTER::hbs_a_val,hbs_b_val 
   INTEGER,DIMENSION(:),ALLOCATABLE::num_hbs_a,num_hbs_b
 
-  INTEGER::ii,jj,gg
+  INTEGER::ii,jj,gg,hh
   INTEGER::don,don_h,acc
   INTEGER::lim_hbs
 
@@ -3158,7 +3163,7 @@ SUBROUTINE GET_HBONDS_SKINNER (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don
   TYPE(darray_pointer),DIMENSION(:),POINTER::hbs_a_val,hbs_b_val 
   INTEGER,DIMENSION(:),ALLOCATABLE::num_hbs_a,num_hbs_b
 
-  INTEGER::ii,jj,gg
+  INTEGER::ii,jj,gg,hh
   INTEGER::don,don_h,acc
   INTEGER::lim_hbs
 
@@ -3449,7 +3454,7 @@ SUBROUTINE GET_HBONDS_SKINNER_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,d
   TYPE(darray_pointer),DIMENSION(:),POINTER::hbs_a_val,hbs_b_val 
   INTEGER,DIMENSION(:),ALLOCATABLE::num_hbs_a,num_hbs_b
 
-  INTEGER::ii,jj,gg
+  INTEGER::ii,jj,gg,hh
   INTEGER::don,don_h,acc
   INTEGER::lim_hbs
 
@@ -3754,7 +3759,7 @@ SUBROUTINE GET_HBONDS_ROH_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A
   TYPE(darray_pointer),DIMENSION(:),POINTER::hbs_a_val,hbs_b_val 
   INTEGER,DIMENSION(:),ALLOCATABLE::num_hbs_a,num_hbs_b
 
-  INTEGER::ii,jj,gg
+  INTEGER::ii,jj,gg,hh
   INTEGER::don,don_h,acc
   INTEGER::lim_hbs
 
@@ -3986,7 +3991,7 @@ SUBROUTINE GET_HBONDS_ROH (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_
   TYPE(darray_pointer),DIMENSION(:),POINTER::hbs_a_val,hbs_b_val 
   INTEGER,DIMENSION(:),ALLOCATABLE::num_hbs_a,num_hbs_b
 
-  INTEGER::ii,jj,gg
+  INTEGER::ii,jj,gg,hh
   INTEGER::don,don_h,acc
   INTEGER::lim_hbs
 
@@ -4207,7 +4212,7 @@ SUBROUTINE GET_HBONDS_DON_ACC_NUM (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A
   DOUBLE PRECISION,DIMENSION(:),POINTER::hbs_a_val,hbs_b_val 
   INTEGER,DIMENSION(:),ALLOCATABLE::num_hbs_a,num_hbs_b
 
-  INTEGER::ii,jj,gg
+  INTEGER::ii,jj,gg,hh
   INTEGER::don,don_h,acc
   INTEGER::lim_hbs
 
@@ -4427,7 +4432,7 @@ SUBROUTINE GET_HBONDS_DON_ACC_NUM_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,
   DOUBLE PRECISION,DIMENSION(:),POINTER::hbs_a_val,hbs_b_val 
   INTEGER,DIMENSION(:),ALLOCATABLE::num_hbs_a,num_hbs_b
 
-  INTEGER::ii,jj,gg
+  INTEGER::ii,jj,gg,hh
   INTEGER::don,don_h,acc
   INTEGER::lim_hbs
 

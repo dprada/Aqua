@@ -749,26 +749,29 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
         return A
 
     def add_donors(self,select=None,verbose=False):
-        setdon,nlist,numsys=__read_set_opt__(self,select)
-        self.donors=list(self.donors)
-        for ii in setdon:
-            self.atom[ii].donor=True
-            with_h=False
-            for jj in self.atom.covalent_bonds:
-                if self.atom[jj].type=='H':
-                    self.donors.append([ii,jj])
-            self.donors=numpy.array(self.donors,dtype=int,order='Fortran')
-            if not with_h:
-                print '# No H atom bonded to',self.atom[ii].info()
-        if verbose:
-            print '#',nlist,'donors added.'
+        print '# This function needs to be fixed'
+        return
+        #setdon,nlist,numsys=__read_set_opt__(self,select)
+        #self.donors=list(self.donors)
+        #for ii in setdon:
+        #    self.atom[ii].donor=True
+        #    with_h=False
+        #    for jj in self.atom.covalent_bonds:
+        #        if self.atom[jj].type=='H':
+        #            self.donors.append([ii,jj])
+        #    self.donors=numpy.array(self.donors,dtype=int,order='Fortran')
+        #    if not with_h:
+        #        print '# No H atom bonded to',self.atom[ii].info()
+        #if verbose:
+        #    print '#',nlist,'donors added.'
 
     def add_acceptors(self,select=None,verbose=False):
         setacc,nlist,numsys=__read_set_opt__(self,select)
         self.acceptors=list(self.acceptors)
         for ii in setacc:
-            self.atom[ii].acceptor=True
-            self.acceptors.append(ii)
+            if ii not in self.acceptors:
+                self.atom[ii].acceptor=True
+                self.acceptors.append(ii)
         self.acceptors=numpy.array(self.acceptors,dtype=int,order='Fortran')
         if verbose:
             print '#',nlist,'acceptors added.'
@@ -2561,24 +2564,25 @@ def add_user_topol(file_topol=None,verbose=False):
 ######################################################
 
 
-def selection_covalent_chains(system=None,chain=None,select=None):
+def selection_covalent_chains(system=None,chain=None,select='ALL'):
 
     setC,nlist_C,nsys_C=__read_set_opt__(system,select)
  
     for ii in range(len(chain)):
         if type(chain[ii]) is not list:
             chain[ii]=[chain[ii]]
- 
+
     aux_dict={}
     for ii in chain:
         for jj in ii:
             aux_dict[jj]=[]
  
     aux_list=aux_dict.keys()
+
     for ii in setC:
         if system.atom[ii].name in aux_list:
             aux_dict[system.atom[ii].name].append(ii)
- 
+
     aux_list=[]
     for ii in range(len(chain)):
         aux_list.append([])
