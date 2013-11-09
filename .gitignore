@@ -1,6 +1,7 @@
 *.so
 *.pyc
 *.log
+*.mod
 *~
 doc/build/
 doc/html/

@@ -50,8 +50,24 @@ MODULE GLOB
 
   DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE::pos_ant
 
+
+  !! Parameters
+  INTEGER::hbdefinition
+  DOUBLE PRECISION::sk_param,roh2_param,roo2_param
+  DOUBLE PRECISION::cos_angooh_param  ! the cosine
+
+
+  !!Output
+  INTEGER,DIMENSION(:),ALLOCATABLE::hbs_s_A,hbs_inds_A,hbs_s_B,hbs_inds_B
+  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::hbs_vals_A,hbs_vals_B
+  
   INTEGER,DIMENSION(:,:),ALLOCATABLE::hbs_out
   DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::hbs_vals_out
+
+
+
+
+
 
 CONTAINS
 
@@ -2355,13 +2371,7 @@ END subroutine rot_trans
 !!$
 !!$
 !!$
-END MODULE GLOB
 
-
-
-MODULE RDF
-
-CONTAINS
 
 SUBROUTINE rdf_frame(distances,box,segment_min,segment_max,bins,n_A,n_B,rdf)
 
@@ -2403,26 +2413,7 @@ SUBROUTINE rdf_frame(distances,box,segment_min,segment_max,bins,n_A,n_B,rdf)
 END SUBROUTINE rdf_frame
 
 
-END MODULE RDF
 
-
-
-
-MODULE HBONDS
-
-USE GLOB
-
-!! Parameters
-INTEGER::definition
-DOUBLE PRECISION::sk_param,roh2_param,roo2_param
-DOUBLE PRECISION::cos_angooh_param  ! the cosine
-
-
-!!Output
-INTEGER,DIMENSION(:),ALLOCATABLE::hbs_s_A,hbs_inds_A,hbs_s_B,hbs_inds_B
-DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::hbs_vals_A,hbs_vals_B
-
-CONTAINS
 
 SUBROUTINE FREE_MEMORY ()
 
@@ -2503,7 +2494,7 @@ SUBROUTINE GET_HBONDS (effic,diff_syst,diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,d
 
   IF (diff_syst==0) THEN
 
-     SELECT CASE (definition)
+     SELECT CASE (hbdefinition)
 
 
      !!!CASE (4) ! Donor-Acceptor-Number
@@ -5108,4 +5099,4 @@ END SUBROUTINE GET_HBONDS_DON_ACC_NUM_LIST
 !! 
 !!END SUBROUTINE GET_HBONDS_TOP_LIST
 
-END MODULE HBONDS
+END MODULE GLOB

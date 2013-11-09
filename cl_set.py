@@ -23,7 +23,7 @@ import datetime as datetime
 ### pyno libraries:
 from cl_coors import *
 import top_par as tp
-import libgeneral as faux
+from libgeneral import glob as faux
 from libmss import glob as mss_funcs
 import libmath as libmath
 
@@ -924,7 +924,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 
         num_frames=0
         for iframe in __read_frame_opt__(self,traj,frame):
-            com[num_frames,:]=faux.glob.center_of_mass(pbc_opt,setcom,iframe.coors,iframe.box,iframe.orthogonal,\
+            com[num_frames,:]=faux.center_of_mass(pbc_opt,setcom,iframe.coors,iframe.box,iframe.orthogonal,\
                                  nlist_setcom,numsys)
             num_frames+=1
 
@@ -958,7 +958,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
         setmov,nlist_setmov,numsys=__read_set_opt__(self,select)
 
         for iframe in __read_frame_opt__(self,traj,frame):
-            faux.glob.center(pbc_opt,wrap_opt,setcom,setmov,iframe.coors,iframe.box,iframe.orthogonal,\
+            faux.center(pbc_opt,wrap_opt,setcom,setmov,iframe.coors,iframe.box,iframe.orthogonal,\
                                  nlist_setcom,nlist_setmov,numsys)
             
         pass
@@ -992,7 +992,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                 dists=numpy.empty(shape=(num_frames,nlist_A,num_points),dtype=float,order='Fortran')
                 num_frames=0
                 for iframe in __read_frame_opt__(self,traj,frame):
-                    dists[num_frames,:,:]=faux.glob.distance_p(pbc,setA,iframe.coors,iframe.box,iframe.orthogonal,points_aux,nlist_A,num_points,nsys_A)
+                    dists[num_frames,:,:]=faux.distance_p(pbc,setA,iframe.coors,iframe.box,iframe.orthogonal,points_aux,nlist_A,num_points,nsys_A)
                     num_frames+=1
 
                 if num_frames==1:
@@ -1015,7 +1015,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
             
             num_frames=0
             for iframe in __read_frame_opt__(self,traj,frame):
-                dists[num_frames,:,:]=faux.glob.distance(diff_syst,diff_set,pbc,setA,iframe.coors,iframe.box,iframe.orthogonal,setB,iframe.coors,nlist_A,nlist_B,nsys_A,nsys_B)
+                dists[num_frames,:,:]=faux.distance(diff_syst,diff_set,pbc,setA,iframe.coors,iframe.box,iframe.orthogonal,setB,iframe.coors,nlist_A,nlist_B,nsys_A,nsys_B)
                 num_frames+=1
 
             if legend:
@@ -1040,7 +1040,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 
         num_frames=0
         for iframe in __read_frame_opt__(self,traj,frame):
-            min_dists[:,num_frames],ind_atoms_min[:,num_frames],min_image[:,:,num_frames]=faux.glob.distance_images(diff_syst,diff_set,setA,iframe.coors,iframe.box,iframe.orthogonal,setB,iframe.coors,nlist_A,nlist_B,nsys_A,nsys_B)
+            min_dists[:,num_frames],ind_atoms_min[:,num_frames],min_image[:,:,num_frames]=faux.distance_images(diff_syst,diff_set,setA,iframe.coors,iframe.box,iframe.orthogonal,setB,iframe.coors,nlist_A,nlist_B,nsys_A,nsys_B)
             num_frames+=1
 
         if num_frames==1:
@@ -1060,7 +1060,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 
         num_frames=0
         for iframe in __read_frame_opt__(self,traj,frame):
-            rgs[num_frames]=faux.glob.radius_gyration(pbc_opt,setA,iframe.coors,iframe.box,iframe.orthogonal,nlist_A,nsys_A)
+            rgs[num_frames]=faux.radius_gyration(pbc_opt,setA,iframe.coors,iframe.box,iframe.orthogonal,nlist_A,nsys_A)
             num_frames+=1
 
         if num_frames==1:
@@ -1077,7 +1077,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 
         num_frames=0
         for iframe in __read_frame_opt__(self,traj,frame):
-            piaxis[:,:,num_frames]=faux.glob.principal_inertia_axis(setA,iframe.coors,iframe.box,iframe.orthogonal,nlist_A,nsys_A)
+            piaxis[:,:,num_frames]=faux.principal_inertia_axis(setA,iframe.coors,iframe.box,iframe.orthogonal,nlist_A,nsys_A)
             num_frames+=1
 
         if num_frames==1:
@@ -1093,7 +1093,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 
         num_frames=0
         for iframe in __read_frame_opt__(self,traj,frame):
-            pgaxis[:,:,num_frames]=faux.glob.principal_geometric_axis(setA,iframe.coors,iframe.box,iframe.orthogonal,nlist_A,nsys_A)
+            pgaxis[:,:,num_frames]=faux.principal_geometric_axis(setA,iframe.coors,iframe.box,iframe.orthogonal,nlist_A,nsys_A)
             num_frames+=1
 
         if num_frames==1:
@@ -1168,11 +1168,11 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
         for iframe in __read_frame_opt__(self,traj,frame):
             jj+=1
             if num_phis:
-                phis=faux.glob.dihedral_angles(iframe.coors,iframe.box,iframe.orthogonal,list_phi,num_phis,self.num_atoms)
+                phis=faux.dihedral_angles(iframe.coors,iframe.box,iframe.orthogonal,list_phi,num_phis,self.num_atoms)
                 for kk in range(num_phis):
                     dih_angs[jj,aux_phi[kk],0]=phis[kk]
             if num_psis:
-                psis=faux.glob.dihedral_angles(iframe.coors,iframe.box,iframe.orthogonal,list_psi,num_psis,self.num_atoms)
+                psis=faux.dihedral_angles(iframe.coors,iframe.box,iframe.orthogonal,list_psi,num_psis,self.num_atoms)
                 for kk in range(num_psis):
                     dih_angs[jj,aux_psi[kk],1]=psis[kk]
 
@@ -1222,7 +1222,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
         jj=-1
         for iframe in __read_frame_opt__(self,traj,frame):
             jj+=1
-            dih_angs[jj,:]=faux.glob.dihedral_angles(iframe.coors,iframe.box,iframe.orthogonal,covalent_chain,num_dih_angs,self.num_atoms)
+            dih_angs[jj,:]=faux.dihedral_angles(iframe.coors,iframe.box,iframe.orthogonal,covalent_chain,num_dih_angs,self.num_atoms)
 
         if num_frames==1:
             if num_dih_angs==1:
@@ -1245,7 +1245,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 
          jj=0
          for iframe in __read_frame_opt__(self,traj,frame):
-             rmsd_val=faux.glob.rmsd(coors_reference,iframe.coors,setA,n_A,natoms_A)
+             rmsd_val=faux.rmsd(coors_reference,iframe.coors,setA,n_A,natoms_A)
              rmsd_vals[jj]=rmsd_val
              jj+=1
 
@@ -1267,8 +1267,8 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
         if new:
             fitted_traj=traj()
         for iframe in __read_frame_opt__(self,traj,frame):
-            rot,center_ref,center_orig,rmsd,g=faux.glob.min_rmsd(coors_reference,iframe.coors,setA,setB,n_A,natoms_A,n_B,natoms_B)
-            coors_new=faux.glob.rot_trans(iframe.coors,rot,center_orig,center_ref,natoms_B)
+            rot,center_ref,center_orig,rmsd,g=faux.min_rmsd(coors_reference,iframe.coors,setA,setB,n_A,natoms_A,n_B,natoms_B)
+            coors_new=faux.rot_trans(iframe.coors,rot,center_orig,center_ref,natoms_B)
             rmsd_traj[jj]=rmsd
             jj+=1
             if new:
@@ -1323,8 +1323,8 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
         rdf_tot=numpy.zeros(shape=(bins),dtype=float,order='Fortran')
         num_frames=0
         for iframe in __read_frame_opt__(self,traj,frame):
-            dist_frame=faux.glob.distance(1,pbc,setA,iframe.coors,iframe.box,iframe.orthogonal,setB,iframe.coors,nlist_A,nlist_B,nsys_A,nsys_B)
-            rdf_frame=faux.rdf.rdf_frame(dist_frame,frame.box,segment[0],segment[1],bins,nlist_A,nlist_B)
+            dist_frame=faux.distance(1,pbc,setA,iframe.coors,iframe.box,iframe.orthogonal,setB,iframe.coors,nlist_A,nlist_B,nsys_A,nsys_B)
+            rdf_frame=faux.rdf_frame(dist_frame,frame.box,segment[0],segment[1],bins,nlist_A,nlist_B)
             rdf_tot+=rdf_frame
             num_frames+=1.0
 
@@ -1342,7 +1342,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
             neighbs=numpy.empty(shape=(num_frames,nlist_A,ranking),dtype=int,order='Fortran')
             num_frames=0
             for iframe in __read_frame_opt__(self,traj,frame):
-                neighbs[num_frames,:,:]=faux.glob.neighbs_ranking(diff_syst,diff_set,pbc,ranking,setA,iframe.coors,iframe.box,iframe.orthogonal,setB,iframe.coors,nlist_A,nlist_B,nsys_A,nsys_B)
+                neighbs[num_frames,:,:]=faux.neighbs_ranking(diff_syst,diff_set,pbc,ranking,setA,iframe.coors,iframe.box,iframe.orthogonal,setB,iframe.coors,nlist_A,nlist_B,nsys_A,nsys_B)
                 num_frames+=1
             if num_frames==1:
                 return neighbs[0][:,:]
@@ -1355,11 +1355,11 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
             if ranking:
                 sort_opt=1
             for iframe in __read_frame_opt__(self,traj,frame):
-                contact_map,num_neighbs,dist_matrix=faux.glob.neighbs_dist(diff_syst,diff_set,pbc,dist,setA,iframe.coors,iframe.box,iframe.orthogonal,setB,iframe.coors,nlist_A,nlist_B,nsys_A,nsys_B)
+                contact_map,num_neighbs,dist_matrix=faux.neighbs_dist(diff_syst,diff_set,pbc,dist,setA,iframe.coors,iframe.box,iframe.orthogonal,setB,iframe.coors,nlist_A,nlist_B,nsys_A,nsys_B)
                 aux_neighbs=[]
                 for ii in range(nlist_A):
                     if num_neighbs[ii]:
-                        neighbs_A=faux.glob.translate_list(sort_opt,setB,contact_map[ii,:],dist_matrix[ii,:],num_neighbs[ii],nlist_B)
+                        neighbs_A=faux.translate_list(sort_opt,setB,contact_map[ii,:],dist_matrix[ii,:],num_neighbs[ii],nlist_B)
                         aux_neighbs.append(neighbs_A)
                     else:
                         aux_neighbs.append([])
@@ -1377,7 +1377,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
         c_map=numpy.empty(shape=(num_frames,nlist_A,nlist_B),dtype=int,order='Fortran')
         num_frames=0
         for iframe in __read_frame_opt__(self,traj,frame):
-            c_map[num_frames][:,:],aa,bb=faux.glob.neighbs_dist(diff_syst,diff_set,pbc,dist,setA,iframe.coors,iframe.box,iframe.orthogonal,setB,iframe.coors,nlist_A,nlist_B,nsys_A,nsys_B)
+            c_map[num_frames][:,:],aa,bb=faux.neighbs_dist(diff_syst,diff_set,pbc,dist,setA,iframe.coors,iframe.box,iframe.orthogonal,setB,iframe.coors,nlist_A,nlist_B,nsys_A,nsys_B)
             num_frames+=1
             del(aa); del(bb)
 
@@ -1407,7 +1407,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 
     def make_cell_grid_ns(self,rcell=7.0,rcut=3.5,traj=0,frame=0):
         for iframe in __read_frame_opt__(self,traj,frame):
-            faux.glob.make_cell_ns(rcell,rcut,iframe.box,self.num_atoms)
+            faux.make_cell_ns(rcell,rcut,iframe.box,self.num_atoms)
 
     def verlet_list_grid_ns(self,r1=3.5,r2=7.0,rcell=7.0,traj=0,frame=0,iframe=None,pbc=True,update=False,verbose=False):
 
@@ -1417,21 +1417,21 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 
         if iframe!=None:
             if update:
-                faux.glob.update_verlet_list_grid_ns(r1,r2,pbc_opt,iframe.coors,iframe.box,iframe.volume,iframe.orthogonal,self.num_atoms)
+                faux.update_verlet_list_grid_ns(r1,r2,pbc_opt,iframe.coors,iframe.box,iframe.volume,iframe.orthogonal,self.num_atoms)
             else:
                 #print 'aqui si'
-                faux.glob.make_cell_ns(rcell,r2,iframe.box,self.num_atoms)
+                faux.make_cell_ns(rcell,r2,iframe.box,self.num_atoms)
                 #print 'aqui tambien'
-                faux.glob.make_verlet_list_grid_ns(r1,r2,pbc_opt,iframe.coors,iframe.box,iframe.volume,iframe.orthogonal,self.num_atoms)
+                faux.make_verlet_list_grid_ns(r1,r2,pbc_opt,iframe.coors,iframe.box,iframe.volume,iframe.orthogonal,self.num_atoms)
                 #print 'aqui sale'
         else:
             if update:
                 for iframe in __read_frame_opt__(self,traj,frame):
-                    faux.glob.update_verlet_list_grid_ns(r1,r2,pbc_opt,iframe.coors,iframe.box,iframe.volume,iframe.orthogonal,self.num_atoms)
+                    faux.update_verlet_list_grid_ns(r1,r2,pbc_opt,iframe.coors,iframe.box,iframe.volume,iframe.orthogonal,self.num_atoms)
             else:
                 for iframe in __read_frame_opt__(self,traj,frame):
-                    faux.glob.make_cell_ns(rcell,r2,iframe.box,self.num_atoms)
-                    faux.glob.make_verlet_list_grid_ns(r1,r2,pbc_opt,iframe.coors,iframe.box,iframe.volume,iframe.orthogonal,self.num_atoms)
+                    faux.make_cell_ns(rcell,r2,iframe.box,self.num_atoms)
+                    faux.make_verlet_list_grid_ns(r1,r2,pbc_opt,iframe.coors,iframe.box,iframe.volume,iframe.orthogonal,self.num_atoms)
         
     def relative_water_position(self,pairs=None,pbc=True,verbose=False):
 
@@ -1460,7 +1460,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
         iframe=self.traj[0].frame[0]
         diff_syst=0
         diff_set=1
-        carvars=faux.glob.relative_water_position(diff_syst,diff_set,pbc_opt,atsinds,iframe.coors,iframe.box,iframe.orthogonal,numpairs,self.num_atoms)
+        carvars=faux.relative_water_position(diff_syst,diff_set,pbc_opt,atsinds,iframe.coors,iframe.box,iframe.orthogonal,numpairs,self.num_atoms)
 
         return carvars
 
@@ -1510,16 +1510,16 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 
         num_frames=__length_frame_opt__(self,traj,frame)
 
-        faux.hbonds.definition=hbonds_type(definition,verbose=False)
+        faux.hbdefinition=hbonds_type(definition,verbose=False)
         
 
-        if faux.hbonds.definition == 0 : 
+        if faux.hbdefinition == 0 : 
             return
         
 
         # Skinner
-        elif faux.hbonds.definition == 1 : 
-            faux.hbonds.sk_param=sk_param
+        elif faux.hbdefinition == 1 : 
+            faux.sk_param=sk_param
             cut_cell=-0.343*numpy.log(sk_param/7.10)+0.10
             if not (allwat_A and allwat_B):
                 print '# This type of hbond only works for water molecules.'
@@ -1545,7 +1545,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                         else:
                             self.verlet_list_grid_ns(r1=cut_cell,r2=cut_cell,rcell=cut_cell,iframe=iframe,update=True)
 
-                        faux.hbonds.get_hbonds_skinner_ns_list( opt_diff_set, opt_pbc, \
+                        faux.get_hbonds_skinner_ns_list( opt_diff_set, opt_pbc, \
                                            acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
                                            iframe.coors,iframe.box,iframe.orthogonal, \
                                            acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
@@ -1553,7 +1553,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                                            nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                            self.num_atoms)
 
-                        hbout.append([ccopy.deepcopy(faux.glob.hbs_out),ccopy.deepcopy(faux.glob.hbs_vals_out)])
+                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
                         gg+=1
 
                 else:
@@ -1562,14 +1562,14 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                     for aa in frame:
                         self.traj[0].reload_frame(frame=aa)
                         iframe=self.traj[0].frame[0]
-                        faux.hbonds.get_hbonds_skinner( opt_diff_set, opt_pbc, \
+                        faux.get_hbonds_skinner( opt_diff_set, opt_pbc, \
                                                         acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
                                                         iframe.coors,iframe.box,iframe.orthogonal, \
                                                         acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
                                                         nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
                                                         nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                                         self.num_atoms)
-                        hbout.append([ccopy.deepcopy(faux.glob.hbs_out),ccopy.deepcopy(faux.glob.hbs_vals_out)])
+                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
                         gg+=1
 
             else:
@@ -1582,7 +1582,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                         else:
                             self.verlet_list_grid_ns(r1=cut_cell,r2=cut_cell,rcell=cut_cell,iframe=iframe,update=True)
 
-                        faux.hbonds.get_hbonds_skinner_ns_list( opt_diff_set, opt_pbc, \
+                        faux.get_hbonds_skinner_ns_list( opt_diff_set, opt_pbc, \
                                            acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
                                            iframe.coors,iframe.box,iframe.orthogonal, \
                                            acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
@@ -1590,20 +1590,20 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                                            nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                            self.num_atoms)
 
-                        hbout.append([ccopy.deepcopy(faux.glob.hbs_out),ccopy.deepcopy(faux.glob.hbs_vals_out)])
+                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
                         gg+=1
                 else:
                     hbout=[]
                     gg=0
                     for iframe in __read_frame_opt__(self,traj,frame):
-                        faux.hbonds.get_hbonds_skinner( opt_diff_set, opt_pbc, \
+                        faux.get_hbonds_skinner( opt_diff_set, opt_pbc, \
                                                         acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
                                                         iframe.coors,iframe.box,iframe.orthogonal, \
                                                         acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
                                                         nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
                                                         nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                                         self.num_atoms)
-                        hbout.append([ccopy.deepcopy(faux.glob.hbs_out),ccopy.deepcopy(faux.glob.hbs_vals_out)])
+                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
                         gg+=1
 
             if gg==1:
@@ -1613,8 +1613,8 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 
 
         # R(o,h)
-        elif faux.hbonds.definition == 2 : 
-            faux.hbonds.roh2_param= roh_param**2
+        elif faux.hbdefinition == 2 : 
+            faux.roh2_param= roh_param**2
 
             if infile:
                 print 'Not implemented yet'
@@ -1631,7 +1631,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                         else:
                             self.verlet_list_grid_ns(r1=roh_param,r2=roh_param,rcell=roh_param,iframe=iframe,update=True)
 
-                        faux.hbonds.get_hbonds_roh_ns_list( opt_diff_set, opt_pbc, \
+                        faux.get_hbonds_roh_ns_list( opt_diff_set, opt_pbc, \
                                            acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
                                            iframe.coors,iframe.box,iframe.orthogonal, \
                                            acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
@@ -1639,20 +1639,20 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                                            nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                            self.num_atoms)
 
-                        hbout.append([ccopy.deepcopy(faux.glob.hbs_out),ccopy.deepcopy(faux.glob.hbs_vals_out)])
+                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
                         gg+=1
                 else:
                     hbout=[]
                     gg=0
                     for iframe in __read_frame_opt__(self,traj,frame):
-                        faux.hbonds.get_hbonds_roh( opt_diff_set, opt_pbc, \
+                        faux.get_hbonds_roh( opt_diff_set, opt_pbc, \
                                                         acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
                                                         iframe.coors,iframe.box,iframe.orthogonal, \
                                                         acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
                                                         nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
                                                         nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                                         self.num_atoms)
-                        hbout.append([ccopy.deepcopy(faux.glob.hbs_out),ccopy.deepcopy(faux.glob.hbs_vals_out)])
+                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
                         gg+=1
 
             if gg==1:
@@ -1662,8 +1662,8 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 
                 
         # R(o,o)-Ang(o,o,h)
-        elif faux.hbonds.definition == 3 :
-            faux.hbonds.roo2_param, faux.hbonds.cos_angooh_param= roo_param**2, numpy.cos(numpy.radians(angooh_param))
+        elif faux.hbdefinition == 3 :
+            faux.roo2_param, faux.cos_angooh_param= roo_param**2, numpy.cos(numpy.radians(angooh_param))
 
             if infile:
 
@@ -1685,7 +1685,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                         else:
                             self.verlet_list_grid_ns(r1=roo_param,r2=roo_param,rcell=roo_param,iframe=iframe,update=True)
 
-                        faux.hbonds.get_hbonds_roo_ang_ns_list( opt_diff_set, opt_pbc, \
+                        faux.get_hbonds_roo_ang_ns_list( opt_diff_set, opt_pbc, \
                                            acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
                                            iframe.coors,iframe.box,iframe.orthogonal, \
                                            acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
@@ -1693,7 +1693,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                                            nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                            self.num_atoms)
 
-                        hbout.append([ccopy.deepcopy(faux.glob.hbs_out),ccopy.deepcopy(faux.glob.hbs_vals_out)])
+                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
                         gg+=1
                 else:
                     hbout=[]
@@ -1701,14 +1701,14 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                     for aa in frame:
                         self.traj[0].reload_frame(frame=aa)
                         iframe=self.traj[0].frame[0]
-                        faux.hbonds.get_hbonds_roo_ang( opt_diff_set, opt_pbc, \
+                        faux.get_hbonds_roo_ang( opt_diff_set, opt_pbc, \
                                                         acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
                                                         iframe.coors,iframe.box,iframe.orthogonal, \
                                                         acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
                                                         nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
                                                         nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                                         self.num_atoms)
-                        hbout.append([ccopy.deepcopy(faux.glob.hbs_out),ccopy.deepcopy(faux.glob.hbs_vals_out)])
+                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
                         gg+=1
 
             else:
@@ -1722,7 +1722,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                         else:
                             self.verlet_list_grid_ns(r1=roo_param,r2=roo_param,rcell=roo_param,iframe=iframe,update=True)
 
-                        faux.hbonds.get_hbonds_roo_ang_ns_list( opt_diff_set, opt_pbc, \
+                        faux.get_hbonds_roo_ang_ns_list( opt_diff_set, opt_pbc, \
                                            acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
                                            iframe.coors,iframe.box,iframe.orthogonal, \
                                            acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
@@ -1730,20 +1730,20 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                                            nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                            self.num_atoms)
 
-                        hbout.append([ccopy.deepcopy(faux.glob.hbs_out),ccopy.deepcopy(faux.glob.hbs_vals_out)])
+                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
                         gg+=1
                 else:
                     hbout=[]
                     gg=0
                     for iframe in __read_frame_opt__(self,traj,frame):
-                        faux.hbonds.get_hbonds_roo_ang( opt_diff_set, opt_pbc, \
+                        faux.get_hbonds_roo_ang( opt_diff_set, opt_pbc, \
                                                         acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
                                                         iframe.coors,iframe.box,iframe.orthogonal, \
                                                         acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
                                                         nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
                                                         nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                                         self.num_atoms)
-                        hbout.append([ccopy.deepcopy(faux.glob.hbs_out),ccopy.deepcopy(faux.glob.hbs_vals_out)])
+                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
                         gg+=1
 
             if gg==1:
@@ -1752,7 +1752,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                 return hbout
 
         # Donor-Acceptor-Number
-        elif faux.hbonds.definition == 4 : 
+        elif faux.hbdefinition == 4 : 
             if not (allwat_A and allwat_B):
                 print '# This type of hbond only works for water molecules.'
                 return
@@ -1772,7 +1772,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                         else:
                             self.verlet_list_grid_ns(r1=6.0,r2=6.0,rcell=6.0,iframe=iframe,update=True)
 
-                        faux.hbonds.get_hbonds_don_acc_num_list( opt_diff_set, opt_pbc, \
+                        faux.get_hbonds_don_acc_num_list( opt_diff_set, opt_pbc, \
                                            acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
                                            iframe.coors,iframe.box,iframe.orthogonal, \
                                            acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
@@ -1780,20 +1780,20 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                                            nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                            self.num_atoms)
 
-                        hbout.append([ccopy.deepcopy(faux.glob.hbs_out),ccopy.deepcopy(faux.glob.hbs_vals_out)])
+                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
                         gg+=1
                 else:
                     hbout=[]
                     gg=0
                     for iframe in __read_frame_opt__(self,traj,frame):
-                        faux.hbonds.get_hbonds_don_acc_num( opt_diff_set, opt_pbc, \
+                        faux.get_hbonds_don_acc_num( opt_diff_set, opt_pbc, \
                                                         acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
                                                         iframe.coors,iframe.box,iframe.orthogonal, \
                                                         acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
                                                         nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
                                                         nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                                         self.num_atoms)
-                        hbout.append([ccopy.deepcopy(faux.glob.hbs_out),ccopy.deepcopy(faux.glob.hbs_vals_out)])
+                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
                         gg+=1
 
             if gg==1:
@@ -1803,7 +1803,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 
 
         # Topological
-        elif faux.hbonds.definition == 5 : 
+        elif faux.hbdefinition == 5 : 
             if not (allwat_A and allwat_B):
                 print '# This type of hbond only works for water molecules.'
                 return
@@ -1823,7 +1823,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                         else:
                             self.verlet_list_grid_ns(r1=6.0,r2=6.0,rcell=6.0,iframe=iframe,update=True)
 
-                        faux.hbonds.get_hbonds_top_list( opt_diff_set, opt_pbc, \
+                        faux.get_hbonds_top_list( opt_diff_set, opt_pbc, \
                                            acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
                                            iframe.coors,iframe.box,iframe.orthogonal, \
                                            acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
@@ -1831,20 +1831,20 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                                            nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                            self.num_atoms)
 
-                        hbout.append([ccopy.deepcopy(faux.glob.hbs_out),ccopy.deepcopy(faux.glob.hbs_vals_out)])
+                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
                         gg+=1
                 else:
                     hbout=[]
                     gg=0
                     for iframe in __read_frame_opt__(self,traj,frame):
-                        faux.hbonds.get_hbonds_top( opt_diff_set, opt_pbc, \
+                        faux.get_hbonds_top( opt_diff_set, opt_pbc, \
                                                         acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
                                                         iframe.coors,iframe.box,iframe.orthogonal, \
                                                         acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
                                                         nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
                                                         nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                                         self.num_atoms)
-                        hbout.append([ccopy.deepcopy(faux.glob.hbs_out),ccopy.deepcopy(faux.glob.hbs_vals_out)])
+                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
                         gg+=1
 
             if gg==1:
@@ -1854,15 +1854,15 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 
 
         # Donor-Number-Ang(o,o,h)
-        elif faux.hbonds.definition == 6 : 
-            faux.hbonds.cos_angooh_param= numpy.cos(numpy.radians(angooh_param))
+        elif faux.hbdefinition == 6 : 
+            faux.cos_angooh_param= numpy.cos(numpy.radians(angooh_param))
             if not (allwat_A and allwat_B):
                 print '# This type of hbond only works for water molecules.'
             print 'Not implemented yet'
             pass
 
         # Nearest-Neighbour
-        elif faux.hbonds.definition == 7 : 
+        elif faux.hbdefinition == 7 : 
             if not (allwat_A and allwat_B):
                 print '# This type of hbond only works for water molecules.'
             print 'Not implemented yet'
@@ -1875,7 +1875,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 
     def mss_hbonds_wat(self,definition=1,hbonds=None,bonds=None,verbose=True):
         
-        mss_funcs.definition_hbs=faux.hbonds.definition
+        mss_funcs.definition_hbs=faux.hbdefinition
 
         if hbonds==None:
             print '# hbonds needed.'
@@ -1924,7 +1924,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 
     def mss_hbonds_wat_prot(self,definition=1,hbonds=None,verbose=True):
         
-        mss_funcs.definition_hbs=faux.hbonds.definition
+        mss_funcs.definition_hbs=faux.hbdefinition
 
         if hbonds==None:
             print '# hbonds needed.'
@@ -1977,7 +1977,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 
     def mss_hbonds_wation(self,definition=1,hbonds=None,bonds=None,tipo=1,verbose=True):
         
-        mss_funcs.definition_hbs=faux.hbonds.definition
+        mss_funcs.definition_hbs=faux.hbdefinition
 
         if hbonds==None:
             print '# hbonds needed.'
@@ -2091,24 +2091,24 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 # 
 #        num_frames=__length_frame_opt__(self,traj,frame)
 # 
-#        faux.hbonds.definition=hbonds_type(definition,verbose=False)
-#        if faux.hbonds.definition == 0 : 
+#        faux.hbdefinition=hbonds_type(definition,verbose=False)
+#        if faux.hbdefinition == 0 : 
 #            return
 #        
-#        elif faux.hbonds.definition == 1 : 
-#            faux.hbonds.sk_param=sk_param
+#        elif faux.hbdefinition == 1 : 
+#            faux.sk_param=sk_param
 #            if not (allwat_A and allwat_B):
 #                print '# This type of hbond only works for water molecules.'
 #            print 'Not implemented yet'
 #            pass
 # 
-#        elif faux.hbonds.definition == 2 : 
-#            faux.hbonds.roh2_param= roh_param**2
+#        elif faux.hbdefinition == 2 : 
+#            faux.roh2_param= roh_param**2
 #            print 'Not implemented yet'
 #            pass
 # 
-#        elif faux.hbonds.definition == 3 : # ROO_ANG
-#            faux.hbonds.roo2_param, faux.hbonds.cos_angooh_param= roo_param**2, numpy.cos(numpy.radians(angooh_param))
+#        elif faux.hbdefinition == 3 : # ROO_ANG
+#            faux.roo2_param, faux.cos_angooh_param= roo_param**2, numpy.cos(numpy.radians(angooh_param))
 # 
 #            if optimize:
 #                gg=0
@@ -2119,7 +2119,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 #                    else:
 #                        self.verlet_list_grid_ns(r1=roo_param,r2=roo_param,rcell=roo_param,iframe=iframe,update=True)
 # 
-#                    faux.hbonds.get_hbonds_roo_ang_ns_list( opt_diff_set, opt_pbc, \
+#                    faux.get_hbonds_roo_ang_ns_list( opt_diff_set, opt_pbc, \
 #                                           acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
 #                                           iframe.coors,iframe.box,iframe.orthogonal, \
 #                                           acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
@@ -2127,20 +2127,20 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 #                                           nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
 #                                           self.num_atoms)
 # 
-#                    hbout.append([faux.glob.hbs_out,faux.glob.hbs_vals_out])
+#                    hbout.append([faux.hbs_out,faux.hbs_vals_out])
 #                    gg+=1
 #            else:
 #                hbout=[]
 #                gg=0
 #                for iframe in __read_frame_opt__(self,traj,frame):
-#                    faux.hbonds.get_hbonds_roo_ang( opt_diff_set, opt_pbc, \
+#                    faux.get_hbonds_roo_ang( opt_diff_set, opt_pbc, \
 #                                                        acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
 #                                                        iframe.coors,iframe.box,iframe.orthogonal, \
 #                                                        acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
 #                                                        nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
 #                                                        nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
 #                                                        self.num_atoms)
-#                    hbout.append([faux.glob.hbs_out,faux.glob.hbs_vals_out])
+#                    hbout.append([faux.hbs_out,faux.hbs_vals_out])
 #                    gg+=1
 # 
 #            if gg==1:
@@ -2148,26 +2148,26 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 #            else:
 #                return hbout
 # 
-#        elif faux.hbonds.definition == 4 : 
+#        elif faux.hbdefinition == 4 : 
 #            if not (allwat_A and allwat_B):
 #                print '# This type of hbond only works for water molecules.'
 #            print 'Not implemented yet'
 #            pass
 # 
-#        elif faux.hbonds.definition == 5 : 
+#        elif faux.hbdefinition == 5 : 
 #            if not (allwat_A and allwat_B):
 #                print '# This type of hbond only works for water molecules.'
 #            print 'Not implemented yet'
 #            pass
 # 
-#        elif faux.hbonds.definition == 6 : 
-#            faux.hbonds.cos_angooh_param= numpy.cos(numpy.radians(angooh_param))
+#        elif faux.hbdefinition == 6 : 
+#            faux.cos_angooh_param= numpy.cos(numpy.radians(angooh_param))
 #            if not (allwat_A and allwat_B):
 #                print '# This type of hbond only works for water molecules.'
 #            print 'Not implemented yet'
 #            pass
 # 
-#        elif faux.hbonds.definition == 7 : 
+#        elif faux.hbdefinition == 7 : 
 #            if not (allwat_A and allwat_B):
 #                print '# This type of hbond only works for water molecules.'
 #            print 'Not implemented yet'
@@ -2223,10 +2223,10 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
         natomB=self.num_atoms
         num_frames=__length_frame_opt__(self,traj,frame)
 
-        faux.hbonds.definition=hbonds_type(definition,verbose=False)
+        faux.hbdefinition=hbonds_type(definition,verbose=False)
 
-        if faux.hbonds.definition == 3 : # ROO_ANG
-            faux.hbonds.roo2_param, faux.hbonds.cos_angooh_param= roo_param**2, numpy.cos(numpy.radians(angooh_param))
+        if faux.hbdefinition == 3 : # ROO_ANG
+            faux.roo2_param, faux.cos_angooh_param= roo_param**2, numpy.cos(numpy.radians(angooh_param))
             
             gg=0
             for iframe in __read_frame_opt__(self,traj,frame):
@@ -2234,7 +2234,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                     self.verlet_list_grid_ns(r1=3.5,r2=3.5,rcell=3.5,iframe=iframe)
                 else:
                     self.verlet_list_grid_ns(r1=3.5,r2=3.5,rcell=3.5,iframe=iframe,update=True)
-                    faux.hbonds.get_hbonds_roo_ang_ns_list(opt_effic, opt_diff_syst, opt_diff_set, opt_pbc, \
+                    faux.get_hbonds_roo_ang_ns_list(opt_effic, opt_diff_syst, opt_diff_set, opt_pbc, \
                                                        acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
                                                        iframe.coors,iframe.box,iframe.orthogonal, \
                                                        acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
@@ -2271,7 +2271,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 
         ddd=[]
         for iframe in __read_frame_opt__(self,traj,frame):
-            dd=faux.glob.water_bisector(opt_pbc,list_atoms,iframe.coors,iframe.box,iframe.orthogonal,len(list_atoms),self.num_atoms)
+            dd=faux.water_bisector(opt_pbc,list_atoms,iframe.coors,iframe.box,iframe.orthogonal,len(list_atoms),self.num_atoms)
             ddd.append(dd)
             
     def water_angle_bisector_atom (self,water='ALL',atoms=None,traj=0,frame=0,pbc=True):
@@ -2310,7 +2310,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
         
         num_frames=0
         for iframe in __read_frame_opt__(self,traj,frame):
-            angls[num_frames,:,:]=faux.glob.water_angle_bisector_atom(opt_pbc,atoms,list_atoms,iframe.coors,iframe.box,iframe.orthogonal,len(list_atoms),natoms,self.num_atoms)
+            angls[num_frames,:,:]=faux.water_angle_bisector_atom(opt_pbc,atoms,list_atoms,iframe.coors,iframe.box,iframe.orthogonal,len(list_atoms),natoms,self.num_atoms)
             num_frames+=1
 
         if num_frames==1:
@@ -2733,7 +2733,7 @@ def selection(system=None,condition=None,traj=0,frame='ALL',pbc=True):
             for gg in range(len(dists_sels)):
                 list_sel_frame=[]
                 for jj in range(len(sel1)):
-                    if faux.glob.within(dists_sels[gg][jj,:],cutoff,len(sel2)):
+                    if faux.within(dists_sels[gg][jj,:],cutoff,len(sel2)):
                         list_sel_frame.append(sel1[jj])
                 list_sel1.append(list_sel_frame)
             #'(atom.resid.type Water and atom.type O) within 3.0 of atom.resid.type Protein'
