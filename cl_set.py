@@ -1332,7 +1332,7 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
         return xxx,rdf_tot
 
 
-    def neighbors(self,setA=None,setB=None,ranking=1,dist=None,traj=0,frame=0,pbc=True):
+    def neighbors(self,setA=None,setB=None,ranking=1,dist=None,asbonds=False,traj=0,frame=0,pbc=True):
      
         setA,nlist_A,nsys_A,setB,nlist_B,nsys_B,diff_syst,diff_set=__read_sets_opt__(self,setA,None,setB)
         num_frames=__length_frame_opt__(self,traj,frame)
@@ -1356,14 +1356,19 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                 sort_opt=1
             for iframe in __read_frame_opt__(self,traj,frame):
                 contact_map,num_neighbs,dist_matrix=faux.neighbs_dist(diff_syst,diff_set,pbc,dist,setA,iframe.coors,iframe.box,iframe.orthogonal,setB,iframe.coors,nlist_A,nlist_B,nsys_A,nsys_B)
-                aux_neighbs=[]
-                for ii in range(nlist_A):
-                    if num_neighbs[ii]:
-                        neighbs_A=faux.translate_list(sort_opt,setB,contact_map[ii,:],dist_matrix[ii,:],num_neighbs[ii],nlist_B)
-                        aux_neighbs.append(neighbs_A)
-                    else:
-                        aux_neighbs.append([])
-                neighbs.append(aux_neighbs)
+                if asbonds:
+                    tot_num_neighbs=sum(num_neighbs)
+                    aux_neighbs,aux_dists=faux.translate2bonds(setA,setB,contact_map,dist_matrix,tot_num_neighbs,nlist_A,nlist_B)
+                    neighbs.append([aux_neighbs,aux_dists])
+                else:
+                    aux_neighbs=[]
+                    for ii in range(nlist_A):
+                        if num_neighbs[ii]:
+                            neighbs_A=faux.translate_list(sort_opt,setB,contact_map[ii,:],dist_matrix[ii,:],num_neighbs[ii],nlist_B)
+                            aux_neighbs.append(neighbs_A)
+                        else:
+                            aux_neighbs.append([])
+                    neighbs.append(aux_neighbs)
             if num_frames==1:
                 return neighbs[0]
             else:

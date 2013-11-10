@@ -1621,6 +1621,34 @@ SUBROUTINE translate_list (sort,list,filter,distances,dim_out,n_list,trans_inds)
 
 END SUBROUTINE translate_list
 
+SUBROUTINE translate2bonds (list_A,list_B,filter,distances,dim_out,n_list_A,n_list_B,blist,bdists)
+
+  IMPLICIT NONE
+  INTEGER,INTENT(IN)::n_list_A,n_list_B,dim_out
+  INTEGER,DIMENSION(n_list_A),INTENT(IN)::list_A
+  INTEGER,DIMENSION(n_list_B),INTENT(IN)::list_B
+  INTEGER,DIMENSION(n_list_A,n_list_B),INTENT(IN)::filter
+  DOUBLE PRECISION,DIMENSION(n_list_A,n_list_B),INTENT(IN)::distances
+  INTEGER,DIMENSION(dim_out,2),INTENT(OUT)::blist
+  DOUBLE PRECISION,DIMENSION(dim_out),INTENT(OUT)::bdists
+
+  INTEGER::ii,jj,gg
+
+  gg=0
+  DO ii=1,n_list_A
+     DO jj=1,n_list_B
+        IF (filter(ii,jj)==1) THEN
+           gg=gg+1
+           blist(gg,1)=list_A(ii)
+           blist(gg,2)=list_B(jj)
+           bdists(gg)=distances(ii,jj)
+        END IF
+     END DO
+  END DO
+
+END SUBROUTINE translate2bonds
+
+
 
 SUBROUTINE within (list_dists,cutoff,dim_list,ISIN)
 
