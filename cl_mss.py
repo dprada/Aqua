@@ -299,8 +299,6 @@ class mss():
                 bb=aux_dict.pop(ii[2])
                 aux_dict[ii[0]].acceptors.append(bb.acceptors[0])
 
-
-
             aux_keys=aux_dict.keys()
             aux_keys.sort()
 
@@ -313,19 +311,23 @@ class mss():
     def reset(self):
 
         for node in self.node:
-            node.shell1st.don=[ [] for ii in range(node.don_num)]
-            node.shell1st.acc=[ [] for ii in range(node.acc_num)]
-            node.shell1st.don_val=[ [] for ii in range(node.don_num)]
-            node.shell1st.acc_val=[ [] for ii in range(node.acc_num)]
-            node.shell1st.don_node=[ [] for ii in range(node.don_num)]
-            node.shell1st.acc_node=[ [] for ii in range(node.acc_num)]
-            node.shell1st.don_num=[ 0 for ii in range(node.don_num)]
-            node.shell1st.acc_num=[ 0 for ii in range(node.acc_num)]
-            node.mss=[]
-            node.mss_ind=[]
+            node.shell1st.don       =[ [] for ii in range(node.don_num)]
+            node.shell1st.acc       =[ [] for ii in range(node.acc_num)]
+            node.shell1st.bond      =[ [] for ii in range(node.nonpolar_num)]
+            node.shell1st.don_val   =[ [] for ii in range(node.don_num)]
+            node.shell1st.acc_val   =[ [] for ii in range(node.acc_num)]
+            node.shell1st.bond_val  =[ [] for ii in range(node.nonpolar_num)]
+            node.shell1st.don_node  =[ [] for ii in range(node.don_num)]
+            node.shell1st.acc_node  =[ [] for ii in range(node.acc_num)]
+            node.shell1st.bond_node =[ [] for ii in range(node.nonpolar_num)]
+            node.shell1st.don_num   =[ 0 for ii in range(node.don_num)]
+            node.shell1st.acc_num   =[ 0 for ii in range(node.acc_num)]
+            node.shell1st.bond_num  =[ 0 for ii in range(node.nonpolar_num)]
+            node.mss                =[]
+            node.mss_ind            =[]
 
 
-    def build_shell1st(self,hbonds=None,bonds=None,hbtype='R(o,o)-Ang(o,o,h)',btype=None):
+    def build_shell1st(self,hbonds=None,bonds=None,hbtype='R(o,o)-Ang(o,o,h)',btype='dists'):
 
         self.hbtype=hbtype
         self.btype=btype
@@ -372,6 +374,35 @@ class mss():
 
         del(filt_aux_don,filt_aux_acc)
 
+        if self.btype in ['dists']:
+            rever=False
+
+        filt_aux_bond=numpy.zeros((self.num_nodes),dtype=int)
+
+        for bond_ind,bond_val in zip(bonds[0],bonds[1]):
+            ata=bond_ind[0]
+            atb=bond_ind[1]
+            ia=self.at2node[ata]
+            ib=self.at2node[atb]
+            self.node[ia[0]].shell1st.bond[ia[2]].append(atb)
+            self.node[ib[0]].shell1st.bond[ib[2]].append(ata)
+            self.node[ia[0]].shell1st.bond_node[ia[2]].append(ib)
+            self.node[ib[0]].shell1st.bond_node[ib[2]].append(ia)
+            self.node[ia[0]].shell1st.bond_val[ia[2]].append(bond_val)
+            self.node[ib[0]].shell1st.bond_val[ib[2]].append(bond_val)
+            self.node[ia[0]].shell1st.bond_num[ia[2]]+=1
+            self.node[ib[0]].shell1st.bond_num[ib[2]]+=1
+            filt_aux_bond[ia[0]]+=1
+            filt_aux_bond[ib[0]]+=1
+
+        for ii in numpy.nonzero(filt_aux_bond>1)[0]:
+            ishell1st=self.node[ii].shell1st
+            tups = zip(ishell1st.bond_val[0], ishell1st.bond[0], ishell1st.bond_node[0])
+            tups.sort(reverse=rever)
+            [ishell1st.bond_val[bond], ishell1st.bond[0], ishell1st.bond_node[0]]=zip(*tups)
+        
+        del(filt_aux_bond)
+        
         # is this faster?
         #for node in self.node:
         #    for ii in range(node.acc_num):
