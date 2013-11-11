@@ -287,70 +287,74 @@ class mss():
         filt_aux_acc=numpy.zeros((self.acc_num),dtype=int)
         filt_aux_at=numpy.zeros((self.at_num),dtype=int)
 
-        for hb_ind,hb_val in zip(hbonds[0],hbonds[1]):
-            atdon=hb_ind[1]
-            atacc=hb_ind[2]
-            idon=self.don2node[atdon]
-            iacc=self.acc2node[atacc]
-            self.node[idon[0]].shell1st.don[idon[1]].append(atacc)
-            self.node[iacc[0]].shell1st.acc[iacc[1]].append(atdon)
-            self.node[idon[0]].shell1st.don_node[idon[1]].append(iacc)
-            self.node[iacc[0]].shell1st.acc_node[iacc[1]].append(idon)
-            self.node[idon[0]].shell1st.don_val[idon[1]].append(hb_val)
-            self.node[iacc[0]].shell1st.acc_val[iacc[1]].append(hb_val)
-            self.node[idon[0]].shell1st.don_num[idon[1]]+=1
-            self.node[iacc[0]].shell1st.acc_num[iacc[1]]+=1
-            filt_aux_don[self.__dict_aux_don__[atdon]]+=1
-            filt_aux_acc[self.__dict_aux_acc__[atacc]]+=1
+        if hbonds:
 
-        for ii in numpy.nonzero(filt_aux_don>1)[0]:
-            idon=self.don2node[self.don_list[ii]]
-            ishell1st=self.node[idon[0]].shell1st
-            tups = zip(ishell1st.don_val[idon[1]], ishell1st.don[idon[1]], ishell1st.don_node[idon[1]])
-            tups.sort(reverse=rever) 
-            [ishell1st.don_val[idon[1]], ishell1st.don[idon[1]], ishell1st.don_node[idon[1]]]=zip(*tups)
-            ishell1st.don_val[idon[1]] = list(ishell1st.don_val[idon[1]])
-            ishell1st.don[idon[1]]     = list(ishell1st.don[idon[1]])
-            ishell1st.don_node[idon[1]]= list(ishell1st.don_node[idon[1]])
+            for hb_ind,hb_val in zip(hbonds[0],hbonds[1]):
+                atdon=hb_ind[1]
+                atacc=hb_ind[2]
+                idon=self.don2node[atdon]
+                iacc=self.acc2node[atacc]
+                self.node[idon[0]].shell1st.don[idon[1]].append(atacc)
+                self.node[iacc[0]].shell1st.acc[iacc[1]].append(atdon)
+                self.node[idon[0]].shell1st.don_node[idon[1]].append(iacc)
+                self.node[iacc[0]].shell1st.acc_node[iacc[1]].append(idon)
+                self.node[idon[0]].shell1st.don_val[idon[1]].append(hb_val)
+                self.node[iacc[0]].shell1st.acc_val[iacc[1]].append(hb_val)
+                self.node[idon[0]].shell1st.don_num[idon[1]]+=1
+                self.node[iacc[0]].shell1st.acc_num[iacc[1]]+=1
+                filt_aux_don[self.__dict_aux_don__[atdon]]+=1
+                filt_aux_acc[self.__dict_aux_acc__[atacc]]+=1
 
-        for ii in numpy.nonzero(filt_aux_acc>1)[0]:
-            iacc=self.acc2node[self.acc_list[ii]]
-            ishell1st=self.node[iacc[0]].shell1st
-            tups = zip(ishell1st.acc_val[iacc[1]], ishell1st.acc[iacc[1]], ishell1st.acc_node[iacc[1]])
-            tups.sort(reverse=rever)
-            [ishell1st.acc_val[iacc[1]], ishell1st.acc[iacc[1]], ishell1st.acc_node[iacc[1]]]=zip(*tups)
-            ishell1st.acc_val[iacc[1]] = list(ishell1st.acc_val[iacc[1]])
-            ishell1st.acc[iacc[1]]     = list(ishell1st.acc[iacc[1]])
-            ishell1st.acc_node[iacc[1]]= list(ishell1st.acc_node[iacc[1]])
+            for ii in numpy.nonzero(filt_aux_don>1)[0]:
+                idon=self.don2node[self.don_list[ii]]
+                ishell1st=self.node[idon[0]].shell1st
+                tups = zip(ishell1st.don_val[idon[1]], ishell1st.don[idon[1]], ishell1st.don_node[idon[1]])
+                tups.sort(reverse=rever) 
+                [ishell1st.don_val[idon[1]], ishell1st.don[idon[1]], ishell1st.don_node[idon[1]]]=zip(*tups)
+                ishell1st.don_val[idon[1]] = list(ishell1st.don_val[idon[1]])
+                ishell1st.don[idon[1]]     = list(ishell1st.don[idon[1]])
+                ishell1st.don_node[idon[1]]= list(ishell1st.don_node[idon[1]])
 
-        if self.btype in ['dists']:
-            rever=False
+            for ii in numpy.nonzero(filt_aux_acc>1)[0]:
+                iacc=self.acc2node[self.acc_list[ii]]
+                ishell1st=self.node[iacc[0]].shell1st
+                tups = zip(ishell1st.acc_val[iacc[1]], ishell1st.acc[iacc[1]], ishell1st.acc_node[iacc[1]])
+                tups.sort(reverse=rever)
+                [ishell1st.acc_val[iacc[1]], ishell1st.acc[iacc[1]], ishell1st.acc_node[iacc[1]]]=zip(*tups)
+                ishell1st.acc_val[iacc[1]] = list(ishell1st.acc_val[iacc[1]])
+                ishell1st.acc[iacc[1]]     = list(ishell1st.acc[iacc[1]])
+                ishell1st.acc_node[iacc[1]]= list(ishell1st.acc_node[iacc[1]])
 
-        for bond_ind,bond_val in zip(bonds[0],bonds[1]):
-            ata=bond_ind[0]
-            atb=bond_ind[1]
-            ia=self.at2node[ata]
-            ib=self.at2node[atb]
-            self.node[ia[0]].shell1st.bond[ia[1]].append(atb)
-            self.node[ib[0]].shell1st.bond[ib[1]].append(ata)
-            self.node[ia[0]].shell1st.bond_node[ia[1]].append(ib)
-            self.node[ib[0]].shell1st.bond_node[ib[1]].append(ia)
-            self.node[ia[0]].shell1st.bond_val[ia[1]].append(bond_val)
-            self.node[ib[0]].shell1st.bond_val[ib[1]].append(bond_val)
-            self.node[ia[0]].shell1st.bond_num[ia[1]]+=1
-            self.node[ib[0]].shell1st.bond_num[ib[1]]+=1
-            filt_aux_at[self.__dict_aux_at__[ata]]+=1
-            filt_aux_at[self.__dict_aux_at__[atb]]+=1
+        if bonds:
 
-        for ii in numpy.nonzero(filt_aux_at>1)[0]:
-            iat=self.at2node[self.at_list[ii]]
-            ishell1st=self.node[iat[0]].shell1st
-            tups = zip(ishell1st.bond_val[iat[1]], ishell1st.bond[iat[1]], ishell1st.bond_node[iat[1]])
-            tups.sort(reverse=rever)
-            [ishell1st.bond_val[iat[1]], ishell1st.bond[iat[1]], ishell1st.bond_node[iat[1]]]=zip(*tups)
-            ishell1st.bond_val[iat[1]] = list(ishell1st.bond_val[iat[1]])
-            ishell1st.bond[iat[1]]     = list(ishell1st.bond[iat[1]])
-            ishell1st.bond_node[iat[1]]= list(ishell1st.bond_node[iat[1]])
+            if self.btype in ['dists']:
+                rever=False
+
+            for bond_ind,bond_val in zip(bonds[0],bonds[1]):
+                ata=bond_ind[0]
+                atb=bond_ind[1]
+                ia=self.at2node[ata]
+                ib=self.at2node[atb]
+                self.node[ia[0]].shell1st.bond[ia[1]].append(atb)
+                self.node[ib[0]].shell1st.bond[ib[1]].append(ata)
+                self.node[ia[0]].shell1st.bond_node[ia[1]].append(ib)
+                self.node[ib[0]].shell1st.bond_node[ib[1]].append(ia)
+                self.node[ia[0]].shell1st.bond_val[ia[1]].append(bond_val)
+                self.node[ib[0]].shell1st.bond_val[ib[1]].append(bond_val)
+                self.node[ia[0]].shell1st.bond_num[ia[1]]+=1
+                self.node[ib[0]].shell1st.bond_num[ib[1]]+=1
+                filt_aux_at[self.__dict_aux_at__[ata]]+=1
+                filt_aux_at[self.__dict_aux_at__[atb]]+=1
+
+            for ii in numpy.nonzero(filt_aux_at>1)[0]:
+                iat=self.at2node[self.at_list[ii]]
+                ishell1st=self.node[iat[0]].shell1st
+                tups = zip(ishell1st.bond_val[iat[1]], ishell1st.bond[iat[1]], ishell1st.bond_node[iat[1]])
+                tups.sort(reverse=rever)
+                [ishell1st.bond_val[iat[1]], ishell1st.bond[iat[1]], ishell1st.bond_node[iat[1]]]=zip(*tups)
+                ishell1st.bond_val[iat[1]] = list(ishell1st.bond_val[iat[1]])
+                ishell1st.bond[iat[1]]     = list(ishell1st.bond[iat[1]])
+                ishell1st.bond_node[iat[1]]= list(ishell1st.bond_node[iat[1]])
         
         del(filt_aux_don,filt_aux_acc,filt_aux_at)
         
