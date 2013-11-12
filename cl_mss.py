@@ -359,33 +359,49 @@ class mss():
         del(filt_aux_don,filt_aux_acc,filt_aux_at)
         
 
-    def build_mss(self):
+    def build_mss_ind_shell1st(self):
 
         for node in self.node:
-            mss=[]
+            mss_ind=[]
             inddon=[]
             indacc=[]
-            mss.extend([node.don_num,node.acc_num,node.at_num])
-            mss.extend(node.shell1st.don_num)
-            mss.extend(node.shell1st.acc_num)
-            mss.extend(node.shell1st.bond_num)
+            mss_ind.extend([node.don_num,node.acc_num,node.at_num])
+            mss_ind.extend(node.shell1st.don_num)
+            mss_ind.extend(node.shell1st.acc_num)
+            mss_ind.extend(node.shell1st.bond_num)
             for ii in range(node.don_num):
                 for jj in range(node.shell1st.don_num[ii]):
-                    mss.append(node.shell1st.don_node[ii][jj][0])
+                    mss_ind.append(node.shell1st.don_node[ii][jj][0])
             for ii in range(node.acc_num):
                 for jj in range(node.shell1st.acc_num[ii]):
-                    mss.append(node.shell1st.acc_node[ii][jj][0])
+                    mss_ind.append(node.shell1st.acc_node[ii][jj][0])
             for ii in range(node.at_num):
                 for jj in range(node.shell1st.bond_num[ii]):
-                    mss.append(node.shell1st.bond_node[ii][jj][0])
-            node.shell1st.mss=mss
+                    mss_ind.append(node.shell1st.bond_node[ii][jj][0])
+            node.shell1st.mss_ind=mss_ind
+        
+    def symmetrize_mss_ind_shell1st(self,symm_type=None):
+
+        if symm_type==1:
+            # H1 and H2 distinguishable in first shell
+            # H1 and H2 indistinguishable in second shell
+            # Nodes water indistinguishable
+            # Nodes ion indistinguishable
+            # Nodes lipid indistinguishable with different peptides ??
+
+
+        pass
+
+    def build_mss_ind(self):
+
+        self.build_mss_ind_shell1st()
 
         for node in self.node:
-            node.mss.append(node.index)
-            node.mss.extend(node.shell1st.mss)
-            ii=sum(node.shell1st.mss[0:3])+3
-            jj=sum(node.shell1st.mss[3:ii])+ii
-            for kk in node.shell1st.mss[ii:jj]:
-                node.mss.extend(self.node[kk].shell1st.mss)
+            node.mss_ind.append(node.index)
+            node.mss_ind.extend(node.shell1st.mss_ind)
+            ii=sum(node.shell1st.mss_ind[0:3])+3
+            jj=sum(node.shell1st.mss_ind[3:ii])+ii
+            for kk in node.shell1st.mss_ind[ii:jj]:
+                node.mss_ind.extend(self.node[kk].shell1st.mss_ind)
             
 
