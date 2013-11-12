@@ -19,6 +19,8 @@ class shell1st():
         self.bond_num=[]
         self.mss=[]
         self.mss_ind=[]
+        self.mss_ind_sym=[]
+        self.mss_sym=[]
 
 
 class adnode():
@@ -382,13 +384,32 @@ class mss():
         
     def symmetrize_mss_ind_shell1st(self,symm_type=None):
 
-        if symm_type==1:
+        if symm_type==1: # microstate only for water
+            
             # H1 and H2 distinguishable in first shell
             # H1 and H2 indistinguishable in second shell
             # Nodes water indistinguishable
             # Nodes ion indistinguishable
             # Nodes lipid indistinguishable with different peptides ??
 
+            for ii in self.list_water:
+                ishell1st=self.node[ii].shell1st
+                ishell1st.mss_ind_sym=ishell1st.mss_ind[3:7]
+                aa=sum(ishell1st.mss_ind_sym)
+                ishell1st.mss_ind_sym.extend(ishell1st.mss_ind[9:(9+aa)])
+                ishell1st.mss_sym=ishell1st.mss_ind[3:7]
+                wind=0
+                wlist=[]
+                iind=0
+                ilist=[]
+                for ii in ishell1st.mss_ind_sym[4:(4+aa)]:
+                    jj=ishell1st.mss_sym[ii]
+                    if self.node[jj].type=='water':
+                        if jj not in wlist:
+                            ishell1st.mss_sym.append('w'+str(wind))
+                            wind+=1
+                        else:
+                            
 
         pass
 
