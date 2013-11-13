@@ -395,23 +395,32 @@ class mss():
             for ii in self.list_water:
                 ishell1st=self.node[ii].shell1st
                 ishell1st.mss_ind_sym=ishell1st.mss_ind[3:7]
-                aa=sum(ishell1st.mss_ind_sym)
-                ishell1st.mss_ind_sym.extend(ishell1st.mss_ind[9:(9+aa)])
                 ishell1st.mss_sym=ishell1st.mss_ind[3:7]
+                numhb=sum(ishell1st.mss_ind_sym[0:3])
+                numb=ishell1st.mss_ind_sym[3]
                 wind=0
-                wlist=[]
                 iind=0
-                ilist=[]
-                for ii in ishell1st.mss_ind_sym[4:(4+aa)]:
-                    jj=ishell1st.mss_sym[ii]
-                    if self.node[jj].type=='water':
-                        if jj not in wlist:
-                            ishell1st.mss_sym.append('w'+str(wind))
+                aux_dict={}
+                for kk in ishell1st.mss_ind[9:(9+numhb)]:
+                    if not aux_dict.has_key(kk):
+                        if self.node[kk].type=='Water':
+                            aux_dict[kk]='w'+str(wind)
                             wind+=1
                         else:
-                            
-
-        pass
+                            aux_dict[kk]=kk
+                    ishell1st.mss_ind_sym.append(kk)
+                    ishell1st.mss_sym.append(aux_dict[kk])
+                for kk in ishell1st.mss_ind[(9+numhb):(9+numhb+numb)]:
+                    if not aux_dict.has_key(kk):
+                        if self.node[kk].type=='Ion':
+                            aux_dict[kk]='i'+str(iind)
+                            iind+=1
+                        else:
+                            aux_dict[kk]=kk
+                    ishell1st.mss_ind_sym.append(kk)
+                    ishell1st.mss_sym.append(aux_dict[kk])
+                print aux_dict
+            del(aux_dict)
 
     def build_mss_ind(self):
 
