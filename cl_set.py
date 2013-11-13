@@ -832,8 +832,11 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
 
     def selection (self,condition=None,traj=0,frame='ALL',pbc=True):
 
-        list_condition=selection(self,condition,traj,frame,pbc)
-        return list_condition
+        if type(condition) in [tuple,list]:
+            return condition
+        else:
+            list_condition=selection(self,condition,traj,frame,pbc)
+            return list_condition
 
     def selection_covalent_chains(self,chain=None,select='protein'):
 

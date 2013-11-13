@@ -39,6 +39,11 @@ class adnode():
         self.shell1st=shell1st()
         self.mss=[]
         self.mss_ind=[]
+        self.symm_ats=None
+        self.symm_ats_list=None
+        self.symm_nodes=None
+        self.symm_nodes_list=None
+
 
     def info(self):
 
@@ -48,7 +53,7 @@ class adnode():
 
 class mss():
 
-    def __init__(self,msystem=None,sets='chains',symm_acc=True,symm_don=True,verbose=True):
+    def __init__(self,msystem=None,sets='chains',symm_ats=None,symm_nodes=None,verbose=True):
 
         self.type=sets   #'chains','residues','molecules'
         self.msystem=msystem
@@ -56,6 +61,8 @@ class mss():
         self.num_nodes=0
         self.hbtype=None
         self.btype=None
+        self.symm_ats=symm_ats
+        self.symm_nodes=symm_nodes
 
         self.build_nodes()
         self.num_nodes=len(self.node)
@@ -126,6 +133,21 @@ class mss():
         for ii in self.at_list:
             self.__dict_aux_at__[ii]=jj
             jj+=1
+
+
+        # symmetric atoms
+
+        if self.symm_ats:
+
+            self.symm_ats_list=[]
+            if type(self.symm_ats) in [list,tuple]:
+                for sel in self.symm_ats:
+                    self.symm_ats_list.append(self.msystem.selection(sel))
+            else:
+                self.symm_ats_list.append(self.msystem.selection(sel))
+
+        for inode self.node:
+            
 
 
         if verbose:
