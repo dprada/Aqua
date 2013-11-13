@@ -19,8 +19,8 @@ class shell1st():
         self.bond_num=[]
         self.mss=[]
         self.mss_ind=[]
-        self.mss_ind_sym=[]
-        self.mss_sym=[]
+        self.mss_ind_symm=[]
+        self.mss_symm=[]
 
 
 class adnode():
@@ -43,7 +43,7 @@ class adnode():
         self.symm_ats_list=None
         self.symm_nodes=None
         self.symm_nodes_list=None
-
+        self.filt_symm_ats=[]
 
     def info(self):
 
@@ -146,8 +146,12 @@ class mss():
             else:
                 self.symm_ats_list.append(self.msystem.selection(sel))
 
-        for inode self.node:
-            
+        for inode in self.node:
+            for criterium in self.symm_ats_list:
+                #aa=numpy.in1d(inode.atoms,criterium)
+                aa=numpy.intersect1d(inode.atoms,criterium)
+                if aa:
+                    inode.filt_symm_ats.append(aa)
 
 
         if verbose:
@@ -403,7 +407,12 @@ class mss():
                 for jj in range(node.shell1st.bond_num[ii]):
                     mss_ind.append(node.shell1st.bond_node[ii][jj][0])
             node.shell1st.mss_ind=mss_ind
+            
+            node.shell1st.mss_ind_symm=mss_ind
+            for eqats in node.filt_ats_symm:
+                
         
+
     def symmetrize_mss_ind_shell1st(self,symm_type=None):
 
         if symm_type==1: # microstate only for water
