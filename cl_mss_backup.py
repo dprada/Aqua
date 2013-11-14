@@ -1,85 +1,49 @@
 # tendria que pensar si incluyo los centros de los aromaticos para hacer hbonds
 import numpy
 
-class atom():
-
-    def __init__(self,index=None,donor=False,acceptor=False,nonpolar=False):
-
-        self.index=index
-        self.donor=donor
-        self.acceptor=acceptor
-        self.nonpolar=nonpolar
-
-        self.bond=[]
-        self.bond_value=[]
-        self.num_bonds=0
-        self.hbond=[]
-        self.hbond_value=[]
-        self.num_hbonds=0
-
-    def add_bond(self,atom=None,value=None):
-
-        self.bond.append(atom)
-        self.bond_value.append(value)
-        self.num_bonds+=1
-
-    def add_hbond(self,atom=None,value=None):
-
-        self.hbond.append(atom)
-        self.hbond_value(atom)
-        self.num_hbonds+=1
-
-    def reset(self):
-
-        self.bond=[]
-        self.bond_value=[]
-        self.num_bonds=0
-        self.hbond=[]
-        self.hbond_value=[]
-        self.num_hbonds=0
-
-
-class shell():
+class shell1st():
 
     def __init__(self):
 
+        self.acc=[]
+        self.don=[]
+        self.bond=[]
+        self.acc_node=[]
+        self.don_node=[]
+        self.bond_node=[]
+        self.acc_val=[]
+        self.don_val=[]
+        self.bond_val=[]
+        self.acc_num=[]
+        self.don_num=[]
+        self.bond_num=[]
         self.mss=[]
         self.mss_ind=[]
+        self.mss_ind_symm=[]
+        self.mss_symm=[]
 
-class node():
 
-    def __init__(self,name=None,type=None):
+class adnode():
 
-        self.type=type
-        self.name=name
+    def __init__(self):
+
+        self.type=None
+        self.name=None
         self.index=None
-
-        self.acceptors_list=[]
-        self.donors_list=[]
-        self.nonpolars_list=[]
-        self.atoms_list=[]
-        self.atom={}
-        self.num_acceptors=0
-        self.num_donors=0
-        self.num_nonpolars=0
-        self.num_atoms=0
-
-        #self.shell1st=shell1st()
-        #self.shell2nd=shell2nd()
-        # 
-        #self.symm_ats=None
-        #self.symm_ats_list=None
-        #self.symm_nodes=None
-        #self.symm_nodes_list=None
-
-        def add_atom(self,index=None,donor=False,acceptor=False,nonpolar=False):
-
-            self.atom[index]=atom(index=None,donor=False,acceptor=False,nonpolar=False)
-
-        def merge_node(self,node=None):
-
-            for ii,jj in node.atom.iteritems():
-                self.atom[ii]=jj
+        self.acceptors=[]
+        self.donors=[]
+        self.atoms=[]
+        self.acc_num=0
+        self.don_num=0
+        self.at_num=0
+        self.shell1st=shell1st()
+        self.mss=[]
+        self.mss_ind=[]
+        self.symm_ats=None
+        self.symm_ats_list=None
+        self.symm_nodes=None
+        self.symm_nodes_list=None
+        self.filt_symm_ats=[]
 
     def info(self):
 
@@ -95,100 +59,99 @@ class mss():
         self.msystem=msystem
         self.node=[]
         self.num_nodes=0
-        self.num_atoms=0
-        self.num_acceptors=0
-        self.num_donors=0
-        self.num_nonpolars=0
-        self.atoms_list=[]
-        self.acceptors_list=[]
-        self.donors_list=[]
-        self.nonpolars_list=[]
-        self.atom2node={}
-        self.acceptor2node={}
-        self.donor2node={}
-        self.nonpolar2node={}
-
-
-        #self.list_protein=[]
-        #self.list_lipid=[]
-        #self.list_ion=[]
-        #self.list_water=[]
-
         self.hbtype=None
         self.btype=None
-        #self.symm_ats=symm_ats
-        #self.symm_nodes=symm_nodes
+        self.symm_ats=symm_ats
+        self.symm_nodes=symm_nodes
 
         self.build_nodes()
-
         self.num_nodes=len(self.node)
+        
+        self.list_protein=[]
+        self.list_water=[]
+        self.list_ion=[]
+        self.list_lipid=[]
         for ii in range(self.num_nodes):
-            for jj,atom in node.atom.iteritems():
-                node.atoms_list.append(jj)
-                self.atom2node[jj]=ii
-                if atom.acceptor:
-                    node.acceptors_list.append(jj)
-                    self.acceptor2node[jj]=ii
-                if atom.donor:
-                    node.donors_list.append(jj)
-                    self.donor2node[jj]=ii
-                if atom.nonpolar:
-                    node.nonpolars_list.append(jj)
-                    self.nonpolar2node[jj]=ii
+            if self.node[ii].type=='Protein':
+                self.list_protein.append(ii)
+            elif self.node[ii].type=='Water':
+                self.list_water.append(ii)
+            elif self.node[ii].type=='Ion':
+                self.list_ion.append(ii)
+            elif self.node[ii].type=='Lipid':
+                self.list_lipid.append(ii)
+
+
+        self.at2node={}
+        self.acc2node={}
+        self.don2node={}
+
+        for ii in range(self.num_nodes):
+            node=self.node[ii]
             node.index=ii
-            node.acceptors_list.sort()
-            node.donors_list.sort()
-            node.nonpolars_list.sort()
-            node.atoms_list.sort()
-            node.num_acceptors=len(node.acceptors_list)
-            node.num_donors=len(node.donors_list)
-            node.num_nonpolars=len(node.nonpolars_list)
-            node.num_atoms=len(node.atoms_list)
-        self.atoms_list=self.atom2node.keys()
-        self.acceptors_list=self.acceptor2node.keys()
-        self.donors_list=self.donor2node.keys()
-        self.nonpolars_list=self.nonpolars_list.keys()
-        self.num_atoms=len(self.atoms_list)
-        self.num_acceptors=len(self.acceptors_list)
-        self.num_donors=len(self.donors_list)
-        self.num_nonpolars=len(self.nonpolars_list)
+            node.don_num=len(node.donors)
+            node.acc_num=len(node.acceptors)
+            node.at_num=len(node.atoms)
+            for jj in range(node.don_num):
+                self.don2node[node.donors[jj]]=[ii,jj]
+                node.shell1st.don.append([])
+                node.shell1st.don_val.append([])
+                node.shell1st.don_num.append(0)
+            for jj in range(node.acc_num):
+                self.acc2node[node.acceptors[jj]]=[ii,jj]
+                node.shell1st.acc.append([])
+                node.shell1st.acc_val.append([])
+                node.shell1st.acc_num.append(0)
+            for jj in range(node.at_num):
+                self.at2node[node.atoms[jj]]=[ii,jj]
+                node.shell1st.bond.append([])
+                node.shell1st.bond_val.append([])
+                node.shell1st.bond_num.append(0)
+
+        self.at_list=self.at2node.keys()
+        self.acc_list=self.acc2node.keys()
+        self.don_list=self.don2node.keys()
+        self.at_num=len(self.at_list)
+        self.acc_num=len(self.acc_list)
+        self.don_num=len(self.don_list)
+
+        self.__dict_aux_don__={}
+        self.__dict_aux_acc__={}
+        self.__dict_aux_at__={}
+
+        jj=0
+        for ii in self.don_list:
+            self.__dict_aux_don__[ii]=jj
+            jj+=1
+
+        jj=0
+        for ii in self.acc_list:
+            self.__dict_aux_acc__[ii]=jj
+            jj+=1
+
+        jj=0
+        for ii in self.at_list:
+            self.__dict_aux_at__[ii]=jj
+            jj+=1
 
 
+        # symmetric atoms
 
-        #self.list_protein=[]
-        #self.list_water=[]
-        #self.list_ion=[]
-        #self.list_lipid=[]
-        #for ii in range(self.num_nodes):
-        #    if self.node[ii].type=='Protein':
-        #        self.list_protein.append(ii)
-        #    elif self.node[ii].type=='Water':
-        #        self.list_water.append(ii)
-        #    elif self.node[ii].type=='Ion':
-        #        self.list_ion.append(ii)
-        #    elif self.node[ii].type=='Lipid':
-        #        self.list_lipid.append(ii)
+        if self.symm_ats:
 
+            self.symm_ats_list=[]
+            if type(self.symm_ats) in [list,tuple]:
+                for sel in self.symm_ats:
+                    self.symm_ats_list.append(self.msystem.selection(sel))
+            else:
+                self.symm_ats_list.append(self.msystem.selection(sel))
 
-
-
-        ## symmetric atoms
-        # 
-        #if self.symm_ats:
-        # 
-        #    self.symm_ats_list=[]
-        #    if type(self.symm_ats) in [list,tuple]:
-        #        for sel in self.symm_ats:
-        #            self.symm_ats_list.append(self.msystem.selection(sel))
-        #    else:
-        #        self.symm_ats_list.append(self.msystem.selection(sel))
-        # 
-        #for inode in self.node:
-        #    for criterium in self.symm_ats_list:
-        #        #aa=numpy.in1d(inode.atoms,criterium)
-        #        aa=numpy.intersect1d(inode.atoms,criterium)
-        #        if aa:
-        #            inode.filt_symm_ats.append(aa)
+        for inode in self.node:
+            for criterium in self.symm_ats_list:
+                #aa=numpy.in1d(inode.atoms,criterium)
+                aa=numpy.intersect1d(inode.atoms,criterium)
+                if aa:
+                    inode.filt_symm_ats.append(aa)
 
 
         if verbose:
@@ -207,50 +170,74 @@ class mss():
         print '#',self.don_num,'donors'
         print '#',self.at_num-self.acc_num-self.don_num,'nonpolar'
 
-    def __build_nodes_chains__(self):
-
-        aux_dict={}
-        aa=0
-
-        for ii in self.msystem.donors:
-            if not aux_dict.has_key(ii[0]):
-                jj=self.msystem.atom[ii[0]].resid
-                tmp_node=node(jj.name,jj.type)
-                aux_dict.[ii[0]]=tmp_node
-            aux_dict[ii[0]].add_atom(ii[1],donor=True)
-
-        for ii in self.msystem.acceptors:
-            if not aux_dict.has_key(ii):
-                jj=self.msystem.atom[ii].resid
-                tmp_node=node(jj.name,jj.resid)
-                aux_dict[ii]=tmp_node
-            aux_dict[ii].add_atom(ii,acceptor=True)
-
-        sel_ions=self.msystem.selection('ion')
-        for ii in sel_ions:
-            jj=self.msystem.atom[ii].resid
-            tmp_node=node(jj.name,jj.resid)
-            aux_dict[ii]=tmp_node
-            aux_dict[ii].add_atom(ii,nonpolar=True)
-
-        return aux_dict
-
-
     def build_nodes(self):
 
         if self.type=='chains':
+            
+            aux_dict={}
+            aa=0
+            for ii in self.msystem.donors:
+                if not aux_dict.has_key(ii[0]):
+                    tmp_adnode=adnode()
+                    tmp_adnode.type=self.msystem.atom[ii[0]].resid.type
+                    tmp_adnode.name=self.msystem.atom[ii[0]].resid.name
+                    if tmp_adnode.type=='Water':
+                        tmp_adnode.water=self.msystem.atom[ii[0]].resid.water
+                    aux_dict[ii[0]]=tmp_adnode
+                aux_dict[ii[0]].donors.append(ii[1])
 
-            aux_dict=self.__build_nodes_chains__()
+            for ii in self.msystem.acceptors:
+                if not aux_dict.has_key(ii):
+                    tmp_adnode=adnode()
+                    tmp_adnode.type=self.msystem.atom[ii].resid.type
+                    tmp_adnode.name=self.msystem.atom[ii].resid.name
+                    if tmp_adnode.type=='Water':
+                        tmp_adnode.water=self.msystem.atom[ii].resid.water
+                    aux_dict[ii]=tmp_adnode
+                aux_dict[ii].acceptors.append(ii)
+
             aux_keys=aux_dict.keys()
             aux_keys.sort()
+
             for ii in aux_keys:
                 self.node.append(aux_dict[ii])
-
+            
             del(aux_dict,aux_keys)
 
         if self.type=='chains+XOn':
             
-            aux_dict=self.__build_nodes_chains__()
+            aux_dict={}
+            aa=0
+            for ii in self.msystem.donors:
+                if not aux_dict.has_key(ii[0]):
+                    tmp_adnode=adnode()
+                    tmp_adnode.type=self.msystem.atom[ii[0]].resid.type
+                    tmp_adnode.name=self.msystem.atom[ii[0]].resid.name
+                    if tmp_adnode.type=='Water':
+                        tmp_adnode.water=self.msystem.atom[ii[0]].resid.water
+                    aux_dict[ii[0]]=tmp_adnode
+                aux_dict[ii[0]].donors.append(ii[1])
+                aux_dict[ii[0]].atoms.append(ii[1])
+
+            for ii in self.msystem.acceptors:
+                if not aux_dict.has_key(ii):
+                    tmp_adnode=adnode()
+                    tmp_adnode.type=self.msystem.atom[ii].resid.type
+                    tmp_adnode.name=self.msystem.atom[ii].resid.name
+                    if tmp_adnode.type=='Water':
+                        tmp_adnode.water=self.msystem.atom[ii].resid.water
+                    aux_dict[ii]=tmp_adnode
+                aux_dict[ii].acceptors.append(ii)
+                aux_dict[ii].atoms.append(ii)
+
+            sel_ions=self.msystem.selection('ion')
+            for ii in sel_ions:
+                tmp_adnode=adnode()
+                tmp_adnode.type=self.msystem.atom[ii].resid.type
+                tmp_adnode.name=self.msystem.atom[ii].resid.name
+                aux_dict[ii]=tmp_adnode
+                aux_dict[ii].atoms.append(ii)
+
 
             # symm in ASP,GLU and Terminals
             con_ASP =self.msystem.selection_covalent_chains(['OD1','CG','OD2'],'protein')
@@ -258,44 +245,58 @@ class mss():
             con_Term=self.msystem.selection_covalent_chains(['OC1','C','OC2'],'protein')
             for ii in con_ASP:
                 bb=aux_dict.pop(ii[2])
-                aux_dict[ii[0]].merge_node(bb)
-
+                aux_dict[ii[0]].acceptors.append(bb.acceptors[0])
+                aux_dict[ii[0]].atoms.append(bb.atoms[0])
             for ii in con_GLU:
                 bb=aux_dict.pop(ii[2])
-                aux_dict[ii[0]].merge_node(bb)
-
+                aux_dict[ii[0]].acceptors.append(bb.acceptors[0])
+                aux_dict[ii[0]].atoms.append(bb.atoms[0])
             for ii in con_Term:
                 bb=aux_dict.pop(ii[2])
-                aux_dict[ii[0]].merge_node(bb)
+                aux_dict[ii[0]].acceptors.append(bb.acceptors[0])
+                aux_dict[ii[0]].atoms.append(bb.atoms[0])
 
             # head of lipid AOT
 
             con_head=self.msystem.selection_covalent_chains(['OS1','S','OS2'],'lipid')
             for ii in con_head:
                 bb=aux_dict.pop(ii[2])
-                aux_dict[ii[0]].merge_node(bb)
-
+                aux_dict[ii[0]].acceptors.append(bb.acceptors[0])
+                aux_dict[ii[0]].atoms.append(bb.atoms[0])
             con_head=self.msystem.selection_covalent_chains(['OS1','S','OS3'],'lipid')
             for ii in con_head:
                 bb=aux_dict.pop(ii[2])
-                aux_dict[ii[0]].merge_node(bb)
+                aux_dict[ii[0]].acceptors.append(bb.acceptors[0])
+                aux_dict[ii[0]].atoms.append(bb.atoms[0])
 
-            aux_dict=self.__build_nodes_chains__()
             aux_keys=aux_dict.keys()
             aux_keys.sort()
-            for ii in aux_keys:
-                self.node.append(aux_dict[ii])
 
+            for ii in aux_keys:
+                aux_node=aux_dict[ii]
+                aux_node.atoms.sort()
+                self.node.append(aux_node)
+            
             del(aux_dict,aux_keys,con_ASP,con_GLU,con_Term)
+
 
     def reset(self):
 
-        for node in self.node:  
-            for atom in node.atom:
-                atom.reset()
-
-        #node.mss                =[]
-        #node.mss_ind            =[]
+        for node in self.node:
+            node.shell1st.don       =[ [] for ii in range(node.don_num)]
+            node.shell1st.acc       =[ [] for ii in range(node.acc_num)]
+            node.shell1st.bond      =[ [] for ii in range(node.at_num)]
+            node.shell1st.don_val   =[ [] for ii in range(node.don_num)]
+            node.shell1st.acc_val   =[ [] for ii in range(node.acc_num)]
+            node.shell1st.bond_val  =[ [] for ii in range(node.at_num)]
+            node.shell1st.don_node  =[ [] for ii in range(node.don_num)]
+            node.shell1st.acc_node  =[ [] for ii in range(node.acc_num)]
+            node.shell1st.bond_node =[ [] for ii in range(node.at_num)]
+            node.shell1st.don_num   =[ 0 for ii in range(node.don_num)]
+            node.shell1st.acc_num   =[ 0 for ii in range(node.acc_num)]
+            node.shell1st.bond_num  =[ 0 for ii in range(node.at_num)]
+            node.mss                =[]
+            node.mss_ind            =[]
 
 
     def build_shell1st(self,hbonds=None,bonds=None,hbtype='R(o,o)-Ang(o,o,h)',btype='dists'):
@@ -306,15 +307,9 @@ class mss():
         self.reset()
 
         if self.hbtype in ['R(o,o)-Ang(o,o,h)','R(o,h)']:
-            rever_hb=False
-        elif self.hbtype in ['Skinner']:
-            rever_hb=True
-
-        if self.btype in ['dists']:
             rever=False
-
-        
-        ## Aqui voy
+        elif self.hbtype in ['Skinner']:
+            rever=True
 
         filt_aux_don=numpy.zeros((self.don_num),dtype=int)
         filt_aux_acc=numpy.zeros((self.acc_num),dtype=int)
