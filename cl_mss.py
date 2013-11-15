@@ -1,5 +1,6 @@
 # tendria que pensar si incluyo los centros de los aromaticos para hacer hbonds
 import numpy
+import copy
 
 class atom():
 
@@ -106,6 +107,7 @@ class node():
         self.shell2nd=shell()
         
         self.symm_ats=[]
+        self.symm_broken=False
 
     def add_atom(self,index=None,donor=False,acceptor=False,nonpolar=False):
 
@@ -212,8 +214,8 @@ class mss():
                 symm_ats_list.append(self.msystem.selection(sel))
             for node in self.node:
                 for criterium in symm_ats_list:
-                    #aa=numpy.in1d(node.atoms,criterium)
-                    aa=numpy.intersect1d(node.atoms,criterium)
+                    aa=numpy.in1d(node.atoms,criterium)
+                    #aa=numpy.intersect1d(node.atoms,criterium)
                     if aa.sum():
                         node.symm_ats.append(aa)
             del(symm_ats_list)
@@ -365,37 +367,55 @@ class mss():
                     atom.sort_bonds(rever_b)
 
 
-    #def build_mss_ind_shell1st(self):
-    # 
-    #    for node in self.node:
-    #        mss_ind=[]
-    #        mss_ind.extend([node.don_num,node.acc_num,node.at_num])
-    #        mss_ind.extend(node.shell1st.don_num)
-    #        mss_ind.extend(node.shell1st.acc_num)
-    #        mss_ind.extend(node.shell1st.bond_num)
-    #        for ii in range(node.don_num):
-    #            for jj in range(node.shell1st.don_num[ii]):
-    #                mss_ind.append(node.shell1st.don_node[ii][jj][0])
-    #        for ii in range(node.acc_num):
-    #            for jj in range(node.shell1st.acc_num[ii]):
-    #                mss_ind.append(node.shell1st.acc_node[ii][jj][0])
-    #        for ii in range(node.at_num):
-    #            for jj in range(node.shell1st.bond_num[ii]):
-    #                mss_ind.append(node.shell1st.bond_node[ii][jj][0])
-    #        node.shell1st.mss_ind=mss_ind
-    #        
-    #        node.shell1st.mss_ind_symm=mss_ind
-    #        for eqats in node.filt_ats_symm:
-    #            pass
-    # 
-    #    for node in self.node:
-    #        mss_ind=[]
-    #        mss_ind.extend([node.don_num,node.acc_num,node.at_num])
-    # 
-    #        
-    # 
-    #    
-    # 
+    def build_mss_shell1st(self):
+     
+        for node in self.node:
+            order=copy.copy(node.atoms)
+            if node.symm_ats:
+                support=numpy.zeros((node.num_atoms,5),dtype=int,order='Fortran')
+                for ii in range(node.num_atoms):
+                    jj=order[ii]
+                    atom=node.atom[jj]
+                    support[0,ii]=atom.num_hbonds
+                    support[1,ii]=atom.num_bonds
+                    if numpy.in1d()
+                    
+
+            for criterium in node.symm_ats:
+                numhbs=[]
+                numbs=[]
+                for ii in criterium:
+                    numhbs.append(node.atom[ii].num_hbonds)
+                    numbs.append(node.atom[ii].num_bonds)
+
+        #    mss_ind=[]
+        #    mss_ind.extend([node.don_num,node.acc_num,node.at_num])
+        #    mss_ind.extend(node.shell1st.don_num)
+        #    mss_ind.extend(node.shell1st.acc_num)
+        #    mss_ind.extend(node.shell1st.bond_num)
+        #    for ii in range(node.don_num):
+        #        for jj in range(node.shell1st.don_num[ii]):
+        #            mss_ind.append(node.shell1st.don_node[ii][jj][0])
+        #    for ii in range(node.acc_num):
+        #        for jj in range(node.shell1st.acc_num[ii]):
+        #            mss_ind.append(node.shell1st.acc_node[ii][jj][0])
+        #    for ii in range(node.at_num):
+        #        for jj in range(node.shell1st.bond_num[ii]):
+        #            mss_ind.append(node.shell1st.bond_node[ii][jj][0])
+        #    node.shell1st.mss_ind=mss_ind
+        #    
+        #    node.shell1st.mss_ind_symm=mss_ind
+        #    for eqats in node.filt_ats_symm:
+        #        pass
+        # 
+        #for node in self.node:
+        #    mss_ind=[]
+        #    mss_ind.extend([node.don_num,node.acc_num,node.at_num])
+     
+            
+     
+        
+     
     #def symmetrize_mss_ind_shell1st(self,symm_type=None):
     # 
     #    if symm_type==1: # microstate only for water
