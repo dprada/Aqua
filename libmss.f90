@@ -16,18 +16,58 @@ SUBROUTINE breaking_symmetry_1st(criterium,order,support,num_atoms,num_crit)
   INTEGER::ii,jj,hh,gg
   LOGICAL,DIMENSION(num_atoms)::filtro,filtroaux
   INTEGER,DIMENSION(num_atoms)::orden_prov
+  INTEGER,DIMENSION(:),ALLOCATABLE::vect_aux,orden_prov,agugeros
 
-  orden_prov(:)=orden(:)
+
+ 
+ 
   filtro(:)=.FALSE.
   DO ii=1,num_atoms
      IF (criterium(ii)==1) THEN
         filtro(ii)=.TRUE.
      END IF
   END DO
+  filtroaux(:)=filtro(:)
 
-  DO jj=1,num_crit
+  criterio=1
+  quedan=COUNT(filtroaux)
+  ALLOCATE(orden_prov(quedan),agugeros(quedan))
+
+  jj=0
+  DO ii=1,num_atoms
+     IF (filtro(ii)==.TRUE.) THEN
+        jj=jj+1
+        agugeros(jj)=ii
+     END IF
+  END DO
+
+  DO WHILE ((quedan>0).or. (criterio<=num_crit))
+     gg=0
+     DO WHILE (COUNT(filtroaux)>0)
+        hh=MAXLOC(support(criterio,:),DIM=1,MASK=filtroaux)
+        filtroaux(hh)=.FALSE.
+        gg=gg+1
+        orden_prov(gg)=hh
+     END DO
      filtroaux(:)=filtro(:)
-     hh=MAXLOC(support(jj,:))
+     interruptor=.TRUE.
+     DO ii=1,(quedan-1)
+        orden(agugeros(ii))=orden_prov(ii)
+        IF (support(criterio,orden_prov(ii))>support(criterio,orden_prov(ii+1))) THEN
+           IF (interruptor==.TRUE.) THEN
+              filtroaux(agugeros(ii))=.FALSE.
+           END IF
+           interruptor=.TRUE.
+        ELSE
+           interruptor=.FALSE.
+        END IF
+     END DO
+     IF (interruptor==.TRUE.) filtroaux(agugeros(quedan))=.FALSE.
+     quedan=COUNT(filtroaux)
+     criterio=criterio+1
+  END DO
+        
+     
      
   
 
