@@ -4,6 +4,35 @@ INTEGER::definition_hbs
 
 CONTAINS
 
+SUBROUTINE breaking_symmetry_1st(criterium,order,support,num_atoms,num_crit)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::num_atoms,num_crit
+  INTEGER,DIMENSION(num_atoms),INTENT(IN)::criterium
+  INTEGER,DIMENSION(num_atoms),INTENT(INOUT)::orden
+  INTEGER,DIMENSION(num_crit,num_atoms),INTENT(INOUT)::support
+
+  INTEGER::ii,jj,hh,gg
+  LOGICAL,DIMENSION(num_atoms)::filtro,filtroaux
+  INTEGER,DIMENSION(num_atoms)::orden_prov
+
+  orden_prov(:)=orden(:)
+  filtro(:)=.FALSE.
+  DO ii=1,num_atoms
+     IF (criterium(ii)==1) THEN
+        filtro(ii)=.TRUE.
+     END IF
+  END DO
+
+  DO jj=1,num_crit
+     filtroaux(:)=filtro(:)
+     hh=MAXLOC(support(jj,:))
+     
+  
+
+  
+
 SUBROUTINE ind_wat_limit_4_nosim (mss,aux,hbs,hbdists,num_wats,num_atoms,num_hbs)
 
 

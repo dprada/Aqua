@@ -1,6 +1,7 @@
 # tendria que pensar si incluyo los centros de los aromaticos para hacer hbonds
 import numpy
 import copy
+libmss import glob as mss_funcs
 
 class atom():
 
@@ -369,24 +370,22 @@ class mss():
 
     def build_mss_shell1st(self):
      
+        num_crit=5
         for node in self.node:
             order=copy.copy(node.atoms)
             if node.symm_ats:
-                support=numpy.zeros((node.num_atoms,5),dtype=int,order='Fortran')
+                support=numpy.zeros((num_crit,node.num_atoms),dtype=int,order='Fortran')
                 for ii in range(node.num_atoms):
                     jj=order[ii]
                     atom=node.atom[jj]
                     support[0,ii]=atom.num_hbonds
                     support[1,ii]=atom.num_bonds
-                    if numpy.in1d()
+            for criterium in node.symm_ats:
+                order,support=mss_funcs.breaking_symmetry_1st(criterium,order,support,node.num_atoms,num_crit)
                     
 
-            for criterium in node.symm_ats:
-                numhbs=[]
-                numbs=[]
-                for ii in criterium:
-                    numhbs.append(node.atom[ii].num_hbonds)
-                    numbs.append(node.atom[ii].num_bonds)
+        # ordenar en el oxigeno por distancias puede ser problematico
+        # piensa en la situacion de 3 hbs al oxigeno con uno de ellos a proteina.
 
         #    mss_ind=[]
         #    mss_ind.extend([node.don_num,node.acc_num,node.at_num])
