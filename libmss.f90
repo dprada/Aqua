@@ -4,74 +4,54 @@ INTEGER::definition_hbs
 
 CONTAINS
 
-SUBROUTINE breaking_symmetry_1st(criterium,order,support,num_atoms,num_crit)
+SUBROUTINE breaking_symmetry_1st(criterium,orden,support,num_atoms,num_crit,neworden)
 
   IMPLICIT NONE
 
   INTEGER,INTENT(IN)::num_atoms,num_crit
   INTEGER,DIMENSION(num_atoms),INTENT(IN)::criterium
-  INTEGER,DIMENSION(num_atoms),INTENT(INOUT)::orden
-  INTEGER,DIMENSION(num_crit,num_atoms),INTENT(INOUT)::support
+  INTEGER,DIMENSION(num_atoms),INTENT(IN)::orden
+  INTEGER,DIMENSION(num_atoms,num_crit),INTENT(IN)::support
+  INTEGER,DIMENSION(num_atoms),INTENT(OUT)::neworden
 
-  INTEGER::ii,jj,hh,gg
-  LOGICAL,DIMENSION(num_atoms)::filtro,filtroaux
-  INTEGER,DIMENSION(num_atoms)::orden_prov
-  INTEGER,DIMENSION(:),ALLOCATABLE::vect_aux,orden_prov,agugeros
+  INTEGER::ii,jj,base,remains
+  INTEGER,DIMENSION(:),ALLOCATABLE::potencias,valores,holes
+  LOGICAL,DIMENSION(:),ALLOCATABLE::filtro
 
+  ALLOCATE(potencias(num_crit),valores(num_atoms))
+  ALLOCATE(holes(num_atoms),filtro(num_atoms))
 
- 
- 
+  remains=0
+  neworden(:)=orden(:)
   filtro(:)=.FALSE.
   DO ii=1,num_atoms
      IF (criterium(ii)==1) THEN
         filtro(ii)=.TRUE.
+        remains=remains+1
+        holes(remains)=ii
      END IF
   END DO
-  filtroaux(:)=filtro(:)
 
-  criterio=1
-  quedan=COUNT(filtroaux)
-  ALLOCATE(orden_prov(quedan),agugeros(quedan))
+  base=MAXVAL(support)+1
 
-  jj=0
+  potencias(num_crit)=1
+  DO ii=(num_crit-1),1,-1
+     potencias(ii)=potencias(ii+1)*base
+  END DO
+
   DO ii=1,num_atoms
-     IF (filtro(ii)==.TRUE.) THEN
-        jj=jj+1
-        agugeros(jj)=ii
-     END IF
+     valores(ii)=dot_product(potencias,support(ii,:))
   END DO
 
-  DO WHILE ((quedan>0).or. (criterio<=num_crit))
-     gg=0
-     DO WHILE (COUNT(filtroaux)>0)
-        hh=MAXLOC(support(criterio,:),DIM=1,MASK=filtroaux)
-        filtroaux(hh)=.FALSE.
-        gg=gg+1
-        orden_prov(gg)=hh
-     END DO
-     filtroaux(:)=filtro(:)
-     interruptor=.TRUE.
-     DO ii=1,(quedan-1)
-        orden(agugeros(ii))=orden_prov(ii)
-        IF (support(criterio,orden_prov(ii))>support(criterio,orden_prov(ii+1))) THEN
-           IF (interruptor==.TRUE.) THEN
-              filtroaux(agugeros(ii))=.FALSE.
-           END IF
-           interruptor=.TRUE.
-        ELSE
-           interruptor=.FALSE.
-        END IF
-     END DO
-     IF (interruptor==.TRUE.) filtroaux(agugeros(quedan))=.FALSE.
-     quedan=COUNT(filtroaux)
-     criterio=criterio+1
+  DO ii=1,remains
+     jj=MAXLOC(valores,DIM=1,MASK=filtro)
+     filtro(jj)=.FALSE.
+     neworden(holes(ii))=orden(jj)
   END DO
-        
-     
-     
-  
 
-  
+
+END SUBROUTINE breaking_symmetry_1st
+
 
 SUBROUTINE ind_wat_limit_4_nosim (mss,aux,hbs,hbdists,num_wats,num_atoms,num_hbs)
 
@@ -1135,12 +1115,6 @@ SUBROUTINE addbonds (tipo,mss,mss_ind,bonds,num_wats,num_bonds)
      END SELECT
 
 END SUBROUTINE addbonds
-
-
-
-
-
-
 
 
 END MODULE GLOB

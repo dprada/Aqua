@@ -1,7 +1,7 @@
 # tendria que pensar si incluyo los centros de los aromaticos para hacer hbonds
 import numpy
 import copy
-libmss import glob as mss_funcs
+from libmss import glob as mss_funcs
 
 class atom():
 
@@ -205,7 +205,7 @@ class mss():
         self.num_nonpolars=len(self.nonpolars)
 
         ## symmetric atoms
-         
+
         if self.symm_ats:
             symm_ats_list=[]
             if type(self.symm_ats) in [list,tuple]:
@@ -216,7 +216,6 @@ class mss():
             for node in self.node:
                 for criterium in symm_ats_list:
                     aa=numpy.in1d(node.atoms,criterium)
-                    #aa=numpy.intersect1d(node.atoms,criterium)
                     if aa.sum():
                         node.symm_ats.append(aa)
             del(symm_ats_list)
@@ -374,15 +373,20 @@ class mss():
         for node in self.node:
             order=copy.copy(node.atoms)
             if node.symm_ats:
-                support=numpy.zeros((num_crit,node.num_atoms),dtype=int,order='Fortran')
+                support=numpy.zeros((node.num_atoms,num_crit),dtype=int,order='Fortran')
                 for ii in range(node.num_atoms):
                     jj=order[ii]
                     atom=node.atom[jj]
-                    support[0,ii]=atom.num_hbonds
-                    support[1,ii]=atom.num_bonds
-            for criterium in node.symm_ats:
-                order,support=mss_funcs.breaking_symmetry_1st(criterium,order,support,node.num_atoms,num_crit)
-                    
+                    support[ii,0]=atom.num_hbonds
+                    support[ii,1]=atom.num_bonds
+                for criterium in node.symm_ats:
+                    order=mss_funcs.breaking_symmetry_1st(criterium,order,support,node.num_atoms,num_crit)
+            mss_ind=[]
+            mss_ind.append(node.num_atoms)
+            mss_ind.extend(order)
+            for ii in order:
+                mss_ind.extend([node.atom[ii].num_hbonds,node.atom[ii].num_bonds])
+            node.shell1st.mss_ind=mss_ind
 
         # ordenar en el oxigeno por distancias puede ser problematico
         # piensa en la situacion de 3 hbs al oxigeno con uno de ellos a proteina.
