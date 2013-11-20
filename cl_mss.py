@@ -84,7 +84,8 @@ class shell():
     def __init__(self):
 
         self.mss=[]
-        self.mss_ind=[]
+        self.mss_ind_atoms=[]
+        self.mss_ind_nodes=[]
 
 class node():
 
@@ -219,6 +220,17 @@ class mss():
                     if aa.sum():
                         node.symm_ats.append(aa)
             del(symm_ats_list)
+
+        if self.symm_nodes:
+            symm_nodes_list=[]
+            if type(self.symm_nodes) in [list,tuple]:
+                for sel in self.symm_nodes:
+                    symm_nodes_list.append(self.msystem.selection(sel))
+            else:
+                symm_nodes_list.append(self.msystem.selection(sel))
+            for node in self.node:
+                for criterium in symm_nodes_list:
+                    
 
         if verbose:
             self.info()
@@ -371,6 +383,7 @@ class mss():
      
         num_crit=5
         for node in self.node:
+
             order=copy.copy(node.atoms)
             if node.symm_ats:
                 support=numpy.zeros((node.num_atoms,num_crit),dtype=int,order='Fortran')
@@ -381,94 +394,46 @@ class mss():
                     support[ii,1]=atom.num_bonds
                 for criterium in node.symm_ats:
                     order=mss_funcs.breaking_symmetry_1st(criterium,order,support,node.num_atoms,num_crit)
-            mss_ind=[]
-            mss_ind.append(node.num_atoms)
-            mss_ind.extend(order)
+            mss_ind_atoms=[]
+            mss_ind_nodes=[]
+            mss_ind_atoms.append(node.num_atoms)
+            mss_ind_atoms.extend(order)
+            mss_ind_nodes.append(node.num_atoms)
+            mss_ind_nodes.extend([node.index for ii in order])
+            aa=[]
+            bb=[]
+            if self.symm_nodes:
             for ii in order:
-                mss_ind.extend([node.atom[ii].num_hbonds,node.atom[ii].num_bonds])
-            node.shell1st.mss_ind=mss_ind
+                cc=[node.atom[ii].num_hbonds,node.atom[ii].num_bonds]
+                mss_ind_atoms.extend(cc)
+                mss_ind_nodes.extend(cc)
+                order_hb_atoms=node.atom[ii].hbond
+                order_hb_nodes=node.atom[ii].hbond_node
+                order_b_atoms =node.atom[ii].bond
+                order_b_nodes =node.atom[ii].bond_node
+                if cc[0]>1:
+                    support=numpy.zeros((cc[0],num_crit),dtype=int,order='Fortran')
+                    support[:,0]=numpy.in1d(order_hb_atoms,)
+                aa.extend(order_hb_atoms)
+                aa.extend(order_b_atoms)
+                bb.extend(order_hb_nodes)
+                bb.extend(order_b_nodes)
 
+            else:
+                for ii in order:
+                    cc=[node.atom[ii].num_hbonds,node.atom[ii].num_bonds]
+                    mss_ind_atoms.extend(cc)
+                    mss_ind_nodes.extend(cc)
+                    aa.extend(node.atom[ii].hbond)
+                    aa.extend(node.atom[ii].bond)
+                    bb.extend(node.atom[ii].hbond_node)
+                    bb.extend(node.atom[ii].bond_node)
+            mss_ind_atoms.extend(aa)
+            mss_ind_nodes.extend(bb)
+            node.shell1st.mss_ind_atoms=mss_ind_atoms
+            node.shell1st.mss_ind_nodes=mss_ind_nodes
+            
         # ordenar en el oxigeno por distancias puede ser problematico
         # piensa en la situacion de 3 hbs al oxigeno con uno de ellos a proteina.
-
-        #    mss_ind=[]
-        #    mss_ind.extend([node.don_num,node.acc_num,node.at_num])
-        #    mss_ind.extend(node.shell1st.don_num)
-        #    mss_ind.extend(node.shell1st.acc_num)
-        #    mss_ind.extend(node.shell1st.bond_num)
-        #    for ii in range(node.don_num):
-        #        for jj in range(node.shell1st.don_num[ii]):
-        #            mss_ind.append(node.shell1st.don_node[ii][jj][0])
-        #    for ii in range(node.acc_num):
-        #        for jj in range(node.shell1st.acc_num[ii]):
-        #            mss_ind.append(node.shell1st.acc_node[ii][jj][0])
-        #    for ii in range(node.at_num):
-        #        for jj in range(node.shell1st.bond_num[ii]):
-        #            mss_ind.append(node.shell1st.bond_node[ii][jj][0])
-        #    node.shell1st.mss_ind=mss_ind
-        #    
-        #    node.shell1st.mss_ind_symm=mss_ind
-        #    for eqats in node.filt_ats_symm:
-        #        pass
-        # 
-        #for node in self.node:
-        #    mss_ind=[]
-        #    mss_ind.extend([node.don_num,node.acc_num,node.at_num])
-     
-            
-     
         
      
-    #def symmetrize_mss_ind_shell1st(self,symm_type=None):
-    # 
-    #    if symm_type==1: # microstate only for water
-    #        
-    #        # H1 and H2 distinguishable in first shell
-    #        # H1 and H2 indistinguishable in second shell
-    #        # Nodes water indistinguishable
-    #        # Nodes ion indistinguishable
-    #        # Nodes lipid indistinguishable with different peptides ??
-    # 
-    #        for ii in self.list_water:
-    #            ishell1st=self.node[ii].shell1st
-    #            ishell1st.mss_ind_sym=ishell1st.mss_ind[3:7]
-    #            ishell1st.mss_sym=ishell1st.mss_ind[3:7]
-    #            numhb=sum(ishell1st.mss_ind_sym[0:3])
-    #            numb=ishell1st.mss_ind_sym[3]
-    #            wind=0
-    #            iind=0
-    #            aux_dict={}
-    #            for kk in ishell1st.mss_ind[9:(9+numhb)]:
-    #                if not aux_dict.has_key(kk):
-    #                    if self.node[kk].type=='Water':
-    #                        aux_dict[kk]='w'+str(wind)
-    #                        wind+=1
-    #                    else:
-    #                        aux_dict[kk]=kk
-    #                ishell1st.mss_ind_sym.append(kk)
-    #                ishell1st.mss_sym.append(aux_dict[kk])
-    #            for kk in ishell1st.mss_ind[(9+numhb):(9+numhb+numb)]:
-    #                if not aux_dict.has_key(kk):
-    #                    if self.node[kk].type=='Ion':
-    #                        aux_dict[kk]='i'+str(iind)
-    #                        iind+=1
-    #                    else:
-    #                        aux_dict[kk]=kk
-    #                ishell1st.mss_ind_sym.append(kk)
-    #                ishell1st.mss_sym.append(aux_dict[kk])
-    #            print aux_dict
-    #        del(aux_dict)
-    # 
-    #def build_mss_ind(self):
-    # 
-    #    self.build_mss_ind_shell1st()
-    # 
-    #    for node in self.node:
-    #        node.mss_ind.append(node.index)
-    #        node.mss_ind.extend(node.shell1st.mss_ind)
-    #        ii=sum(node.shell1st.mss_ind[0:3])+3
-    #        jj=sum(node.shell1st.mss_ind[3:ii])+ii
-    #        for kk in node.shell1st.mss_ind[ii:jj]:
-    #            node.mss_ind.extend(self.node[kk].shell1st.mss_ind)
-            
-
