@@ -49,8 +49,46 @@ SUBROUTINE breaking_symmetry_1st(criterium,orden,support,num_atoms,num_crit,newo
      neworden(holes(ii))=orden(jj)
   END DO
 
-
 END SUBROUTINE breaking_symmetry_1st
+
+SUBROUTINE breaking_symmetry_2nd(orden1,orden2,support,num_atoms,num_crit,neworden1,neworden2)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::num_atoms,num_crit
+  INTEGER,DIMENSION(num_atoms),INTENT(IN)::orden1,orden2
+  INTEGER,DIMENSION(num_atoms,num_crit),INTENT(IN)::support
+  INTEGER,DIMENSION(num_atoms),INTENT(OUT)::neworden1,neworden2
+
+  INTEGER::ii,jj,base
+  INTEGER,DIMENSION(:),ALLOCATABLE::potencias,valores
+  LOGICAL,DIMENSION(:),ALLOCATABLE::filtro
+
+  ALLOCATE(potencias(num_crit),valores(num_atoms))
+  ALLOCATE(filtro(num_atoms))
+
+  filtro(:)=.True.
+
+  base=MAXVAL(support)+1
+
+  potencias(num_crit)=1
+  DO ii=(num_crit-1),1,-1
+     potencias(ii)=potencias(ii+1)*base
+  END DO
+
+  DO ii=1,num_atoms
+     valores(ii)=dot_product(potencias,support(ii,:))
+  END DO
+
+  DO ii=1,num_atoms
+     jj=MAXLOC(valores,DIM=1,MASK=filtro)
+     filtro(jj)=.FALSE.
+     neworden1(ii)=orden1(jj)
+     neworden2(ii)=orden2(jj)
+  END DO
+
+END SUBROUTINE breaking_symmetry_2nd
+
 
 
 SUBROUTINE ind_wat_limit_4_nosim (mss,aux,hbs,hbdists,num_wats,num_atoms,num_hbs)

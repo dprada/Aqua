@@ -109,6 +109,7 @@ class node():
         self.shell2nd=shell()
         
         self.symm_ats=[]
+        self.symm_node=[]
         self.symm_broken=False
 
     def add_atom(self,index=None,donor=False,acceptor=False,nonpolar=False):
@@ -221,6 +222,8 @@ class mss():
                         node.symm_ats.append(aa)
             del(symm_ats_list)
 
+        ## symmetric nodes
+
         if self.symm_nodes:
             symm_nodes_list=[]
             if type(self.symm_nodes) in [list,tuple]:
@@ -230,7 +233,10 @@ class mss():
                 symm_nodes_list.append(self.msystem.selection(sel))
             for node in self.node:
                 for criterium in symm_nodes_list:
-                    
+                    if True in numpy.in1d(node.atoms,criterium):
+                        node.symm_node.append(True)
+                    else:
+                        node.symm_node.append(False)
 
         if verbose:
             self.info()
@@ -392,6 +398,12 @@ class mss():
                     atom=node.atom[jj]
                     support[ii,0]=atom.num_hbonds
                     support[ii,1]=atom.num_bonds
+                    bb=numpy.zeros((3),dtype=int)
+                    for kk in atom.hbond_node:
+                        bb+=self.node[kk].symm_node
+                    for kk in atom.bond_node:
+                        bb+=self.node[kk].symm_node
+                    support[ii,2:5]=bb
                 for criterium in node.symm_ats:
                     order=mss_funcs.breaking_symmetry_1st(criterium,order,support,node.num_atoms,num_crit)
             mss_ind_atoms=[]
@@ -403,22 +415,28 @@ class mss():
             aa=[]
             bb=[]
             if self.symm_nodes:
-            for ii in order:
-                cc=[node.atom[ii].num_hbonds,node.atom[ii].num_bonds]
-                mss_ind_atoms.extend(cc)
-                mss_ind_nodes.extend(cc)
-                order_hb_atoms=node.atom[ii].hbond
-                order_hb_nodes=node.atom[ii].hbond_node
-                order_b_atoms =node.atom[ii].bond
-                order_b_nodes =node.atom[ii].bond_node
-                if cc[0]>1:
-                    support=numpy.zeros((cc[0],num_crit),dtype=int,order='Fortran')
-                    support[:,0]=numpy.in1d(order_hb_atoms,)
-                aa.extend(order_hb_atoms)
-                aa.extend(order_b_atoms)
-                bb.extend(order_hb_nodes)
-                bb.extend(order_b_nodes)
-
+                for ii in order:
+                    cc=[node.atom[ii].num_hbonds,node.atom[ii].num_bonds]
+                    mss_ind_atoms.extend(cc)
+                    mss_ind_nodes.extend(cc)
+                    order_hb_atoms=node.atom[ii].hbond
+                    order_hb_nodes=node.atom[ii].hbond_node
+                    order_b_atoms =node.atom[ii].bond
+                    order_b_nodes =node.atom[ii].bond_node
+                    if cc[0]>1:
+                        support=numpy.zeros((cc[0],num_crit),dtype=int,order='Fortran')
+                        for jj in range(cc[0]):
+                            support[jj,0:3]=self.node[order_hb_nodes[jj]].symm_node
+                        order_hb_atoms,order_hb_nodes=mss_funcs.breaking_symmetry_2nd(order_hb_atoms,order_hb_nodes,support,cc[0],num_crit)
+                    if cc[1]>1:
+                        support=numpy.zeros((cc[1],num_crit),dtype=int,order='Fortran')
+                        for jj in range(cc[1]):
+                            support[jj,0:3]=self.node[order_b_nodes[jj]].symm_node
+                        order_b_atoms,order_b_nodes=mss_funcs.breaking_symmetry_2nd(order_b_atoms,order_b_nodes,support,cc[1],num_crit)
+                    aa.extend(order_hb_atoms)
+                    aa.extend(order_b_atoms)
+                    bb.extend(order_hb_nodes)
+                    bb.extend(order_b_nodes)
             else:
                 for ii in order:
                     cc=[node.atom[ii].num_hbonds,node.atom[ii].num_bonds]
