@@ -451,6 +451,44 @@ class mss():
             node.shell1st.mss_ind_atoms=mss_ind_atoms
             node.shell1st.mss_ind_nodes=mss_ind_nodes
             
+            mss=[]
+            mss.append(mss_ind_nodes[0])
+            aux_dict={}
+            cc_water=0
+            cc_lipid=0
+            cc_ion=0
+            for ii in mss_ind_nodes[1:(1+node.num_atoms)]:
+                if aux_dict.has_key(ii):
+                    pass
+                else:
+                    if ii in self.waters:
+                        aux_dict[ii]='w'+str(cc_water)
+                        cc_water+=1
+                    elif ii in self.lipids:
+                        aux_dict[ii]='l'+str(cc_lipid)
+                        cc_lipid+=1
+                    elif ii in self.ions:
+                        aux_dict[ii]='i'+str(cc_ion)
+                        cc_ion+=1
+                mss.append(aux_dict[ii])
+            for ii in mss_ind_nodes[(1+node.num_atoms):(1+node.num_atoms+2*node.num_atoms)]:
+                mss.append(ii)
+            for ii in mss_ind_nodes[(1+node.num_atoms+2*node.num_atoms):]:
+                if aux_dict.has_key(ii):
+                    pass
+                else:
+                    if ii in self.waters:
+                        aux_dict[ii]='w'+str(cc_water)
+                        cc_water+=1
+                    elif ii in self.lipids:
+                        aux_dict[ii]='l'+str(cc_lipid)
+                        cc_lipid+=1
+                    elif ii in self.ions:
+                        aux_dict[ii]='i'+str(cc_ion)
+                        cc_ion+=1
+                mss.append(aux_dict[ii])
+            node.shell1st.mss=mss
+            
         # ordenar en el oxigeno por distancias puede ser problematico
         # piensa en la situacion de 3 hbs al oxigeno con uno de ellos a proteina.
         
