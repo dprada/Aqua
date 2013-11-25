@@ -184,7 +184,7 @@ class cl_water(labels_set):             # Attributes of a water molecule
 ####
 
 
-class msystem(labels_set):               # The suptra-estructure: System (waters+cofactors+proteins...)
+class msystem(labels_set):               # The supra-estructure: System (waters+cofactors+proteins...)
 
     
     def __init__(self,input_file=None,download=None,coors=False,with_bonds=True,missing_atoms=True,wrap=True,verbose=False):
@@ -225,6 +225,8 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
         self.resid=[]                   # list of residues (objects: molecule)
         self.chain=[]                   # list of chains   (objects: molecule)
         self.chains=[]                  # list of chain names (strings)
+        self.protein=[]
+        self.lipid=[]
         self.ion=[]                     # list of ions (objects: molecule)
         self.water=[]                   # list of waters   (objects: cl_water)
         self.water_model=None           # water model
@@ -457,8 +459,16 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
                                  print '# No atom type',ii,'in', residue.name, residue.pdb_index
                              for ii in unknown:
                                  print '# Unknown atom type',ii,'in', residue.name, residue.pdb_index
-                  
-                  
+
+                 ## Aqui pongo las cadenas reales
+                 cov_chains=self.selection_covalent_chains(chain='ALL',select='ALL')
+                 for cov_chain in cov_chains:
+                     if self.atom[cov_chain[0]].resid.type=='Lipid':
+                         self.lipid.append(cov_chain)
+                     elif self.atom[cov_chain[0]].resid.type=='Protein':
+                         self.protein.append(cov_chain)
+                 del(cov_chains)
+
                  # Charge
                   
                  for atom in self.atom[:]:
@@ -521,6 +531,8 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
             self.num_waters=len(self.water)
             self.num_chains=len(self.chains)
             self.num_ions=len(self.ion)
+            self.num_proteins=len(self.protein)
+            self.num_lipids=len(self.lipid)
             self.list_atoms=[ii for ii in range(self.num_atoms)]
 
 
@@ -554,12 +566,16 @@ class msystem(labels_set):               # The suptra-estructure: System (waters
         self.num_waters=len(self.water)
         self.num_trajs=len(self.traj)
         self.num_ions=len(self.ion)
+        self.num_proteins=len(self.protein)
+        self.num_lipids=len(self.lipid)
         print '#','System created from the file',self.file_topol,':'
         print '#',self.num_atoms,' atoms'
         print '#',self.num_residues,' residues'
         print '#',self.num_chains,' chains'
         print '#',self.num_waters,' waters'
         print '#',self.num_ions,' ions'
+        print '#',self.num_lipids,' lipids'
+        print '#',self.num_proteins,' proteins'
 
     # To handle files
 
@@ -2573,52 +2589,93 @@ def add_user_topol(file_topol=None,verbose=False):
 
 
 def selection_covalent_chains(system=None,chain=None,select='ALL'):
-
-    setC,nlist_C,nsys_C=__read_set_opt__(system,select)
  
-    for ii in range(len(chain)):
-        if type(chain[ii]) is not list:
-            chain[ii]=[chain[ii]]
+    if chain=='ALL':
 
-    aux_dict={}
-    for ii in chain:
-        for jj in ii:
-            aux_dict[jj]=[]
+        nn=len(system.atom)
+        aux_dict={}
+        aux_list=numpy.zeros((nn),dtype=int)
+        aux_filt=numpy.zeros((nn),dtype=bool)
+
+        gg=0
+        for ii in range(nn):
+            if aux_filt[ii]==False:
+                gg=gg+1
+                aux_dict[gg]=[]
+                aux_dict[gg].append(ii)
+                aux_filt[ii]=True
+                aux_list[ii]=gg
+                ggg=gg
+            else:
+                ggg=aux_list[ii]
+            for jj in system.atom[ii].covalent_bonds:
+                if aux_filt[jj] and aux_list[jj]!=ggg:
+                    kk=aux_list[jj]
+                    ll=aux_dict.pop(kk)
+                    aux_dict[ggg].extend(ll)
+                    for mm in ll:
+                        aux_list[mm]=ggg
+                elif aux_filt[jj]==False:
+                    aux_filt[jj]=True
+                    aux_list[jj]=ggg
+                    aux_dict[ggg].append(jj)
+
+        salida=[]
+        for aa,bb in aux_dict.iteritems():
+            salida.append(bb)
+
+        del(aux_dict,aux_list,aux_filt)
+
+        return salida
+        pass
+
+    else:
+
+        setC,nlist_C,nsys_C=__read_set_opt__(system,select)
+        
+        for ii in range(len(chain)):
+            if type(chain[ii]) is not list:
+                chain[ii]=[chain[ii]]
+
+        aux_dict={}
+        for ii in chain:
+            for jj in ii:
+                aux_dict[jj]=[]
  
-    aux_list=aux_dict.keys()
+        aux_list=aux_dict.keys()
 
-    for ii in setC:
-        if system.atom[ii].name in aux_list:
-            aux_dict[system.atom[ii].name].append(ii)
+        for ii in setC:
+            if system.atom[ii].name in aux_list:
+                aux_dict[system.atom[ii].name].append(ii)
 
-    aux_list=[]
-    for ii in range(len(chain)):
-        aux_list.append([])
-        for jj in chain[ii]:
-            aux_list[ii].extend(aux_dict[jj])
-        aux_list[ii].sort()
+        aux_list=[]
+        for ii in range(len(chain)):
+            aux_list.append([])
+            for jj in chain[ii]:
+                aux_list[ii].extend(aux_dict[jj])
+            aux_list[ii].sort()
  
-    bonds=[]
-    for ii in range(len(aux_list)-1):
-        bonds.append({})
-        for jj in aux_list[ii]:
-            bonds[ii][jj]=[]
-            for kk in system.atom[jj].covalent_bonds:
-                if kk in aux_list[ii+1]:
-                    bonds[ii][jj].append(kk)
+        bonds=[]
+        for ii in range(len(aux_list)-1):
+            bonds.append({})
+            for jj in aux_list[ii]:
+                bonds[ii][jj]=[]
+                for kk in system.atom[jj].covalent_bonds:
+                    if kk in aux_list[ii+1]:
+                        bonds[ii][jj].append(kk)
 
-    salida=[[ii] for ii in aux_list[0]]
-    for kk in range(len(aux_list)-1):
-        salida2=[]
-        for ii in range(len(salida)):
-            desde=salida[ii][-1]
-            for hacia in bonds[kk][desde]:
-                salida2.append(salida[ii]+[hacia])
-        salida=salida2
+        salida=[[ii] for ii in aux_list[0]]
+        for kk in range(len(aux_list)-1):
+            salida2=[]
+            for ii in range(len(salida)):
+                desde=salida[ii][-1]
+                for hacia in bonds[kk][desde]:
+                    salida2.append(salida[ii]+[hacia])
+            salida=salida2
 
-    del(salida2,bonds,aux_list,aux_dict,setC,nlist_C,nsys_C)
+        del(salida2,bonds,aux_list,aux_dict,setC,nlist_C,nsys_C)
 
-    return salida
+        return salida
 
 
 def selection(system=None,condition=None,traj=0,frame='ALL',pbc=True):

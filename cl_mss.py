@@ -22,6 +22,7 @@ class atom():
         self.hbond_value=[]
         self.num_hbonds=0
 
+
     def add_bond(self,atom=None,node=None,value=None):
 
         self.bond.append(atom)
@@ -109,8 +110,8 @@ class node():
         self.shell2nd=shell()
         
         self.symm_ats=[]
-        self.symm_node=[]
-        self.symm_broken=False
+#        self.symm_node=[]
+#        self.symm_broken=False
 
     def add_atom(self,index=None,donor=False,acceptor=False,nonpolar=False):
 
@@ -132,7 +133,7 @@ class node():
 
 class mss():
 
-    def __init__(self,msystem=None,sets='chains',symm_ats=None,symm_nodes=None,verbose=True):
+    def __init__(self,msystem=None,sets='chains',symm_ats=None,symm_nodes=None,symm_sets_nodes=None,verbose=True):
 
         self.type=sets   #'chains','residues','molecules'
         self.msystem=msystem
@@ -160,6 +161,7 @@ class mss():
         self.btype=None
         self.symm_ats=symm_ats
         self.symm_nodes=symm_nodes
+        self.symm_sets_nodes=symm_sets_nodes
 
         self.build_nodes()
 
@@ -392,20 +394,21 @@ class mss():
 
             order=copy.copy(node.atoms)
             if node.symm_ats:
-                support=numpy.zeros((node.num_atoms,num_crit),dtype=int,order='Fortran')
-                for ii in range(node.num_atoms):
-                    jj=order[ii]
-                    atom=node.atom[jj]
-                    support[ii,0]=atom.num_hbonds
-                    support[ii,1]=atom.num_bonds
-                    bb=numpy.zeros((3),dtype=int)
-                    for kk in atom.hbond_node:
-                        bb+=self.node[kk].symm_node
-                    for kk in atom.bond_node:
-                        bb+=self.node[kk].symm_node
-                    support[ii,2:5]=bb
-                for criterium in node.symm_ats:
-                    order=mss_funcs.breaking_symmetry_1st(criterium,order,support,node.num_atoms,num_crit)
+                order=__break_symm_1st_atoms__(order,node)
+                #support=numpy.zeros((node.num_atoms,num_crit),dtype=int,order='Fortran')
+                #for ii in range(node.num_atoms):
+                #    jj=order[ii]
+                #    atom=node.atom[jj]
+                #    support[ii,0]=atom.num_hbonds
+                #    support[ii,1]=atom.num_bonds
+                #    bb=numpy.zeros((3),dtype=int)
+                #    for kk in atom.hbond_node:
+                #        bb+=self.node[kk].symm_node
+                #    for kk in atom.bond_node:
+                #        bb+=self.node[kk].symm_node
+                #    support[ii,2:5]=bb
+                #for criterium in node.symm_ats:
+                #    order=mss_funcs.breaking_symmetry_1st(criterium,order,support,node.num_atoms,num_crit)
             mss_ind_atoms=[]
             mss_ind_nodes=[]
             mss_ind_atoms.append(node.num_atoms)
@@ -492,4 +495,33 @@ class mss():
         # ordenar en el oxigeno por distancias puede ser problematico
         # piensa en la situacion de 3 hbs al oxigeno con uno de ellos a proteina.
         
-     
+
+def __break_symm_1st_atoms__(order=None,node=None):
+
+    support=[]
+
+    for ii in range(node.num_atoms):
+        jj=order[ii]
+        atom=node.atom[jj]
+        support.append(atom.num_hbonds)
+        support.append(atom.num_bonds)
+        
+
+
+
+
+                order=__break_symm_1st_atoms__(order,node)
+                #support=numpy.zeros((node.num_atoms,num_crit),dtype=int,order='Fortran')
+                #for ii in range(node.num_atoms):
+                #    jj=order[ii]
+                #    atom=node.atom[jj]
+                #    support[ii,0]=atom.num_hbonds
+                #    support[ii,1]=atom.num_bonds
+                #    bb=numpy.zeros((3),dtype=int)
+                #    for kk in atom.hbond_node:
+                #        bb+=self.node[kk].symm_node
+                #    for kk in atom.bond_node:
+                #        bb+=self.node[kk].symm_node
+                #    support[ii,2:5]=bb
+                #for criterium in node.symm_ats:
+                #    order=mss_funcs.breaking_symmetry_1st(criterium,order,support,node.num_atoms,num_crit)
