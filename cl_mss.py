@@ -96,6 +96,8 @@ class node():
         self.name=name
         self.index=None
         self.label=None
+        self.codigo=None
+        self.codigo2=None
 
         self.acceptors=[]
         self.donors=[]
@@ -229,6 +231,7 @@ class mss():
                         node.symm_ats.append(aa)
             del(symm_ats_list)
 
+        contador_codigo=0
         ## symmetric nodes
 
         if self.symm_nodes:
@@ -239,11 +242,14 @@ class mss():
             else:
                 symm_nodes_list.append(self.msystem.selection(sel))
             for node in self.node:
-                for criterium in symm_nodes_list:
-                    if True in numpy.in1d(node.atoms,criterium):
+                for ii in range(len(symm_nodes_list)):
+                    if True in numpy.in1d(node.atoms,symm_nodes_list[ii]):
                         node.symm_node.append(True)
+                        node.codigo=contador_codigo+ii
                     else:
                         node.symm_node.append(False)
+            contador_codigo+=len(symm_nodes_list)
+            
 
         ## symmetric sets of nodes
 
@@ -255,14 +261,16 @@ class mss():
                     aux=[item for sublist in symm_sets_nodes for item in sublist]
                     num_lipids=len(symm_sets_nodes)
                     conjuntos={ii:[] for ii in range(num_lipids)}
-                    if True in numpy.in1d(node.atoms,aux):
-                        node.symm_node.append(True)
-                        for ii in range(num_lipids):
-                            if True in numpy.in1d(node.atoms,symm_sets_nodes[ii]):
-                                conjuntos[ii].append(node.index)
-                    else:
-                        node.symm_node.append(False)
-
+                    for node in self.node:
+                        if True in numpy.in1d(node.atoms,aux):
+                            node.codigo=contador_codigo
+                            node.symm_node.append(True)
+                            for ii in range(num_lipids):
+                                if True in numpy.in1d(node.atoms,symm_sets_nodes[ii]):
+                                    conjuntos[ii].append(node.index)
+                                else:
+                                    node.symm_node.append(False)
+                    contador_codigo+=1
 
         if verbose:
             self.info()
@@ -413,13 +421,19 @@ class mss():
 
     def build_mss_shell1st(self):
      
-        num_crit=5
+        for node in self.node:
+            node.codigo2=[0,0,0,0,0,0,0,0]
+            for atom in node.atoms:
+                node.codigo2[0]+=node.atom[atom].num_hbonds
+                node.codigo2[1]+=node.atom[atom].num_bonds
+                
+
         for node in self.node:
      
             order=copy.copy(node.atoms)
-            if node.symm_ats:
-                order=__break_symm_1st_atoms__(order,node)
-                #support=numpy.zeros((node.num_atoms,num_crit),dtype=int,order='Fortran')
+            #if node.symm_ats:
+            #    order=__break_symm_1st_atoms__(order,node)
+                #support=numpy.zeros((node.num_atoms,5),dtype=int,order='Fortran')
                 #for ii in range(node.num_atoms):
                 #    jj=order[ii]
                 #    atom=node.atom[jj]
@@ -451,15 +465,19 @@ class mss():
                     order_b_atoms =node.atom[ii].bond
                     order_b_nodes =node.atom[ii].bond_node
                     if cc[0]>1:
-                        support=numpy.zeros((cc[0],num_crit),dtype=int,order='Fortran')
+                        support=numpy.zeros((cc[0],3),dtype=int,order='Fortran')
                         for jj in range(cc[0]):
-                            support[jj,0:3]=self.node[order_hb_nodes[jj]].symm_node
-                        order_hb_atoms,order_hb_nodes=mss_funcs.breaking_symmetry_2nd(order_hb_atoms,order_hb_nodes,support,cc[0],num_crit)
+                            support[jj,0]=self.node[order_hb_nodes[jj]].codigo
+                            support[jj,1]=self.node[order_hb_nodes[jj]].codigo2[0]
+                            support[jj,2]=self.node[order_hb_nodes[jj]].codigo2[1]
+                        order_hb_atoms,order_hb_nodes=mss_funcs.breaking_symmetry_2nd(order_hb_atoms,order_hb_nodes,support,cc[0],3)
                     if cc[1]>1:
-                        support=numpy.zeros((cc[1],num_crit),dtype=int,order='Fortran')
+                        support=numpy.zeros((cc[1],3),dtype=int,order='Fortran')
                         for jj in range(cc[1]):
-                            support[jj,0:3]=self.node[order_b_nodes[jj]].symm_node
-                        order_b_atoms,order_b_nodes=mss_funcs.breaking_symmetry_2nd(order_b_atoms,order_b_nodes,support,cc[1],num_crit)
+                            support[jj,0]=self.node[order_b_nodes[jj]].codigo
+                            support[jj,1]=self.node[order_b_nodes[jj]].codigo2[0]
+                            support[jj,2]=self.node[order_b_nodes[jj]].codigo2[1]
+                        order_b_atoms,order_b_nodes=mss_funcs.breaking_symmetry_2nd(order_b_atoms,order_b_nodes,support,cc[1],3)
                     aa.extend(order_hb_atoms)
                     aa.extend(order_b_atoms)
                     bb.extend(order_hb_nodes)
@@ -586,6 +604,12 @@ class mss():
             
         # ordenar en el oxigeno por distancias puede ser problematico
         # piensa en la situacion de 3 hbs al oxigeno con uno de ellos a proteina.
+
+    def breakcodigo (self, node=None):
+        pass
+        
+
+
 
 #def __break_symm_1st_atoms__(order=None,node=None):
 # 
