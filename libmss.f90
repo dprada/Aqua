@@ -51,7 +51,7 @@ SUBROUTINE breaking_symmetry_1st(criterium,orden,support,num_atoms,num_crit,newo
 
 END SUBROUTINE breaking_symmetry_1st
 
-SUBROUTINE breaking_symmetry_2nd(orden1,orden2,support,num_atoms,num_crit,neworden1,neworden2)
+SUBROUTINE breaking_symmetry_2nd(orden1,orden2,support,num_atoms,num_crit,neworden1,neworden2,broken)
 
   IMPLICIT NONE
 
@@ -59,33 +59,66 @@ SUBROUTINE breaking_symmetry_2nd(orden1,orden2,support,num_atoms,num_crit,neword
   INTEGER,DIMENSION(num_atoms),INTENT(IN)::orden1,orden2
   INTEGER,DIMENSION(num_atoms,num_crit),INTENT(IN)::support
   INTEGER,DIMENSION(num_atoms),INTENT(OUT)::neworden1,neworden2
+  INTEGER,INTENT(OUT)::broken
 
-  INTEGER::ii,jj,base
-  INTEGER,DIMENSION(:),ALLOCATABLE::potencias,valores
+  INTEGER::ii,jj,gg,kk,eff_num_crit
+  INTEGER,DIMENSION(:),ALLOCATABLE::potencias,valores,base
   LOGICAL,DIMENSION(:),ALLOCATABLE::filtro
+  INTEGER,DIMENSION(:,:),ALLOCATABLE::eff_support
 
-  ALLOCATE(potencias(num_crit),valores(num_atoms))
+
+  ALLOCATE(filtro(num_crit))
+  filtro=.False.
+  DO ii=1,num_crit
+     IF (SUM(support(:,ii))>0) THEN
+        filtro(ii)=.True.
+     END IF
+  END DO
+  eff_num_crit=COUNT(filtro)
+
+  ALLOCATE(eff_support(num_atoms,eff_num_crit),base(eff_num_crit),valores(num_atoms))
+
+  eff_num_crit=0
+  DO ii=1,num_crit
+     IF (filtro(ii)==.True.) THEN
+        eff_num_crit=eff_num_crit+1
+        valores(:)=support(:,ii)
+        eff_support(:,eff_num_crit)=valores(:)
+        base(eff_num_crit)=MAXVAL(valores(:),DIM=1)+1
+     END IF
+  END DO
+
+  DEALLOCATE(filtro)
+
+  ALLOCATE(potencias(eff_num_crit))
   ALLOCATE(filtro(num_atoms))
 
   filtro(:)=.True.
 
-  base=MAXVAL(support)+1
-
-  potencias(num_crit)=1
-  DO ii=(num_crit-1),1,-1
-     potencias(ii)=potencias(ii+1)*base
+  potencias(eff_num_crit)=1
+  DO ii=(eff_num_crit-1),1,-1
+     potencias(ii)=potencias(ii+1)*base(ii+1)
   END DO
 
   DO ii=1,num_atoms
-     valores(ii)=dot_product(potencias,support(ii,:))
+     valores(ii)=dot_product(potencias,eff_support(ii,:))
   END DO
 
+  broken=1
+  gg=0
   DO ii=1,num_atoms
      jj=MAXLOC(valores,DIM=1,MASK=filtro)
+     kk=valores(jj)
+     IF (gg==kk) THEN
+        broken=0
+     END IF
+     gg=kk
      filtro(jj)=.FALSE.
      neworden1(ii)=orden1(jj)
      neworden2(ii)=orden2(jj)
   END DO
+
+  DEALLOCATE(filtro,potencias,eff_support,base,valores)
 
 END SUBROUTINE breaking_symmetry_2nd
 

@@ -169,6 +169,7 @@ class mss():
         self.symm_ats=symm_ats
         self.symm_nodes=symm_nodes
         self.symm_sets_nodes=symm_sets_nodes
+        self.symm_sets_nodes_aux=[]
 
         self.build_nodes()
 
@@ -271,6 +272,7 @@ class mss():
                                 else:
                                     node.symm_node.append(False)
                     contador_codigo+=1
+                    self.symm_sets_nodes_aux.append(conjuntos.values())
 
         if verbose:
             self.info()
@@ -420,13 +422,56 @@ class mss():
 
 
     def build_mss_shell1st(self):
-     
+
+        
+
+        # Que necesito:
+        # - codigo per node
+        # - codigo_sets with index of set and position of node in set
+        # - num_hbonds per atom
+        # - num_bonds  per atom
+        # - num_hbonds per category in atom
+        # - num_bonds  per category in atom
+        # - num_hbonds per node
+        # - num_bonds  per node
+        # - num_hbonds per category in node (this was codigo1)
+        # - num_bonds  per category in node (this was codigo2)
+        # - array per node lipid with nodes present in hbond
+        # - array per node lipid with nodes present in bond
+        # - array per atom lipid with nodes present in hbond
+        # - array per atom lipid with nodes present in bond
+        # - compute the number of indices in matrix support
+
+        for node in self.node:
+            node.shell1st.order=copy.copy(node.atoms)
+            if node.symm_ats:
+                support=numpy.zeros((node.num_atoms,5),dtype=int,order='Fortran')
+                for ii in range(node.num_atoms):
+                    jj=node.shell1st.order[ii]
+                    atom=node.atom[jj]
+                    support[ii,0]=atom.num_hbonds
+                    support[ii,1]=atom.num_bonds
+                    bb=numpy.zeros((3),dtype=int)
+                    for kk in atom.hbond_node:
+                        bb+=self.node[kk].symm_node
+                    for kk in atom.bond_node:
+                        bb+=self.node[kk].symm_node
+        
         for node in self.node:
             node.codigo2=[0,0,0,0,0,0,0,0]
             for atom in node.atoms:
                 node.codigo2[0]+=node.atom[atom].num_hbonds
                 node.codigo2[1]+=node.atom[atom].num_bonds
-                
+                for ii in node.atom[atom].hbond_node:
+                    jj=self.node[ii].codigo+2
+                    node.codigo2[jj]+=1
+                for ii in node.atom[atom].bond_node:
+                    jj=self.node[ii].codigo+2+3
+                    node.codigo2[jj]+=1
+            if
+
+        #for set_nodes in self.symm_sets_nodes_aux:
+            
 
         for node in self.node:
      
@@ -464,20 +509,29 @@ class mss():
                     order_hb_nodes=node.atom[ii].hbond_node
                     order_b_atoms =node.atom[ii].bond
                     order_b_nodes =node.atom[ii].bond_node
+                    broken0=1
+                    broken1=1
                     if cc[0]>1:
-                        support=numpy.zeros((cc[0],3),dtype=int,order='Fortran')
+                        support=numpy.zeros((cc[0],14),dtype=int,order='Fortran')
                         for jj in range(cc[0]):
                             support[jj,0]=self.node[order_hb_nodes[jj]].codigo
-                            support[jj,1]=self.node[order_hb_nodes[jj]].codigo2[0]
-                            support[jj,2]=self.node[order_hb_nodes[jj]].codigo2[1]
-                        order_hb_atoms,order_hb_nodes=mss_funcs.breaking_symmetry_2nd(order_hb_atoms,order_hb_nodes,support,cc[0],3)
+                            if self.node[order_hb_nodes[jj]].codigo==2:
+                                support[jj,self.node[order_hb_nodes[jj]].codigo_set[1]+1]=1
+                                try:
+                                    aux_group_lipid[self.node[order_hb_nodes[jj]].codigo_set[1]].append(jj)
+                                except:
+                                    aux_group_lipid[self.node[order_hb_nodes[jj]].codigo_set[1]]=[jj]
+                            support[jj,6:14]=self.node[order_hb_nodes[jj]].codigo2[:]
+                            
+                        order_hb_atoms,order_hb_nodes,broken0=mss_funcs.breaking_symmetry_2nd(order_hb_atoms,order_hb_nodes,support,cc[0],9)
                     if cc[1]>1:
-                        support=numpy.zeros((cc[1],3),dtype=int,order='Fortran')
+                        support=numpy.zeros((cc[1],9),dtype=int,order='Fortran')
                         for jj in range(cc[1]):
                             support[jj,0]=self.node[order_b_nodes[jj]].codigo
-                            support[jj,1]=self.node[order_b_nodes[jj]].codigo2[0]
-                            support[jj,2]=self.node[order_b_nodes[jj]].codigo2[1]
-                        order_b_atoms,order_b_nodes=mss_funcs.breaking_symmetry_2nd(order_b_atoms,order_b_nodes,support,cc[1],3)
+                            support[jj,1:9]=self.node[order_b_nodes[jj]].codigo2[:]
+                        order_b_atoms,order_b_nodes,broken1=mss_funcs.breaking_symmetry_2nd(order_b_atoms,order_b_nodes,support,cc[1],9)
+                    if broken0==0 or broken1==0:
+                        print 'aquiii',node.index
                     aa.extend(order_hb_atoms)
                     aa.extend(order_b_atoms)
                     bb.extend(order_hb_nodes)
