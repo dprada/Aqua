@@ -424,7 +424,6 @@ class mss():
     def build_mss_shell1st(self):
 
         
-
         # Que necesito:
         # - codigo per node
         # - codigo_sets with index of set and position of node in set
