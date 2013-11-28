@@ -4,7 +4,7 @@ INTEGER::definition_hbs
 
 CONTAINS
 
-SUBROUTINE breaking_symmetry_1st(criterium,orden,support,num_atoms,num_crit,neworden)
+SUBROUTINE breaking_symmetry_1st(criterium,orden,support,num_atoms,num_crit,neworden,broken)
 
   IMPLICIT NONE
 
@@ -13,13 +13,50 @@ SUBROUTINE breaking_symmetry_1st(criterium,orden,support,num_atoms,num_crit,newo
   INTEGER,DIMENSION(num_atoms),INTENT(IN)::orden
   INTEGER,DIMENSION(num_atoms,num_crit),INTENT(IN)::support
   INTEGER,DIMENSION(num_atoms),INTENT(OUT)::neworden
+  INTEGER,INTENT(OUT)::broken
 
-  INTEGER::ii,jj,base,remains
-  INTEGER,DIMENSION(:),ALLOCATABLE::potencias,valores,holes
+  INTEGER::ii,jj,gg,kk,eff_num_crit,remains
+  INTEGER,DIMENSION(:),ALLOCATABLE::potencias,valores,base,holes
   LOGICAL,DIMENSION(:),ALLOCATABLE::filtro
+  INTEGER,DIMENSION(:,:),ALLOCATABLE::eff_support
 
-  ALLOCATE(potencias(num_crit),valores(num_atoms))
-  ALLOCATE(holes(num_atoms),filtro(num_atoms))
+  ALLOCATE(filtro(num_crit))
+  filtro=.False.
+  DO ii=1,num_crit
+     IF (SUM(support(:,ii))>0) THEN
+        filtro(ii)=.True.
+     END IF
+  END DO
+  eff_num_crit=COUNT(filtro)
+
+  ALLOCATE(eff_support(num_atoms,eff_num_crit),base(eff_num_crit),valores(num_atoms))
+
+  eff_num_crit=0
+  DO ii=1,num_crit
+     IF (filtro(ii)==.True.) THEN
+        eff_num_crit=eff_num_crit+1
+        valores(:)=support(:,ii)
+        eff_support(:,eff_num_crit)=valores(:)
+        base(eff_num_crit)=MAXVAL(valores(:),DIM=1)+1
+     END IF
+  END DO
+
+  DEALLOCATE(filtro)
+
+  ALLOCATE(potencias(eff_num_crit))
+  ALLOCATE(filtro(num_atoms))
+
+
+  potencias(eff_num_crit)=1
+  DO ii=(eff_num_crit-1),1,-1
+     potencias(ii)=potencias(ii+1)*base(ii+1)
+  END DO
+
+  DO ii=1,num_atoms
+     valores(ii)=dot_product(potencias,eff_support(ii,:))
+  END DO
+
+  ALLOCATE(holes(num_atoms))
 
   remains=0
   neworden(:)=orden(:)
@@ -32,22 +69,20 @@ SUBROUTINE breaking_symmetry_1st(criterium,orden,support,num_atoms,num_crit,newo
      END IF
   END DO
 
-  base=MAXVAL(support)+1
-
-  potencias(num_crit)=1
-  DO ii=(num_crit-1),1,-1
-     potencias(ii)=potencias(ii+1)*base
-  END DO
-
-  DO ii=1,num_atoms
-     valores(ii)=dot_product(potencias,support(ii,:))
-  END DO
-
+  broken=1
+  gg=0
   DO ii=1,remains
      jj=MAXLOC(valores,DIM=1,MASK=filtro)
+     kk=valores(jj)
+     IF (gg==kk) THEN
+        broken=0
+     END IF
+     gg=kk
      filtro(jj)=.FALSE.
      neworden(holes(ii))=orden(jj)
   END DO
+
+  DEALLOCATE(filtro,potencias,eff_support,base,valores,holes)
 
 END SUBROUTINE breaking_symmetry_1st
 
