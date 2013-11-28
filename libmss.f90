@@ -33,7 +33,7 @@ SUBROUTINE breaking_symmetry_1st(criterium,orden,support,num_atoms,num_crit,newo
 
   eff_num_crit=0
   DO ii=1,num_crit
-     IF (filtro(ii)==.True.) THEN
+     IF (filtro(ii).eqv..True.) THEN
         eff_num_crit=eff_num_crit+1
         valores(:)=support(:,ii)
         eff_support(:,eff_num_crit)=valores(:)
@@ -115,7 +115,7 @@ SUBROUTINE breaking_symmetry_2nd(orden1,orden2,support,num_atoms,num_crit,neword
 
   eff_num_crit=0
   DO ii=1,num_crit
-     IF (filtro(ii)==.True.) THEN
+     IF (filtro(ii).eqv..True.) THEN
         eff_num_crit=eff_num_crit+1
         valores(:)=support(:,ii)
         eff_support(:,eff_num_crit)=valores(:)

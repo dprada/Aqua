@@ -24,6 +24,8 @@ class atom():
 
         self.suphb=None
         self.supb=None
+        self.suphb_2sh=None
+        self.supb_2sh=None
 
     def add_bond(self,atom=None,node=None,value=None):
 
@@ -118,6 +120,11 @@ class node():
         self.symm_ats=[]
         self.symm_node=[]
 #        self.symm_broken=False
+
+        self.suphb=None
+        self.supb=None
+        self.suphb_2sh=None
+        self.supb_2sh=None
 
     def add_atom(self,index=None,donor=False,acceptor=False,nonpolar=False):
 
@@ -434,7 +441,12 @@ class mss():
 
         # Que necesito:
 
+        diccionarios=[]
         for node in self.node:
+            aux_set_node_hb={}
+            aux_set_node_b={}
+            node.suphb=numpy.zeros((10),dtype=int)
+            node.supb=numpy.zeros((10),dtype=int)
             for atom in node.atom.values():
                 atom.suphb=numpy.zeros((10),dtype=int)
                 bb=[0,0,0]
@@ -445,11 +457,13 @@ class mss():
                     bb[ll]+=1
                     if ll==2:
                         aux_set[self.node[kk].codigo_sets[0]]=0
+                        aux_set_node_hb[self.node[kk].codigo_sets[0]]=0
                         cc[self.node[kk].codigo_sets[1]]+=1
                 atom.suphb[0]=atom.num_hbonds
                 atom.suphb[1:4]=bb
                 atom.suphb[4]=len(aux_set)
                 atom.suphb[5:10]=cc
+                node.suphb+=atom.suphb
                 atom.supb=numpy.zeros((10),dtype=int)
                 bb=[0,0,0]
                 cc=[0,0,0,0,0]
@@ -459,13 +473,45 @@ class mss():
                     bb[ll]+=1
                     if ll==2:
                         aux_set[self.node[kk].codigo_sets[0]]=0
+                        aux_set_node_b[self.node[kk].codigo_sets[0]]=0
                         cc[self.node[kk].codigo_sets[1]]+=1
                 atom.supb[0]=atom.num_bonds
                 atom.supb[1:4]=bb
                 atom.supb[4]=len(aux_set)
                 atom.supb[5:10]=cc
+                node.supb+=atom.supb
+            node.suphb[4]=len(aux_set_node_hb)
+            node.supb[4]=len(aux_set_node_b)
+            diccionarios.append([aux_set_node_hb,aux_set_node_b])
 
-        
+        for ii in range(self.num_nodes):
+            node=self.node[ii]
+            aux_set_node_hb={}
+            aux_set_node_b={}
+            node.suphb_2sh=numpy.zeros((10),dtype=int)
+            node.supb_2sh=numpy.zeros((10),dtype=int)
+            for atom in node.atom.values():
+                atom.suphb_2sh=numpy.zeros((10),dtype=int)
+                atom.supb_2sh=numpy.zeros((10),dtype=int)
+                aux_set={}
+                for kk in atom.hbond_node:
+                    atom.suphb_2sh+=self.node[kk].suphb
+                    aux_set.update(diccionarios[kk][0])
+                    aux_set_node_hb.update(diccionarios[kk][0])
+                atom.suphb_2sh[4]=len(aux_set)
+                node.suphb_2sh+=atom.suphb_2sh
+                aux_set={}
+                for kk in atom.bond_node:
+                    atom.supb_2sh+=self.node[kk].supb
+                    aux_set.update(diccionarios[kk][1])
+                    aux_set_node_b.update(diccionarios[kk][1])
+                atom.supb_2sh[4]=len(aux_set)
+                node.supb_2sh+=atom.supb_2sh
+            node.suphb_2sh[4]=len(aux_set_node_hb)
+            node.supb_2sh[4]=len(aux_set_node_b)
+
+        del(diccionarios)
+
         # Que necesito:
         # - codigo per node #Done
         # - codigo_sets with index of set and position of node in set #Done
@@ -519,36 +565,18 @@ class mss():
             order=copy.copy(node.atoms)
             if node.symm_ats:
                 broken=1
-                support=numpy.zeros((node.num_atoms,2+3+1+5+3+1+5),dtype=int,order='Fortran')
+                support=numpy.zeros((node.num_atoms,40),dtype=int,order='Fortran')
                 for ii in range(node.num_atoms):
                     jj=order[ii]
                     atom=node.atom[jj]
-                    support[ii,0]=atom.num_hbonds
-                    support[ii,1]=atom.num_bonds
-                    bb=numpy.zeros((3+1+5),dtype=int)
-                    cc=numpy.zeros((3+1+5),dtype=int)
-                    aux_set={}
-                    for kk in atom.hbond_node:
-                        ll=self.node[kk].codigo
-                        bb[ll]+=1
-                        if ll==2:
-                            aux_set[self.node[kk].codigo_sets[0]]=0
-                            bb[4+self.node[kk].codigo_sets[1]]+=1
-                    bb[3]=len(aux_set)
-                    aux_set={}
-                    for kk in atom.bond_node:
-                        ll=self.node[kk].codigo
-                        cc[ll]+=1
-                        if ll==2:
-                            aux_set[self.node[kk].codigo_sets[0]]=0
-                            cc[4+self.node[kk].codigo_sets[1]]+=1
-                    cc[3]=len(aux_set)
-                    support[ii,2:11]=bb
-                    support[ii,11:20]=cc
+                    support[ii,0:10]=atom.suphb
+                    support[ii,10:20]=atom.supb
+                    support[ii,20:30]=atom.suphb_2sh
+                    support[ii,30:40]=atom.supb_2sh
                 for criterium in node.symm_ats:
-                    order,broken=mss_funcs.breaking_symmetry_1st(criterium,order,support,node.num_atoms,20)
+                    order,broken=mss_funcs.breaking_symmetry_1st(criterium,order,support,node.num_atoms,40)
                 if broken==0:
-                    print 'aqui',node.index
+                    print 'aqui1',node.index
             mss_ind_atoms=[]
             mss_ind_nodes=[]
             mss_ind_atoms.append(node.num_atoms)
