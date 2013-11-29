@@ -87,7 +87,7 @@ SUBROUTINE breaking_symmetry_1st(criterium,orden,support,num_atoms,num_crit,newo
 
 END SUBROUTINE breaking_symmetry_1st
 
-SUBROUTINE breaking_symmetry_2nd(orden1,orden2,support,num_atoms,num_crit,neworden1,neworden2,broken)
+SUBROUTINE breaking_symmetry_2nd(orden1,orden2,support,num_atoms,num_crit,neworden1,neworden2,new_symm)
 
   IMPLICIT NONE
 
@@ -95,7 +95,7 @@ SUBROUTINE breaking_symmetry_2nd(orden1,orden2,support,num_atoms,num_crit,neword
   INTEGER,DIMENSION(num_atoms),INTENT(IN)::orden1,orden2
   INTEGER,DIMENSION(num_atoms,num_crit),INTENT(IN)::support
   INTEGER,DIMENSION(num_atoms),INTENT(OUT)::neworden1,neworden2
-  INTEGER,INTENT(OUT)::broken
+  INTEGER,DIMENSION(num_atoms),INTENT(OUT)::new_symm
 
   INTEGER::ii,jj,gg,kk,eff_num_crit
   INTEGER,DIMENSION(:),ALLOCATABLE::potencias,valores,base
@@ -140,13 +140,14 @@ SUBROUTINE breaking_symmetry_2nd(orden1,orden2,support,num_atoms,num_crit,neword
      valores(ii)=dot_product(potencias,eff_support(ii,:))
   END DO
 
-  broken=1
-  gg=0
+  new_symm(:)=0
+  gg=-1
   DO ii=1,num_atoms
      jj=MAXLOC(valores,DIM=1,MASK=filtro)
      kk=valores(jj)
      IF (gg==kk) THEN
-        broken=0
+        new_symm(ii)=1
+        new_symm(ii-1)=1
      END IF
      gg=kk
      filtro(jj)=.FALSE.

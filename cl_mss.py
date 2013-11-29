@@ -620,6 +620,7 @@ class mss():
 
             aa=[]
             bb=[]
+            dd=[]
             order=node.new_order
             if self.symm_nodes:
                 for ii in order:
@@ -636,14 +637,16 @@ class mss():
                             support[jj,0]=self.node[order_hb_nodes[jj]].codigo
                             support[jj,1:11]=self.node[order_hb_nodes[jj]].suphb
                             support[jj,11:21]=self.node[order_hb_nodes[jj]].supb
-                        order_hb_atoms,order_hb_nodes,broken0=mss_funcs.breaking_symmetry_2nd(order_hb_atoms,order_hb_nodes,support,cc[0],21)
+                        order_hb_atoms,order_hb_nodes,new_symm_hb=mss_funcs.breaking_symmetry_2nd(order_hb_atoms,order_hb_nodes,support,cc[0],21)
+                        dd.extend(new_symm_hb)
                     if cc[1]>1:
                         support=numpy.zeros((cc[1],21),dtype=int,order='Fortran')
                         for jj in range(cc[1]):
                             support[jj,0]=self.node[order_b_nodes[jj]].codigo
                             support[jj,1:11]=self.node[order_b_nodes[jj]].suphb
                             support[jj,11:21]=self.node[order_b_nodes[jj]].supb
-                        order_b_atoms,order_b_nodes,broken1=mss_funcs.breaking_symmetry_2nd(order_b_atoms,order_b_nodes,support,cc[1],21)
+                        order_b_atoms,order_b_nodes,new_symm_b=mss_funcs.breaking_symmetry_2nd(order_b_atoms,order_b_nodes,support,cc[1],21)
+                        dd.extend(new_symm_b)
                     #if broken0==0 or broken1==0:
                     #    print 'aquiii',node.index
                     aa.extend(order_hb_atoms)
@@ -658,6 +661,7 @@ class mss():
                     bb.extend(node.atom[ii].bond_node)                     
             node.shell1st.mss_ind_atoms.extend(aa)
             node.shell1st.mss_ind_nodes.extend(bb)
+            node.shell1st.new_symm=dd
              
             mss=[]
             mss.append(node.shell1st.mss_ind_nodes[0])
