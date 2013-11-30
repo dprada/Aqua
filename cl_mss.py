@@ -639,6 +639,8 @@ class mss():
                             support[jj,11:21]=self.node[order_hb_nodes[jj]].supb
                         order_hb_atoms,order_hb_nodes,new_symm_hb=mss_funcs.breaking_symmetry_2nd(order_hb_atoms,order_hb_nodes,support,cc[0],21)
                         dd.extend(new_symm_hb)
+                    if cc[0]==1:
+                        dd.extend([0])
                     if cc[1]>1:
                         support=numpy.zeros((cc[1],21),dtype=int,order='Fortran')
                         for jj in range(cc[1]):
@@ -647,6 +649,8 @@ class mss():
                             support[jj,11:21]=self.node[order_b_nodes[jj]].supb
                         order_b_atoms,order_b_nodes,new_symm_b=mss_funcs.breaking_symmetry_2nd(order_b_atoms,order_b_nodes,support,cc[1],21)
                         dd.extend(new_symm_b)
+                    if cc[1]==1:
+                        dd.extend([0])
                     #if broken0==0 or broken1==0:
                     #    print 'aquiii',node.index
                     aa.extend(order_hb_atoms)
