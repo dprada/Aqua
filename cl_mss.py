@@ -708,106 +708,54 @@ class mss():
         # ordenar en el oxigeno por distancias puede ser problematico
         # piensa en la situacion de 3 hbs al oxigeno con uno de ellos a proteina.
 
-    def build_mss_shell1st_bis(self):
-     
-        num_crit=5
+    def build_mss_shell2nd(self):
+
         for node in self.node:
-     
-            order=copy.copy(node.atoms)
-            mss_ind_atoms=[]
-            mss_ind_nodes=[]
-            mss_ind_atoms.append(node.num_atoms)
-            mss_ind_atoms.extend(order)
-            mss_ind_nodes.append(node.num_atoms)
-            mss_ind_nodes.extend([node.index for ii in order])
-            aa=[]
-            bb=[]
-            for ii in order:
-                cc=[node.atom[ii].num_hbonds,node.atom[ii].num_bonds]
-                mss_ind_atoms.extend(cc)
-                mss_ind_nodes.extend(cc)
-                aa.extend(node.atom[ii].hbond)
-                aa.extend(node.atom[ii].bond)
-                bb.extend(node.atom[ii].hbond_node)
-                bb.extend(node.atom[ii].bond_node)
-            mss_ind_atoms.extend(aa)
-            mss_ind_nodes.extend(bb)
-            node.shell1st.mss_ind_atoms=mss_ind_atoms
-            node.shell1st.mss_ind_nodes=mss_ind_nodes
+            node.shell2nd.mss_ind_atoms.extend(node.shell1st.mss_ind_atoms)
+            node.shell2nd.mss_ind_nodes.extend(node.shell1st.mss_ind_nodes)
+            pacambiar=[]
+            n_ats=node.shell1st.mss_ind_nodes[0]
+            n_bs=sum(node.shell1st.mss_ind_nodes[(1+n_ats):(1+n_ats*3)])
+            pacambiar.extend(range(1,(1+n_ats)))
+            pacambiar.extend(range((1+n_ats*3),(1+n_ats*3+n_bs)))
+            ll=len(node.shell1st.mss_ind_nodes)
+            for ii in range((1+n_ats*3),(1+n_ats*3+n_bs)):
+                jj=node.shell1st.mss_ind_nodes[ii]
+                nn_ats=self.node[jj].shell1st.mss_ind_nodes[0]
+                nn_bs=sum(self.node[jj].shell1st.mss_ind_nodes[(1+nn_ats):(1+nn_ats*3)])
+                pacambiar.extend(range(ll+1,(ll+1+nn_ats)))
+                pacambiar.extend(range((ll+1+nn_ats*3),(ll+1+nn_ats*3+nn_bs)))
+                ll+=len(self.node[jj].shell1st.mss_ind_nodes)
+                node.shell2nd.mss_ind_atoms.extend(self.node[jj].shell1st.mss_ind_atoms)
+                node.shell2nd.mss_ind_nodes.extend(self.node[jj].shell1st.mss_ind_nodes)
             
-            mss=[]
-            mss.append(mss_ind_nodes[0])
+            mss=copy.copy(node.shell2nd.mss_ind_nodes)
             aux_dict={}
             cc_water=0
             cc_lipid=0
             cc_ion=0
-            for ii in mss_ind_nodes[1:(1+node.num_atoms)]:
-                if aux_dict.has_key(ii):
+            for ii in pacambiar:
+                jj=mss[ii]
+                if aux_dict.has_key(jj):
                     pass
                 else:
-                    if ii in self.waters:
-                        aux_dict[ii]='w'+str(cc_water)
+                    if jj in self.waters:
+                        aux_dict[jj]='w'+str(cc_water)
                         cc_water+=1
-                    elif ii in self.lipids:
-                        aux_dict[ii]='l'+str(cc_lipid)
+                    elif jj in self.lipids:
+                        aux_dict[jj]='l'+str(cc_lipid)
                         cc_lipid+=1
-                    elif ii in self.ions:
-                        aux_dict[ii]='i'+str(cc_ion)
+                    elif jj in self.ions:
+                        aux_dict[jj]='i'+str(cc_ion)
                         cc_ion+=1
-                mss.append(aux_dict[ii])
-            for ii in mss_ind_nodes[(1+node.num_atoms):(1+node.num_atoms+2*node.num_atoms)]:
-                mss.append(ii)
-            for ii in mss_ind_nodes[(1+node.num_atoms+2*node.num_atoms):]:
-                if aux_dict.has_key(ii):
-                    pass
-                else:
-                    if ii in self.waters:
-                        aux_dict[ii]='w'+str(cc_water)
-                        cc_water+=1
-                    elif ii in self.lipids:
-                        aux_dict[ii]='l'+str(cc_lipid)
-                        cc_lipid+=1
-                    elif ii in self.ions:
-                        aux_dict[ii]='i'+str(cc_ion)
-                        cc_ion+=1
-                mss.append(aux_dict[ii])
-            node.shell1st.mss=mss
-            
-        # ordenar en el oxigeno por distancias puede ser problematico
-        # piensa en la situacion de 3 hbs al oxigeno con uno de ellos a proteina.
+                mss[ii]=aux_dict[jj]
+            node.shell2nd.mss=mss
+
+
+        pass
+
 
     def breakcodigo (self, node=None):
         pass
         
 
-
-
-#def __break_symm_1st_atoms__(order=None,node=None):
-# 
-#    support=[]
-# 
-#    for ii in range(node.num_atoms):
-#        jj=order[ii]
-#        atom=node.atom[jj]
-#        support.append(atom.num_hbonds)
-#        support.append(atom.num_bonds)
-        
-
-
-
-
-                #order=__break_symm_1st_atoms__(order,node)
-                #support=numpy.zeros((node.num_atoms,num_crit),dtype=int,order='Fortran')
-                #for ii in range(node.num_atoms):
-                #    jj=order[ii]
-                #    atom=node.atom[jj]
-                #    support[ii,0]=atom.num_hbonds
-                #    support[ii,1]=atom.num_bonds
-                #    bb=numpy.zeros((3),dtype=int)
-                #    for kk in atom.hbond_node:
-                #        bb+=self.node[kk].symm_node
-                #    for kk in atom.bond_node:
-                #        bb+=self.node[kk].symm_node
-                #    support[ii,2:5]=bb
-                #for criterium in node.symm_ats:
-                #    order=mss_funcs.breaking_symmetry_1st(criterium,order,support,node.num_atoms,num_crit)
