@@ -444,6 +444,7 @@ class mss():
 
         # Que necesito:
 
+        # node.suphb, node.supb, atom.suphb and atom.supb for 1st shell.
         diccionarios=[]
         for node in self.node:
             aux_set_node_hb={}
@@ -487,6 +488,7 @@ class mss():
             node.supb[4]=len(aux_set_node_b)
             diccionarios.append([aux_set_node_hb,aux_set_node_b])
 
+        # node.suphb, node.supb, atom.suphb and atom.supb for 2nd shell.
         for ii in range(self.num_nodes):
             node=self.node[ii]
             aux_set_node_hb={}
@@ -515,55 +517,9 @@ class mss():
 
         del(diccionarios)
 
-        # Que necesito:
-        # - codigo per node #Done
-        # - codigo_sets with index of set and position of node in set #Done
-        # - num_hbonds per atom #Done
-        # - num_bonds  per atom #Done
-        # - num_hbonds per category in atom
-        # - num_bonds  per category in atom
-        # - num_hbonds per node
-        # - num_bonds  per node
-        # - num_hbonds per category in node (this was codigo1)
-        # - num_bonds  per category in node (this was codigo2)
-        # - array per node lipid with nodes present in hbond
-        # - array per node lipid with nodes present in bond
-        # - array per atom lipid with nodes present in hbond
-        # - array per atom lipid with nodes present in bond
-        # - compute the number of indices in matrix support
+        # Hasta aqui el soporte. 
 
-        #for node in self.node:
-        #    node.shell1st.order=copy.copy(node.atoms)
-        #    if node.symm_ats:
-        #        support=numpy.zeros((node.num_atoms,5),dtype=int,order='Fortran')
-        #        for ii in range(node.num_atoms):
-        #            jj=node.shell1st.order[ii]
-        #            atom=node.atom[jj]
-        #            support[ii,0]=atom.num_hbonds
-        #            support[ii,1]=atom.num_bonds
-        #            bb=numpy.zeros((3),dtype=int)
-        #            for kk in atom.hbond_node:
-        #                bb+=self.node[kk].symm_node
-        #            for kk in atom.bond_node:
-        #                bb+=self.node[kk].symm_node
-        # 
-        #for node in self.node:
-        #    node.codigo2=[0,0,0,0,0,0,0,0]
-        #    for atom in node.atoms:
-        #        node.codigo2[0]+=node.atom[atom].num_hbonds
-        #        node.codigo2[1]+=node.atom[atom].num_bonds
-        #        for ii in node.atom[atom].hbond_node:
-        #            jj=self.node[ii].codigo+2
-        #            node.codigo2[jj]+=1
-        #        for ii in node.atom[atom].bond_node:
-        #            jj=self.node[ii].codigo+2+3
-        #            node.codigo2[jj]+=1
-        #    if
-
-        #for set_nodes in self.symm_sets_nodes_aux:
-            
-
-        for node in self.node:
+        for node in self.node: # Para el orden de los mismos atomos del nodo. P.e.: H1 y H2
      
             order=copy.copy(node.atoms)
             node.shell1st.new_symm.extend(['X'])
@@ -582,15 +538,6 @@ class mss():
                     node.new_symm_ats.append(new_symm)
                     broken+=sum(new_symm)
                 node.shell1st.new_symm.extend(new_symm)
-                #if broken>0:
-                #    veo=[]
-                #    for criterium in node.symm_ats:
-                #        for ii in range(len(criterium)):
-                #            if criterium[ii]==True:
-                #                veo.append(node.atom[order[ii]].num_hbonds)
-                #                veo.append(node.atom[order[ii]].num_bonds)
-                #    if sum(veo)!=0:
-                #        node.symm_broken_ats=False
             else:
                 node.shell1st.new_symm.extend([0 for ii in range(node.num_atoms)])
             node.shell1st.new_symm.extend(['X' for ii in range(2*node.num_atoms)])
@@ -609,21 +556,7 @@ class mss():
             node.shell1st.mss_ind_nodes=mss_ind_nodes
 
 
-        #for node in self.node:
-        #    if node.symm_broken_ats==False:
-        #        print '###'
-        #        print 'aqui1',node.index,node.shell1st.mss_ind_atoms
-        #        for ii in range(node.shell1st.mss_ind_atoms[0]):
-        #            cc=node.shell1st.mss_ind_atoms[1+ii]
-        #            print '>',cc
-        #            for jj in node.atom[cc].hbond_node:
-        #                print ' -->', jj
-        #                print self.node[jj].shell1st.mss_ind_atoms
-        #            
-
-                #for 
-
-        for node in self.node:
+        for node in self.node: # Para el orden de los nodos enlazados.
 
             aa=[]
             bb=[]
@@ -638,27 +571,57 @@ class mss():
                     broken0=1
                     broken1=1
                     if cc[0]>1:
-                        support=numpy.zeros((cc[0],21),dtype=int,order='Fortran')
+                        aux_set={}
+                        support=numpy.zeros((cc[0],1+5+10+10+1),dtype=int,order='Fortran')
                         for jj in range(cc[0]):
                             support[jj,0]=self.node[order_hb_nodes[jj]].codigo
-                            support[jj,1:11]=self.node[order_hb_nodes[jj]].suphb
-                            support[jj,11:21]=self.node[order_hb_nodes[jj]].supb
-                        order_hb_atoms,order_hb_nodes,new_symm_hb=mss_funcs.breaking_symmetry_2nd(order_hb_atoms,order_hb_nodes,support,cc[0],21)
+                            support[jj,6:16]=self.node[order_hb_nodes[jj]].suphb
+                            support[jj,16:26]=self.node[order_hb_nodes[jj]].supb
+                            if self.node[order_hb_nodes[jj]].codigo==2:
+                                support[jj,26]=self.node[order_hb_nodes[jj]].codigo_sets[1]
+                                try:
+                                    aux_set[self.node[order_hb_nodes[jj]].codigo_sets[0]].append(jj)
+                                except:
+                                    aux_set[self.node[order_hb_nodes[jj]].codigo_sets[0]]=[jj]
+                        for same_set in aux_set.values():
+                            aaa=numpy.zeros((5),dtype=int,order='Fortran')
+                            bbb=numpy.zeros((20),dtype=int,order='Fortran')
+                            for ww in same_set:
+                                aaa[support[ww,26]]+=1
+                                bbb[:]+=support[ww,6:26]
+                            for ww in same_set:
+                                support[ww,1:6]=aaa[:]
+                                support[ww,6:26]=bbb[:]
+                        order_hb_atoms,order_hb_nodes,new_symm_hb=mss_funcs.breaking_symmetry_2nd(order_hb_atoms,order_hb_nodes,support,cc[0],27)
                         node.shell1st.new_symm.extend(new_symm_hb)
                     if cc[0]==1:
                         node.shell1st.new_symm.extend([0])
                     if cc[1]>1:
-                        support=numpy.zeros((cc[1],21),dtype=int,order='Fortran')
+                        aux_set={}
+                        support=numpy.zeros((cc[1],1+5+10+10+1),dtype=int,order='Fortran')
                         for jj in range(cc[1]):
                             support[jj,0]=self.node[order_b_nodes[jj]].codigo
-                            support[jj,1:11]=self.node[order_b_nodes[jj]].suphb
-                            support[jj,11:21]=self.node[order_b_nodes[jj]].supb
-                        order_b_atoms,order_b_nodes,new_symm_b=mss_funcs.breaking_symmetry_2nd(order_b_atoms,order_b_nodes,support,cc[1],21)
+                            support[jj,6:16]=self.node[order_b_nodes[jj]].suphb
+                            support[jj,16:26]=self.node[order_b_nodes[jj]].supb
+                            if self.node[order_b_nodes[jj]].codigo==2:
+                                support[jj,26]=self.node[order_b_nodes[jj]].codigo_sets[1]
+                                try:
+                                    aux_set[self.node[order_b_nodes[jj]].codigo_sets[0]].append(jj)
+                                except:
+                                    aux_set[self.node[order_b_nodes[jj]].codigo_sets[0]]=[jj]
+                        for same_set in aux_set.values():
+                            aaa=numpy.zeros((5),dtype=int,order='Fortran')
+                            bbb=numpy.zeros((20),dtype=int,order='Fortran')
+                            for ww in same_set:
+                                aaa[support[ww,26]]+=1
+                                bbb[:]+=support[ww,6:26]
+                            for ww in same_set:
+                                support[ww,1:6]=aaa[:]
+                                support[ww,6:26]=bbb[:]
+                        order_b_atoms,order_b_nodes,new_symm_b=mss_funcs.breaking_symmetry_2nd(order_b_atoms,order_b_nodes,support,cc[1],27)
                         node.shell1st.new_symm.extend(new_symm_b)
                     if cc[1]==1:
                         node.shell1st.new_symm.extend([0])
-                    #if broken0==0 or broken1==0:
-                    #    print 'aquiii',node.index
                     aa.extend(order_hb_atoms)
                     aa.extend(order_b_atoms)
                     bb.extend(order_hb_nodes)
@@ -673,47 +636,36 @@ class mss():
                     node.shell1st.new_symm.extend([0 for ii in range(node.atom[ii].num_bonds)])
             node.shell1st.mss_ind_atoms.extend(aa)
             node.shell1st.mss_ind_nodes.extend(bb)
-             
-            mss=[]
-            mss.append(node.shell1st.mss_ind_nodes[0])
-            aux_dict={}
+
+            pacambiar=[]
+            n_ats=node.shell1st.mss_ind_nodes[0]
+            n_bs=sum(node.shell1st.mss_ind_nodes[(1+n_ats):(1+n_ats*3)])
+            pacambiar.extend(range(1,(1+n_ats)))
+            pacambiar.extend(range((1+n_ats*3),(1+n_ats*3+n_bs)))
+
+            mss=copy.copy(node.shell1st.mss_ind_nodes)
+            aux2_dict={}
+            aux2_set={}
             cc_water=0
             cc_lipid=0
             cc_ion=0
-            for ii in node.shell1st.mss_ind_nodes[1:(1+node.num_atoms)]:
-                if aux_dict.has_key(ii):
-                    pass
-                else:
-                    if ii in self.waters:
-                        aux_dict[ii]='w'+str(cc_water)
+            for ii in pacambiar:
+                jj=mss[ii]
+                if aux2_dict.has_key(jj)==False:
+                    if jj in self.waters:
+                        aux2_dict[jj]='w'+str(cc_water)
                         cc_water+=1
-                    elif ii in self.lipids:
-                        aux_dict[ii]='l'+str(cc_lipid)
-                        cc_lipid+=1
-                    elif ii in self.ions:
-                        aux_dict[ii]='i'+str(cc_ion)
+                    elif jj in self.lipids:
+                        if aux2_set.has_key(self.node[jj].codigo_sets[0])==False:
+                            aux2_set[self.node[jj].codigo_sets[0]]=cc_lipid
+                            cc_lipid+=1
+                        aux2_dict[jj]='l'+str(aux2_set[self.node[jj].codigo_sets[0]])+'-'+str(self.node[jj].codigo_sets[1])
+                    elif jj in self.ions:
+                        aux2_dict[jj]='i'+str(cc_ion)
                         cc_ion+=1
-                mss.append(aux_dict[ii])
-            for ii in node.shell1st.mss_ind_nodes[(1+node.num_atoms):(1+node.num_atoms+2*node.num_atoms)]:
-                mss.append(ii)
-            for ii in node.shell1st.mss_ind_nodes[(1+node.num_atoms+2*node.num_atoms):]:
-                if aux_dict.has_key(ii):
-                    pass
-                else:
-                    if ii in self.waters:
-                        aux_dict[ii]='w'+str(cc_water)
-                        cc_water+=1
-                    elif ii in self.lipids:
-                        aux_dict[ii]='l'+str(cc_lipid)
-                        cc_lipid+=1
-                    elif ii in self.ions:
-                        aux_dict[ii]='i'+str(cc_ion)
-                        cc_ion+=1
-                mss.append(aux_dict[ii])
+                mss[ii]=aux2_dict[jj]
             node.shell1st.mss=mss
             
-        # ordenar en el oxigeno por distancias puede ser problematico
-        # piensa en la situacion de 3 hbs al oxigeno con uno de ellos a proteina.
 
     def build_mss_shell2nd(self):
 
@@ -739,27 +691,27 @@ class mss():
                 node.shell2nd.new_symm.extend(self.node[jj].shell1st.new_symm)
             
             mss=copy.copy(node.shell2nd.mss_ind_nodes)
-            aux_dict={}
+            aux2_dict={}
+            aux2_set={}
             cc_water=0
             cc_lipid=0
             cc_ion=0
             for ii in pacambiar:
                 jj=mss[ii]
-                if aux_dict.has_key(jj):
-                    pass
-                else:
+                if aux2_dict.has_key(jj)==False:
                     if jj in self.waters:
-                        aux_dict[jj]='w'+str(cc_water)
+                        aux2_dict[jj]='w'+str(cc_water)
                         cc_water+=1
                     elif jj in self.lipids:
-                        aux_dict[jj]='l'+str(cc_lipid)
-                        cc_lipid+=1
+                        if aux2_set.has_key(self.node[jj].codigo_sets[0])==False:
+                            aux2_set[self.node[jj].codigo_sets[0]]=cc_lipid
+                            cc_lipid+=1
+                        aux2_dict[jj]='l'+str(aux2_set[self.node[jj].codigo_sets[0]])+'-'+str(self.node[jj].codigo_sets[1])
                     elif jj in self.ions:
-                        aux_dict[jj]='i'+str(cc_ion)
+                        aux2_dict[jj]='i'+str(cc_ion)
                         cc_ion+=1
-                mss[ii]=aux_dict[jj]
+                mss[ii]=aux2_dict[jj]
             node.shell2nd.mss=mss
-
 
         pass
 
