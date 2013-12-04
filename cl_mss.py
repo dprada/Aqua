@@ -526,7 +526,6 @@ class mss():
         otro_auxilio_hb=numpy.zeros((self.num_nodes,self.max_ats_node),dtype=int)
         otro_auxilio_b=numpy.zeros((self.num_nodes,self.max_ats_node),dtype=int)
         for node in self.node: # Para el orden de los mismos atomos del nodo. P.e.: H1 y H2
-     
             order=copy.copy(node.atoms)
             node.shell1st.new_symm.extend(['X'])
             if node.symm_ats:
@@ -565,6 +564,44 @@ class mss():
             node.shell1st.mss_ind_atoms=mss_ind_atoms
             node.shell1st.mss_ind_nodes=mss_ind_nodes
 
+        for node in self.node: # para quitar cierta simetria
+            if 1 in node.shell1st.new_symm:
+                support=numpy.zeros((node.num_atoms,2*self.max_ats_node),dtype=int,order='Fortran')
+                order=node.new_order
+                criterium=node.shell1st.new_symm
+                node.shell1st.new_symm=[]
+                node.shell1st.new_symm.extend(['X'])
+                for ii in range(node.num_atoms):
+                    atom=order[ii]
+                    for jj in node.atom[atom].hbond_node:
+                        support[ii,0:3]+=otro_auxilio_hb[jj,:]
+                        support[ii,3:6]+=otro_auxilio_b[jj,:]
+                    for jj in node.atom[atom].bond_node:
+                        support[ii,0:3]+=otro_auxilio_hb[jj,:]
+                        support[ii,3:6]+=otro_auxilio_b[jj,:]
+                broken=0
+                for criterium in node.symm_ats:
+                    order,new_symm=mss_funcs.breaking_symmetry_1st(criterium,order,support,node.num_atoms,6)
+                    node.new_symm_ats.append(new_symm)
+                    broken+=sum(new_symm)
+                node.shell1st.new_symm.extend(new_symm)
+                node.shell1st.new_symm.extend(['X' for ii in range(2*node.num_atoms)])
+                mss_ind_atoms=[]
+                mss_ind_nodes=[]
+                mss_ind_atoms.append(node.num_atoms)
+                mss_ind_atoms.extend(order)
+                node.new_order=order
+                mss_ind_nodes.append(node.num_atoms)
+                mss_ind_nodes.extend([node.index for ii in order])
+                kkk=0
+                for ii in order:                                            
+                    cc=[node.atom[ii].num_hbonds,node.atom[ii].num_bonds]   
+                    mss_ind_atoms.extend(cc)                                
+                    mss_ind_nodes.extend(cc)
+                    kkk+=1
+                node.shell1st.mss_ind_atoms=mss_ind_atoms
+                node.shell1st.mss_ind_nodes=mss_ind_nodes
+                
 
         for node in self.node: # Para el orden de los nodos enlazados.
 
