@@ -184,6 +184,8 @@ class mss():
         self.symm_sets_nodes=symm_sets_nodes
         self.symm_sets_nodes_aux=[]
 
+        self.max_ats_node=0
+
         self.build_nodes()
 
         self.num_nodes=len(self.node)
@@ -220,6 +222,8 @@ class mss():
             node.num_donors=len(node.donors)
             node.num_nonpolars=len(node.nonpolars)
             node.num_atoms=len(node.atoms)
+            if self.max_ats_node<node.num_atoms:
+                self.max_ats_node=node.num_atoms
         self.atoms=self.atom2node.keys()
         self.acceptors=self.acceptor2node.keys()
         self.donors=self.donor2node.keys()
@@ -519,6 +523,8 @@ class mss():
 
         # Hasta aqui el soporte. 
 
+        otro_auxilio_hb=numpy.zeros((self.num_nodes,self.max_ats_node),dtype=int)
+        otro_auxilio_b=numpy.zeros((self.num_nodes,self.max_ats_node),dtype=int)
         for node in self.node: # Para el orden de los mismos atomos del nodo. P.e.: H1 y H2
      
             order=copy.copy(node.atoms)
@@ -548,10 +554,14 @@ class mss():
             node.new_order=order
             mss_ind_nodes.append(node.num_atoms)
             mss_ind_nodes.extend([node.index for ii in order])
+            kkk=0
             for ii in order:                                            
                 cc=[node.atom[ii].num_hbonds,node.atom[ii].num_bonds]   
                 mss_ind_atoms.extend(cc)                                
                 mss_ind_nodes.extend(cc)
+                otro_auxilio_hb[node.index,kkk]=node.atom[ii].num_hbonds
+                otro_auxilio_b[node.index,kkk]=node.atom[ii].num_bonds
+                kkk+=1
             node.shell1st.mss_ind_atoms=mss_ind_atoms
             node.shell1st.mss_ind_nodes=mss_ind_nodes
 
@@ -572,54 +582,58 @@ class mss():
                     broken1=1
                     if cc[0]>1:
                         aux_set={}
-                        support=numpy.zeros((cc[0],1+5+10+10+1),dtype=int,order='Fortran')
+                        support=numpy.zeros((cc[0],1+5+10+10+2*self.max_ats_node+1),dtype=int,order='Fortran')
                         for jj in range(cc[0]):
                             support[jj,0]=self.node[order_hb_nodes[jj]].codigo
                             support[jj,6:16]=self.node[order_hb_nodes[jj]].suphb
                             support[jj,16:26]=self.node[order_hb_nodes[jj]].supb
+                            support[jj,26:29]=otro_auxilio_hb[order_hb_nodes[jj],:]
+                            support[jj,29:32]=otro_auxilio_b[order_hb_nodes[jj],:]
                             if self.node[order_hb_nodes[jj]].codigo==2:
-                                support[jj,26]=self.node[order_hb_nodes[jj]].codigo_sets[1]
+                                support[jj,32]=self.node[order_hb_nodes[jj]].codigo_sets[1]
                                 try:
                                     aux_set[self.node[order_hb_nodes[jj]].codigo_sets[0]].append(jj)
                                 except:
                                     aux_set[self.node[order_hb_nodes[jj]].codigo_sets[0]]=[jj]
                         for same_set in aux_set.values():
                             aaa=numpy.zeros((5),dtype=int,order='Fortran')
-                            bbb=numpy.zeros((20),dtype=int,order='Fortran')
+                            bbb=numpy.zeros((26),dtype=int,order='Fortran')
                             for ww in same_set:
-                                aaa[support[ww,26]]+=1
-                                bbb[:]+=support[ww,6:26]
+                                aaa[support[ww,32]]+=1
+                                bbb[:]+=support[ww,6:32]
                             for ww in same_set:
                                 support[ww,1:6]=aaa[:]
-                                support[ww,6:26]=bbb[:]
-                        order_hb_atoms,order_hb_nodes,new_symm_hb=mss_funcs.breaking_symmetry_2nd(order_hb_atoms,order_hb_nodes,support,cc[0],27)
-                        node.shell1st.new_symm.extend(new_symm_hb)
+                                support[ww,6:32]=bbb[:]
+                        order_hb_atoms,order_hb_nodes,new_symm_hb=mss_funcs.breaking_symmetry_2nd(order_hb_atoms,order_hb_nodes,support,cc[0],33)
+                        node.shell1st.new_symm.extend(2*new_symm_hb)
                     if cc[0]==1:
                         node.shell1st.new_symm.extend([0])
                     if cc[1]>1:
                         aux_set={}
-                        support=numpy.zeros((cc[1],1+5+10+10+1),dtype=int,order='Fortran')
+                        support=numpy.zeros((cc[1],1+5+10+10+2*self.max_ats_node+1),dtype=int,order='Fortran')
                         for jj in range(cc[1]):
                             support[jj,0]=self.node[order_b_nodes[jj]].codigo
                             support[jj,6:16]=self.node[order_b_nodes[jj]].suphb
                             support[jj,16:26]=self.node[order_b_nodes[jj]].supb
+                            support[jj,26:29]=otro_auxilio_hb[order_b_nodes[jj],:]
+                            support[jj,29:32]=otro_auxilio_b[order_b_nodes[jj],:]
                             if self.node[order_b_nodes[jj]].codigo==2:
-                                support[jj,26]=self.node[order_b_nodes[jj]].codigo_sets[1]
+                                support[jj,32]=self.node[order_b_nodes[jj]].codigo_sets[1]
                                 try:
                                     aux_set[self.node[order_b_nodes[jj]].codigo_sets[0]].append(jj)
                                 except:
                                     aux_set[self.node[order_b_nodes[jj]].codigo_sets[0]]=[jj]
                         for same_set in aux_set.values():
                             aaa=numpy.zeros((5),dtype=int,order='Fortran')
-                            bbb=numpy.zeros((20),dtype=int,order='Fortran')
+                            bbb=numpy.zeros((26),dtype=int,order='Fortran')
                             for ww in same_set:
-                                aaa[support[ww,26]]+=1
-                                bbb[:]+=support[ww,6:26]
+                                aaa[support[ww,32]]+=1
+                                bbb[:]+=support[ww,6:32]
                             for ww in same_set:
                                 support[ww,1:6]=aaa[:]
-                                support[ww,6:26]=bbb[:]
-                        order_b_atoms,order_b_nodes,new_symm_b=mss_funcs.breaking_symmetry_2nd(order_b_atoms,order_b_nodes,support,cc[1],27)
-                        node.shell1st.new_symm.extend(new_symm_b)
+                                support[ww,6:32]=bbb[:]
+                        order_b_atoms,order_b_nodes,new_symm_b=mss_funcs.breaking_symmetry_2nd(order_b_atoms,order_b_nodes,support,cc[1],33)
+                        node.shell1st.new_symm.extend(2*new_symm_b)
                     if cc[1]==1:
                         node.shell1st.new_symm.extend([0])
                     aa.extend(order_hb_atoms)
