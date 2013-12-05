@@ -720,6 +720,7 @@ class mss():
 
     def build_mss_shell2nd(self):
 
+        # Pulo el hecho de que el nodo en el centro rompe asimetrias
         for node in self.node:
             node.shell2nd.mss_ind_atoms.extend(node.shell1st.mss_ind_atoms)
             node.shell2nd.mss_ind_nodes.extend(node.shell1st.mss_ind_nodes)
@@ -764,5 +765,11 @@ class mss():
                 mss[ii]=aux2_dict[jj]
             node.shell2nd.mss=mss
 
-        pass
 
+    def breaking_symmetry_centrality(self,node=None,center=None):
+
+        new_mss_ind_atoms=copy.copy(self.node[jj].shell1st.mss_ind_atoms)
+        new_mss_ind_nodes=copy.copy(self.node[jj].shell1st.mss_ind_atoms)
+        new_new_symm     =copy.copy(self.node[jj].shell1st.new_symm)
+
+        

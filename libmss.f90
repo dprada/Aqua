@@ -4,6 +4,28 @@ INTEGER::definition_hbs
 
 CONTAINS
 
+!!SUBROUTINE breaking_symmmetry_centrality(ind_atoms,ind_nodes,symm,center,len_mss,new_ind_atoms,new_ind_nodes,new_symm)
+!! 
+!!  INTEGER::len_mss,center
+!!  INTEGER,DIMENSION(len_mss),INTENT(IN)::ind_atoms,ind_nodes,symm
+!!  INTEGER,DIMENSION(len_mss),INTENT(OUT)::new_ind_atoms,new_ind_nodes,new_symm
+!!  
+!!  natoms=ind_nodes(1)
+!!  ALLOCATE(nbs(natoms,2))
+!! 
+!!  jj=1
+!!  DO ii=1,natoms
+!!     nbs(ii,1)=ind_nodes(jj) 
+!!     nbs(ii,2)=ind_nodes(jj+1) 
+!!     jj=jj+2
+!!  END DO
+!! 
+!!  
+!! 
+!! 
+!!END SUBROUTINE breaking_symmmetry_centrality
+
+
 SUBROUTINE breaking_symmetry_1st(criterium,orden,support,num_atoms,num_crit,neworden,new_symm)
 
   IMPLICIT NONE
