@@ -2,44 +2,7 @@ MODULE GLOB
 
 INTEGER::definition_hbs
 
-
-
 CONTAINS
-
-SUBROUTINE support_up(n1,n2,n3,n4,n6,n5)
-
-  INTEGER,INTENT(IN)::n1,n2,n3,n4,n5
-  INTEGER,DIMENSION(n5),INTENT(IN)::n6
-
-  num_atoms=n1
-  num_nodes=n2
-  max_ats_node=n3
-  num_type_nodes=n4
-  num_type_sets=n5
-  ALLOCATE
-
-SUBROUTINE support_at_1st_up (num_atoms,max_ats_node,num_type_nodes,atoms_per_set,num_type_sets)
-
-  INTEGER,INTENT(IN)::num_atoms,max_ats_node,num_type_nodes,num_type_sets
-  INTEGER,DIMENSION(num_type_sets),INTENT(IN)::atoms_per_set
-  INTEGER::dim
-
-  !(1): number of hbonds in atom
-  !(...,num_type_nodes): occupation per node_type
-  !(...,)
-
-  IF (ALLOCATED(at_hb_1sh)) DEALLOCATE(at_hb_1sh)
-  IF (ALLOCATED(at_b_1sh)) DEALLOCATE(at_b_1sh)
-
-  dim=1+num_type_nodes
-  ALLOCATE(at_hb_1sh,at_b_1sh)
-  at_hb_1sh(:,:)=0
-  at_b_1sh(:,:)=0
-
-END SUBROUTINE support_at_1st_up
-
-
-
 
 !!SUBROUTINE breaking_symmmetry_centrality(ind_atoms,ind_nodes,symm,center,len_mss,new_ind_atoms,new_ind_nodes,new_symm)
 !! 
