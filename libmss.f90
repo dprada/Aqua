@@ -1,24 +1,16 @@
 MODULE GLOB
 
 INTEGER::definition_hbs
-
+INTEGER,DIMENSION(:,:),ALLOCATABLE::sup_atom_hb_1sh,sup_node_hb_1sh
+INTEGER,DIMENSION(:,:),ALLOCATABLE::sup_atom_b_1sh,sup_node_b_1sh
 
 
 CONTAINS
 
-SUBROUTINE support_up(n1,n2,n3,n4,n6,n5)
 
-  INTEGER,INTENT(IN)::n1,n2,n3,n4,n5
-  INTEGER,DIMENSION(n5),INTENT(IN)::n6
+SUBROUTINE support_1st_up (num_atoms,max_ats_node,num_type_nodes,atoms_per_set,num_type_sets)
 
-  num_atoms=n1
-  num_nodes=n2
-  max_ats_node=n3
-  num_type_nodes=n4
-  num_type_sets=n5
-  ALLOCATE
-
-SUBROUTINE support_at_1st_up (num_atoms,max_ats_node,num_type_nodes,atoms_per_set,num_type_sets)
+  IMPLICIT NONE
 
   INTEGER,INTENT(IN)::num_atoms,max_ats_node,num_type_nodes,num_type_sets
   INTEGER,DIMENSION(num_type_sets),INTENT(IN)::atoms_per_set
@@ -28,18 +20,76 @@ SUBROUTINE support_at_1st_up (num_atoms,max_ats_node,num_type_nodes,atoms_per_se
   !(...,num_type_nodes): occupation per node_type
   !(...,)
 
-  IF (ALLOCATED(at_hb_1sh)) DEALLOCATE(at_hb_1sh)
-  IF (ALLOCATED(at_b_1sh)) DEALLOCATE(at_b_1sh)
+  dim=20
+  IF (ALLOCATED(sup_1sh)) DEALLOCATE(sup_1sh)
+  ALLOCATE(sup_atom_1sh(num_atoms,dim))
 
   dim=1+num_type_nodes
   ALLOCATE(at_hb_1sh,at_b_1sh)
   at_hb_1sh(:,:)=0
   at_b_1sh(:,:)=0
 
-END SUBROUTINE support_at_1st_up
+END SUBROUTINE support_1st_up
+
+SUBROUTINE add_hb_support_1st(at1,at2)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::at1,at2
+
+  INTEGER::ii
+
+  !Num_hbs
+  at_hb_1sh(at1)=at_hb_1sh(at1)+1
+
+  !Num_nodes per type
+  ii=1+category_node(at2)
+  at_hb_1sh(ii)=at_hb_1sh(ii)+1
+  IF (in_set(at2)>0) THEN
+     aux_set_hb(at1,in_set(at2),which_set(at2))=.TRUE.
+     ii=1+num_types+num_sets+off_set(in_set(at2))+atom_in_set(at2)
+     at_hb_1st(ii)=at_hb_1st(ii)+1
+  END IF
+
+END SUBROUTINE add_hb_support_1st
+
+SUBROUTINE add_b_support_1st(at1,at2)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::at1,at2
+
+  INTEGER::ii
+
+  !Num_bs
+  at_b_1sh(at1)=at_b_1sh(at1)+1
+
+  !Num_nodes per type
+  ii=1+category_node(at2)
+  at_hb_1sh(ii)=at_hb_1sh(ii)+1
+  IF (in_set(at2)>0) THEN
+     aux_set_b(at1,in_set(at2),which_set(at2))=.TRUE.
+     ii=1+num_types+num_sets+off_set(in_set(at2))+atom_in_set(at2)
+     at_hb_1st(ii)=at_hb_1st(ii)+1
+  END IF
+
+END SUBROUTINE add_b_support_1st
 
 
 
+SUBROUTINE support_1st_down()
+
+  INTEGER::ii,jj,kk
+
+  DO ii=1,num_atoms
+     DO jj=1,num_sets
+        kk=1+num_types+jj
+        at_hb_1sh(kk)=COUNT(aux_set_hb(ii,jj,:),DIM=1)
+        at_b_1sh(kk)= COUNT(aux_set_b(ii,jj,:),DIM=1)
+     END DO
+  END DO
+
+END SUBROUTINE support_1st_down
 
 !!SUBROUTINE breaking_symmmetry_centrality(ind_atoms,ind_nodes,symm,center,len_mss,new_ind_atoms,new_ind_nodes,new_symm)
 !! 

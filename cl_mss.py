@@ -8,7 +8,6 @@ class atom():
     def __init__(self,index=None,donor=False,acceptor=False,nonpolar=False):
 
         self.index=index
-        self.__id__=0
         self.name=None
         self.donor=donor
         self.acceptor=acceptor
@@ -94,7 +93,6 @@ class node():
     def __init__(self,name=None,type=None):
 
         self.index=None
-        self.__id__=None
         self.name=name
         self.label=None
         self.type=type
@@ -149,8 +147,10 @@ class internal_vars():
 
     def __init__(self,num_atoms=None,num_nodes=None):
 
-        self.code_node=numpy.zeros((num_nodes,2),dtype=int,order="Fortran")
-        self.atom2node=numpy.zeros((num_atoms),dtype=int,order="Fortran")
+        self.atom2id={}
+        self.node2id={}
+        self.category_node=numpy.zeros((num_nodes,3),dtype=int,order="Fortran")
+        self.atomid2nodeid=numpy.zeros((num_atoms),dtype=int,order="Fortran")
         self.max_atoms_node=0
 
 class mss():
@@ -248,9 +248,8 @@ class mss():
                         node.symm_ats.append(aa)
             del(symm_ats_list)
 
-        count_code=0
         ## symmetric nodes
-
+        count_category=1
         if self.symm_nodes:
             symm_nodes_list=[]
             if type(self.symm_nodes) in [list,tuple]:
@@ -261,14 +260,31 @@ class mss():
             for node in self.node:
                 for ii in range(len(symm_nodes_list)):
                     if True in numpy.in1d(node.atoms,symm_nodes_list[ii]):
-                        node.symm_node.append(True)
-                        node.code[0]=count_code+ii
-                    else:
-                        node.symm_node.append(False)
-            count_code+=len(symm_nodes_list)
-            
+                        node.category[0]=count_category+ii
+            count_category+=len(symm_nodes_list)
 
         ## symmetric sets of nodes
+
+        if self.symm_sets_nodes:
+            for criterium in self.symm_sets_nodes:
+                if criterium == 'lipids':
+                    symm_sets_nodes=self.msystem.lipid
+                elif criterium == 'proteins':
+                    symm_sets_nodes=self.msystem.protein
+                aux=[item for sublist in symm_sets_nodes for item in sublist]
+                num_sets=len(symm_sets_nodes)
+                sets={(ii+1):[] for ii in range(num_lipids)}
+                for node in self.node:
+                    if True in numpy.in1d(node.atoms,aux):
+                        node.category[0]=count_category
+                        for ii in range(num_sets):
+                            if True in numpy.in1d(node.atoms,symm_sets_nodes[ii]):
+                                sets[ii].append(node.index)
+                count_category+=1
+                self.symm_sets_nodes_aux.append(conjuntos.values())
+                for ii in range(len(self.symm_sets_nodes_aux[0])):
+                for jj in range(len(self.symm_sets_nodes_aux[0][ii])):
+                                
 
         if self.symm_sets_nodes:
             for criterium in self.symm_sets_nodes:
@@ -297,21 +313,38 @@ class mss():
                     self.node[cc].code[2]=jj
 
 
+        ### building categories
+
+
+
         ### building support
 
         self.ivars=internal_vars(self.num_atoms,self.num_nodes)
-        ii_n=0
-        ii_a=0
+        #self.atom2id={}
+        #self.node2id={}
+        #self.category_node=numpy.zeros((num_nodes,3),dtype=int,order="Fortran")
+        #self.atomid2nodeid=numpy.zeros((num_atoms),dtype=int,order="Fortran")
+        #self.max_atoms_node=0
+
+        ii_n=1
+        ii_a=1
         for node in self.node:
-            self.ivars.code[ii_n,:]=node.code[:]
-            node.__id__=ii_n+1
+            self.ivars.node2id[node.index]=ii_n
             for atom in node.atom.values():
-                atom.__id__=ii_a+1
-                self.ivars.atom2node[ii_a]=ii_n+1
+                self.ivars.atom2id[atom.index]=ii_a
+                self.ivars.atom2node[ii_a]=ii_n
                 ii_a+=1
             ii_n+=1
             if self.ivars.max_atoms_node<len(node.num_atoms):
                 self.ivars.max_atoms_node=node.num_atoms
+
+
+
+
+        count_code=0
+
+
+
 
         if verbose:
             self.info()
@@ -414,57 +447,70 @@ class mss():
             for atom in node.atom.values():
                 atom.reset()
 
-#    def build_shell1st(self,hbonds=None,bonds=None,hbtype='R(o,o)-Ang(o,o,h)',btype='dists'):
-# 
-#        self.hbtype=hbtype
-#        self.btype=btype
-# 
-#        self.reset()
-# 
-#        if self.hbtype in ['R(o,o)-Ang(o,o,h)','R(o,h)']:
-#            rever_hb=False
-#        elif self.hbtype in ['Skinner']:
-#            rever_hb=True
-# 
-#        if self.btype in ['dists']:
-#            rever_b=False
-#        else:
-#            rever_b=True
-#        
-#        if hbonds:
-# 
-#            for hb_ind,hb_val in zip(hbonds[0],hbonds[1]):
-#                atdon=hb_ind[1]
-#                atacc=hb_ind[2]
-#                ndon=self.donor2node[atdon]
-#                nacc=self.acceptor2node[atacc]
-#                self.node[ndon].atom[atdon].add_hbond(atacc,nacc,hb_val)
-#                self.node[nacc].atom[atacc].add_hbond(atdon,ndon,hb_val)
-# 
-#            for node in self.node:
-#                for atom in node.atom.values():
-#                    atom.sort_hbonds(rever_hb)
-# 
-#        if bonds:
-# 
-#            for bond_ind,bond_val in zip(bonds[0],bonds[1]):
-#                ata=bond_ind[0]
-#                atb=bond_ind[1]
-#                na=self.atom2node[ata]
-#                nb=self.atom2node[atb]
-#                self.node[na].atom[ata].add_bond(atb,nb,bond_val)
-#                self.node[nb].atom[atb].add_bond(ata,na,bond_val)
-# 
-#            for node in self.node:
-#                for atom in node.atom.values():
-#                    atom.sort_bonds(rever_b)
-# 
-# 
-#        # build support
-# 
-#        
-#        
-# 
+    def build_shell1st(self,hbonds=None,bonds=None,hbtype='R(o,o)-Ang(o,o,h)',btype='dists'):
+ 
+        self.hbtype=hbtype
+        self.btype=btype
+
+        self.reset()
+
+
+        if self.hbtype in ['R(o,o)-Ang(o,o,h)','R(o,h)']:
+            rever_hb=False
+        elif self.hbtype in ['Skinner']:
+            rever_hb=True
+ 
+        if self.btype in ['dists']:
+            rever_b=False
+        else:
+            rever_b=True
+        
+        if hbonds:
+ 
+            for hb_ind,hb_val in zip(hbonds[0],hbonds[1]):
+                atdon=hb_ind[1]
+                atacc=hb_ind[2]
+                ndon=self.donor2node[atdon]
+                nacc=self.acceptor2node[atacc]
+                self.node[ndon].atom[atdon].add_hbond(atacc,nacc,hb_val)
+                self.node[nacc].atom[atacc].add_hbond(atdon,ndon,hb_val)
+ 
+            for node in self.node:
+                for atom in node.atom.values():
+                    atom.sort_hbonds(rever_hb)
+ 
+        if bonds:
+ 
+            for bond_ind,bond_val in zip(bonds[0],bonds[1]):
+                ata=bond_ind[0]
+                atb=bond_ind[1]
+                na=self.atom2node[ata]
+                nb=self.atom2node[atb]
+                self.node[na].atom[ata].add_bond(atb,nb,bond_val)
+                self.node[nb].atom[atb].add_bond(ata,na,bond_val)
+ 
+            for node in self.node:
+                for atom in node.atom.values():
+                    atom.sort_bonds(rever_b)
+ 
+ 
+        # build support
+ 
+        mss_funcs.support_1st_up(self.num_atoms,self.ivars.max_atoms_node,self.ivars.num_type_nodes,self.ivars.atoms_per_set,self.ivars.num_type_sets)
+        # id de nodos, id de atomos, definicion de sets
+
+        for node in self.node:
+            for atom in node.atom.values():
+                jj=self.ivars.atom2id[atom.index]
+                for ii in atom.hbond:
+                    mss_funcs.add_hb_support_1st(jj,self.ivars.atom2id[ii])
+                for ii in atom.bond:
+                    mss_funcs.add_b_support_1st (jj,self.ivars.atom2id[ii])
+
+        #sup_ats,sup_nodes=mss_funcs.support_1st_down()
+
+ 
+
 #    def build_mss_shell1st(self):
 # 
 #        # Que necesito:
