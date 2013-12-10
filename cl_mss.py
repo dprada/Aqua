@@ -96,7 +96,7 @@ class node():
         self.name=name
         self.label=None
         self.type=type
-        self.code=[0,0,0]  # code_node, code_set, code_inside_set
+        self.category=[0,0,0]  # code_node, code_set, code_inside_set
 
         self.acceptors=[]
         self.donors=[]
@@ -149,9 +149,14 @@ class internal_vars():
 
         self.atom2id={}
         self.node2id={}
-        self.category_node=numpy.zeros((num_nodes,3),dtype=int,order="Fortran")
+        self.category_atom=numpy.zeros((num_atoms,3),dtype=int,order="Fortran")
         self.atomid2nodeid=numpy.zeros((num_atoms),dtype=int,order="Fortran")
         self.max_atoms_node=0
+        self.sets=[]
+        self.num_sets=0
+        self.nodes_per_set=[]
+        self.num_sets_sets=[]
+        self.num_categories=0
 
 class mss():
 
@@ -249,7 +254,7 @@ class mss():
             del(symm_ats_list)
 
         ## symmetric nodes
-        count_category=1
+        count_category=0
         if self.symm_nodes:
             symm_nodes_list=[]
             if type(self.symm_nodes) in [list,tuple]:
@@ -265,15 +270,18 @@ class mss():
 
         ## symmetric sets of nodes
 
+        aux_sets=[]
+        aux_category_sets=[]
         if self.symm_sets_nodes:
             for criterium in self.symm_sets_nodes:
                 if criterium == 'lipids':
                     symm_sets_nodes=self.msystem.lipid
                 elif criterium == 'proteins':
                     symm_sets_nodes=self.msystem.protein
+                aux_category_sets.append(count_category)
                 aux=[item for sublist in symm_sets_nodes for item in sublist]
                 num_sets=len(symm_sets_nodes)
-                sets={(ii+1):[] for ii in range(num_lipids)}
+                sets={ii:[] for ii in range(num_sets)}
                 for node in self.node:
                     if True in numpy.in1d(node.atoms,aux):
                         node.category[0]=count_category
@@ -281,50 +289,25 @@ class mss():
                             if True in numpy.in1d(node.atoms,symm_sets_nodes[ii]):
                                 sets[ii].append(node.index)
                 count_category+=1
-                self.symm_sets_nodes_aux.append(conjuntos.values())
-                for ii in range(len(self.symm_sets_nodes_aux[0])):
-                for jj in range(len(self.symm_sets_nodes_aux[0][ii])):
-                                
-
-        if self.symm_sets_nodes:
-            for criterium in self.symm_sets_nodes:
-                if criterium == 'lipids':
-                    conjuntos={}
-                    symm_sets_nodes=self.msystem.lipid
-                    aux=[item for sublist in symm_sets_nodes for item in sublist]
-                    num_lipids=len(symm_sets_nodes)
-                    conjuntos={ii:[] for ii in range(num_lipids)}
-                    for node in self.node:
-                        if True in numpy.in1d(node.atoms,aux):
-                            node.code[0]=count_code
-                            node.symm_node.append(True)
-                            for ii in range(num_lipids):
-                                if True in numpy.in1d(node.atoms,symm_sets_nodes[ii]):
-                                    conjuntos[ii].append(node.index)
-                                else:
-                                    node.symm_node.append(False)
-                    contador_codigo+=1
-                    self.symm_sets_nodes_aux.append(conjuntos.values())
-
-            for ii in range(len(self.symm_sets_nodes_aux[0])):
-                for jj in range(len(self.symm_sets_nodes_aux[0][ii])):
-                    cc=self.symm_sets_nodes_aux[0][ii][jj]
-                    self.node[cc].code[1]=ii
-                    self.node[cc].code[2]=jj
-
-
-        ### building categories
-
+                aux_sets.append(sets.values())
+                for ii in range(num_sets):
+                    aux=sets[ii]
+                    for jj in range(len(aux)):
+                        self.node[aux[jj]].category[1]=ii
+                        self.node[aux[jj]].category[2]=jj
 
 
         ### building support
 
         self.ivars=internal_vars(self.num_atoms,self.num_nodes)
-        #self.atom2id={}
-        #self.node2id={}
-        #self.category_node=numpy.zeros((num_nodes,3),dtype=int,order="Fortran")
-        #self.atomid2nodeid=numpy.zeros((num_atoms),dtype=int,order="Fortran")
-        #self.max_atoms_node=0
+
+        self.ivars.num_categories=count_category
+        self.ivars.sets=aux_sets
+        self.ivars.category_sets=numpy.array(aux_category_sets)
+        self.ivars.num_sets=len(self.ivars.sets)
+        for ii in range(self.ivars.num_sets):
+            self.ivars.nodes_per_set.append(len(self.ivars.sets[ii][0]))
+            self.ivars.num_sets_sets.append(len(self.ivars.sets[ii]))
 
         ii_n=1
         ii_a=1
@@ -332,19 +315,12 @@ class mss():
             self.ivars.node2id[node.index]=ii_n
             for atom in node.atom.values():
                 self.ivars.atom2id[atom.index]=ii_a
-                self.ivars.atom2node[ii_a]=ii_n
+                self.ivars.atomid2nodeid[ii_a-1]=ii_n
+                self.ivars.category_atom[ii_a-1,:]=node.category
                 ii_a+=1
             ii_n+=1
-            if self.ivars.max_atoms_node<len(node.num_atoms):
+            if self.ivars.max_atoms_node<node.num_atoms:
                 self.ivars.max_atoms_node=node.num_atoms
-
-
-
-
-        count_code=0
-
-
-
 
         if verbose:
             self.info()
@@ -494,102 +470,29 @@ class mss():
                     atom.sort_bonds(rever_b)
  
  
-        # build support
- 
-        mss_funcs.support_1st_up(self.num_atoms,self.ivars.max_atoms_node,self.ivars.num_type_nodes,self.ivars.atoms_per_set,self.ivars.num_type_sets)
-        # id de nodos, id de atomos, definicion de sets
+        ## build support
+         
+        mss_funcs.support_1st_up(self.num_atoms,self.num_nodes,self.ivars.max_atoms_node,self.ivars.num_categories,self.ivars.nodes_per_set,self.ivars.num_sets_sets,self.ivars.num_sets)
 
         for node in self.node:
+            jj_node=self.ivars.node2id[node.index]
             for atom in node.atom.values():
                 jj=self.ivars.atom2id[atom.index]
-                for ii in atom.hbond:
-                    mss_funcs.add_hb_support_1st(jj,self.ivars.atom2id[ii])
-                for ii in atom.bond:
-                    mss_funcs.add_b_support_1st (jj,self.ivars.atom2id[ii])
+                for xx in atom.hbond:
+                    ii=self.ivars.atom2id[xx]
+                    ii_category=self.ivars.category_atom[ii,:]
+                    mss_funcs.add_hb_support_1st(jj,ii,ii_category)
+                for xx in atom.bond:
+                    ii=self.ivars.atom2id[xx]
+                    ii_category=self.ivars.category_atom[ii,:]
+                    mss_funcs.add_b_support_1st (jj,ii,ii_category)
 
-        #sup_ats,sup_nodes=mss_funcs.support_1st_down()
+        mss_funcs.support_1st_down(self.ivars.atomid2nodeid,self.num_nodes,self.ivars.num_sets_sets,self.ivars.num_categories,self.num_atoms,self.ivars.num_sets)
 
  
 
 #    def build_mss_shell1st(self):
 # 
-#        # Que necesito:
-# 
-#        
-# 
-# 
-#        # node.suphb, node.supb, atom.suphb and atom.supb for 1st shell.
-#        diccionarios=[]
-#        for node in self.node:
-#            aux_set_node_hb={}
-#            aux_set_node_b={}
-#            node.suphb=numpy.zeros((10),dtype=int)
-#            node.supb=numpy.zeros((10),dtype=int)
-#            for atom in node.atom.values():
-#                atom.suphb=numpy.zeros((10),dtype=int)
-#                bb=[0,0,0]
-#                cc=[0,0,0,0,0]
-#                aux_set={}
-#                for kk in atom.hbond_node:
-#                    ll=self.node[kk].codigo
-#                    bb[ll]+=1
-#                    if ll==2:
-#                        aux_set[self.node[kk].codigo_sets[0]]=0
-#                        aux_set_node_hb[self.node[kk].codigo_sets[0]]=0
-#                        cc[self.node[kk].codigo_sets[1]]+=1
-#                atom.suphb[0]=atom.num_hbonds
-#                atom.suphb[1:4]=bb
-#                atom.suphb[4]=len(aux_set)
-#                atom.suphb[5:10]=cc
-#                node.suphb+=atom.suphb
-#                atom.supb=numpy.zeros((10),dtype=int)
-#                bb=[0,0,0]
-#                cc=[0,0,0,0,0]
-#                aux_set={}
-#                for kk in atom.bond_node:
-#                    ll=self.node[kk].codigo
-#                    bb[ll]+=1
-#                    if ll==2:
-#                        aux_set[self.node[kk].codigo_sets[0]]=0
-#                        aux_set_node_b[self.node[kk].codigo_sets[0]]=0
-#                        cc[self.node[kk].codigo_sets[1]]+=1
-#                atom.supb[0]=atom.num_bonds
-#                atom.supb[1:4]=bb
-#                atom.supb[4]=len(aux_set)
-#                atom.supb[5:10]=cc
-#                node.supb+=atom.supb
-#            node.suphb[4]=len(aux_set_node_hb)
-#            node.supb[4]=len(aux_set_node_b)
-#            diccionarios.append([aux_set_node_hb,aux_set_node_b])
-# 
-#        # node.suphb, node.supb, atom.suphb and atom.supb for 2nd shell.
-#        for ii in range(self.num_nodes):
-#            node=self.node[ii]
-#            aux_set_node_hb={}
-#            aux_set_node_b={}
-#            node.suphb_2sh=numpy.zeros((10),dtype=int)
-#            node.supb_2sh=numpy.zeros((10),dtype=int)
-#            for atom in node.atom.values():
-#                atom.suphb_2sh=numpy.zeros((10),dtype=int)
-#                atom.supb_2sh=numpy.zeros((10),dtype=int)
-#                aux_set={}
-#                for kk in atom.hbond_node:
-#                    atom.suphb_2sh+=self.node[kk].suphb
-#                    aux_set.update(diccionarios[kk][0])
-#                    aux_set_node_hb.update(diccionarios[kk][0])
-#                atom.suphb_2sh[4]=len(aux_set)
-#                node.suphb_2sh+=atom.suphb_2sh
-#                aux_set={}
-#                for kk in atom.bond_node:
-#                    atom.supb_2sh+=self.node[kk].supb
-#                    aux_set.update(diccionarios[kk][1])
-#                    aux_set_node_b.update(diccionarios[kk][1])
-#                atom.supb_2sh[4]=len(aux_set)
-#                node.supb_2sh+=atom.supb_2sh
-#            node.suphb_2sh[4]=len(aux_set_node_hb)
-#            node.supb_2sh[4]=len(aux_set_node_b)
-# 
-#        del(diccionarios)
 # 
 #        # Hasta aqui el soporte. 
 # 
