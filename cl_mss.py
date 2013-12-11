@@ -149,7 +149,7 @@ class internal_vars():
 
         self.atom2id={}
         self.node2id={}
-        self.category_atom=numpy.zeros((num_atoms,3),dtype=int,order="Fortran")
+        self.categories=numpy.zeros((num_nodes,3),dtype=int,order="Fortran")
         self.atomid2nodeid=numpy.zeros((num_atoms),dtype=int,order="Fortran")
         self.max_atoms_node=0
         self.sets=[]
@@ -313,10 +313,10 @@ class mss():
         ii_a=1
         for node in self.node:
             self.ivars.node2id[node.index]=ii_n
+            self.ivars.categories[ii_n-1,:]=node.category
             for atom in node.atom.values():
                 self.ivars.atom2id[atom.index]=ii_a
                 self.ivars.atomid2nodeid[ii_a-1]=ii_n
-                self.ivars.category_atom[ii_a-1,:]=node.category
                 ii_a+=1
             ii_n+=1
             if self.ivars.max_atoms_node<node.num_atoms:
@@ -471,25 +471,28 @@ class mss():
  
  
         ## build support
-         
-        mss_funcs.support_1st_up(self.num_atoms,self.num_nodes,self.ivars.max_atoms_node,self.ivars.num_categories,self.ivars.nodes_per_set,self.ivars.num_sets_sets,self.ivars.num_sets)
+
+        tot_num_hbs=len(hbonds[0])*2
+        tot_num_bs=len(bonds[0])*2
+
+        mss_funcs.support_up(tot_num_hbs,tot_num_bs)
 
         for node in self.node:
-            jj_node=self.ivars.node2id[node.index]
             for atom in node.atom.values():
                 jj=self.ivars.atom2id[atom.index]
                 for xx in atom.hbond:
                     ii=self.ivars.atom2id[xx]
-                    ii_category=self.ivars.category_atom[ii,:]
-                    mss_funcs.add_hb_support_1st(jj,ii,ii_category)
+                    mss_funcs.add_hb_support(jj,ii)
                 for xx in atom.bond:
                     ii=self.ivars.atom2id[xx]
-                    ii_category=self.ivars.category_atom[ii,:]
-                    mss_funcs.add_b_support_1st (jj,ii,ii_category)
+                    mss_funcs.add_b_support(jj,ii)
 
-        mss_funcs.support_1st_down(self.ivars.atomid2nodeid,self.num_nodes,self.ivars.num_sets_sets,self.ivars.num_categories,self.num_atoms,self.ivars.num_sets)
+        codes_atom,codes_node=mss_funcs.support_down(self.ivars.atomid2nodeid,self.ivars.categories,self.ivars.num_sets_sets,
+                                                     self.ivars.nodes_per_set,self.ivars.num_categories,self.num_atoms,
+                                                     self.num_nodes,self.ivars.num_sets)
 
- 
+        return codes_atom,codes_node
+
 
 #    def build_mss_shell1st(self):
 # 

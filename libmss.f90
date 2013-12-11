@@ -1,132 +1,164 @@
 MODULE GLOB
 
 INTEGER::definition_hbs
-INTEGER::top_sets
-INTEGER,DIMENSION(:),ALLOCATABLE::offset_sets
-INTEGER,DIMENSION(:,:),ALLOCATABLE::sup_atom_hb_1sh,sup_node_hb_1sh
-INTEGER,DIMENSION(:,:),ALLOCATABLE::sup_atom_b_1sh,sup_node_b_1sh
-LOGICAL,DIMENSION(:,:,:),ALLOCATABLE::aux_set_hb,aux_set_b
-
+INTEGER::num_tot_hbs,num_tot_bs
+INTEGER,DIMENSION(:,:),ALLOCATABLE::list_tot_hbs,list_tot_bs
 
 CONTAINS
 
+SUBROUTINE support_up (num_hbs,num_bs)
 
-SUBROUTINE support_1st_up (num_atoms,num_nodes,max_ats_node,num_categories,nodes_per_set,sets_per_set,num_sets)
- 
   IMPLICIT NONE
- 
-  INTEGER,INTENT(IN)::num_atoms,num_nodes,max_ats_node,num_categories,num_sets
-  INTEGER,DIMENSION(num_sets),INTENT(IN)::nodes_per_set,sets_per_set
-  INTEGER::dim,ii
- 
-  !(1): number of hbonds in atom
-  !(...,num_type_nodes): occupation per node_type
-  !(...,)
- 
+
+  INTEGER,INTENT(IN)::num_hbs,num_bs
+
+  IF (ALLOCATED(list_tot_hbs))     DEALLOCATE(list_tot_hbs)
+  IF (ALLOCATED(list_tot_bs))      DEALLOCATE(list_tot_bs)
+
+  ALLOCATE(list_tot_hbs(num_hbs,2),list_tot_bs(num_bs,2))
+
+  num_tot_hbs=0 
+  num_tot_bs=0
+
+END SUBROUTINE support_up
+
+
+SUBROUTINE add_hb_support(at1,at2)
+
+  INTEGER,INTENT(IN)::at1,at2
+
+  num_tot_hbs=num_tot_hbs+1
+  list_tot_hbs(num_tot_hbs,:)=(/at1,at2/)
+
+END SUBROUTINE add_hb_support
+
+SUBROUTINE add_b_support(at1,at2)
+
+  INTEGER,INTENT(IN)::at1,at2
+
+  num_tot_bs=num_tot_bs+1
+  list_tot_bs(num_tot_bs,:)=(/at1,at2/)
+
+END SUBROUTINE add_b_support
+
+SUBROUTINE support_down(atom2node,category,sets_per_set,nodes_per_set,num_categories,num_atoms,num_nodes,num_sets,codes_atom,codes_node)
+
+  INTEGER,INTENT(IN)::num_atoms,num_nodes,num_sets,num_categories
+  INTEGER,DIMENSION(num_atoms),INTENT(IN)::atom2node
+  INTEGER,DIMENSION(num_sets),INTENT(IN)::sets_per_set,nodes_per_set
+  INTEGER,DIMENSION(num_nodes,3),INTENT(IN)::category
+  INTEGER,DIMENSION(num_atoms,4),INTENT(OUT)::codes_atom
+  INTEGER,DIMENSION(num_nodes,4),INTENT(OUT)::codes_node
+
+  INTEGER::ii,jj,kk,ll
+  INTEGER::dim,dim_sets,top_sets
+  INTEGER,DIMENSION(3)::cat
+  INTEGER,DIMENSION(:),ALLOCATABLE::offset_sets
+  LOGICAL,DIMENSION(:,:,:),ALLOCATABLE::aux_node_set_hb,aux_node_set_b
+  LOGICAL,DIMENSION(:,:,:),ALLOCATABLE::aux_atom_set_hb,aux_atom_set_b
+  INTEGER,DIMENSION(:,:),ALLOCATABLE  ::sup_atom_hb_1sh,sup_node_hb_1sh
+  INTEGER,DIMENSION(:,:),ALLOCATABLE  ::sup_atom_b_1sh,sup_node_b_1sh
+  INTEGER,DIMENSION(:,:),ALLOCATABLE  ::sup_atom_hb_2sh,sup_node_hb_2sh
+  INTEGER,DIMENSION(:,:),ALLOCATABLE  ::sup_atom_b_2sh,sup_node_b_2sh
+
   dim=1+num_categories+num_sets
   DO ii=1,num_sets
      dim=dim+nodes_per_set(ii)
   END DO
+  dim_sets=MAXVAL(sets_per_set)
+  top_sets=num_categories-num_sets
 
- 
-  IF (ALLOCATED(sup_atom_hb_1sh)) DEALLOCATE(sup_atom_hb_1sh)
-  IF (ALLOCATED(sup_atom_b_1sh))  DEALLOCATE(sup_atom_b_1sh)
-  IF (ALLOCATED(sup_node_hb_1sh)) DEALLOCATE(sup_node_hb_1sh)
-  IF (ALLOCATED(sup_node_b_1sh))  DEALLOCATE(sup_node_b_1sh)
-  IF (ALLOCATED(offset_sets))     DEALLOCATE(offset_sets)
-  IF (ALLOCATED(aux_set_hb))     DEALLOCATE(aux_set_hb)
-  IF (ALLOCATED(aux_set_b))     DEALLOCATE(aux_set_b)
-  ALLOCATE(sup_atom_hb_1sh(num_atoms,dim),sup_atom_b_1sh(num_atoms,dim))
-  ALLOCATE(sup_node_hb_1sh(num_nodes,dim),sup_node_b_1sh(num_nodes,dim))
-  ALLOCATE(aux_set_hb(num_atoms,num_sets,MAXVAL(sets_per_set)))
-  ALLOCATE(aux_set_b(num_atoms,num_sets,MAXVAL(sets_per_set)))
+  ALLOCATE(aux_node_set_hb(num_nodes,num_sets,dim_sets))
+  ALLOCATE(aux_node_set_b (num_nodes,num_sets,dim_sets))
+  ALLOCATE(aux_atom_set_hb(num_atoms,num_sets,dim_sets))
+  ALLOCATE(aux_atom_set_b (num_atoms,num_sets,dim_sets))
+
   ALLOCATE(offset_sets(num_sets))
- 
-  sup_atom_hb_1sh(:,:)=0
-  sup_atom_b_1sh(:,:)=0
-  sup_node_hb_1sh(:,:)=0
-  sup_node_b_1sh(:,:)=0
-  aux_set_b=.FALSE.
-  aux_set_hb=.FALSE.
 
   offset_sets(1)=1+num_categories+num_sets
   DO ii=2,num_sets
      offset_sets(ii)=offset_sets(ii-1)+nodes_per_set(ii-1)
   END DO
-  top_sets=num_categories-num_sets
- 
-END SUBROUTINE support_1st_up
 
-SUBROUTINE add_hb_support_1st(at1,at2,category2)
+  ALLOCATE(sup_atom_hb_1sh (num_atoms,dim))
+  ALLOCATE(sup_atom_b_1sh  (num_atoms,dim)) 
+  ALLOCATE(sup_node_hb_1sh (num_nodes,dim))
+  ALLOCATE(sup_node_b_1sh  (num_nodes,dim)) 
+  ALLOCATE(sup_atom_hb_2sh (num_atoms,dim))
+  ALLOCATE(sup_atom_b_2sh  (num_atoms,dim)) 
+  ALLOCATE(sup_node_hb_2sh (num_nodes,dim))
+  ALLOCATE(sup_node_b_2sh  (num_nodes,dim)) 
+
+  aux_node_set_hb=.FALSE.
+  aux_node_set_b=.FALSE.
+  aux_atom_set_hb=.FALSE.
+  aux_atom_set_b=.FALSE.
+  sup_atom_hb_1sh=0
+  sup_atom_b_1sh=0
+  sup_node_hb_1sh=0
+  sup_node_b_1sh=0
+  sup_atom_hb_2sh=0
+  sup_atom_b_2sh=0
+  sup_node_hb_2sh=0
+  sup_node_b_2sh=0
+
  
-  IMPLICIT NONE
+  DO ii=1,num_tot_hbs
+
+     at1=list_tot_hbs(ii,1)
+     at2=list_tot_hbs(ii,2)
+     nd1=atom2node(at1)
+     nd2=atom2node(at2)
+
+     !Num_hbs
+     sup_atom_hb_1sh(at1,1)=sup_atom_hb_1sh(at1,1)+1
  
-  INTEGER,INTENT(IN)::at1,at2
-  INTEGER,DIMENSION(3),INTENT(IN)::category2
- 
-  INTEGER::ii,jj
- 
-  !Num_hbs
-  sup_atom_hb_1sh(at1,1)=sup_atom_hb_1sh(at1,1)+1
- 
-  !Num_nodes per type
-  ii=1+category2(1)
-  sup_atom_hb_1sh(at1,ii+1)=sup_atom_hb_1sh(at1,ii+1)+1
-  IF (ii>top_sets) THEN
-     aux_set_hb(at1,(ii-top_sets),category2(2)+1)=.TRUE.
-     jj=offset_sets(ii-top_sets)+category2(3)+1
+     !Num_nodes per type
+     cat=category(nd2,:)+1
+     jj=1+cat(1)
      sup_atom_hb_1sh(at1,jj)=sup_atom_hb_1sh(at1,jj)+1
-  END IF
+     jj=jj-1
+     IF (jj>top_sets) THEN
+        kk=jj-top_sets
+        aux_atom_set_hb(at1,kk,cat(2))=.TRUE.
+        aux_node_set_hb(nd1,kk,cat(2))=.TRUE.
+        ll=offset_sets(kk)+cat(3)
+        sup_atom_hb_1sh(at1,ll)=sup_atom_hb_1sh(at1,ll)+1
+     END IF
+
+  END DO
+
+  DO ii=1,num_tot_bs
+
+     at1=list_tot_bs(ii,1)
+     at2=list_tot_bs(ii,2)
+     nd1=atom2node(at1)
+     nd2=atom2node(at2)
+
+     !Num_hbs
+     sup_atom_b_1sh(at1,1)=sup_atom_b_1sh(at1,1)+1
  
-END SUBROUTINE add_hb_support_1st
- 
-SUBROUTINE add_b_support_1st(at1,at2,category2)
- 
-  IMPLICIT NONE
- 
-  INTEGER,INTENT(IN)::at1,at2
-  INTEGER,DIMENSION(3),INTENT(IN)::category2
- 
-  INTEGER::ii,jj
- 
-  !Num_hbs
-  sup_atom_b_1sh(at1,1)=sup_atom_b_1sh(at1,1)+1
- 
-  !Num_nodes per type
-  ii=1+category2(1)
-  sup_atom_b_1sh(at1,ii+1)=sup_atom_b_1sh(at1,ii+1)+1
-  IF (ii>top_sets) THEN
-     aux_set_b(at1,(ii-top_sets),category2(2)+1)=.TRUE.
-     jj=offset_sets(ii-top_sets)+category2(3)+1
+     !Num_nodes per type
+     cat=category(nd2,:)+1
+     jj=1+cat(1)
      sup_atom_b_1sh(at1,jj)=sup_atom_b_1sh(at1,jj)+1
-  END IF
+     jj=jj-1
+     IF (jj>top_sets) THEN
+        kk=jj-top_sets
+        aux_atom_set_b(at1,kk,cat(2))=.TRUE.
+        aux_node_set_b(nd1,kk,cat(2))=.TRUE.
+        ll=offset_sets(kk)+cat(3)
+        sup_atom_b_1sh(at1,ll)=sup_atom_b_1sh(at1,ll)+1
+     END IF
 
- 
-END SUBROUTINE add_b_support_1st
- 
- 
-SUBROUTINE support_1st_down(atom2node,num_nodes,sets_per_set,num_categories,num_atoms,num_sets)
- 
-  INTEGER,INTENT(IN)::num_atoms,num_nodes,num_sets,num_categories
-  INTEGER,DIMENSION(num_atoms),INTENT(IN)::atom2node
-  INTEGER,DIMENSION(num_sets),INTENT(IN)::sets_per_set
-
-  INTEGER::ii,jj,kk,ll
-  LOGICAL,DIMENSION(:,:,:),ALLOCATABLE::set_hb,set_b
- 
-  ALLOCATE(set_hb(num_nodes,num_sets,MAXVAL(sets_per_set)))
-  ALLOCATE(set_b(num_nodes,num_sets,MAXVAL(sets_per_set)))
-  set_hb=.FALSE.
-  set_b=.FALSE.
+  END DO
 
   DO ii=1,num_atoms
      ll=atom2node(ii)
      DO jj=1,num_sets
         kk=1+num_categories+jj
-        sup_atom_hb_1sh(ii,kk)=COUNT(aux_set_hb(ii,jj,:),DIM=1)
-        sup_atom_b_1sh(ii,kk)= COUNT(aux_set_b(ii,jj,:),DIM=1)
-        set_hb(ll,jj,:)=set_hb(ll,jj,:).OR.aux_set_hb(ii,jj,:)
-        set_b(ll,jj,:)=set_b(ll,jj,:).OR.aux_set_b(ii,jj,:)
+        sup_atom_hb_1sh(ii,kk)=COUNT(aux_atom_set_hb(ii,jj,:),DIM=1)
+        sup_atom_b_1sh(ii,kk) =COUNT(aux_atom_set_b(ii,jj,:),DIM=1)
      END DO
      sup_node_hb_1sh(ll,:)= sup_node_hb_1sh(ll,:)+sup_atom_hb_1sh(ii,:)
      sup_node_b_1sh(ll,:) = sup_node_b_1sh(ll,:)+sup_atom_b_1sh(ii,:)
@@ -135,12 +167,129 @@ SUBROUTINE support_1st_down(atom2node,num_nodes,sets_per_set,num_categories,num_
   DO ii=1,num_nodes
      DO jj=1,num_sets
         kk=1+num_categories+jj
-        sup_node_hb_1sh(ii,kk)=COUNT(set_hb(ii,jj,:),DIM=1)
-        sup_node_b_1sh(ii,kk) =COUNT(set_b(ii,jj,:),DIM=1)
+        sup_node_hb_1sh(ii,kk)=COUNT(aux_node_set_hb(ii,jj,:),DIM=1)
+        sup_node_b_1sh(ii,kk) =COUNT(aux_node_set_b(ii,jj,:),DIM=1)
      END DO
   END DO
 
-END SUBROUTINE support_1st_down
+  aux_atom_set_hb=.FALSE.
+  DO ii=1,num_tot_hbs
+
+     at1=list_tot_hbs(ii,1)
+     at2=list_tot_hbs(ii,2)
+     nd1=atom2node(at1)
+     nd2=atom2node(at2)
+
+     sup_atom_hb_2sh(at1,:)=sup_atom_hb_2sh(at1,:)+sup_node_hb_1sh(nd2,:)
+     DO jj=1,num_sets
+        aux_atom_set_hb(at1,jj,:)=aux_atom_set_hb(at1,jj,:).OR.aux_node_set_hb(nd2,jj,:)
+     END DO
+
+  END DO
+
+  aux_atom_set_b=.FALSE.
+  DO ii=1,num_tot_bs
+
+     at1=list_tot_bs(ii,1)
+     at2=list_tot_bs(ii,2)
+     nd1=atom2node(at1)
+     nd2=atom2node(at2)
+
+     sup_atom_b_2sh(at1,:)=sup_atom_b_2sh(at1,:)+sup_node_b_1sh(nd2,:)
+     DO jj=1,num_sets
+        aux_atom_set_b(at1,jj,:)=aux_atom_set_b(at1,jj,:).OR.aux_node_set_b(nd2,jj,:)
+     END DO
+
+  END DO
+
+  aux_node_set_hb=.FALSE.
+  aux_node_set_b=.FALSE.
+  DO ii=1,num_atoms
+     ll=atom2node(ii)
+     DO jj=1,num_sets
+        kk=1+num_categories+jj
+        sup_atom_hb_2sh(ii,kk)=COUNT(aux_atom_set_hb(ii,jj,:),DIM=1)
+        sup_atom_b_2sh(ii,kk) =COUNT(aux_atom_set_b(ii,jj,:),DIM=1)
+        aux_node_set_hb(ll,jj,:)=aux_node_set_hb(ll,jj,:).OR.aux_atom_set_hb(ii,jj,:)
+        aux_node_set_b(ll,jj,:) =aux_node_set_b(ll,jj,:).OR.aux_atom_set_b(ii,jj,:)
+     END DO
+     sup_node_hb_2sh(ll,:)= sup_node_hb_2sh(ll,:)+sup_atom_hb_2sh(ii,:)
+     sup_node_b_2sh(ll,:) = sup_node_b_2sh(ll,:)+sup_atom_b_2sh(ii,:)
+  END DO
+
+  DO ii=1,num_nodes
+     DO jj=1,num_sets
+        kk=1+num_categories+jj
+        sup_node_hb_2sh(ii,kk)=COUNT(aux_node_set_hb(ii,jj,:),DIM=1)
+        sup_node_b_2sh(ii,kk) =COUNT(aux_node_set_b(ii,jj,:),DIM=1)
+     END DO
+  END DO
+
+  !codigos
+
+  CALL order_support (sup_atom_hb_1sh,num_atoms,dim,codes_atom(:,1))
+  CALL order_support (sup_atom_b_1sh,num_atoms,dim, codes_atom(:,2))
+  CALL order_support (sup_atom_hb_2sh,num_atoms,dim,codes_atom(:,3))
+  CALL order_support (sup_atom_b_2sh,num_atoms,dim, codes_atom(:,4))
+
+  CALL order_support (sup_node_hb_1sh,num_nodes,dim,codes_node(:,1))
+  CALL order_support (sup_node_b_1sh,num_nodes,dim, codes_node(:,2))
+  CALL order_support (sup_node_hb_2sh,num_nodes,dim,codes_node(:,3))
+  CALL order_support (sup_node_b_2sh,num_nodes,dim, codes_node(:,4))
+
+
+  DEALLOCATE(aux_node_set_hb,aux_node_set_b)
+  DEALLOCATE(aux_atom_set_hb,aux_atom_set_b)
+  DEALLOCATE(sup_atom_hb_1sh,sup_atom_b_1sh)
+  DEALLOCATE(sup_atom_hb_2sh,sup_atom_b_2sh)
+  DEALLOCATE(sup_node_hb_1sh,sup_node_b_1sh)
+  DEALLOCATE(sup_node_hb_2sh,sup_node_b_2sh)
+  DEALLOCATE(offset_sets)
+
+END SUBROUTINE support_down
+
+
+SUBROUTINE order_support (box,num_obj,dim,order)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::num_obj,dim
+  INTEGER,DIMENSION(num_obj,dim),INTENT(IN)::box
+  INTEGER,DIMENSION(num_obj),INTENT(OUT)::order
+
+  INTEGER::ii,jj,kk,factor
+  INTEGER,DIMENSION(:),ALLOCATABLE::trad,veo
+
+  order(:)=0
+
+  DO ii=1,dim
+     factor=MAXVAL(box(:,ii),DIM=1)
+     print*,'>1<',factor
+     order(:)=order(:)*factor+box(:,ii)
+     factor=MAXVAL(order(:),DIM=1)
+     print*,'>2<'
+     ALLOCATE(trad(0:factor),veo(0:factor))
+     veo=.FALSE.
+     DO jj=1,num_obj
+        veo(order(jj))=.TRUE.
+     END DO
+     kk=0
+     DO jj=0,factor
+        IF (veo(jj)==.TRUE.) THEN
+           trad(jj)=kk
+           kk=kk+1
+        END IF
+     END DO
+     DO jj=1,num_obj
+        order(jj)=trad(order(jj))
+     END DO
+     DEALLOCATE(trad,veo)
+  END DO
+
+
+  print*,'--',kk,'--'
+
+END SUBROUTINE order_support
 
 
 
