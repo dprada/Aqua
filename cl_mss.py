@@ -113,9 +113,9 @@ class node():
 
         self.symm_ats=[]
         self.symm_node=[]
-        #self.new_order=None
-        #self.symm_broken_ats=True
-        #self.new_symm_ats=[]
+        self.new_order=None
+        self.symm_broken_ats=True
+        self.new_symm_ats=[]
 
 
     def add_atom(self,index=None,donor=False,acceptor=False,nonpolar=False):
@@ -157,6 +157,9 @@ class internal_vars():
         self.nodes_per_set=[]
         self.num_sets_sets=[]
         self.num_categories=0
+        self.codes_atoms=None
+        self.code_atoms=None
+        self.codes_nodes=None
 
 class mss():
 
@@ -487,58 +490,45 @@ class mss():
                     ii=self.ivars.atom2id[xx]
                     mss_funcs.add_b_support(jj,ii)
 
-        codes_atom,codes_node=mss_funcs.support_down(self.ivars.atomid2nodeid,self.ivars.categories,self.ivars.num_sets_sets,
+        self.ivars.codes_atoms,self.ivars.codes_nodes,self.ivars.code_atoms=mss_funcs.support_down(self.ivars.atomid2nodeid,self.ivars.categories,self.ivars.num_sets_sets,
                                                      self.ivars.nodes_per_set,self.ivars.num_categories,self.num_atoms,
                                                      self.num_nodes,self.ivars.num_sets)
 
-        return codes_atom,codes_node
+        for node in self.node: # Para el orden de los mismos atomos del nodo. P.e.: H1 y H2
+            order=copy.copy(node.atoms)
+            node.shell1st.new_symm.extend(['X'])
+            if node.symm_ats:
+                support=numpy.zeros((node.num_atoms),dtype=int,order='Fortran')
+                for ii in range(node.num_atoms):
+                    jj=self.ivars.atom2id[order[ii]]
+                    support[ii]=self.ivars.code_atoms[jj]
+                broken=0
+                for criterium in node.symm_ats:
+                    order,new_symm=mss_funcs.breaking_symmetry_1st_2(criterium,order,support,node.num_atoms)
+                    node.new_symm_ats.append(new_symm)
+                    broken+=sum(new_symm)
+                node.shell1st.new_symm.extend(new_symm)
+            else:
+                node.shell1st.new_symm.extend([0 for ii in range(node.num_atoms)])
+            node.shell1st.new_symm.extend(['X' for ii in range(2*node.num_atoms)])
+            mss_ind_atoms=[]
+            mss_ind_nodes=[]
+            mss_ind_atoms.append(node.num_atoms)
+            mss_ind_atoms.extend(order)
+            node.new_order=order
+            mss_ind_nodes.append(node.num_atoms)
+            mss_ind_nodes.extend([node.index for ii in order])
+            for ii in order:                                            
+                cc=[node.atom[ii].num_hbonds,node.atom[ii].num_bonds]   
+                mss_ind_atoms.extend(cc)                                
+                mss_ind_nodes.extend(cc)
+            node.shell1st.mss_ind_atoms=mss_ind_atoms
+            node.shell1st.mss_ind_nodes=mss_ind_nodes
+
+#        for node in self.node: # Para el orden de los nodos enlazados.
 
 
 #    def build_mss_shell1st(self):
-# 
-# 
-#        # Hasta aqui el soporte. 
-# 
-#        otro_auxilio_hb=numpy.zeros((self.num_nodes,self.max_ats_node),dtype=int)
-#        otro_auxilio_b=numpy.zeros((self.num_nodes,self.max_ats_node),dtype=int)
-#        for node in self.node: # Para el orden de los mismos atomos del nodo. P.e.: H1 y H2
-#            order=copy.copy(node.atoms)
-#            node.shell1st.new_symm.extend(['X'])
-#            if node.symm_ats:
-#                support=numpy.zeros((node.num_atoms,40),dtype=int,order='Fortran')
-#                for ii in range(node.num_atoms):
-#                    jj=order[ii]
-#                    atom=node.atom[jj]
-#                    support[ii,0:10]=atom.suphb
-#                    support[ii,10:20]=atom.supb
-#                    support[ii,20:30]=atom.suphb_2sh
-#                    support[ii,30:40]=atom.supb_2sh
-#                broken=0
-#                for criterium in node.symm_ats:
-#                    order,new_symm=mss_funcs.breaking_symmetry_1st(criterium,order,support,node.num_atoms,40)
-#                    node.new_symm_ats.append(new_symm)
-#                    broken+=sum(new_symm)
-#                node.shell1st.new_symm.extend(new_symm)
-#            else:
-#                node.shell1st.new_symm.extend([0 for ii in range(node.num_atoms)])
-#            node.shell1st.new_symm.extend(['X' for ii in range(2*node.num_atoms)])
-#            mss_ind_atoms=[]
-#            mss_ind_nodes=[]
-#            mss_ind_atoms.append(node.num_atoms)
-#            mss_ind_atoms.extend(order)
-#            node.new_order=order
-#            mss_ind_nodes.append(node.num_atoms)
-#            mss_ind_nodes.extend([node.index for ii in order])
-#            kkk=0
-#            for ii in order:                                            
-#                cc=[node.atom[ii].num_hbonds,node.atom[ii].num_bonds]   
-#                mss_ind_atoms.extend(cc)                                
-#                mss_ind_nodes.extend(cc)
-#                otro_auxilio_hb[node.index,kkk]=node.atom[ii].num_hbonds
-#                otro_auxilio_b[node.index,kkk]=node.atom[ii].num_bonds
-#                kkk+=1
-#            node.shell1st.mss_ind_atoms=mss_ind_atoms
-#            node.shell1st.mss_ind_nodes=mss_ind_nodes
 # 
 #        for node in self.node: # para quitar cierta simetria
 #            if 1 in node.shell1st.new_symm:

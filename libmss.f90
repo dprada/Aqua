@@ -41,7 +41,7 @@ SUBROUTINE add_b_support(at1,at2)
 
 END SUBROUTINE add_b_support
 
-SUBROUTINE support_down(atom2node,category,sets_per_set,nodes_per_set,num_categories,num_atoms,num_nodes,num_sets,codes_atom,codes_node)
+SUBROUTINE support_down(atom2node,category,sets_per_set,nodes_per_set,num_categories,num_atoms,num_nodes,num_sets,codes_atom,codes_node,code_atom)
 
   INTEGER,INTENT(IN)::num_atoms,num_nodes,num_sets,num_categories
   INTEGER,DIMENSION(num_atoms),INTENT(IN)::atom2node
@@ -49,6 +49,7 @@ SUBROUTINE support_down(atom2node,category,sets_per_set,nodes_per_set,num_catego
   INTEGER,DIMENSION(num_nodes,3),INTENT(IN)::category
   INTEGER,DIMENSION(num_atoms,4),INTENT(OUT)::codes_atom
   INTEGER,DIMENSION(num_nodes,4),INTENT(OUT)::codes_node
+  INTEGER,DIMENSION(num_atoms),INTENT(OUT)::code_atom
 
   INTEGER::ii,jj,kk,ll
   INTEGER::dim,dim_sets,top_sets
@@ -231,6 +232,7 @@ SUBROUTINE support_down(atom2node,category,sets_per_set,nodes_per_set,num_catego
   CALL order_support (sup_atom_b_1sh,num_atoms,dim, codes_atom(:,2))
   CALL order_support (sup_atom_hb_2sh,num_atoms,dim,codes_atom(:,3))
   CALL order_support (sup_atom_b_2sh,num_atoms,dim, codes_atom(:,4))
+  CALL order_support (codes_atom,num_atoms,4,code_atom)
 
   CALL order_support (sup_node_hb_1sh,num_nodes,dim,codes_node(:,1))
   CALL order_support (sup_node_b_1sh,num_nodes,dim, codes_node(:,2))
@@ -264,10 +266,8 @@ SUBROUTINE order_support (box,num_obj,dim,order)
 
   DO ii=1,dim
      factor=MAXVAL(box(:,ii),DIM=1)
-     print*,'>1<',factor
-     order(:)=order(:)*factor+box(:,ii)
+     order(:)=order(:)*(factor+1)+box(:,ii)
      factor=MAXVAL(order(:),DIM=1)
-     print*,'>2<'
      ALLOCATE(trad(0:factor),veo(0:factor))
      veo=.FALSE.
      DO jj=1,num_obj
@@ -285,9 +285,6 @@ SUBROUTINE order_support (box,num_obj,dim,order)
      END DO
      DEALLOCATE(trad,veo)
   END DO
-
-
-  print*,'--',kk,'--'
 
 END SUBROUTINE order_support
 
@@ -313,6 +310,55 @@ END SUBROUTINE order_support
 !! 
 !! 
 !!END SUBROUTINE breaking_symmmetry_centrality
+
+SUBROUTINE breaking_symmetry_1st_2(criterium,orden,support,num_atoms,neworden,new_symm)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::num_atoms
+  INTEGER,DIMENSION(num_atoms),INTENT(IN)::criterium
+  INTEGER,DIMENSION(num_atoms),INTENT(IN)::orden
+  INTEGER,DIMENSION(num_atoms),INTENT(IN)::support
+  INTEGER,DIMENSION(num_atoms),INTENT(OUT)::neworden
+  INTEGER,DIMENSION(num_atoms),INTENT(OUT)::new_symm
+
+  INTEGER::ii,jj,gg,kk,remains
+  INTEGER,DIMENSION(:),ALLOCATABLE::holes
+  LOGICAL,DIMENSION(:),ALLOCATABLE::filtro
+
+
+  ALLOCATE(holes(num_atoms))
+  ALLOCATE(filtro(num_atoms))
+
+  remains=0
+  neworden(:)=orden(:)
+  filtro(:)=.FALSE.
+  DO ii=1,num_atoms
+     IF (criterium(ii)==1) THEN
+        filtro(ii)=.TRUE.
+        remains=remains+1
+        holes(remains)=ii
+     END IF
+  END DO
+
+  new_symm(:)=0
+  gg=-1
+  DO ii=1,remains
+     jj=MAXLOC(support,DIM=1,MASK=filtro)
+     kk=support(jj)
+     IF ((gg==kk).AND.(gg>0)) THEN
+        new_symm(holes(ii-1))=1
+        new_symm(holes(ii))=1
+     END IF
+     gg=kk
+     filtro(jj)=.FALSE.
+     neworden(holes(ii))=orden(jj)
+  END DO
+
+  DEALLOCATE(filtro,holes)
+
+
+END SUBROUTINE breaking_symmetry_1st_2
 
 
 SUBROUTINE breaking_symmetry_1st(criterium,orden,support,num_atoms,num_crit,neworden,new_symm)
