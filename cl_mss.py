@@ -490,9 +490,7 @@ class mss():
                     ii=self.ivars.atom2id[xx]
                     mss_funcs.add_b_support(jj,ii)
 
-        self.ivars.codes_atoms,self.ivars.codes_nodes,self.ivars.code_atoms=mss_funcs.support_down(self.ivars.atomid2nodeid,self.ivars.categories,self.ivars.num_sets_sets,
-                                                     self.ivars.nodes_per_set,self.ivars.num_categories,self.num_atoms,
-                                                     self.num_nodes,self.ivars.num_sets)
+        self.ivars.codes_atoms,self.ivars.codes_nodes,self.ivars.code_atoms=mss_funcs.support_down(self.ivars.atomid2nodeid,self.ivars.categories,self.ivars.num_sets_sets,self.ivars.nodes_per_set,self.ivars.num_categories,self.num_atoms,self.num_nodes,self.ivars.num_sets)
 
         for node in self.node: # Para el orden de los mismos atomos del nodo. P.e.: H1 y H2
             order=copy.copy(node.atoms)
@@ -525,7 +523,54 @@ class mss():
             node.shell1st.mss_ind_atoms=mss_ind_atoms
             node.shell1st.mss_ind_nodes=mss_ind_nodes
 
-#        for node in self.node: # Para el orden de los nodos enlazados.
+        # Quitar cierta simetria
+
+        # Para el orden de los nodos enlazados.
+
+        # Provisional
+        for node in self.node: # Para el orden de los nodos enlazados. 
+            aa=[]
+            bb=[]
+            order=node.new_order
+            for ii in order:                                           
+                aa.extend(node.atom[ii].hbond)
+                aa.extend(node.atom[ii].bond)
+                bb.extend(node.atom[ii].hbond_node)
+                bb.extend(node.atom[ii].bond_node)
+                node.shell1st.new_symm.extend([0 for ii in range(node.atom[ii].num_hbonds)])
+                node.shell1st.new_symm.extend([0 for ii in range(node.atom[ii].num_bonds)])
+            node.shell1st.mss_ind_atoms.extend(aa)
+            node.shell1st.mss_ind_nodes.extend(bb)
+
+            pacambiar=[]
+            n_ats=node.shell1st.mss_ind_nodes[0]
+            n_bs=sum(node.shell1st.mss_ind_nodes[(1+n_ats):(1+n_ats*3)])
+            pacambiar.extend(range(1,(1+n_ats)))
+            pacambiar.extend(range((1+n_ats*3),(1+n_ats*3+n_bs)))
+ 
+            mss=copy.copy(node.shell1st.mss_ind_nodes)
+            aux2_dict={}
+            aux2_set={}
+            cc_water=0
+            cc_lipid=0
+            cc_ion=0
+            for ii in pacambiar:
+                jj=mss[ii]
+                if aux2_dict.has_key(jj)==False:
+                    if jj in self.waters:
+                        aux2_dict[jj]='w'+str(cc_water)
+                        cc_water+=1
+                    elif jj in self.lipids:
+                        if aux2_set.has_key(self.node[jj].codigo_sets[0])==False:
+                            aux2_set[self.node[jj].codigo_sets[0]]=cc_lipid
+                            cc_lipid+=1
+                        aux2_dict[jj]='l'+str(aux2_set[self.node[jj].codigo_sets[0]])+'-'+str(self.node[jj].codigo_sets[1])
+                    elif jj in self.ions:
+                        aux2_dict[jj]='i'+str(cc_ion)
+                        cc_ion+=1
+                mss[ii]=aux2_dict[jj]
+            node.shell1st.mss=mss
+
 
 
 #    def build_mss_shell1st(self):

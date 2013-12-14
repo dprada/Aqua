@@ -41,7 +41,8 @@ SUBROUTINE add_b_support(at1,at2)
 
 END SUBROUTINE add_b_support
 
-SUBROUTINE support_down(atom2node,category,sets_per_set,nodes_per_set,num_categories,num_atoms,num_nodes,num_sets,codes_atom,codes_node,code_atom)
+SUBROUTINE support_down(atom2node,category,sets_per_set,&
+  & nodes_per_set,num_categories,num_atoms,num_nodes,num_sets,codes_atom,codes_node,code_atom)
 
   INTEGER,INTENT(IN)::num_atoms,num_nodes,num_sets,num_categories
   INTEGER,DIMENSION(num_atoms),INTENT(IN)::atom2node
@@ -51,7 +52,7 @@ SUBROUTINE support_down(atom2node,category,sets_per_set,nodes_per_set,num_catego
   INTEGER,DIMENSION(num_nodes,4),INTENT(OUT)::codes_node
   INTEGER,DIMENSION(num_atoms),INTENT(OUT)::code_atom
 
-  INTEGER::ii,jj,kk,ll
+  INTEGER::ii,jj,kk,ll,at1,at2,nd1,nd2
   INTEGER::dim,dim_sets,top_sets
   INTEGER,DIMENSION(3)::cat
   INTEGER,DIMENSION(:),ALLOCATABLE::offset_sets
@@ -260,7 +261,8 @@ SUBROUTINE order_support (box,num_obj,dim,order)
   INTEGER,DIMENSION(num_obj),INTENT(OUT)::order
 
   INTEGER::ii,jj,kk,factor
-  INTEGER,DIMENSION(:),ALLOCATABLE::trad,veo
+  INTEGER,DIMENSION(:),ALLOCATABLE::trad
+  LOGICAL,DIMENSION(:),ALLOCATABLE::veo
 
   order(:)=0
 
@@ -275,7 +277,7 @@ SUBROUTINE order_support (box,num_obj,dim,order)
      END DO
      kk=0
      DO jj=0,factor
-        IF (veo(jj)==.TRUE.) THEN
+        IF (veo(jj).eqv..TRUE.) THEN
            trad(jj)=kk
            kk=kk+1
         END IF
