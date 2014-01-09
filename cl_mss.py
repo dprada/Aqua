@@ -22,6 +22,52 @@ class atom():
         self.hbond_value=[]
         self.num_hbonds=0
 
+    def add_bond(self,atom=None,node=None,value=None):
+
+        self.bond.append(atom)
+        self.bond_node.append(node)
+        self.bond_value.append(value)
+        self.num_bonds+=1
+
+    def add_hbond(self,atom=None,node=None,value=None):
+
+        self.hbond.append(atom)
+        self.hbond_node.append(node)
+        self.hbond_value.append(value)
+        self.num_hbonds+=1
+
+    def sort_bonds(self,rever=False):
+
+        if self.num_bonds>1:
+            tups = zip(self.bond_value,self.bond,self.bond_node)
+            tups.sort(reverse=rever)
+            [self.bond_value,self.bond,self.bond_node]=zip(*tups)
+            self.bond_value = list(self.bond_value)
+            self.bond       = list(self.bond)
+            self.bond_node  = list(self.bond_node)
+
+    def sort_hbonds(self,rever=False):
+
+        if self.num_hbonds>1:
+            tups = zip(self.hbond_value,self.hbond,self.hbond_node)
+            tups.sort(reverse=rever)
+            [self.hbond_value,self.hbond,self.hbond_node]=zip(*tups)
+            self.hbond_value = list(self.hbond_value)
+            self.hbond       = list(self.hbond)
+            self.hbond_node  = list(self.hbond_node)
+
+    def reset(self):
+
+        self.bond=[]
+        self.bond_value=[]
+        self.bond_node=[]
+        self.num_bonds=0
+        self.hbond=[]
+        self.hbond_value=[]
+        self.hbond_node=[]
+        self.num_hbonds=0
+
+
     def info(self):
 
         print '# ', self.name
@@ -114,6 +160,44 @@ class mss():
 
         self.build_nodes()
 
+        self.atom2node={}
+        self.trad2f_node={}
+        self.trad2f_atom={}
+        self.trad2py_node=[]
+        self.trad2py_atom=[]
+        ii_n=0
+        ii_at=0
+
+        self.num_nodes=len(self.node)
+        self.x_node_run_ats=numpy.zeros((self.num_nodes+1),dtype=int,order='Fortran')
+        self.x_atom2node=[]
+        
+        for ii in range(self.num_nodes):
+            node=self.node[ii]
+            ii_n+=1 ; self.trad2f_node[ii]=ii_n ; self.trad2py_node.append(ii)
+            for jj,atom in node.atom.iteritems():
+                ii_at+=1 ; self.trad2f_atom[jj]=ii_at ; self.trad2py_atom.append(jj)
+                self.num_atoms+=1
+                node.atoms.append(jj)
+                atms=self.msystem.atom[jj]
+                atom.name=atms.name+'-'+str(atms.pdb_index)+'/'+atms.resid.name+'-'+str(atms.resid.pdb_index)
+                self.atom2node[jj]=ii
+                self.x_atom2node.append(ii_n)
+                if atom.acceptor:
+                    node.acceptors.append(jj)
+                if atom.donor:
+                    node.donors.append(jj)
+                if atom.nonpolar:
+                    node.nonpolars.append(jj)
+            node.index=ii
+            node.acceptors.sort()
+            node.donors.sort()
+            node.nonpolars.sort()
+            node.num_acceptors=len(node.acceptors)
+            node.num_donors=len(node.donors)
+            node.num_nonpolars=len(node.nonpolars)
+            node.num_atoms=len(node.atoms)
+            self.x_node_run_ats[ii+1]=node.num_atoms+self.x_node_run_ats[ii]
 
     def info(self):
 
@@ -207,4 +291,99 @@ class mss():
 
             del(aux_dict,aux_keys,con_ASP,con_GLU,con_Term)
 
+    def build_net(self,hbonds=None,bonds=None,hbtype='R(o,o)-Ang(o,o,h)',btype='dists'):
 
+        self.hbtype=hbtype
+        self.btype=btype
+
+        if self.hbtype in ['R(o,o)-Ang(o,o,h)','R(o,h)']:
+            rever_hb=False
+        elif self.hbtype in ['Skinner']:
+            rever_hb=True
+ 
+        if self.btype in ['dists']:
+            rever_b=False
+        else:
+            rever_b=True
+        
+        if hbonds:
+ 
+            for hb_ind,hb_val in zip(hbonds[0],hbonds[1]):
+                atdon=hb_ind[1]
+                atacc=hb_ind[2]
+                ndon=self.atom2node[atdon]
+                nacc=self.atom2node[atacc]
+                self.node[ndon].atom[atdon].add_hbond(atacc,nacc,hb_val)
+                self.node[nacc].atom[atacc].add_hbond(atdon,ndon,hb_val)
+ 
+            for node in self.node:
+                for atom in node.atom.values():
+                    atom.sort_hbonds(rever_hb)
+ 
+        if bonds:
+ 
+            for bond_ind,bond_val in zip(bonds[0],bonds[1]):
+                ata=bond_ind[0]
+                atb=bond_ind[1]
+                na=self.atom2node[ata]
+                nb=self.atom2node[atb]
+                self.node[na].atom[ata].add_bond(atb,nb,bond_val)
+                self.node[nb].atom[atb].add_bond(ata,na,bond_val)
+ 
+            for node in self.node:
+                for atom in node.atom.values():
+                    atom.sort_bonds(rever_b)
+
+
+        # Hago red:
+
+        self.T_hbs_start=numpy.zeros((self.num_atoms+1),dtype=int,order='Fortran')
+        self.T_hbs_ind=[]
+        self.T_bs_start=numpy.zeros((self.num_atoms+1),dtype=int,order='Fortran')
+        self.T_bs_ind=[]
+
+        jj=0
+        for node in self.node:
+            for atom in node.atom.values():
+                for ii in atom.hbond:
+                    self.T_hbs_ind.append(self.trad2f_atom[ii])
+                for ii in atom.bond:
+                    self.T_bs_ind.append(self.trad2f_atom[ii])
+                self.T_hbs_start[jj+1]=self.T_hbs_start[jj]+atom.num_hbonds
+                self.T_bs_start[jj+1]=self.T_bs_start[jj]+atom.num_bonds
+                jj+=1
+
+        self.T_num_hbs=len(self.T_hbs_ind)
+        self.T_num_bs=len(self.T_bs_ind)
+        self.T_hbs_ind=numpy.array(self.T_hbs_ind,dtype=int,order='Fortran')
+        self.T_bs_ind=numpy.array(self.T_bs_ind,dtype=int,order='Fortran')
+
+    def load_topol(self):
+
+        mss_funcs.load_topol(self.x_node_run_ats,self.x_atom2node,self.trad2py_node,self.trad2py_atom,self.num_nodes,self.num_atoms)
+
+    def load_net(self):
+
+        mss_funcs.load_net(self.T_hbs_start,self.T_bs_start,self.T_hbs_ind,self.T_bs_ind,self.T_num_hbs,self.T_num_bs,self.num_atoms)
+
+    def reset_topol(self):
+
+        pass
+
+    def reset_net(self):
+
+        pass
+
+    def build_shell1st(self,node='ALL'):
+     
+        # x_node_run_ats,x_atom2node,trad2py_node,trad2py_atom
+        # T_hbs_start,T_hbs_ind,T_bs_start,T_bs_ind,T_num_hbs,T_num_bs
+        if node=='ALL':
+            for ii in range(self.num_nodes):
+                jj=self.trad2f_node[ii]
+                mss_funcs.build_shell1st(jj)
+        elif type(node)==int:
+            jj=self.trad2f_node[node]
+            mss_funcs.build_shell1st(jj)
+
+        pass
