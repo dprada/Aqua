@@ -2,6 +2,7 @@ MODULE GLOB
 
 INTEGER::num_nodes,num_atoms
 INTEGER,DIMENSION(:),ALLOCATABLE::node_run_ats,atom2node,trad2py_node,trad2py_atom,atomspernode
+INTEGER,DIMENSION(:),ALLOCATABLE::symm_ats_crits,symm_ats_start,symm_ats
 
 INTEGER::T_num_hbs,T_num_bs
 INTEGER,DIMENSION(:),ALLOCATABLE::T_hbs_start,T_bs_start,T_hbs_ind,T_bs_ind
@@ -11,14 +12,17 @@ INTEGER,DIMENSION(:),ALLOCATABLE::mss_ind_atoms,mss_ind_nodes,mss_symm,mss
 
 CONTAINS
 
-SUBROUTINE load_topol(inode_run_ats,iatom2node,itrad2py_node,itrad2py_atom,inum_nodes,inum_atoms)
+SUBROUTINE load_topol(inode_run_ats,iatom2node,itrad2py_node,itrad2py_atom,isymm_ats_start,isymm_ats_crits,isymm_ats,inum_nodes,inum_atoms,isymm_ats_dim)
 
   IMPLICIT NONE
-  INTEGER,INTENT(IN)::inum_nodes,inum_atoms
+  INTEGER,INTENT(IN)::inum_nodes,inum_atoms,isymm_ats_dim
   INTEGER,DIMENSION(inum_nodes+1),INTENT(IN)::inode_run_ats
   INTEGER,DIMENSION(inum_atoms),INTENT(IN)::iatom2node
   INTEGER,DIMENSION(inum_nodes),INTENT(IN)::itrad2py_node
   INTEGER,DIMENSION(inum_atoms),INTENT(IN)::itrad2py_atom
+  INTEGER,DIMENSION(inum_nodes+1),INTENT(IN)::isymm_ats_start
+  INTEGER,DIMENSION(inum_nodes),INTENT(IN)::isymm_ats_crits
+  INTEGER,DIMENSION(isymm_ats_dim),INTENT(IN)::isymm_ats
 
   INTEGER::ii
 
@@ -44,6 +48,15 @@ SUBROUTINE load_topol(inode_run_ats,iatom2node,itrad2py_node,itrad2py_atom,inum_
   DO ii=1,num_nodes
      atomspernode(ii)=node_run_ats(ii+1)-node_run_ats(ii)
   END DO
+
+  IF (ALLOCATED(symm_ats)) DEALLOCATE(symm_ats)
+  IF (ALLOCATED(symm_ats_crits)) DEALLOCATE(symm_ats_crits)
+  IF (ALLOCATED(symm_ats_start)) DEALLOCATE(symm_ats_start)
+
+  ALLOCATE(symm_ats(isymm_ats_dim),symm_ats_crits(num_nodes),symm_ats_start(num_nodes+1))
+  symm_ats(:)=isymm_ats(:)
+  symm_ats_start(:)=isymm_ats_start(:)
+  symm_ats_crits(:)=isymm_ats_crits(:)
 
 END SUBROUTINE load_topol
 
@@ -71,6 +84,7 @@ SUBROUTINE load_net(iT_hbs_start,iT_bs_start,iT_hbs_ind,iT_bs_ind,iT_num_hbs,iT_
   ALLOCATE(T_hbs_start(num_atoms+1),T_bs_start(num_atoms+1))
   ALLOCATE(T_hbs_ind(T_num_hbs),T_bs_ind(T_num_bs))
   ALLOCATE(T_hbs_num(num_atoms),T_bs_num(num_atoms))
+
   T_hbs_start(:)=iT_hbs_start(:)
   T_bs_start(:)=iT_bs_start(:)
   T_hbs_ind(:)=iT_hbs_ind(:)

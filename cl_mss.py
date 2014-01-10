@@ -111,6 +111,8 @@ class node():
         self.shell1st=shell()
         self.shell2nd=shell()
 
+        self.symm_ats=[]
+
     def add_atom(self,index=None,donor=False,acceptor=False,nonpolar=False):
 
         self.atom[index]=atom(index=index,donor=donor,acceptor=acceptor,nonpolar=nonpolar)
@@ -157,6 +159,9 @@ class mss():
 
         self.hbtype=None
         self.btype=None
+        self.symm_ats=symm_ats
+        self.symm_nodes=symm_nodes
+        self.symm_sets_nodes=symm_sets_nodes
 
         self.build_nodes()
 
@@ -198,6 +203,43 @@ class mss():
             node.num_nonpolars=len(node.nonpolars)
             node.num_atoms=len(node.atoms)
             self.x_node_run_ats[ii+1]=node.num_atoms+self.x_node_run_ats[ii]
+
+        ## symmetric atoms
+
+        self.x_symm_ats=[]
+        self.x_symm_ats_crits=[]
+        self.x_symm_ats_start=[0]
+
+        if self.symm_ats:
+            gg=0
+            symm_ats_list=[]
+            if type(self.symm_ats) in [list,tuple]:
+                for sel in self.symm_ats:
+                    symm_ats_list.append(self.msystem.selection(sel))
+            else:
+                symm_ats_list.append(self.msystem.selection(sel))
+            for node in self.node:
+                hh=0
+                for criterium in symm_ats_list:
+                    aa=numpy.in1d(node.atoms,criterium)
+                    if aa.sum():
+                        node.symm_ats.append(aa)
+                        self.x_symm_ats.extend(aa)
+                        hh+=1
+                        gg+=len(aa)
+                self.x_symm_ats_crits.append(hh)
+                self.x_symm_ats_start.append(gg)
+            del(symm_ats_list)
+            self.x_symm_ats      =numpy.array(self.x_symm_ats,dtype=int,order='Fortran')
+            self.x_symm_ats_crits=numpy.array(self.x_symm_ats_crits,dtype=int,order='Fortran')
+            self.x_symm_ats_start=numpy.array(self.x_symm_ats_start,dtype=int,order='Fortran')
+            self.x_symm_ats_dim=self.x_symm_ats.shape[0]
+        else:
+            for node in self.node:
+                self.x_symm_ats_crits=numpy.zeros((self.num_nodes),dtype=int,order='Fortran')
+                self.x_symm_ats_start=numpy.zeros((self.num_nodes+1),dtype=int,order='Fortran')
+                self.x_symm_ats=numpy.zeros((1),dtype=int,order='Fortran')
+                self.x_symm_ats_dim=self.x_symm_ats.shape[0]
 
     def info(self):
 
@@ -360,7 +402,9 @@ class mss():
 
     def load_topol(self):
 
-        mss_funcs.load_topol(self.x_node_run_ats,self.x_atom2node,self.trad2py_node,self.trad2py_atom,self.num_nodes,self.num_atoms)
+        mss_funcs.load_topol(self.x_node_run_ats,self.x_atom2node,self.trad2py_node,self.trad2py_atom,
+                             self.x_symm_ats_start,self.x_symm_ats_crits,self.x_symm_ats,
+                             self.num_nodes,self.num_atoms,self.x_symm_ats_dim)
 
     def load_net(self):
 
