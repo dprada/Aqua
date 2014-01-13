@@ -152,9 +152,9 @@ pre:
 	@ echo "# Libraries:"
 
 fin:
-	@ echo "--------------------------------------------"
+	@ echo "-----------------------------------------------"
 	@ echo "# Check INSTALL.log for further info"
-	@ echo "--------------------------------------------"
+	@ echo "-----------------------------------------------"
 
 io_formats/libxdrfile.so: xdrfile-1.1.1.tar.gz
 	@ echo '>>>>>> Installing the xdr library...' > INSTALL.log
