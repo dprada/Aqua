@@ -180,7 +180,7 @@ class mss():
         for ii in range(self.num_nodes):
             node=self.node[ii]
             ii_n+=1 ; self.trad2f_node[ii]=ii_n ; self.trad2py_node.append(ii)
-            for jj,atom in node.atom.iteritems():
+            for jj,atom in sorted(node.atom.iteritems()):
                 ii_at+=1 ; self.trad2f_atom[jj]=ii_at ; self.trad2py_atom.append(jj)
                 self.num_atoms+=1
                 node.atoms.append(jj)
@@ -222,11 +222,13 @@ class mss():
                 hh=0
                 for criterium in symm_ats_list:
                     aa=numpy.in1d(node.atoms,criterium)
-                    if aa.sum():
+                    bb=aa.sum()
+                    if bb:
                         node.symm_ats.append(aa)
-                        self.x_symm_ats.extend(aa)
+                        self.x_symm_ats.append(bb)
+                        self.x_symm_ats.extend(aa.nonzero()[0]+1)
                         hh+=1
-                        gg+=len(aa)
+                        gg+=bb+1
                 self.x_symm_ats_crits.append(hh)
                 self.x_symm_ats_start.append(gg)
             del(symm_ats_list)
