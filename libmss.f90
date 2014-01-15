@@ -3,7 +3,8 @@ MODULE GLOB
 INTEGER::num_nodes,num_atoms
 INTEGER,DIMENSION(:),ALLOCATABLE::node_run_ats,atom2node,trad2py_node,trad2py_atom,atomspernode
 INTEGER,DIMENSION(:),ALLOCATABLE::symm_ats_crits,symm_ats_start,symm_ats
-INTEGER,DIMENSION(:),ALLOCATABLE::symm_aux
+
+INTEGER,DIMENSION(:),ALLOCATABLE::vecti_aux
 
 INTEGER::T_num_hbs,T_num_bs
 INTEGER,DIMENSION(:),ALLOCATABLE::T_hbs_start,T_bs_start,T_hbs_ind,T_bs_ind
@@ -164,12 +165,12 @@ SUBROUTINE build_order_ats_shell1st (core,num_ats,order,symm_ats_1sh)
      ii=symm_ats_start(core)
      jj=symm_ats_start(core+1)
      gg=jj-ii
-     ALLOCATE(symm_aux(gg))
-     symm_aux(:)=symm_ats((ii+1):jj)
-
-     print*,symm_aux(:)
+     ALLOCATE(vecti_aux(gg))
+     vecti_aux(:)=symm_ats((ii+1):jj)
 
      interruptor=.true.
+
+     IF (interruptor.eqv..true.) CALL SORTBYNUMHBS_ATS_1SH(core,num_ats,order,interruptor,num_crits)
 
      !CALL averaver(symm)
      ! 
@@ -206,118 +207,61 @@ END SUBROUTINE build_order_ats_shell1st
 
 !!#### SORTING:
 
-!!$SUBROUTINE SORTINTARRAY_1SH (quedan,vect_int,holes,num_ats,order,filtro)
-!!$
-!!$  INTEGER,INTENT(IN)::quedan,num_ats
-!!$  INTEGER,DIMENSION(quedan),INTENT(IN)::vect_int,holes
-!!$  INTEGER,DIMENSION(num_ats),INTENT(INOUT)::order
-!!$  LOGICAL,DIMENSION(num_ats),INTENT(INOUT)::filtro
-!!$
-!!$  LOGICAL,DIMENSION(:),ALLOCATABLE::new_filtro
-!!$  INTEGER,DIMENSION(:),ALLOCATABLE::new_order,new_vals
-!!$
-!!$  ALLOCATE(new_filtro(quedan),new_vals(quedan),new_order(quedan))
-!!$
-!!$  DO ii=1,quedan
-!!$     jj=MAXLOC(vect_int,DIM=1,MASK=new_filtro)
-!!$     new_filtro(jj)=.FALSE.     
-!!$     new_order(ii)=order(holes(jj))
-!!$     new_vals(ii)=vect_int(jj)
-!!$  END DO
-!!$  DO ii=1,quedan-1
-!!$     IF (new_vals(ii)==new_vals(ii+1)) THEN
-!!$        new_filtro(ii)=.TRUE.
-!!$        new_filtro(ii+1)=.TRUE.
-!!$     END IF
-!!$  END DO
-!!$
-!!$  DO ii=1,quedan
-!!$     jj=holes(ii)
-!!$     order(jj)=new_order(ii)
-!!$     IF (new_vals(ii)/=new_vals(ii+1)) THEN
-!!$        filtro(jj)=.FALSE.
-!!$
-!!$
-!!$  
-!!$
-!!$SUBROUTINE SORTINTARRAY_1SH (vect_int,num_ats,order,filtro)
-!!$
-!!$  INTEGER,INTENT(IN)::core,num_ats
-!!$  INTEGER,DIMENSION(),INTENT(IN)::vect_int
-!!$  INTEGER,DIMENSION(num_ats),INTENT(INOUT)::order
-!!$  LOGICAL,DIMENSION(num_ats),INTENT(INOUT)::filtro
-!!$
-!!$  INTEGER:: ii,jj,gg,val
-!!$  INTEGER,DIMENSION(:),ALLOCATABLE::sorted,holes,new_order
-!!$  LOGICAL,DIMENSION(:),ALLOCATABLE::new_filtro
-!!$
-!!$  gg=COUNT(filtro)
-!!$
-!!$  ALLOCATE(sorted(gg),holes(gg),new_filtro(num_ats),new_order(num_ats))
-!!$
-!!$  gg=0
-!!$  DO ii=1,num_ats
-!!$     IF (filtro(ii).eqv..true.) THEN
-!!$        gg=gg+1
-!!$        holes(gg)=ii
-!!$     END IF
-!!$  END DO
-!!$
-!!$  new_order(:)=order(:)
-!!$  new_filtro(:)=.FALSE.
-!!$  jj=MAXLOC(vect_int,DIM=1,MASK=filtro)
-!!$  val_old=vect_int(jj)
-!!$  ind_old=holes(1)
-!!$  new_order(ind_old)=order(jj)
-!!$  filtro(jj)=.FALSE.
-!!$
-!!$  DO ii=2,gg
-!!$     jj=MAXLOC(vect_int,DIM=1,MASK=filtro)
-!!$     val_new=vect_int(jj)
-!!$     ind_new=holes(jj)
-!!$     new_order(ind_new)=order(jj)
-!!$     filtro(jj)=.FALSE.
-!!$     IF (val_new==val_old) THEN
-!!$        new_filtro(ind_new)=.TRUE.
-!!$        new_filtro(ind_old)=.TRUE.
-!!$     END IF
-!!$     val_old=val_new
-!!$     ind_old=ind_new
-!!$  END DO
-!!$
-!!$  filtro(:)=new_filtro(:)
-!!$  IF (COUNT(filtro)==0) interruptor=.FALSE.
-!!$
-!!$  DEALLOCATE(sorted,holes,new_filtro)
-!!$
-!!$END SUBROUTINE SORTINTARRAY_1SH
-!!$
-!!$
-!!$SUBROUTINE SORTBYNUMHBS_ATS_1SH (core,num_ats,order,filtro,interruptor,quedan)
-!!$
-!!$  INTEGER,INTENT(IN)::core,num_ats
-!!$  INTEGER,DIMENSION(num_ats),INTENT(INOUT)::order
-!!$  LOGICAL,DIMENSION(num_ats),INTENT(INOUT)::filtro
-!!$  LOGICAL,INTENT(INOUT)::interruptor
-!!$  INTEGER,INTENT(INOUT)::quedan
-!!$
-!!$  INTEGER,DIMENSION(:),ALLOCATABLE::val_aux,holes
-!!$
-!!$  ALLOCATE(val_aux(quedan),)
-!!$
-!!$  gg=0
-!!$  DO ii=1,num_ats
-!!$     IF (filtro(ii).eqv..TRUE.) THEN
-!!$        gg=gg+1
-!!$        val_aux(gg)=T_hbs_num(order(ii))
-!!$        holes(gg)=ii
-!!$     END IF
-!!$  END DO
-!!$
-!!$  CALL SORTINTARRAY_1SH(quedan,val_aux,holes,num_ats,order,filtro)
-!!$
-!!$  quedan=COUNT(filtro)
-!!$  IF (quedan==0) interruptor=.FALSE.
+SUBROUTINE SORTINTARRAY_1SH (num_ats,idim,order,val_aux,ind_aux,order_aux,symm_aux)
+
+  INTEGER,INTENT(IN)::num_ats,idim
+  INTEGER,DIMENSION(num_ats),INTENT(INOUT)::order
+  INTEGER,DIMENSION(idim),INTENT(IN)::val_aux,ind_aux,order_aux
+  INTEGER,DIMENSION(idim),INTENT(OUT)::symm_aux
+
+  INTEGER::ii,jj
+  LOGICAL,DIMENSION(idim)::filtro
+  INTEGER,DIMENSION(idim)::vals,inds
+
+  filtro=.TRUE.
+
+  DO ii=1,idim
+     jj=MAXLOC(val_aux,DIM=1,MASK=filtro(:))
+     filtro(jj)=.FALSE.
+     inds(ii)=ind_aux(jj)
+     vals(ii)=val_aux(jj)
+     order(order_aux(ii))=order_aux(jj)
+  END DO
+
+        
+  
+
+END SUBROUTINE SORTINTARRAY_1SH
+
+
+SUBROUTINE SORTBYNUMHBS_ATS_1SH (core,num_ats,order,interruptor,num_crits)
+
+  INTEGER,INTENT(IN)::core,num_ats
+  INTEGER,DIMENSION(num_ats),INTENT(INOUT)::order
+  LOGICAL,INTENT(INOUT)::interruptor
+  INTEGER,INTENT(INOUT)::num_crits
+
+  INTEGER::ii,jj,gg,idim
+  INTEGER,DIMENSION(:),ALLOCATABLE::val_aux,ind_aux,symm_aux,order_aux
+  LOGICAL,DIMENSION(:,:),ALLOCATABLE::filtro
+
+  gg=0
+  DO ii=1,num_crits
+     gg=gg+1
+     idim=vecti_aux(gg)
+     ALLOCATE(val_aux(idim),ind_aux(idim),symm_aux(idim),order_aux(idim))
+     DO jj=1,idim
+        gg=gg+1
+        kk=vecti_aux(gg)
+        ll=order(kk)
+        ind_aux(jj)=kk
+        order_aux(jj)=ll
+        val_aux(jj)=T_hbs_num(ll)
+     END DO
+     CALL SORTINTARRAY_1SH(num_ats,idim,order,val_aux,ind_aux,order_aux,symm_aux)
+  END DO
+
+  DEALLOCATE(val_aux,filtro)
 
 
 END MODULE GLOB
