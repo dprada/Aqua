@@ -109,7 +109,6 @@ SUBROUTINE build_shell1st (core)
   INTEGER::nn,ii,jj,gg
   INTEGER,DIMENSION(:),ALLOCATABLE::order_ats_1sh,symm_ats_1sh
 
-
   IF (ALLOCATED(mss_ind_atoms)) DEALLOCATE(mss_ind_atoms)
   IF (ALLOCATED(mss_ind_nodes)) DEALLOCATE(mss_ind_nodes)
   IF (ALLOCATED(mss_symm))      DEALLOCATE(mss_symm)
@@ -118,7 +117,7 @@ SUBROUTINE build_shell1st (core)
   nn=atomspernode(core)
  
   ALLOCATE(order_ats_1sh(nn),symm_ats_1sh(nn))
-  
+
   CALL build_order_ats_shell1st(core,nn,order_ats_1sh,symm_ats_1sh)
 
   gg=1+nn
@@ -135,9 +134,8 @@ SUBROUTINE build_shell1st (core)
      gg=gg+2
   END DO
 
-
   DEALLOCATE(order_ats_1sh,symm_ats_1sh)
- 
+
 END SUBROUTINE build_shell1st
 
 
@@ -148,7 +146,7 @@ SUBROUTINE build_order_ats_shell1st (core,num_ats,order,symm_ats_1sh)
   INTEGER,INTENT(IN)::core,num_ats
   INTEGER,DIMENSION(num_ats),INTENT(OUT)::order,symm_ats_1sh
 
-  INTEGER::ii,jj,gg,num_crits
+  INTEGER::ii,jj,kk,gg,ll,num_crits
   LOGICAL::interruptor
 
   jj=0
@@ -169,99 +167,205 @@ SUBROUTINE build_order_ats_shell1st (core,num_ats,order,symm_ats_1sh)
      vecti_aux(:)=symm_ats((ii+1):jj)
 
      interruptor=.true.
-
-     IF (interruptor.eqv..true.) CALL SORTBYNUMHBS_ATS_1SH(core,num_ats,order,interruptor,num_crits)
-
-     !CALL averaver(symm)
-     ! 
-     !print*,symm(:)
-
-!!$     ALLOCATE(filtro(num_ats))
-!!$     
-!!$     ggg=symm_ats_start(core)
-!!$
-!!$     DO ii=1,num_crits
-!!$        
-!!$        DO jj=1,num_ats
-!!$           ggg=ggg+1
-!!$           filtro(jj)=symm_ats(ggg)
-!!$        END DO
-!!$        interruptor=.true.
-!!$
-!!$        IF (interruptor.eqv..true.) CALL SORTBYNUMHBS_ATS_1SH(core,num_ats,order,filtro,interruptor)
-!!$     
-!!$
-!!$        DO jj=1,num_ats
-!!$           IF (filtro(jj).eqv..true.) THEN
-!!$              symm(jj)=symm(jj)+1
-!!$           END IF
-!!$        END DO
-!!$
-!!$     END DO
-
-     DEALLOCATE(symm_aux)
+     IF (interruptor.eqv..true.) CALL SORTBYNUMHBS_ATS_1SH(core,num_ats,order,interruptor,num_crits,gg)
+     IF (interruptor.eqv..true.) CALL SORTBYNUMBS_ATS_1SH(core,num_ats,order,interruptor,num_crits,gg)
+     symm_ats_1sh(:)=0
+     IF (interruptor.eqv..true.) THEN
+        gg=0
+        DO ii=1,num_crits
+           gg=gg+1
+           kk=vecti_aux(gg)
+           DO jj=1,kk
+              gg=gg+1
+              ll=vecti_aux(gg)
+              symm_ats_1sh(ll)=ii
+           END DO
+        END DO
+        DEALLOCATE(vecti_aux)
+     END IF
 
   END IF
 
 END SUBROUTINE build_order_ats_shell1st
 
-!!#### SORTING:
+!!#### SORTING 1ST SHELL:
 
-SUBROUTINE SORTINTARRAY_1SH (num_ats,idim,order,val_aux,ind_aux,order_aux,symm_aux)
-
-  INTEGER,INTENT(IN)::num_ats,idim
-  INTEGER,DIMENSION(num_ats),INTENT(INOUT)::order
-  INTEGER,DIMENSION(idim),INTENT(IN)::val_aux,ind_aux,order_aux
-  INTEGER,DIMENSION(idim),INTENT(OUT)::symm_aux
-
-  INTEGER::ii,jj
-  LOGICAL,DIMENSION(idim)::filtro
-  INTEGER,DIMENSION(idim)::vals,inds
-
-  filtro=.TRUE.
-
-  DO ii=1,idim
-     jj=MAXLOC(val_aux,DIM=1,MASK=filtro(:))
-     filtro(jj)=.FALSE.
-     inds(ii)=ind_aux(jj)
-     vals(ii)=val_aux(jj)
-     order(order_aux(ii))=order_aux(jj)
-  END DO
-
-        
-  
-
-END SUBROUTINE SORTINTARRAY_1SH
-
-
-SUBROUTINE SORTBYNUMHBS_ATS_1SH (core,num_ats,order,interruptor,num_crits)
+SUBROUTINE SORTBYNUMHBS_ATS_1SH (core,num_ats,order,interruptor,num_crits,dim_vecti_aux)
 
   INTEGER,INTENT(IN)::core,num_ats
+  INTEGER,INTENT(INOUT)::dim_vecti_aux
   INTEGER,DIMENSION(num_ats),INTENT(INOUT)::order
   LOGICAL,INTENT(INOUT)::interruptor
   INTEGER,INTENT(INOUT)::num_crits
 
-  INTEGER::ii,jj,gg,idim
-  INTEGER,DIMENSION(:),ALLOCATABLE::val_aux,ind_aux,symm_aux,order_aux
-  LOGICAL,DIMENSION(:,:),ALLOCATABLE::filtro
+  INTEGER::ii,jj,gg
+  INTEGER,DIMENSION(:),ALLOCATABLE::valores
+
+  ALLOCATE(valores(dim_vecti_aux))
 
   gg=0
   DO ii=1,num_crits
      gg=gg+1
      idim=vecti_aux(gg)
-     ALLOCATE(val_aux(idim),ind_aux(idim),symm_aux(idim),order_aux(idim))
+     DO jj=1,idim
+        gg=gg+1
+        kk=vecti_aux(gg)
+        ll=order(kk)
+        valores(gg)=T_hbs_num(ll)
+     END DO
+  END DO
+
+  CALL SORT_INT_ATS_1SH(num_ats,dim_vecti_aux,order,valores,interruptor,num_crits)
+
+  DEALLOCATE(valores)
+
+END SUBROUTINE SORTBYNUMHBS_ATS_1SH
+
+SUBROUTINE SORTBYNUMBS_ATS_1SH (core,num_ats,order,interruptor,num_crits,dim_vecti_aux)
+
+  INTEGER,INTENT(IN)::core,num_ats
+  INTEGER,INTENT(INOUT)::dim_vecti_aux
+  INTEGER,DIMENSION(num_ats),INTENT(INOUT)::order
+  LOGICAL,INTENT(INOUT)::interruptor
+  INTEGER,INTENT(INOUT)::num_crits
+
+  INTEGER::ii,jj,gg
+  INTEGER,DIMENSION(:),ALLOCATABLE::valores
+
+  ALLOCATE(valores(dim_vecti_aux))
+
+  gg=0
+  DO ii=1,num_crits
+     gg=gg+1
+     idim=vecti_aux(gg)
+     DO jj=1,idim
+        gg=gg+1
+        kk=vecti_aux(gg)
+        ll=order(kk)
+        valores(gg)=T_bs_num(ll)
+     END DO
+  END DO
+
+  CALL SORT_INT_ATS_1SH(num_ats,dim_vecti_aux,order,valores,interruptor,num_crits)
+
+  DEALLOCATE(valores)
+
+END SUBROUTINE SORTBYNUMBS_ATS_1SH
+
+
+SUBROUTINE SORT_INT_ATS_1SH (num_ats,dim_vecti_aux,order,valores,interruptor,num_crits)
+
+  INTEGER,INTENT(IN)::num_ats
+  INTEGER,INTENT(INOUT)::dim_vecti_aux
+  INTEGER,DIMENSION(num_ats),INTENT(INOUT)::order
+  INTEGER,DIMENSION(dim_vecti_aux),INTENT(IN)::valores
+  LOGICAL,INTENT(INOUT)::interruptor
+  INTEGER,INTENT(INOUT)::num_crits
+
+  INTEGER::ii,jj,kk,ll,gg,idim,new_num_crits,tope
+  INTEGER,DIMENSION(:),ALLOCATABLE::val_aux,ind_aux,order_aux
+  INTEGER,DIMENSION(:),ALLOCATABLE::vals,inds
+  INTEGER,DIMENSION(:),ALLOCATABLE::new_symm_aux,cajon
+  LOGICAL,DIMENSION(:),ALLOCATABLE::filtro
+
+  new_num_crits=0
+
+  gg=0
+  DO ii=1,num_crits
+     gg=gg+1
+     idim=vecti_aux(gg)
+     ALLOCATE(val_aux(idim),ind_aux(idim),order_aux(idim))
      DO jj=1,idim
         gg=gg+1
         kk=vecti_aux(gg)
         ll=order(kk)
         ind_aux(jj)=kk
         order_aux(jj)=ll
-        val_aux(jj)=T_hbs_num(ll)
+        val_aux(jj)=valores(gg)
      END DO
-     CALL SORTINTARRAY_1SH(num_ats,idim,order,val_aux,ind_aux,order_aux,symm_aux)
+     ALLOCATE(filtro(idim),vals(idim),inds(idim))
+     filtro=.TRUE.
+     DO jj=1,idim
+        kk=MAXLOC(val_aux,DIM=1,MASK=filtro(:))
+        filtro(kk)=.FALSE.
+        ll=ind_aux(jj)
+        inds(jj)=ll
+        vals(jj)=val_aux(kk)
+        order(ll)=order_aux(kk)
+     END DO
+     interruptor=.FALSE.
+     DO jj=2,idim
+        IF (vals(jj-1)==vals(jj)) THEN
+           IF (interruptor==.FALSE.) THEN
+              order_aux(1)=inds(jj-1)
+              order_aux(2)=inds(jj)
+              ll=2
+              interruptor=.TRUE.
+           ELSE
+              ll=ll+1
+              order_aux(ll)=jj
+           END IF
+        ELSE
+           IF (interruptor==.TRUE.) THEN
+              interruptor=.FALSE.
+              new_num_crits=new_num_crits+1
+              IF (new_num_crits==1) THEN
+                 tope=ll+1
+                 ALLOCATE(new_symm_aux(tope))
+                 new_symm_aux(1)=ll
+                 new_symm_aux(2:tope)=order_aux(1:ll)
+              ELSE
+                 ALLOCATE(cajon(tope))
+                 cajon(:)=new_symm_aux(:)
+                 DEALLOCATE(new_symm_aux)
+                 ALLOCATE(new_symm_aux(tope+1+ll))
+                 new_symm_aux(1:tope)=cajon(:)
+                 new_symm_aux(tope+1)=ll
+                 new_symm_aux((tope+2):(tope+ll))=order_aux(1:ll)
+                 tope=tope+1+ll
+                 DEALLOCATE(cajon)
+              END IF
+           END IF
+        END IF
+     END DO
+     IF (interruptor==.TRUE.) THEN
+        interruptor=.FALSE.
+        new_num_crits=new_num_crits+1
+        IF (new_num_crits==1) THEN
+           tope=ll+1
+           ALLOCATE(new_symm_aux(tope))
+           new_symm_aux(1)=ll
+           new_symm_aux(2:tope)=order_aux(1:ll)
+        ELSE
+           ALLOCATE(cajon(tope))
+           cajon(:)=new_symm_aux(:)
+           DEALLOCATE(new_symm_aux)
+           ALLOCATE(new_symm_aux(tope+1+ll))
+           new_symm_aux(1:tope)=cajon(:)
+           tope=tope+1
+           new_symm_aux(tope)=ll
+           new_symm_aux((tope+1):(tope+ll))=order_aux(1:ll)
+           tope=tope+ll
+           DEALLOCATE(cajon)
+        END IF
+     END IF
+     DEALLOCATE(val_aux,ind_aux,order_aux)
+     DEALLOCATE(filtro,vals,inds)
   END DO
 
-  DEALLOCATE(val_aux,filtro)
+  num_crits=new_num_crits
+  DEALLOCATE(vecti_aux)
+  IF (num_crits==0) THEN
+     interruptor=.FALSE.
+     dim_vecti_aux=0
+  ELSE
+     interruptor=.TRUE.
+     ALLOCATE(vecti_aux(tope))
+     dim_vecti_aux=tope
+     vecti_aux(:)=new_symm_aux(:)
+     DEALLOCATE(new_symm_aux)
+  END IF
 
+END SUBROUTINE SORT_INT_ATS_1SH
 
 END MODULE GLOB
