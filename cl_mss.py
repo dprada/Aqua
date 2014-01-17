@@ -428,8 +428,16 @@ class mss():
             for ii in range(self.num_nodes):
                 jj=self.trad2f_node[ii]
                 mss_funcs.build_shell1st(jj)
+                self.node[ii].shell1st.mss           = numpy.copy(mss_funcs.mss)
+                self.node[ii].shell1st.mss_ind_atoms = numpy.copy(mss_funcs.mss_ind_atoms)
+                self.node[ii].shell1st.mss_ind_nodes = numpy.copy(mss_funcs.mss_ind_nodes)
+                self.node[ii].shell1st.mss_symm      = numpy.copy(mss_funcs.mss_symm)
         elif type(node)==int:
             jj=self.trad2f_node[node]
             mss_funcs.build_shell1st(jj)
-
+            self.node[node].shell1st.mss           = numpy.copy(mss_funcs.mss)
+            self.node[node].shell1st.mss_ind_atoms = numpy.copy(mss_funcs.mss_ind_atoms)
+            self.node[node].shell1st.mss_ind_nodes = numpy.copy(mss_funcs.mss_ind_nodes)
+            self.node[node].shell1st.mss_symm      = numpy.copy(mss_funcs.mss_symm)
         pass
+
