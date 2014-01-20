@@ -97,6 +97,7 @@ class node():
         self.name=name
         self.label=None
         self.type=type
+        self.category=[0,0,0] # code_node,code_set,code_inside_set
 
         self.acceptors=[]
         self.donors=[]
@@ -162,6 +163,7 @@ class mss():
         self.symm_ats=symm_ats
         self.symm_nodes=symm_nodes
         self.symm_sets_nodes=symm_sets_nodes
+        self.num_categories=0
 
         self.build_nodes()
 
@@ -242,6 +244,57 @@ class mss():
                 self.x_symm_ats_start=numpy.zeros((self.num_nodes+1),dtype=int,order='Fortran')
                 self.x_symm_ats=numpy.zeros((1),dtype=int,order='Fortran')
                 self.x_symm_ats_dim=self.x_symm_ats.shape[0]
+
+        ## symmetric nodes and categories
+
+        self.x_categories_node=numpy.zeros((self.num_nodes),dtype=int,order='Fortran')
+
+        count_category=0
+        if self.symm_nodes:
+            symm_nodes_list=[]
+            if type(self.symm_nodes) in [list,tuple]:
+                for sel in self.symm_nodes:
+                    symm_nodes_list.append(self.msystem.selection(sel))
+            else:
+                symm_nodes_list.append(self.msystem.selection(sel))
+            for node in self.node:
+                for ii in range(len(symm_nodes_list)):
+                    if True in numpy.in1d(node.atoms,symm_nodes_list[ii]):
+                        node.category[0]=count_category+ii
+                        self.x_categories_node[node.index]=count_category+ii
+            count_category+=len(symm_nodes_list)
+
+        ## symmetric sets of nodes
+
+        aux_sets=[]
+        aux_category_sets=[]
+        if self.symm_sets_nodes:
+            for criterium in self.symm_sets_nodes:
+                if criterium == 'lipids':
+                    symm_sets_nodes=self.msystem.lipid
+                elif criterium == 'proteins':
+                    symm_sets_nodes=self.msystem.protein
+                aux_category_sets.append(count_category)
+                aux=[item for sublist in symm_sets_nodes for item in sublist]
+                num_sets=len(symm_sets_nodes)
+                sets={ii:[] for ii in range(num_sets)}
+                for node in self.node:
+                    if True in numpy.in1d(node.atoms,aux):
+                        node.category[0]=count_category
+                        self.x_categories_node[node.index]=count_category
+                        for ii in range(num_sets):
+                            if True in numpy.in1d(node.atoms,symm_sets_nodes[ii]):
+                                sets[ii].append(node.index)
+                count_category+=1
+                aux_sets.append(sets.values())
+                for ii in range(num_sets):
+                    aux=sets[ii]
+                    for jj in range(len(aux)):
+                        self.node[aux[jj]].category[1]=ii
+                        self.node[aux[jj]].category[2]=jj
+
+        self.num_categories=count_category
+
 
     def info(self):
 
@@ -406,7 +459,9 @@ class mss():
 
         mss_funcs.load_topol(self.x_node_run_ats,self.x_atom2node,self.trad2py_node,self.trad2py_atom,
                              self.x_symm_ats_start,self.x_symm_ats_crits,self.x_symm_ats,
+                             self.x_categories_node,
                              self.num_nodes,self.num_atoms,self.x_symm_ats_dim)
+
 
     def load_net(self):
 

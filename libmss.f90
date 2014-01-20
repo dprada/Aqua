@@ -2,20 +2,22 @@ MODULE GLOB
 
 INTEGER::num_nodes,num_atoms
 INTEGER,DIMENSION(:),ALLOCATABLE::node_run_ats,atom2node,trad2py_node,trad2py_atom,atomspernode
+INTEGER,DIMENSION(:),ALLOCATABLE::node_category,node_hbs_num,node_bs_num
+INTEGER,DIMENSION(:),ALLOCATABLE::atom_hbs_num,atom_bs_num
 INTEGER,DIMENSION(:),ALLOCATABLE::symm_ats_crits,symm_ats_start,symm_ats
 
 INTEGER,DIMENSION(:),ALLOCATABLE::vecti_aux
 
 INTEGER::T_num_hbs,T_num_bs
 INTEGER,DIMENSION(:),ALLOCATABLE::T_hbs_start,T_bs_start,T_hbs_ind,T_bs_ind
-INTEGER,DIMENSION(:),ALLOCATABLE::T_hbs_num,T_bs_num
 
 INTEGER,DIMENSION(:),ALLOCATABLE::mss_ind_atoms,mss_ind_nodes,mss_symm,mss
 
 CONTAINS
 
+
 SUBROUTINE load_topol(inode_run_ats,iatom2node,itrad2py_node,itrad2py_atom,&
-     isymm_ats_start,isymm_ats_crits,isymm_ats,inum_nodes,inum_atoms,isymm_ats_dim)
+     isymm_ats_start,isymm_ats_crits,isymm_ats,inode_category,inum_nodes,inum_atoms,isymm_ats_dim)
 
   IMPLICIT NONE
   INTEGER,INTENT(IN)::inum_nodes,inum_atoms,isymm_ats_dim
@@ -26,6 +28,7 @@ SUBROUTINE load_topol(inode_run_ats,iatom2node,itrad2py_node,itrad2py_atom,&
   INTEGER,DIMENSION(inum_nodes+1),INTENT(IN)::isymm_ats_start
   INTEGER,DIMENSION(inum_nodes),INTENT(IN)::isymm_ats_crits
   INTEGER,DIMENSION(isymm_ats_dim),INTENT(IN)::isymm_ats
+  INTEGER,DIMENSION(inum_nodes),INTENT(IN)::inode_category
 
   INTEGER::ii
 
@@ -61,6 +64,18 @@ SUBROUTINE load_topol(inode_run_ats,iatom2node,itrad2py_node,itrad2py_atom,&
   symm_ats_start(:)=isymm_ats_start(:)
   symm_ats_crits(:)=isymm_ats_crits(:)
 
+  IF (ALLOCATED(node_category)) DEALLOCATE(node_category)
+  IF (ALLOCATED(node_hbs_num)) DEALLOCATE(node_hbs_num)
+  IF (ALLOCATED(node_bs_num)) DEALLOCATE(node_bs_num)
+  IF (ALLOCATED(atom_hbs_num))    DEALLOCATE(atom_hbs_num)
+  IF (ALLOCATED(atom_bs_num))     DEALLOCATE(atom_bs_num)
+
+  ALLOCATE(node_category(num_nodes))
+  ALLOCATE(node_hbs_num(num_nodes),node_bs_num(num_nodes))
+  ALLOCATE(atom_hbs_num(num_atoms),atom_bs_num(num_atoms))
+
+  node_category(:)=inode_category(:)
+
 END SUBROUTINE load_topol
 
 SUBROUTINE load_net(iT_hbs_start,iT_bs_start,iT_hbs_ind,iT_bs_ind,iT_num_hbs,iT_num_bs,inum_atoms)
@@ -72,30 +87,34 @@ SUBROUTINE load_net(iT_hbs_start,iT_bs_start,iT_hbs_ind,iT_bs_ind,iT_num_hbs,iT_
   INTEGER,DIMENSION(iT_num_hbs),INTENT(IN)::iT_hbs_ind
   INTEGER,DIMENSION(iT_num_bs),INTENT(IN)::iT_bs_ind
 
-  INTEGER::ii
+  INTEGER::ii,jj,kk
 
   IF (ALLOCATED(T_hbs_start))  DEALLOCATE(T_hbs_start)
   IF (ALLOCATED(T_bs_start))   DEALLOCATE(T_bs_start)
   IF (ALLOCATED(T_hbs_ind))    DEALLOCATE(T_hbs_ind)
   IF (ALLOCATED(T_bs_ind))     DEALLOCATE(T_bs_ind)
-  IF (ALLOCATED(T_hbs_num))    DEALLOCATE(T_hbs_num)
-  IF (ALLOCATED(T_bs_num))     DEALLOCATE(T_bs_num)
 
   T_num_hbs=iT_num_hbs
   T_num_bs=iT_num_bs
 
   ALLOCATE(T_hbs_start(num_atoms+1),T_bs_start(num_atoms+1))
   ALLOCATE(T_hbs_ind(T_num_hbs),T_bs_ind(T_num_bs))
-  ALLOCATE(T_hbs_num(num_atoms),T_bs_num(num_atoms))
 
   T_hbs_start(:)=iT_hbs_start(:)
   T_bs_start(:)=iT_bs_start(:)
   T_hbs_ind(:)=iT_hbs_ind(:)
   T_bs_ind(:)=iT_bs_ind(:)
 
+  node_hbs_num(:)=0
+  node_bs_num(:)=0
   DO ii=1,num_atoms
-     T_hbs_num(ii)=T_hbs_start(ii+1)-T_hbs_start(ii)
-     T_bs_num(ii)=T_bs_start(ii+1)-T_bs_start(ii)
+     kk=atom2node(ii)
+     jj=T_hbs_start(ii+1)-T_hbs_start(ii)
+     atom_hbs_num(ii)=jj
+     node_hbs_num(kk)=node_hbs_num(kk)+jj
+     jj=T_bs_start(ii+1)-T_bs_start(ii)
+     atom_bs_num(ii)=jj
+     node_bs_num(kk)=node_bs_num(kk)+jj
   END DO
 
 END SUBROUTINE load_net
@@ -127,8 +146,8 @@ SUBROUTINE build_shell1st (core)
   gg=0
   DO ii=1,nn
      jj=order_ats_1sh(ii)
-     num_ats_bonded_1sh(gg+1)=T_hbs_num(jj)
-     num_ats_bonded_1sh(gg+2)=T_bs_num(jj)
+     num_ats_bonded_1sh(gg+1)=atom_hbs_num(jj)
+     num_ats_bonded_1sh(gg+2)=atom_bs_num(jj)
      gg=gg+2
   END DO
 
@@ -150,8 +169,7 @@ SUBROUTINE build_shell1st (core)
         ELSE
            ALLOCATE(boxi(kk),boxi2(kk))
            boxi(:)=T_hbs_ind((ll):(ll+kk-1))
-           !CALL build_order_ats_bonded_shell1st(core,kk,boxi,boxi2)
-           boxi2(:)=0
+           CALL build_order_ats_bonded_shell1st(core,kk,boxi,boxi2)
            order_ats_bonded_1sh((mm+1):(mm+kk))=boxi(:)
            symm_ats_bonded_1sh((mm+1):(mm+kk))=boxi2(:)
            DEALLOCATE(boxi,boxi2)
@@ -167,8 +185,7 @@ SUBROUTINE build_shell1st (core)
         ELSE
            ALLOCATE(boxi(kk),boxi2(kk))
            boxi(:)=T_bs_ind((ll):(ll+kk-1))
-           !CALL build_order_ats_bonded_shell1st(core,kk,boxi,boxi2)
-           boxi2(:)=0
+           CALL build_order_ats_bonded_shell1st(core,kk,boxi,boxi2)
            order_ats_bonded_1sh((mm+1):(mm+kk))=boxi(:)
            symm_ats_bonded_1sh((mm+1):(mm+kk))=boxi2(:)
            DEALLOCATE(boxi,boxi2)
@@ -283,7 +300,7 @@ SUBROUTINE SORTBYNUMHBS_ATS_1SH (core,num_ats,order,interruptor,num_crits,dim_ve
   LOGICAL,INTENT(INOUT)::interruptor
   INTEGER,INTENT(INOUT)::num_crits
 
-  INTEGER::ii,jj,gg
+  INTEGER::ii,jj,gg,kk,ll,idim
   INTEGER,DIMENSION(:),ALLOCATABLE::valores
 
   ALLOCATE(valores(dim_vecti_aux))
@@ -296,7 +313,7 @@ SUBROUTINE SORTBYNUMHBS_ATS_1SH (core,num_ats,order,interruptor,num_crits,dim_ve
         gg=gg+1
         kk=vecti_aux(gg)
         ll=order(kk)
-        valores(gg)=T_hbs_num(ll)
+        valores(gg)=atom_hbs_num(ll)
      END DO
   END DO
 
@@ -316,7 +333,7 @@ SUBROUTINE SORTBYNUMBS_ATS_1SH (core,num_ats,order,interruptor,num_crits,dim_vec
   LOGICAL,INTENT(INOUT)::interruptor
   INTEGER,INTENT(INOUT)::num_crits
 
-  INTEGER::ii,jj,gg
+  INTEGER::ii,jj,gg,kk,ll,idim
   INTEGER,DIMENSION(:),ALLOCATABLE::valores
 
   ALLOCATE(valores(dim_vecti_aux))
@@ -329,7 +346,7 @@ SUBROUTINE SORTBYNUMBS_ATS_1SH (core,num_ats,order,interruptor,num_crits,dim_vec
         gg=gg+1
         kk=vecti_aux(gg)
         ll=order(kk)
-        valores(gg)=T_bs_num(ll)
+        valores(gg)=atom_bs_num(ll)
      END DO
   END DO
 
@@ -339,6 +356,106 @@ SUBROUTINE SORTBYNUMBS_ATS_1SH (core,num_ats,order,interruptor,num_crits,dim_vec
 
 END SUBROUTINE SORTBYNUMBS_ATS_1SH
 
+SUBROUTINE SORTBYNUMHBS_NODES_1SH (core,num_ats,order,interruptor,num_crits,dim_vecti_aux)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::core,num_ats
+  INTEGER,INTENT(INOUT)::dim_vecti_aux
+  INTEGER,DIMENSION(num_ats),INTENT(INOUT)::order
+  LOGICAL,INTENT(INOUT)::interruptor
+  INTEGER,INTENT(INOUT)::num_crits
+
+  INTEGER::ii,jj,gg,kk,ll,idim
+  INTEGER,DIMENSION(:),ALLOCATABLE::valores
+
+  ALLOCATE(valores(dim_vecti_aux))
+
+  gg=0
+  DO ii=1,num_crits
+     gg=gg+1
+     idim=vecti_aux(gg)
+     DO jj=1,idim
+        gg=gg+1
+        kk=vecti_aux(gg)
+        ll=order(kk)
+        valores(gg)=node_hbs_num(atom2node(ll))
+     END DO
+  END DO
+
+  CALL SORT_INT_ATS_1SH(num_ats,dim_vecti_aux,order,valores,interruptor,num_crits)
+
+  DEALLOCATE(valores)
+
+END SUBROUTINE SORTBYNUMHBS_NODES_1SH
+
+
+SUBROUTINE SORTBYNUMBS_NODES_1SH (core,num_ats,order,interruptor,num_crits,dim_vecti_aux)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::core,num_ats
+  INTEGER,INTENT(INOUT)::dim_vecti_aux
+  INTEGER,DIMENSION(num_ats),INTENT(INOUT)::order
+  LOGICAL,INTENT(INOUT)::interruptor
+  INTEGER,INTENT(INOUT)::num_crits
+
+  INTEGER::ii,jj,gg,kk,ll,idim
+  INTEGER,DIMENSION(:),ALLOCATABLE::valores
+
+  ALLOCATE(valores(dim_vecti_aux))
+
+  gg=0
+  DO ii=1,num_crits
+     gg=gg+1
+     idim=vecti_aux(gg)
+     DO jj=1,idim
+        gg=gg+1
+        kk=vecti_aux(gg)
+        ll=order(kk)
+        valores(gg)=node_bs_num(atom2node(ll))
+     END DO
+  END DO
+
+  CALL SORT_INT_ATS_1SH(num_ats,dim_vecti_aux,order,valores,interruptor,num_crits)
+
+  DEALLOCATE(valores)
+
+END SUBROUTINE SORTBYNUMBS_NODES_1SH
+
+
+SUBROUTINE SORTBYCATEGORY_NODES_BONDED_1SH (core,num_ats,order,interruptor,num_crits,dim_vecti_aux)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::core,num_ats
+  INTEGER,INTENT(INOUT)::dim_vecti_aux
+  INTEGER,DIMENSION(num_ats),INTENT(INOUT)::order
+  LOGICAL,INTENT(INOUT)::interruptor
+  INTEGER,INTENT(INOUT)::num_crits
+
+  INTEGER::ii,jj,gg,kk,ll,idim
+  INTEGER,DIMENSION(:),ALLOCATABLE::valores
+
+  ALLOCATE(valores(dim_vecti_aux))
+
+  gg=0
+  DO ii=1,num_crits
+     gg=gg+1
+     idim=vecti_aux(gg)
+     DO jj=1,idim
+        gg=gg+1
+        kk=vecti_aux(gg)
+        ll=order(kk)
+        valores(gg)=node_category(atom2node(ll))
+     END DO
+  END DO
+
+  CALL SORT_INT_ATS_1SH(num_ats,dim_vecti_aux,order,valores,interruptor,num_crits)
+
+  DEALLOCATE(valores)
+
+END SUBROUTINE SORTBYCATEGORY_NODES_BONDED_1SH
 
 SUBROUTINE SORT_INT_ATS_1SH (num_ats,dim_vecti_aux,order,valores,interruptor,num_crits)
 
@@ -392,7 +509,7 @@ SUBROUTINE SORT_INT_ATS_1SH (num_ats,dim_vecti_aux,order,valores,interruptor,num
               interruptor=.TRUE.
            ELSE
               ll=ll+1
-              order_aux(ll)=jj
+              order_aux(ll)=inds(jj)
            END IF
         ELSE
            IF (interruptor==.TRUE.) THEN
@@ -409,9 +526,10 @@ SUBROUTINE SORT_INT_ATS_1SH (num_ats,dim_vecti_aux,order,valores,interruptor,num
                  DEALLOCATE(new_symm_aux)
                  ALLOCATE(new_symm_aux(tope+1+ll))
                  new_symm_aux(1:tope)=cajon(:)
-                 new_symm_aux(tope+1)=ll
-                 new_symm_aux((tope+2):(tope+ll))=order_aux(1:ll)
-                 tope=tope+1+ll
+                 tope=tope+1
+                 new_symm_aux(tope)=ll
+                 new_symm_aux((tope+1):(tope+ll))=order_aux(1:ll)
+                 tope=tope+ll
                  DEALLOCATE(cajon)
               END IF
            END IF
@@ -458,45 +576,47 @@ SUBROUTINE SORT_INT_ATS_1SH (num_ats,dim_vecti_aux,order,valores,interruptor,num
 END SUBROUTINE SORT_INT_ATS_1SH
 
 SUBROUTINE build_order_ats_bonded_shell1st (core,num_ats,order,symm_ats_bonded_1sh)
-
+ 
   IMPLICIT NONE
-
+ 
   INTEGER,INTENT(IN)::core,num_ats
   INTEGER,DIMENSION(num_ats),INTENT(INOUT)::order
   INTEGER,DIMENSION(num_ats),INTENT(OUT)::symm_ats_bonded_1sh
-
+ 
   INTEGER::ii,jj,kk,gg,ll,num_crits
   LOGICAL::interruptor
-
+ 
   symm_ats_bonded_1sh(:)=0
-  !### POR HACER (CONTINUAR AQUI)
+
   num_crits=1
+  gg=num_ats+1
 
-     ii=symm_ats_start(core)
-     jj=symm_ats_start(core+1)
-     gg=jj-ii
-     ALLOCATE(vecti_aux(gg))
-     vecti_aux(:)=symm_ats((ii+1):jj)
+  ALLOCATE(vecti_aux(gg))
+  vecti_aux=(/num_ats,(ii,ii=1,num_ats,1)/)
+ 
 
-     interruptor=.true.
-     IF (interruptor.eqv..true.) CALL SORTBYNUMHBS_ATS_1SH(core,num_ats,order,interruptor,num_crits,gg)
-     IF (interruptor.eqv..true.) CALL SORTBYNUMBS_ATS_1SH(core,num_ats,order,interruptor,num_crits,gg)
+  interruptor=.true.
 
-     IF (interruptor.eqv..true.) THEN
-        gg=0
-        DO ii=1,num_crits
+  IF (interruptor.eqv..true.) CALL SORTBYCATEGORY_NODES_BONDED_1SH (core,num_ats,order,interruptor,num_crits,gg)
+
+  IF (interruptor.eqv..true.) CALL SORTBYNUMHBS_NODES_1SH(core,num_ats,order,interruptor,num_crits,gg)
+
+  IF (interruptor.eqv..true.) CALL SORTBYNUMBS_NODES_1SH(core,num_ats,order,interruptor,num_crits,gg)
+
+  IF (interruptor.eqv..true.) THEN
+     gg=0
+     DO ii=1,num_crits
+        gg=gg+1
+        kk=vecti_aux(gg)
+        DO jj=1,kk
            gg=gg+1
-           kk=vecti_aux(gg)
-           DO jj=1,kk
-              gg=gg+1
-              ll=vecti_aux(gg)
-              symm_ats_1sh(ll)=ii
-           END DO
+           ll=vecti_aux(gg)
+           symm_ats_bonded_1sh(ll)=ii
         END DO
-        DEALLOCATE(vecti_aux)
-     END IF
-
+     END DO
+     DEALLOCATE(vecti_aux)
   END IF
+
 
 END SUBROUTINE build_order_ats_bonded_shell1st
 
