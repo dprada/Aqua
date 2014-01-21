@@ -125,7 +125,7 @@ SUBROUTINE build_shell1st (core)
  
   INTEGER,INTENT(IN)::core
  
-  INTEGER::nn,nn2,mm,mm2,ii,jj,gg,kk,ll
+  INTEGER::nn,nn2,mm,ii,jj,gg,kk,ll
   INTEGER,DIMENSION(:),ALLOCATABLE::order_ats_1sh,symm_ats_1sh,num_ats_bonded_1sh
   INTEGER,DIMENSION(:),ALLOCATABLE::order_ats_bonded_1sh,symm_ats_bonded_1sh
   INTEGER,DIMENSION(:),ALLOCATABLE::order_nodes_1sh,order_nodes_bonded_1sh
@@ -502,7 +502,7 @@ SUBROUTINE SORT_INT_ATS_1SH (num_ats,dim_vecti_aux,order,valores,interruptor,num
      interruptor=.FALSE.
      DO jj=2,idim
         IF (vals(jj-1)==vals(jj)) THEN
-           IF (interruptor==.FALSE.) THEN
+           IF (interruptor.eqv..FALSE.) THEN
               order_aux(1)=inds(jj-1)
               order_aux(2)=inds(jj)
               ll=2
@@ -512,7 +512,7 @@ SUBROUTINE SORT_INT_ATS_1SH (num_ats,dim_vecti_aux,order,valores,interruptor,num
               order_aux(ll)=inds(jj)
            END IF
         ELSE
-           IF (interruptor==.TRUE.) THEN
+           IF (interruptor.eqv..True.) THEN
               interruptor=.FALSE.
               new_num_crits=new_num_crits+1
               IF (new_num_crits==1) THEN
@@ -535,7 +535,7 @@ SUBROUTINE SORT_INT_ATS_1SH (num_ats,dim_vecti_aux,order,valores,interruptor,num
            END IF
         END IF
      END DO
-     IF (interruptor==.TRUE.) THEN
+     IF (interruptor.eqv..True.) THEN
         interruptor=.FALSE.
         new_num_crits=new_num_crits+1
         IF (new_num_crits==1) THEN
@@ -619,6 +619,264 @@ SUBROUTINE build_order_ats_bonded_shell1st (core,num_ats,order,symm_ats_bonded_1
 
 
 END SUBROUTINE build_order_ats_bonded_shell1st
+
+!#######################################
+!#######################################
+!#######################################
+!#######################################
+!#######################################
+!#######################################
+
+SUBROUTINE build_shell2nd (core)
+
+  IMPLICIT NONE
+ 
+  TYPE iarray_pointer
+     INTEGER,DIMENSION(:),POINTER::p1
+  END TYPE iarray_pointer
+
+  INTEGER,INTENT(IN)::core
+ 
+  INTEGER::nn,nn2,mm,ii,jj,gg,kk,ll
+  INTEGER,DIMENSION(:),ALLOCATABLE::order_ats_1sh,symm_ats_1sh,num_ats_bonded_1sh
+  INTEGER,DIMENSION(:),ALLOCATABLE::order_ats_bonded_1sh,symm_ats_bonded_1sh
+  INTEGER,DIMENSION(:),ALLOCATABLE::order_nodes_1sh,order_nodes_bonded_1sh
+  INTEGER,DIMENSION(:),ALLOCATABLE::boxi,boxi2
+
+  INTEGER::core2
+  INTEGER::nnn,nnn2,mmm,iii
+  !INTEGER,DIMENSION(:),ALLOCATABLE::order_ats_2nd,symm_ats_2nd,num_ats_bonded_2nd
+  !INTEGER,DIMENSION(:),ALLOCATABLE::order_ats_bonded_2nd,symm_ats_bonded_2nd
+  !INTEGER,DIMENSION(:),ALLOCATABLE::order_nodes_2nd,order_nodes_bonded_2nd
+  TYPE(iarray_pointer),DIMENSION(:),POINTER::order_ats_2nd,symm_ats_2nd,num_ats_bonded_2nd
+  TYPE(iarray_pointer),DIMENSION(:),POINTER::order_ats_bonded_2nd,symm_ats_bonded_2nd
+  TYPE(iarray_pointer),DIMENSION(:),POINTER::order_nodes_2nd,order_nodes_bonded_2nd
+  INTEGER,DIMENSION(:),ALLOCATABLE::enes,enes2,emes
+
+  IF (ALLOCATED(mss_ind_atoms)) DEALLOCATE(mss_ind_atoms)
+  IF (ALLOCATED(mss_ind_nodes)) DEALLOCATE(mss_ind_nodes)
+  IF (ALLOCATED(mss_symm))      DEALLOCATE(mss_symm)
+  IF (ALLOCATED(mss))           DEALLOCATE(mss)
+
+  !core
+
+  nn=atomspernode(core)
+  nn2=2*nn
+ 
+  ALLOCATE(order_ats_1sh(nn),order_nodes_1sh(nn),symm_ats_1sh(nn),num_ats_bonded_1sh(nn2))
+
+  CALL build_order_ats_shell1st(core,nn,order_ats_1sh,symm_ats_1sh)
+
+  gg=0
+  DO ii=1,nn
+     jj=order_ats_1sh(ii)
+     num_ats_bonded_1sh(gg+1)=atom_hbs_num(jj)
+     num_ats_bonded_1sh(gg+2)=atom_bs_num(jj)
+     gg=gg+2
+  END DO
+
+  mm=SUM(num_ats_bonded_1sh(:),DIM=1)
+  
+  ALLOCATE(order_ats_bonded_1sh(mm),order_nodes_bonded_1sh(mm),symm_ats_bonded_1sh(mm))
+
+  gg=0
+  mm=0
+  symm_ats_bonded_1sh(:)=0
+  DO ii=1,nn
+     jj=order_ats_1sh(ii)
+     kk=num_ats_bonded_1sh(gg+1)
+     IF (kk>0) THEN
+        ll=T_hbs_start(jj)+1
+        IF (kk==1) THEN
+           mm=mm+1
+           order_ats_bonded_1sh(mm)=T_hbs_ind(ll)
+        ELSE
+           ALLOCATE(boxi(kk),boxi2(kk))
+           boxi(:)=T_hbs_ind((ll):(ll+kk-1))
+           CALL build_order_ats_bonded_shell1st(core,kk,boxi,boxi2)
+           order_ats_bonded_1sh((mm+1):(mm+kk))=boxi(:)
+           symm_ats_bonded_1sh((mm+1):(mm+kk))=boxi2(:)
+           DEALLOCATE(boxi,boxi2)
+           mm=mm+kk
+        END IF
+     END IF
+     kk=num_ats_bonded_1sh(gg+2)
+     IF (kk>0) THEN
+        ll=T_bs_start(jj)+1
+        IF (kk==1) THEN
+           mm=mm+1
+           order_ats_bonded_1sh(mm)=T_bs_ind(ll)
+        ELSE
+           ALLOCATE(boxi(kk),boxi2(kk))
+           boxi(:)=T_bs_ind((ll):(ll+kk-1))
+           CALL build_order_ats_bonded_shell1st(core,kk,boxi,boxi2)
+           order_ats_bonded_1sh((mm+1):(mm+kk))=boxi(:)
+           symm_ats_bonded_1sh((mm+1):(mm+kk))=boxi2(:)
+           DEALLOCATE(boxi,boxi2)
+           mm=mm+kk
+        END IF
+     END IF
+     gg=gg+2
+  END DO
+
+  !!! for the second shell
+
+  order_nodes_1sh(:)        =atom2node(order_ats_1sh(:))
+  order_nodes_bonded_1sh(:) =atom2node(order_ats_bonded_1sh(:))
+
+
+  ALLOCATE(order_ats_2nd(mm),symm_ats_2nd(mm),num_ats_bonded_2nd(mm))
+  ALLOCATE(order_ats_bonded_2nd(mm),symm_ats_bonded_2nd(mm))
+  ALLOCATE(order_nodes_2nd(mm),order_nodes_bonded_2nd(mm))
+  ALLOCATE(enes(mm),enes2(mm),emes(mm))
+
+  DO iii=1,mm
+     core2=order_nodes_bonded_1sh(iii)
+
+     nnn=atomspernode(core2)
+     nnn2=2*nnn
+ 
+     ALLOCATE(order_ats_2nd(iii)%p1(nnn),order_nodes_2nd(iii)%p1(nnn),symm_ats_2nd(iii)%p1(nnn),num_ats_bonded_2nd(iii)%p1(nnn2))
+
+     CALL build_order_ats_shell1st(core2,nnn,order_ats_2nd(iii)%p1,symm_ats_2nd(iii)%p1)
+
+     gg=0
+     DO ii=1,nnn
+        jj=order_ats_2nd(iii)%p1(ii)
+        num_ats_bonded_2nd(iii)%p1(gg+1)=atom_hbs_num(jj)
+        num_ats_bonded_2nd(iii)%p1(gg+2)=atom_bs_num(jj)
+        gg=gg+2
+     END DO
+
+     mmm=SUM(num_ats_bonded_2nd(iii)%p1(:),DIM=1)
+  
+     ALLOCATE(order_ats_bonded_2nd(iii)%p1(mmm),order_nodes_bonded_2nd(iii)%p1(mmm),symm_ats_bonded_2nd(iii)%p1(mmm))
+
+     gg=0
+     mmm=0
+     symm_ats_bonded_2nd(iii)%p1(:)=0
+     DO ii=1,nnn
+        jj=order_ats_2nd(iii)%p1(ii)
+        kk=num_ats_bonded_2nd(iii)%p1(gg+1)
+        IF (kk>0) THEN
+           ll=T_hbs_start(jj)+1
+           IF (kk==1) THEN
+              mmm=mmm+1
+              order_ats_bonded_2nd(iii)%p1(mmm)=T_hbs_ind(ll)
+           ELSE
+              ALLOCATE(boxi(kk),boxi2(kk))
+              boxi(:)=T_hbs_ind((ll):(ll+kk-1))
+              CALL build_order_ats_bonded_shell1st(core2,kk,boxi,boxi2)
+              order_ats_bonded_2nd(iii)%p1((mmm+1):(mmm+kk))=boxi(:)
+              symm_ats_bonded_2nd(iii)%p1((mmm+1):(mmm+kk))=boxi2(:)
+              DEALLOCATE(boxi,boxi2)
+              mmm=mmm+kk
+           END IF
+        END IF
+        kk=num_ats_bonded_2nd(iii)%p1(gg+2)
+        IF (kk>0) THEN
+           ll=T_bs_start(jj)+1
+           IF (kk==1) THEN
+              mmm=mmm+1
+              order_ats_bonded_2nd(iii)%p1(mmm)=T_bs_ind(ll)
+           ELSE
+              ALLOCATE(boxi(kk),boxi2(kk))
+              boxi(:)=T_bs_ind((ll):(ll+kk-1))
+              CALL build_order_ats_bonded_shell1st(core2,kk,boxi,boxi2)
+              order_ats_bonded_2nd(iii)%p1((mmm+1):(mmm+kk))=boxi(:)
+              symm_ats_bonded_2nd(iii)%p1((mmm+1):(mmm+kk))=boxi2(:)
+              DEALLOCATE(boxi,boxi2)
+              mmm=mmm+kk
+           END IF
+        END IF
+        gg=gg+2
+     END DO
+     
+     order_nodes_2nd(iii)%p1(:)        =atom2node(order_ats_2nd(iii)%p1(:))
+     order_nodes_bonded_2nd(iii)%p1(:) =atom2node(order_ats_bonded_2nd(iii)%p1(:))
+     enes(iii)=nnn
+     enes2(iii)=nnn2
+     emes(iii)=mmm
+
+  END DO
+  !!!!
+
+  !Translate
+  order_ats_1sh(:)          =trad2py_atom(order_ats_1sh(:))
+  order_ats_bonded_1sh(:)   =trad2py_atom(order_ats_bonded_1sh(:))
+  order_nodes_1sh(:)        =trad2py_node(order_nodes_1sh(:))
+  order_nodes_bonded_1sh(:) =trad2py_node(order_nodes_bonded_1sh(:))
+
+  DO iii=1,mm
+     order_ats_2nd(iii)%p1(:)          =trad2py_atom(order_ats_2nd(iii)%p1(:))
+     order_ats_bonded_2nd(iii)%p1(:)   =trad2py_atom(order_ats_bonded_2nd(iii)%p1(:))
+     order_nodes_2nd(iii)%p1(:)        =trad2py_node(order_nodes_2nd(iii)%p1(:))
+     order_nodes_bonded_2nd(iii)%p1(:) =trad2py_node(order_nodes_bonded_2nd(iii)%p1(:))
+  END DO
+
+  !Build
+
+  nnn=SUM(enes(:),DIM=1)
+  nnn2=SUM(enes2(:),DIM=1)
+  mmm=SUM(emes(:),DIM=1)
+
+  ALLOCATE(mss_ind_atoms(1+nn+nn2+mm+mm+nnn+nnn2+mmm),mss_symm(1+nn+nn2+mm+mm+nnn+nnn2+mmm))
+  ALLOCATE(mss_ind_nodes(1+nn+nn2+mm+mm+nnn+nnn2+mmm),mss(1+nn+nn2+mm+mm+nnn+nnn2+mmm))
+
+
+  mss_symm(:)=0
+  mss_ind_atoms(1)=nn
+  mss_ind_nodes(1)=nn
+  ii=2
+  jj=1+nn
+  mss_ind_atoms(ii:jj)=order_ats_1sh(:)
+  mss_ind_nodes(ii:jj)=order_nodes_1sh(:)
+  mss_symm(ii:jj)=symm_ats_1sh(:)
+  ii=jj+1
+  jj=jj+nn2
+  mss_ind_atoms(ii:jj)=num_ats_bonded_1sh(:)
+  mss_ind_nodes(ii:jj)=num_ats_bonded_1sh(:)
+  ii=jj+1
+  jj=jj+mm
+  mss_ind_atoms(ii:jj)=order_ats_bonded_1sh(:)
+  mss_ind_nodes(ii:jj)=order_nodes_bonded_1sh(:)
+  mss_symm(ii:jj)=symm_ats_bonded_1sh(:)
+  DO iii=1,mm
+     ii=jj+1
+     jj=jj+1
+     mss_ind_atoms(ii)=enes(iii)
+     mss_ind_nodes(ii)=enes(iii)
+     ii=jj+1
+     jj=jj+enes(iii)
+     mss_ind_atoms(ii:jj)=order_ats_2nd(iii)%p1(:)
+     mss_ind_nodes(ii:jj)=order_nodes_2nd(iii)%p1(:)
+     mss_symm(ii:jj)=symm_ats_2nd(iii)%p1(:)
+     ii=jj+1
+     jj=jj+enes2(iii)
+     mss_ind_atoms(ii:jj)=num_ats_bonded_2nd(iii)%p1(:)
+     mss_ind_nodes(ii:jj)=num_ats_bonded_2nd(iii)%p1(:)
+     ii=jj+1
+     jj=jj+emes(iii)
+     mss_ind_atoms(ii:jj)=order_ats_bonded_2nd(iii)%p1(:)
+     mss_ind_nodes(ii:jj)=order_nodes_bonded_2nd(iii)%p1(:)
+     mss_symm(ii:jj)=symm_ats_bonded_2nd(iii)%p1(:)
+     DEALLOCATE(order_ats_2nd(iii)%p1,order_ats_bonded_2nd(iii)%p1)
+     DEALLOCATE(order_nodes_2nd(iii)%p1,order_nodes_bonded_2nd(iii)%p1)
+     DEALLOCATE(symm_ats_2nd(iii)%p1,symm_ats_bonded_2nd(iii)%p1,num_ats_bonded_2nd(iii)%p1)
+  END DO
+
+
+  DEALLOCATE(order_ats_1sh,order_ats_bonded_1sh)
+  DEALLOCATE(order_nodes_1sh,order_nodes_bonded_1sh)
+  DEALLOCATE(symm_ats_1sh,symm_ats_bonded_1sh,num_ats_bonded_1sh)
+  DEALLOCATE(order_ats_2nd,order_ats_bonded_2nd)
+  DEALLOCATE(order_nodes_2nd,order_nodes_bonded_2nd)
+  DEALLOCATE(symm_ats_2nd,symm_ats_bonded_2nd,num_ats_bonded_2nd)
+  DEALLOCATE(enes,enes2,emes)
+
+
+END SUBROUTINE build_shell2nd
+
 
 
 END MODULE GLOB
