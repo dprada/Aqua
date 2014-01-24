@@ -89,6 +89,7 @@ class shell():
         self.mss_ind_nodes = numpy.array([],dtype='int32',order='Fortran') 
         self.new_symm      = numpy.array([],dtype='int32',order='Fortran') 
         self.mss_str       = numpy.array([],dtype='int32',order='Fortran')
+        self.mss_str2      = []
 
 class node():
 
@@ -609,6 +610,33 @@ class mss():
                             aux2_dict[jj]='i'+str(cc_ion)
                             cc_ion+=1
                     node.shell2nd.mss_str[ii]=aux2_dict[jj]
+                aa1=node.shell2nd.mss_str[0]
+                node.shell2nd.mss_str2.append(aa1)
+                node.shell2nd.mss_str2.append(node.shell2nd.mss_str[1])
+                gg=aa1
+                ggg=0
+                for ii in range(aa1):
+                    node.shell2nd.mss_str2.append(node.shell2nd.mss_str[gg+1])
+                    node.shell2nd.mss_str2.append(node.shell2nd.mss_str[gg+2])
+                    ggg+=node.shell2nd.mss_str[gg+1]+node.shell2nd.mss_str[gg+2]
+                    gg+=2
+                for iii in range(ggg):
+                    gg+=1
+                    node.shell2nd.mss_str2.append(node.shell2nd.mss_str[gg])
+                for iii in range(ggg):
+                    gg+=1
+                    aa1=node.shell2nd.mss_str[gg]
+                    node.shell2nd.mss_str2.append(aa1)
+                    gg+=aa1
+                    jjj=0
+                    for jj in range(aa1):
+                        node.shell2nd.mss_str2.append(node.shell2nd.mss_str[gg+1])
+                        node.shell2nd.mss_str2.append(node.shell2nd.mss_str[gg+2])
+                        jjj+=node.shell2nd.mss_str[gg+1]+node.shell2nd.mss_str[gg+2]
+                        gg+=2
+                    for jj in range(jjj):
+                        gg+=1
+                        node.shell2nd.mss_str2.append(node.shell2nd.mss_str[gg])
 
         del(aa,pacambiar,aux2_dict,aux2_set)
 

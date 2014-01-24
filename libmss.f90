@@ -652,6 +652,10 @@ SUBROUTINE build_shell2nd (core)
   TYPE(iarray_pointer),DIMENSION(:),POINTER::order_ats_bonded_2nd,symm_ats_bonded_2nd
   TYPE(iarray_pointer),DIMENSION(:),POINTER::order_nodes_2nd,order_nodes_bonded_2nd
   INTEGER,DIMENSION(:),ALLOCATABLE::enes,enes2,emes
+  INTEGER,DIMENSION(:),ALLOCATABLE::aux_order_ats_2nd,aux_symm_ats_2nd,aux_num_ats_bonded_2nd
+  INTEGER,DIMENSION(:),ALLOCATABLE::aux_order_ats_bonded_2nd,aux_symm_ats_bonded_2nd
+  INTEGER,DIMENSION(:),ALLOCATABLE::aux_order_nodes_2nd,aux_order_nodes_bonded_2nd
+
 
   IF (ALLOCATED(mss_ind_atoms)) DEALLOCATE(mss_ind_atoms)
   IF (ALLOCATED(mss_ind_nodes)) DEALLOCATE(mss_ind_nodes)
@@ -735,56 +739,58 @@ SUBROUTINE build_shell2nd (core)
 
      nnn=atomspernode(core2)
      nnn2=2*nnn
- 
-     ALLOCATE(order_ats_2nd(iii)%p1(nnn),order_nodes_2nd(iii)%p1(nnn),symm_ats_2nd(iii)%p1(nnn),num_ats_bonded_2nd(iii)%p1(nnn2))
 
-     CALL build_order_ats_shell1st(core2,nnn,order_ats_2nd(iii)%p1,symm_ats_2nd(iii)%p1)
+     ALLOCATE(aux_order_ats_2nd(nnn),aux_order_nodes_2nd(nnn),aux_symm_ats_2nd(nnn),aux_num_ats_bonded_2nd(nnn2))
+     !ALLOCATE(order_ats_2nd(iii)%p1(nnn),order_nodes_2nd(iii)%p1(nnn),symm_ats_2nd(iii)%p1(nnn),num_ats_bonded_2nd(iii)%p1(nnn2))
+
+     CALL build_order_ats_shell1st(core2,nnn,aux_order_ats_2nd,aux_symm_ats_2nd)
 
      gg=0
      DO ii=1,nnn
-        jj=order_ats_2nd(iii)%p1(ii)
-        num_ats_bonded_2nd(iii)%p1(gg+1)=atom_hbs_num(jj)
-        num_ats_bonded_2nd(iii)%p1(gg+2)=atom_bs_num(jj)
+        jj=aux_order_ats_2nd(ii)
+        aux_num_ats_bonded_2nd(gg+1)=atom_hbs_num(jj)
+        aux_num_ats_bonded_2nd(gg+2)=atom_bs_num(jj)
         gg=gg+2
      END DO
 
-     mmm=SUM(num_ats_bonded_2nd(iii)%p1(:),DIM=1)
+     mmm=SUM(aux_num_ats_bonded_2nd(:),DIM=1)
   
-     ALLOCATE(order_ats_bonded_2nd(iii)%p1(mmm),order_nodes_bonded_2nd(iii)%p1(mmm),symm_ats_bonded_2nd(iii)%p1(mmm))
+     ALLOCATE(aux_order_ats_bonded_2nd(mmm),aux_order_nodes_bonded_2nd(mmm),aux_symm_ats_bonded_2nd(mmm))
+     !ALLOCATE(order_ats_bonded_2nd(iii)%p1(mmm),order_nodes_bonded_2nd(iii)%p1(mmm),symm_ats_bonded_2nd(iii)%p1(mmm))
 
      gg=0
      mmm=0
-     symm_ats_bonded_2nd(iii)%p1(:)=0
+     aux_symm_ats_bonded_2nd(:)=0
      DO ii=1,nnn
-        jj=order_ats_2nd(iii)%p1(ii)
-        kk=num_ats_bonded_2nd(iii)%p1(gg+1)
+        jj=aux_order_ats_2nd(ii)
+        kk=aux_num_ats_bonded_2nd(gg+1)
         IF (kk>0) THEN
            ll=T_hbs_start(jj)+1
            IF (kk==1) THEN
               mmm=mmm+1
-              order_ats_bonded_2nd(iii)%p1(mmm)=T_hbs_ind(ll)
+              aux_order_ats_bonded_2nd(mmm)=T_hbs_ind(ll)
            ELSE
               ALLOCATE(boxi(kk),boxi2(kk))
               boxi(:)=T_hbs_ind((ll):(ll+kk-1))
               CALL build_order_ats_bonded_shell1st(core2,kk,boxi,boxi2)
-              order_ats_bonded_2nd(iii)%p1((mmm+1):(mmm+kk))=boxi(:)
-              symm_ats_bonded_2nd(iii)%p1((mmm+1):(mmm+kk))=boxi2(:)
+              aux_order_ats_bonded_2nd((mmm+1):(mmm+kk))=boxi(:)
+              aux_symm_ats_bonded_2nd((mmm+1):(mmm+kk))=boxi2(:)
               DEALLOCATE(boxi,boxi2)
               mmm=mmm+kk
            END IF
         END IF
-        kk=num_ats_bonded_2nd(iii)%p1(gg+2)
+        kk=aux_num_ats_bonded_2nd(gg+2)
         IF (kk>0) THEN
            ll=T_bs_start(jj)+1
            IF (kk==1) THEN
               mmm=mmm+1
-              order_ats_bonded_2nd(iii)%p1(mmm)=T_bs_ind(ll)
+              aux_order_ats_bonded_2nd(mmm)=T_bs_ind(ll)
            ELSE
               ALLOCATE(boxi(kk),boxi2(kk))
               boxi(:)=T_bs_ind((ll):(ll+kk-1))
               CALL build_order_ats_bonded_shell1st(core2,kk,boxi,boxi2)
-              order_ats_bonded_2nd(iii)%p1((mmm+1):(mmm+kk))=boxi(:)
-              symm_ats_bonded_2nd(iii)%p1((mmm+1):(mmm+kk))=boxi2(:)
+              aux_order_ats_bonded_2nd((mmm+1):(mmm+kk))=boxi(:)
+              aux_symm_ats_bonded_2nd((mmm+1):(mmm+kk))=boxi2(:)
               DEALLOCATE(boxi,boxi2)
               mmm=mmm+kk
            END IF
@@ -792,11 +798,25 @@ SUBROUTINE build_shell2nd (core)
         gg=gg+2
      END DO
      
-     order_nodes_2nd(iii)%p1(:)        =atom2node(order_ats_2nd(iii)%p1(:))
-     order_nodes_bonded_2nd(iii)%p1(:) =atom2node(order_ats_bonded_2nd(iii)%p1(:))
+     aux_order_nodes_2nd(:)        =atom2node(aux_order_ats_2nd(:))
+     aux_order_nodes_bonded_2nd(:) =atom2node(aux_order_ats_bonded_2nd(:))
      enes(iii)=nnn
      enes2(iii)=nnn2
      emes(iii)=mmm
+
+     ALLOCATE(order_ats_2nd(iii)%p1(nnn),order_nodes_2nd(iii)%p1(nnn),symm_ats_2nd(iii)%p1(nnn),num_ats_bonded_2nd(iii)%p1(nnn2))
+     ALLOCATE(order_ats_bonded_2nd(iii)%p1(mmm),order_nodes_bonded_2nd(iii)%p1(mmm),symm_ats_bonded_2nd(iii)%p1(mmm))
+
+     order_ats_2nd(iii)%p1(:)=aux_order_ats_2nd(:)
+     order_nodes_2nd(iii)%p1(:)=aux_order_nodes_2nd(:)
+     symm_ats_2nd(iii)%p1(:)=aux_symm_ats_2nd(:)
+     num_ats_bonded_2nd(iii)%p1(:)=aux_num_ats_bonded_2nd(:)
+     order_ats_bonded_2nd(iii)%p1(:)=aux_order_ats_bonded_2nd(:)
+     order_nodes_bonded_2nd(iii)%p1(:)=aux_order_nodes_bonded_2nd(:)
+     symm_ats_bonded_2nd(iii)%p1(:)=aux_symm_ats_bonded_2nd(:)
+     
+     DEALLOCATE(aux_order_ats_bonded_2nd,aux_order_nodes_bonded_2nd,aux_symm_ats_bonded_2nd)
+     DEALLOCATE(aux_order_ats_2nd,aux_order_nodes_2nd,aux_symm_ats_2nd,aux_num_ats_bonded_2nd)
 
   END DO
   !!!!
