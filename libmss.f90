@@ -268,6 +268,63 @@ SUBROUTINE build_order_ats_shell1st (core,num_ats,order,symm_ats_1sh)
      interruptor=.true.
      IF (interruptor.eqv..true.) CALL SORTBYNUMHBS_ATS_1SH(core,num_ats,order,interruptor,num_crits,gg)
      IF (interruptor.eqv..true.) CALL SORTBYNUMBS_ATS_1SH(core,num_ats,order,interruptor,num_crits,gg)
+     IF (interruptor.eqv..true.) CALL SORTBYCATEGORYHBS_ATS_1SH(core,num_ats,order,interruptor,num_crits,gg)
+     IF (interruptor.eqv..true.) CALL SORTBYCATEGORYBS_ATS_1SH(core,num_ats,order,interruptor,num_crits,gg)
+
+     IF (interruptor.eqv..true.) THEN
+        gg=0
+        DO ii=1,num_crits
+           gg=gg+1
+           kk=vecti_aux(gg)
+           DO jj=1,kk
+              gg=gg+1
+              ll=vecti_aux(gg)
+              symm_ats_1sh(ll)=ii
+           END DO
+        END DO
+        DEALLOCATE(vecti_aux)
+        !print*,'Todavia',core
+     END IF
+
+  END IF
+
+END SUBROUTINE build_order_ats_shell1st
+
+SUBROUTINE build_order_ats_shell1st_2nd (core,core1st,num_ats,order,symm_ats_1sh)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::core,core1st,num_ats
+  INTEGER,DIMENSION(num_ats),INTENT(OUT)::order,symm_ats_1sh
+
+  INTEGER::ii,jj,kk,gg,ll,num_crits
+  LOGICAL::interruptor
+
+  symm_ats_1sh(:)=0
+
+  jj=0
+  DO ii=node_run_ats(core)+1,node_run_ats(core+1)
+     jj=jj+1
+     order(jj)=ii
+  END DO
+ 
+  num_crits=symm_ats_crits(core)
+
+
+  IF (num_crits>0) THEN
+
+     ii=symm_ats_start(core)
+     jj=symm_ats_start(core+1)
+     gg=jj-ii
+     ALLOCATE(vecti_aux(gg))
+     vecti_aux(:)=symm_ats((ii+1):jj)
+
+     interruptor=.true.
+     IF (interruptor.eqv..true.) CALL SORTBYCORE_ATS_1SH (core,core1st,num_ats,order,interruptor,num_crits,gg)
+     IF (interruptor.eqv..true.) CALL SORTBYNUMHBS_ATS_1SH(core,num_ats,order,interruptor,num_crits,gg)
+     IF (interruptor.eqv..true.) CALL SORTBYNUMBS_ATS_1SH(core,num_ats,order,interruptor,num_crits,gg)
+     IF (interruptor.eqv..true.) CALL SORTBYCATEGORYHBS_ATS_1SH(core,num_ats,order,interruptor,num_crits,gg)
+     IF (interruptor.eqv..true.) CALL SORTBYCATEGORYBS_ATS_1SH(core,num_ats,order,interruptor,num_crits,gg)
 
      IF (interruptor.eqv..true.) THEN
         gg=0
@@ -285,7 +342,7 @@ SUBROUTINE build_order_ats_shell1st (core,num_ats,order,symm_ats_1sh)
 
   END IF
 
-END SUBROUTINE build_order_ats_shell1st
+END SUBROUTINE build_order_ats_shell1st_2nd
 
 
 !!#### SORTING 1ST SHELL:
@@ -355,6 +412,166 @@ SUBROUTINE SORTBYNUMBS_ATS_1SH (core,num_ats,order,interruptor,num_crits,dim_vec
   DEALLOCATE(valores)
 
 END SUBROUTINE SORTBYNUMBS_ATS_1SH
+
+SUBROUTINE SORTBYCORE_ATS_1SH(core,core1st,num_ats,order,interruptor,num_crits,dim_vecti_aux)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::core,core1st,num_ats
+  INTEGER,INTENT(INOUT)::dim_vecti_aux
+  INTEGER,DIMENSION(num_ats),INTENT(INOUT)::order
+  LOGICAL,INTENT(INOUT)::interruptor
+  INTEGER,INTENT(INOUT)::num_crits
+
+  INTEGER::ii,jj,gg,kk,ll,mm,nn,pp,idim
+  INTEGER,DIMENSION(:),ALLOCATABLE::valores
+     
+  ALLOCATE(valores(dim_vecti_aux))
+  valores(:)=0
+     
+  gg=0
+  DO ii=1,num_crits
+     gg=gg+1
+     idim=vecti_aux(gg)
+     DO jj=1,idim
+        gg=gg+1
+        kk=vecti_aux(gg)
+        ll=order(kk)
+        DO mm=T_hbs_start(ll)+1,T_hbs_start(ll+1)
+           nn=T_hbs_ind(mm)
+           IF (atom2node(nn)==core1st) valores(gg)=1
+        END DO
+        DO mm=T_bs_start(ll)+1,T_bs_start(ll+1)
+           nn=T_bs_ind(mm)
+           IF (atom2node(nn)==core1st) valores(gg)=1
+        END DO
+     END DO
+  END DO
+  
+  CALL SORT_INT_ATS_1SH(num_ats,dim_vecti_aux,order,valores,interruptor,num_crits)
+     
+  DEALLOCATE(valores)
+
+END SUBROUTINE SORTBYCORE_ATS_1SH
+
+
+SUBROUTINE SORTBYCATEGORYHBS_ATS_1SH(core,num_ats,order,interruptor,num_crits,dim_vecti_aux)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::core,num_ats
+  INTEGER,INTENT(INOUT)::dim_vecti_aux
+  INTEGER,DIMENSION(num_ats),INTENT(INOUT)::order
+  LOGICAL,INTENT(INOUT)::interruptor
+  INTEGER,INTENT(INOUT)::num_crits
+
+  INTEGER::ii,jj,gg,kk,ll,mm,nn,pp,idim,dim_matrix
+  INTEGER,DIMENSION(:,:),ALLOCATABLE::valores
+
+  dim_matrix=0
+  gg=0
+  DO ii=1,num_crits
+     gg=gg+1
+     idim=vecti_aux(gg)
+     DO jj=1,idim
+        gg=gg+1
+        kk=vecti_aux(gg)
+        ll=order(kk)
+        mm=atom_hbs_num(ll)
+        IF (dim_matrix<mm) dim_matrix=mm
+     END DO
+  END DO
+
+  IF (dim_matrix>0) THEN
+     
+     ALLOCATE(valores(dim_vecti_aux,dim_matrix))
+     valores(:,:)=0
+     
+     gg=0
+     DO ii=1,num_crits
+        gg=gg+1
+        idim=vecti_aux(gg)
+        DO jj=1,idim
+           gg=gg+1
+           kk=vecti_aux(gg)
+           ll=order(kk)
+           pp=0
+           DO mm=T_hbs_start(ll)+1,T_hbs_start(ll+1)
+              pp=pp+1
+              nn=T_hbs_ind(mm)
+              nn=atom2node(nn)
+              nn=node_category(nn)
+              valores(gg,pp)=nn
+           END DO
+        END DO
+     END DO
+     
+     CALL SORT_INT_MATRIX_ATS_1SH(num_ats,dim_vecti_aux,dim_matrix,order,valores,interruptor,num_crits)
+     
+     DEALLOCATE(valores)
+
+  END IF
+
+END SUBROUTINE SORTBYCATEGORYHBS_ATS_1SH
+
+SUBROUTINE SORTBYCATEGORYBS_ATS_1SH(core,num_ats,order,interruptor,num_crits,dim_vecti_aux)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::core,num_ats
+  INTEGER,INTENT(INOUT)::dim_vecti_aux
+  INTEGER,DIMENSION(num_ats),INTENT(INOUT)::order
+  LOGICAL,INTENT(INOUT)::interruptor
+  INTEGER,INTENT(INOUT)::num_crits
+
+  INTEGER::ii,jj,gg,kk,ll,mm,nn,pp,idim,dim_matrix
+  INTEGER,DIMENSION(:,:),ALLOCATABLE::valores
+
+  dim_matrix=0
+  gg=0
+  DO ii=1,num_crits
+     gg=gg+1
+     idim=vecti_aux(gg)
+     DO jj=1,idim
+        gg=gg+1
+        kk=vecti_aux(gg)
+        ll=order(kk)
+        mm=atom_hbs_num(ll)
+        IF (dim_matrix<mm) dim_matrix=mm
+     END DO
+  END DO
+
+  IF (dim_matrix>0) THEN
+     
+     ALLOCATE(valores(dim_vecti_aux,dim_matrix))
+     valores(:,:)=0
+     
+     gg=0
+     DO ii=1,num_crits
+        gg=gg+1
+        idim=vecti_aux(gg)
+        DO jj=1,idim
+           gg=gg+1
+           kk=vecti_aux(gg)
+           ll=order(kk)
+           pp=0
+           DO mm=T_bs_start(ll)+1,T_bs_start(ll+1)
+              pp=pp+1
+              nn=T_bs_ind(mm)
+              nn=atom2node(nn)
+              nn=node_category(nn)
+              valores(gg,pp)=nn
+           END DO
+        END DO
+     END DO
+     
+     CALL SORT_INT_MATRIX_ATS_1SH(num_ats,dim_vecti_aux,dim_matrix,order,valores,interruptor,num_crits)
+     
+     DEALLOCATE(valores)
+
+  END IF
+
+END SUBROUTINE SORTBYCATEGORYBS_ATS_1SH
 
 SUBROUTINE SORTBYNUMHBS_NODES_1SH (core,num_ats,order,interruptor,num_crits,dim_vecti_aux)
 
@@ -456,6 +673,41 @@ SUBROUTINE SORTBYCATEGORY_NODES_BONDED_1SH (core,num_ats,order,interruptor,num_c
   DEALLOCATE(valores)
 
 END SUBROUTINE SORTBYCATEGORY_NODES_BONDED_1SH
+
+SUBROUTINE SORTBYCORE_NODES_BONDED_1SH (core,core1st,num_ats,order,interruptor,num_crits,dim_vecti_aux)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::core,core1st,num_ats
+  INTEGER,INTENT(INOUT)::dim_vecti_aux
+  INTEGER,DIMENSION(num_ats),INTENT(INOUT)::order
+  LOGICAL,INTENT(INOUT)::interruptor
+  INTEGER,INTENT(INOUT)::num_crits
+
+  INTEGER::ii,jj,gg,kk,ll,idim
+  INTEGER,DIMENSION(:),ALLOCATABLE::valores
+
+  ALLOCATE(valores(dim_vecti_aux))
+  valores(:)=0
+
+  gg=0
+  DO ii=1,num_crits
+     gg=gg+1
+     idim=vecti_aux(gg)
+     DO jj=1,idim
+        gg=gg+1
+        kk=vecti_aux(gg)
+        ll=order(kk)
+        IF (atom2node(ll)==core1st) valores(gg)=1
+     END DO
+  END DO
+
+  CALL SORT_INT_ATS_1SH(num_ats,dim_vecti_aux,order,valores,interruptor,num_crits)
+
+  DEALLOCATE(valores)
+
+END SUBROUTINE SORTBYCORE_NODES_BONDED_1SH
+
 
 SUBROUTINE SORT_INT_ATS_1SH (num_ats,dim_vecti_aux,order,valores,interruptor,num_crits)
 
@@ -575,6 +827,141 @@ SUBROUTINE SORT_INT_ATS_1SH (num_ats,dim_vecti_aux,order,valores,interruptor,num
 
 END SUBROUTINE SORT_INT_ATS_1SH
 
+SUBROUTINE SORT_INT_MATRIX_ATS_1SH (num_ats,dim_vecti_aux,dim_matrix,order,valores,interruptor,num_crits)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::num_ats,dim_matrix
+  INTEGER,INTENT(INOUT)::dim_vecti_aux
+  INTEGER,DIMENSION(num_ats),INTENT(INOUT)::order
+  INTEGER,DIMENSION(dim_vecti_aux,dim_matrix),INTENT(IN)::valores
+  LOGICAL,INTENT(INOUT)::interruptor
+  INTEGER,INTENT(INOUT)::num_crits
+
+  INTEGER::ii,jj,kk,ll,gg,nn,pp,idim,new_num_crits,tope
+  INTEGER,DIMENSION(:),ALLOCATABLE::val_aux,ind_aux,order_aux
+  INTEGER,DIMENSION(:),ALLOCATABLE::vals,inds
+  INTEGER,DIMENSION(:),ALLOCATABLE::new_symm_aux,cajon
+  LOGICAL,DIMENSION(:),ALLOCATABLE::filtro
+  LOGICAL,DIMENSION(:,:),ALLOCATABLE::suprafiltro
+
+  ALLOCATE(suprafiltro(dim_vecti_aux,dim_matrix))
+  suprafiltro(:,:)=.TRUE.
+
+  pp=1
+  DO WHILE ((num_crits>0).AND.(pp<=dim_matrix))
+     
+     new_num_crits=0
+     
+     gg=0
+     DO ii=1,num_crits
+        gg=gg+1
+        idim=vecti_aux(gg)
+        ALLOCATE(val_aux(idim),ind_aux(idim),order_aux(idim))
+        DO jj=1,idim
+           gg=gg+1
+           kk=vecti_aux(gg)
+           ll=order(kk)
+           ind_aux(jj)=kk
+           order_aux(jj)=ll
+           nn=MAXLOC(valores(gg,:),DIM=1,MASK=suprafiltro(gg,:))
+           suprafiltro(gg,nn)=.FALSE.
+           val_aux(jj)=valores(gg,nn)
+        END DO
+        ALLOCATE(filtro(idim),vals(idim),inds(idim))
+        filtro=.TRUE.
+        DO jj=1,idim
+           kk=MAXLOC(val_aux,DIM=1,MASK=filtro(:))
+           filtro(kk)=.FALSE.
+           ll=ind_aux(jj)
+           inds(jj)=ll
+           vals(jj)=val_aux(kk)
+           order(ll)=order_aux(kk)
+        END DO
+        interruptor=.FALSE.
+        DO jj=2,idim
+           IF (vals(jj-1)==vals(jj)) THEN
+              IF (interruptor.eqv..FALSE.) THEN
+                 order_aux(1)=inds(jj-1)
+                 order_aux(2)=inds(jj)
+                 ll=2
+                 interruptor=.TRUE.
+              ELSE
+                 ll=ll+1
+                 order_aux(ll)=inds(jj)
+              END IF
+           ELSE
+              IF (interruptor.eqv..True.) THEN
+                 interruptor=.FALSE.
+                 new_num_crits=new_num_crits+1
+                 IF (new_num_crits==1) THEN
+                    tope=ll+1
+                    ALLOCATE(new_symm_aux(tope))
+                    new_symm_aux(1)=ll
+                    new_symm_aux(2:tope)=order_aux(1:ll)
+                 ELSE
+                    ALLOCATE(cajon(tope))
+                    cajon(:)=new_symm_aux(:)
+                    DEALLOCATE(new_symm_aux)
+                    ALLOCATE(new_symm_aux(tope+1+ll))
+                    new_symm_aux(1:tope)=cajon(:)
+                    tope=tope+1
+                    new_symm_aux(tope)=ll
+                    new_symm_aux((tope+1):(tope+ll))=order_aux(1:ll)
+                    tope=tope+ll
+                    DEALLOCATE(cajon)
+                 END IF
+              END IF
+           END IF
+        END DO
+        IF (interruptor.eqv..True.) THEN
+           interruptor=.FALSE.
+           new_num_crits=new_num_crits+1
+           IF (new_num_crits==1) THEN
+              tope=ll+1
+              ALLOCATE(new_symm_aux(tope))
+              new_symm_aux(1)=ll
+              new_symm_aux(2:tope)=order_aux(1:ll)
+           ELSE
+              ALLOCATE(cajon(tope))
+              cajon(:)=new_symm_aux(:)
+              DEALLOCATE(new_symm_aux)
+              ALLOCATE(new_symm_aux(tope+1+ll))
+              new_symm_aux(1:tope)=cajon(:)
+              tope=tope+1
+              new_symm_aux(tope)=ll
+              new_symm_aux((tope+1):(tope+ll))=order_aux(1:ll)
+              tope=tope+ll
+              DEALLOCATE(cajon)
+           END IF
+        END IF
+        DEALLOCATE(val_aux,ind_aux,order_aux)
+        DEALLOCATE(filtro,vals,inds)
+     END DO
+     
+     num_crits=new_num_crits
+     DEALLOCATE(vecti_aux)
+     IF (num_crits==0) THEN
+        interruptor=.FALSE.
+        dim_vecti_aux=0
+     ELSE
+        interruptor=.TRUE.
+        ALLOCATE(vecti_aux(tope))
+        dim_vecti_aux=tope
+        vecti_aux(:)=new_symm_aux(:)
+        DEALLOCATE(new_symm_aux)
+     END IF
+
+     pp=pp+1
+  END DO
+
+  DEALLOCATE(suprafiltro)
+
+
+END SUBROUTINE SORT_INT_MATRIX_ATS_1SH
+
+
+
 SUBROUTINE build_order_ats_bonded_shell1st (core,num_ats,order,symm_ats_bonded_1sh)
  
   IMPLICIT NONE
@@ -598,9 +985,7 @@ SUBROUTINE build_order_ats_bonded_shell1st (core,num_ats,order,symm_ats_bonded_1
   interruptor=.true.
 
   IF (interruptor.eqv..true.) CALL SORTBYCATEGORY_NODES_BONDED_1SH (core,num_ats,order,interruptor,num_crits,gg)
-
   IF (interruptor.eqv..true.) CALL SORTBYNUMHBS_NODES_1SH(core,num_ats,order,interruptor,num_crits,gg)
-
   IF (interruptor.eqv..true.) CALL SORTBYNUMBS_NODES_1SH(core,num_ats,order,interruptor,num_crits,gg)
 
   IF (interruptor.eqv..true.) THEN
@@ -619,6 +1004,52 @@ SUBROUTINE build_order_ats_bonded_shell1st (core,num_ats,order,symm_ats_bonded_1
 
 
 END SUBROUTINE build_order_ats_bonded_shell1st
+
+SUBROUTINE build_order_ats_bonded_shell1st_2nd (core,core1st,num_ats,order,symm_ats_bonded_1sh)
+ 
+  IMPLICIT NONE
+ 
+  INTEGER,INTENT(IN)::core,core1st,num_ats
+  INTEGER,DIMENSION(num_ats),INTENT(INOUT)::order
+  INTEGER,DIMENSION(num_ats),INTENT(OUT)::symm_ats_bonded_1sh
+ 
+  INTEGER::ii,jj,kk,gg,ll,num_crits
+  LOGICAL::interruptor
+ 
+  symm_ats_bonded_1sh(:)=0
+
+  num_crits=1
+  gg=num_ats+1
+
+  ALLOCATE(vecti_aux(gg))
+  vecti_aux=(/num_ats,(ii,ii=1,num_ats,1)/)
+ 
+
+  interruptor=.true.
+
+  IF (interruptor.eqv..true.) CALL SORTBYCORE_NODES_BONDED_1SH (core,core1st,num_ats,order,interruptor,num_crits,gg)
+  IF (interruptor.eqv..true.) CALL SORTBYCATEGORY_NODES_BONDED_1SH (core,num_ats,order,interruptor,num_crits,gg)
+
+  !IF (interruptor.eqv..true.) CALL SORTBYNUMHBS_NODES_1SH(core,num_ats,order,interruptor,num_crits,gg)
+  !IF (interruptor.eqv..true.) CALL SORTBYNUMBS_NODES_1SH(core,num_ats,order,interruptor,num_crits,gg)
+
+  IF (interruptor.eqv..true.) THEN
+     gg=0
+     DO ii=1,num_crits
+        gg=gg+1
+        kk=vecti_aux(gg)
+        DO jj=1,kk
+           gg=gg+1
+           ll=vecti_aux(gg)
+           symm_ats_bonded_1sh(ll)=ii
+        END DO
+     END DO
+     DEALLOCATE(vecti_aux)
+  END IF
+
+
+END SUBROUTINE build_order_ats_bonded_shell1st_2nd
+
 
 !#######################################
 !#######################################
@@ -741,9 +1172,8 @@ SUBROUTINE build_shell2nd (core)
      nnn2=2*nnn
 
      ALLOCATE(aux_order_ats_2nd(nnn),aux_order_nodes_2nd(nnn),aux_symm_ats_2nd(nnn),aux_num_ats_bonded_2nd(nnn2))
-     !ALLOCATE(order_ats_2nd(iii)%p1(nnn),order_nodes_2nd(iii)%p1(nnn),symm_ats_2nd(iii)%p1(nnn),num_ats_bonded_2nd(iii)%p1(nnn2))
 
-     CALL build_order_ats_shell1st(core2,nnn,aux_order_ats_2nd,aux_symm_ats_2nd)
+     CALL build_order_ats_shell1st_2nd(core2,core,nnn,aux_order_ats_2nd,aux_symm_ats_2nd)
 
      gg=0
      DO ii=1,nnn
@@ -756,7 +1186,6 @@ SUBROUTINE build_shell2nd (core)
      mmm=SUM(aux_num_ats_bonded_2nd(:),DIM=1)
   
      ALLOCATE(aux_order_ats_bonded_2nd(mmm),aux_order_nodes_bonded_2nd(mmm),aux_symm_ats_bonded_2nd(mmm))
-     !ALLOCATE(order_ats_bonded_2nd(iii)%p1(mmm),order_nodes_bonded_2nd(iii)%p1(mmm),symm_ats_bonded_2nd(iii)%p1(mmm))
 
      gg=0
      mmm=0
@@ -772,7 +1201,7 @@ SUBROUTINE build_shell2nd (core)
            ELSE
               ALLOCATE(boxi(kk),boxi2(kk))
               boxi(:)=T_hbs_ind((ll):(ll+kk-1))
-              CALL build_order_ats_bonded_shell1st(core2,kk,boxi,boxi2)
+              CALL build_order_ats_bonded_shell1st_2nd(core2,core,kk,boxi,boxi2)
               aux_order_ats_bonded_2nd((mmm+1):(mmm+kk))=boxi(:)
               aux_symm_ats_bonded_2nd((mmm+1):(mmm+kk))=boxi2(:)
               DEALLOCATE(boxi,boxi2)
@@ -788,7 +1217,7 @@ SUBROUTINE build_shell2nd (core)
            ELSE
               ALLOCATE(boxi(kk),boxi2(kk))
               boxi(:)=T_bs_ind((ll):(ll+kk-1))
-              CALL build_order_ats_bonded_shell1st(core2,kk,boxi,boxi2)
+              CALL build_order_ats_bonded_shell1st_2nd(core2,core,kk,boxi,boxi2)
               aux_order_ats_bonded_2nd((mmm+1):(mmm+kk))=boxi(:)
               aux_symm_ats_bonded_2nd((mmm+1):(mmm+kk))=boxi2(:)
               DEALLOCATE(boxi,boxi2)
