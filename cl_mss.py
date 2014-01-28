@@ -257,7 +257,7 @@ class mss():
 
         ## symmetric nodes and categories
 
-        self.x_categories_node=numpy.zeros((self.num_nodes),dtype=int,order='Fortran')
+        self.x_categories_node=numpy.zeros((self.num_nodes,3),dtype=int,order='Fortran')
 
         count_category=0
         if self.symm_nodes:
