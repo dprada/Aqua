@@ -245,17 +245,15 @@ class mss():
                 self.x_symm_ats_crits[node.index]=hh
             del(symm_ats_list)
             self.x_symm_ats      =numpy.array(self.x_symm_ats,dtype=int,order='Fortran')
-            self.x_symm_ats_dim=self.x_symm_ats.shape[0]
         else:
             for node in self.node:
                 self.x_symm_ats=numpy.zeros((1),dtype=int,order='Fortran')
-                self.x_symm_ats_dim=self.x_symm_ats.shape[0]
 
         ## symmetric nodes and categories
+        
+        self.x_symm_nods=[]
+        self.x_symm_nods_num=0
 
-        self.x_categories_node=numpy.zeros((self.num_nodes,3),dtype=int,order='Fortran')
-
-        count_category=0
         if self.symm_nodes:
             symm_nodes_list=[]
             if type(self.symm_nodes) in [list,tuple]:
@@ -263,43 +261,47 @@ class mss():
                     symm_nodes_list.append(self.msystem.selection(sel))
             else:
                 symm_nodes_list.append(self.msystem.selection(sel))
+            self.x_symm_nods_num=len(symm_nodes_list)
+            aux2=range(self.x_symm_nods_num)
+            aux=[[] for ii in aux2]
             for node in self.node:
-                for ii in range(len(symm_nodes_list)):
+                for ii in aux2:
                     if True in numpy.in1d(node.atoms,symm_nodes_list[ii]):
-                        node.category[0]=count_category+ii
-                        self.x_categories_node[node.index]=count_category+ii
-            count_category+=len(symm_nodes_list)
+                        aux[ii].append(node.index+1)
+                        break
+            for ii in aux2:
+                self.x_symm_nods.append(len(aux[ii]))
+                self.x_symm_nods.extend(aux[ii])
+            del(aux,aux2)
+            self.x_symm_nods=numpy.array(self.x_symm_nods,dtype=int,order='Fortran')
+
 
         ## symmetric sets of nodes
 
-        aux_sets=[]
-        aux_category_sets=[]
+        self.x_symm_sets_num=0
+        self.x_symm_sets=[]
+
         if self.symm_sets_nodes:
+            self.x_symm_sets_num=len(self.symm_sets_nodes)
             for criterium in self.symm_sets_nodes:
                 if criterium == 'lipids':
                     symm_sets_nodes=self.msystem.lipid
                 elif criterium == 'proteins':
                     symm_sets_nodes=self.msystem.protein
-                aux_category_sets.append(count_category)
                 aux=[item for sublist in symm_sets_nodes for item in sublist]
                 num_sets=len(symm_sets_nodes)
                 sets={ii:[] for ii in range(num_sets)}
                 for node in self.node:
                     if True in numpy.in1d(node.atoms,aux):
-                        node.category[0]=count_category
-                        self.x_categories_node[node.index]=count_category
                         for ii in range(num_sets):
                             if True in numpy.in1d(node.atoms,symm_sets_nodes[ii]):
-                                sets[ii].append(node.index)
-                count_category+=1
-                aux_sets.append(sets.values())
+                                sets[ii].append(node.index+1)
+                                break
+                self.x_symm_sets.append(num_sets)
+                self.x_symm_sets.append(len(sets[0]))
                 for ii in range(num_sets):
-                    aux=sets[ii]
-                    for jj in range(len(aux)):
-                        self.node[aux[jj]].category[1]=ii
-                        self.node[aux[jj]].category[2]=jj
-
-        self.num_categories=count_category
+                    self.x_symm_sets.extend(sets[ii])
+            self.x_symm_sets=numpy.array(self.x_symm_sets,dtype=int,order='Fortran')
 
 
     def info(self):
@@ -465,20 +467,15 @@ class mss():
 
         mss_funcs.load_topol(self.x_atom2node,self.trad2py_atom,self.trad2py_node,
                              self.x_symm_ats_start,self.x_symm_ats_crits,self.x_symm_ats,
-                             self.num_atoms,self.num_nodes,self.x_symm_ats_dim)
-
-        #mss_funcs.load_topol(self.x_node_run_ats,self.x_atom2node,self.trad2py_node,self.trad2py_atom,
-        #                     self.x_symm_ats_start,self.x_symm_ats_crits,self.x_symm_ats,
-        #                     self.x_categories_node,
-        #                     self.num_nodes,self.num_atoms,self.x_symm_ats_dim)
-
+                             self.x_symm_nods,self.x_symm_nods_num,
+                             self.x_symm_sets,self.x_symm_sets_num,
+                             self.num_atoms,self.num_nodes,
+                             self.x_symm_ats.shape[0],self.x_symm_nods.shape[0],self.x_symm_sets.shape[0])
 
     def load_net(self):
 
         mss_funcs.load_net(self.T_hbs,self.T_bs,self.T_num_hbs_atom,self.T_num_bs_atom,
                            self.T_num_hbs,self.T_num_bs,self.num_atoms)
-
-        #mss_funcs.load_net(self.T_hbs_start,self.T_bs_start,self.T_hbs_ind,self.T_bs_ind,self.T_num_hbs,self.T_num_bs,self.num_atoms)
 
     def reset_topol(self):
 
@@ -488,31 +485,31 @@ class mss():
 
         pass
 
-#    def build_shell1st(self,node='ALL'):
-#     
-#        # x_node_run_ats,x_atom2node,trad2py_node,trad2py_atom
-#        # T_hbs_start,T_hbs_ind,T_bs_start,T_bs_ind,T_num_hbs,T_num_bs
-#        if node=='ALL':
-#            for ii in range(self.num_nodes):
-#                jj=self.trad2f_node[ii]
-#                mss_funcs.build_shell1st(jj)
-#                self.node[ii].shell1st.mss           = numpy.copy(mss_funcs.mss)
-#                self.node[ii].shell1st.mss           = numpy.copy(mss_funcs.mss_ind_nodes) # provisional
-#                self.node[ii].shell1st.mss_ind_atoms = numpy.copy(mss_funcs.mss_ind_atoms)
-#                self.node[ii].shell1st.mss_ind_nodes = numpy.copy(mss_funcs.mss_ind_nodes)
-#                self.node[ii].shell1st.mss_symm      = numpy.copy(mss_funcs.mss_symm)
-#            self.mss2mss_str(shell1st=True)
-#        elif type(node)==int:
-#            jj=self.trad2f_node[node]
-#            mss_funcs.build_shell1st(jj)
-#            self.node[node].shell1st.mss           = numpy.copy(mss_funcs.mss)
-#            self.node[node].shell1st.mss           = numpy.copy(mss_funcs.mss_ind_nodes) # provisional
-#            self.node[node].shell1st.mss_ind_atoms = numpy.copy(mss_funcs.mss_ind_atoms)
-#            self.node[node].shell1st.mss_ind_nodes = numpy.copy(mss_funcs.mss_ind_nodes)
-#            self.node[node].shell1st.mss_symm      = numpy.copy(mss_funcs.mss_symm)
-#            self.mss2mss_str(node=node,shell1st=True)
-#        pass
-# 
+    def build_shell1st(self,node='ALL'):
+     
+        # x_node_run_ats,x_atom2node,trad2py_node,trad2py_atom
+        # T_hbs_start,T_hbs_ind,T_bs_start,T_bs_ind,T_num_hbs,T_num_bs
+        if node=='ALL':
+            for ii in range(self.num_nodes):
+                jj=self.trad2f_node[ii]
+                mss_funcs.build_shell1st(jj)
+                #self.node[ii].shell1st.mss           = numpy.copy(mss_funcs.mss)
+                self.node[ii].shell1st.mss           = numpy.copy(mss_funcs.mss_ind_nods) # provisional
+                self.node[ii].shell1st.mss_ind_atoms = numpy.copy(mss_funcs.mss_ind_ats)
+                self.node[ii].shell1st.mss_ind_nodes = numpy.copy(mss_funcs.mss_ind_nods)
+                #self.node[ii].shell1st.mss_symm      = numpy.copy(mss_funcs.mss_symm)
+            #self.mss2mss_str(shell1st=True)
+        elif type(node)==int:
+            jj=self.trad2f_node[node]
+            mss_funcs.build_shell1st(jj)
+            #self.node[node].shell1st.mss           = numpy.copy(mss_funcs.mss)
+            self.node[node].shell1st.mss           = numpy.copy(mss_funcs.mss_ind_nods) # provisional
+            self.node[node].shell1st.mss_ind_atoms = numpy.copy(mss_funcs.mss_ind_ats)
+            self.node[node].shell1st.mss_ind_nodes = numpy.copy(mss_funcs.mss_ind_nods)
+            #self.node[node].shell1st.mss_symm      = numpy.copy(mss_funcs.mss_symm)
+            #self.mss2mss_str(node=node,shell1st=True)
+        pass
+ 
 #    def build_shell2nd(self,node='ALL'):
 #     
 #        # x_node_run_ats,x_atom2node,trad2py_node,trad2py_atom
