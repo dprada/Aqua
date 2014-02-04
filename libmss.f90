@@ -356,7 +356,7 @@ SUBROUTINE SORT_INT_1SH (nats,dim_aux,order,valores,num_crits)
 
   num_crits=new_num_crits
   DEALLOCATE(vect_aux)
-  IF (num_crits) THEN
+  IF (num_crits>0) THEN
      ALLOCATE(vect_aux(tope))
      dim_aux=tope
      vect_aux(:)=new_symm_aux(:)
@@ -397,8 +397,6 @@ SUBROUTINE build_shell1st (core)
  
   !! Construyo Arbol
 
-  print*,'>>> ',core,' <<<'
-
   nats=num_ats_nod(core)
   nats2=2*nats
   nnods=num_Hbs_Bs_nod(core)
@@ -428,9 +426,10 @@ SUBROUTINE build_shell1st (core)
   DO ii=1,nats
      DO jj=1,2
         IF (dim_tree_core(ii,jj)>1) THEN
+           print*,trad2py_nod(at2nod(tree_core(ii,jj)%p1(:)))
            CALL build_order_bonded_1st(tree_core(ii,jj)%p1(:),dim_tree_core(ii,jj),num_crits)
+           print*,trad2py_nod(at2nod(tree_core(ii,jj)%p1(:)))
            IF (num_crits>0) THEN
-              print*,'si'
               DEALLOCATE(vect_aux)
            END IF
         END IF
@@ -446,17 +445,24 @@ SUBROUTINE build_shell1st (core)
 
   jj=1
   mss_ind_ats(jj)  = nats
+  mss_ind_nods(jj) = nats
   ii=jj+1
   jj=jj+nats
-  mss_ind_ats(ii:jj) = order_core(:)
+  mss_ind_ats(ii:jj)  = order_core(:)
+  mss_ind_nods(ii:jj) = at2nod(mss_ind_ats(ii:jj))
+  mss_ind_ats(ii:jj)  = trad2py_at(mss_ind_ats(ii:jj))
+  mss_ind_nods(ii:jj) = trad2py_nod(mss_ind_nods(ii:jj))
   ii=jj+1
   jj=jj+nats2
-  mss_ind_ats(ii:jj) = (/(dim_tree_core(eff_order_core(kk),:),kk=1,nats)/)
+  mss_ind_ats(ii:jj)  = (/(dim_tree_core(eff_order_core(kk),:),kk=1,nats)/)
+  mss_ind_nods(ii:jj) = mss_ind_ats(ii:jj)
   ii=jj+1
   jj=jj+nnods
   mss_ind_ats(ii:jj) = (/((/tree_core(eff_order_core(kk),1)%p1(:),tree_core(eff_order_core(kk),2)%p1(:)/),kk=1,nats)/)
+  mss_ind_nods(ii:jj) = at2nod(mss_ind_ats(ii:jj))
+  mss_ind_ats(ii:jj)  = trad2py_at(mss_ind_ats(ii:jj))
+  mss_ind_nods(ii:jj) = trad2py_nod(mss_ind_nods(ii:jj))
 
- 
 END SUBROUTINE build_shell1st
 
 SUBROUTINE order_ats_1st (core,nats,order)
@@ -473,15 +479,15 @@ SUBROUTINE order_ats_1st (core,nats,order)
 
   num_crits=ats_symm_num_crits(core)
 
-  IF (num_crits) THEN
+  IF (num_crits>0) THEN
 
      dim_aux=ats_symm_length(core)
      ii=ats_symm_in(core)
      ALLOCATE(vect_aux(dim_aux))
      vect_aux(:)=ats_symm(ii:(ii+dim_aux-1))
      CALL SORTBYNUMHBS_ATS_1SH(core,nats,order,num_crits,dim_aux)
-     IF (num_crits) CALL SORTBYNUMBS_ATS_1SH(core,nats,order,num_crits,dim_aux)
-     IF (num_crits) DEALLOCATE(vect_aux)
+     IF (num_crits>0) CALL SORTBYNUMBS_ATS_1SH(core,nats,order,num_crits,dim_aux)
+     IF (num_crits>0) DEALLOCATE(vect_aux)
 
   END IF
 
@@ -496,28 +502,27 @@ SUBROUTINE build_order_bonded_1st (order,dim_ord,num_crits)
   INTEGER,INTENT(OUT)::num_crits
 
   INTEGER::ii,dim_aux
-  INTEGER,DIMENSION(dim_ord)::lista_nodos,valores
+  INTEGER,DIMENSION(dim_ord)::lista_nodos
+  INTEGER,DIMENSION(:),ALLOCATABLE::valores
   
   lista_nodos(:)=at2nod(order(:))
-  valores(:)=lev_supsets(lista_nodos(:))
   
-  ALLOCATE(vect_aux(dim_ord+1))
+  ALLOCATE(vect_aux(dim_ord+1),valores(dim_ord+1))
   vect_aux(:)=(/dim_ord,(/(ii,ii=1,dim_ord)/)/)
+  valores(:)=(/0,(/lev_supsets(lista_nodos(:))/)/)
+
   num_crits=1
   dim_aux=dim_ord+1
 
-  print*,'entra'
-  print*,order(:)
-  print*,vect_aux(:)
   CALL SORT_INT_1SH(dim_ord,dim_aux,order,valores,num_crits)
 
   IF (superfiltro_sets.eqv..TRUE.) THEN
      IF (ANY(filtro_supsets(lista_nodos(:)),DIM=1).eqv..TRUE.) THEN
-        print*,'*****   ','aqui'
+
      END IF
   END IF
 
-  print*,'sale',num_crits
+  DEALLOCATE(valores)
 
 END SUBROUTINE build_order_bonded_1st
 
