@@ -9,7 +9,7 @@ MODULE GLOB
 
 INTEGER::num_ats,num_nods,num_sets,num_supsets
 INTEGER,DIMENSION(:),ALLOCATABLE::at2nod
-INTEGER,DIMENSION(:),ALLOCATABLE::in_at_nod,num_ats_nod
+INTEGER,DIMENSION(:),ALLOCATABLE::in_at_nod,num_ats_nod,num_ats_nod2
 INTEGER,DIMENSION(:),ALLOCATABLE::lev_ats,lev_nods,lev_sets,lev_supsets
 INTEGER,DIMENSION(:),ALLOCATABLE::topes_supsets
 LOGICAL,DIMENSION(:),ALLOCATABLE::filtro_supsets
@@ -61,6 +61,7 @@ SUBROUTINE load_topol(xx_at2nod,&
   IF (ALLOCATED(trad2py_nod))      DEALLOCATE(trad2py_nod)
   IF (ALLOCATED(in_at_nod))        DEALLOCATE(in_at_nod)
   IF (ALLOCATED(num_ats_nod))      DEALLOCATE(num_ats_nod)
+  IF (ALLOCATED(num_ats_nod2))     DEALLOCATE(num_ats_nod2)
 
   IF (ALLOCATED(ats_symm))           DEALLOCATE(ats_symm)
   IF (ALLOCATED(ats_symm_num_crits))  DEALLOCATE(ats_symm_num_crits)
@@ -85,7 +86,7 @@ SUBROUTINE load_topol(xx_at2nod,&
   trad2py_at(:)  = xx_trad2py_at(:)
   trad2py_nod(:) = xx_trad2py_nod(:)
 
-  ALLOCATE(num_ats_nod(num_nods),in_at_nod(num_nods))
+  ALLOCATE(num_ats_nod(num_nods),num_ats_nod2(num_nods),in_at_nod(num_nods))
   ALLOCATE(lev_nods(num_nods),lev_sets(num_nods),lev_supsets(num_nods))
   ALLOCATE(filtro_supsets(num_nods))
 
@@ -103,6 +104,7 @@ SUBROUTINE load_topol(xx_at2nod,&
      lev_nods(ii)=1
      lev_sets(ii)=1
      lev_supsets(ii)=ii
+     num_ats_nod2(ii)=num_ats_nod(ii)*2
   END DO
 
   ! SYMM ATS
@@ -205,9 +207,11 @@ SUBROUTINE load_net(xx_hbs,xx_bs,xx_num_Hbs_at,xx_num_Bs_at,&
   IF (ALLOCATED(num_hbs_at))   DEALLOCATE(num_hbs_at)
   IF (ALLOCATED(hbs))          DEALLOCATE(hbs)
 
+
   IF (ALLOCATED(in_bs))        DEALLOCATE(in_bs)
   IF (ALLOCATED(num_bs_at))    DEALLOCATE(num_bs_at)
   IF (ALLOCATED(bs))           DEALLOCATE(bs)
+
 
   IF (ALLOCATED(num_Hbs_Bs_nod))   DEALLOCATE(num_Hbs_Bs_nod)
 
@@ -248,7 +252,7 @@ END SUBROUTINE load_net
 
 
 !!!#################################
-!!!####  GENERAL FUNCTIONS TO SORT
+!!!####  GENERAL FUNCTIONS TO SORT  
 !!!#################################
 
 SUBROUTINE SORT_INT_1SH (nats,dim_aux,order,valores,num_crits)
@@ -371,7 +375,335 @@ END SUBROUTINE SORT_INT_1SH
 !!!####  BUILD FIRST SHELL
 !!!#################################
 
+
 SUBROUTINE build_shell1st (core)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::core
+
+  INTEGER::aa,bb,cc,dd,ee,ii,jj,kk,ll
+
+  INTEGER::s1_nats,s1_nats2,s1_nnods,s1_ntot,s1_ats_symm_num_crits
+  INTEGER,DIMENSION(:),ALLOCATABLE::s1_ats_symm,s1_order_ats,s1_num_bonds,s1_order_bonded_ats
+
+
+  s1_nats=num_ats_nod(core)
+  s1_nats2=num_ats_nod2(core)
+  s1_nnods=num_Hbs_Bs_nod(core)
+  s1_ntot=s1_nats+s1_nats2+s1_nnods+1
+  ll=ats_symm_length(core)
+  ii=ats_symm_in(core)
+  jj=ii+ll
+  ALLOCATE(s1_ats_symm(ll))
+  s1_ats_symm_num_crits=ats_symm_num_crits(core)
+  s1_ats_symm(:)=ats_symm(ii:jj)
+  ALLOCATE(s1_order_ats(s1_nats))
+  ii=in_at_nod(core)
+  s1_order_ats(:)=(/(jj,jj=1,s1_nats)/)+ii
+  ALLOCATE(s1_num_bonds(s1_nats2))
+  ALLOCATE(s1_order_bonded_ats(s1_nnods))
+  kk=1
+  ll=0
+  DO ii=1,s1_nats
+     jj=s1_order_ats(ii)
+     aa=num_Hbs_at(jj)
+     bb=num_Bs_at(jj)
+     cc=aa+bb
+     dd=in_Hbs(jj)
+     ee=in_Bs(jj)
+     s1_num_bonds(kk)=aa
+     s1_num_bonds(kk+1)=bb
+     kk=kk+2
+     s1_order_bonded_ats((ll+1):(ll+cc))=(/Hbs(dd+1:dd+aa),Bs(ee+1:ee+bb)/)
+     ll=ll+cc
+  END DO
+
+  IF (ALLOCATED(mss_ind_ats))   DEALLOCATE(mss_ind_ats)
+  IF (ALLOCATED(mss_ind_nods))  DEALLOCATE(mss_ind_nods)
+  IF (ALLOCATED(mss))           DEALLOCATE(mss)
+
+  ALLOCATE(mss_ind_ats(s1_ntot),mss_ind_nods(s1_ntot),mss(s1_ntot))
+  mss_ind_ats(:)=0
+  mss_ind_nods(:)=0
+  mss(:)=0
+
+  jj=1
+  mss_ind_ats(jj)  = s1_nats
+  mss_ind_nods(jj) = s1_nats
+  ii=jj+1
+  jj=jj+s1_nats
+  mss_ind_ats(ii:jj)  = s1_order_ats(:)
+  mss_ind_nods(ii:jj) = at2nod(s1_order_ats(:))
+  mss_ind_ats(ii:jj)  = trad2py_at(s1_order_ats(:))
+  mss_ind_nods(ii:jj) = trad2py_nod(mss_ind_nods(ii:jj))
+  ii=jj+1
+  jj=jj+s1_nats2
+  mss_ind_ats(ii:jj)  = s1_num_bonds(:)
+  mss_ind_nods(ii:jj) = s1_num_bonds(:)
+  ii=jj+1
+  jj=jj+s1_nnods
+  mss_ind_ats(ii:jj)  = s1_order_bonded_ats(:)
+  mss_ind_nods(ii:jj) = at2nod(s1_order_bonded_ats(:))
+  mss_ind_ats(ii:jj)  = trad2py_at(s1_order_bonded_ats(:))
+  mss_ind_nods(ii:jj) = trad2py_nod(mss_ind_nods(ii:jj))
+
+  DEALLOCATE(s1_ats_symm,s1_order_ats,s1_num_bonds,s1_order_bonded_ats)
+
+END SUBROUTINE build_shell1st
+
+
+SUBROUTINE build_shell2nd (core)
+
+  IMPLICIT NONE
+
+  TYPE iarray_pointer
+     INTEGER,DIMENSION(:),POINTER::p1
+  END TYPE iarray_pointer
+
+  INTEGER,INTENT(IN)::core
+
+  INTEGER::aa,bb,cc,dd,ee,ii,jj,kk,ll,iii
+  INTEGER::core2
+
+  INTEGER::s1_nats,s1_nats2,s1_nnods,s1_ntot,s1_ats_symm_num_crits
+  INTEGER,DIMENSION(:),ALLOCATABLE::s1_ats_symm,s1_order_ats,s1_num_bonds,s1_order_bonded_ats
+
+  INTEGER::si_nats,si_nats2,si_nnods
+  INTEGER,DIMENSION(:),ALLOCATABLE::s2_nats,s2_nats2,s2_nnods,s2_ntot,s2_ats_symm_num_crits
+  TYPE(iarray_pointer),DIMENSION(:),POINTER::s2_ats_symm,s2_order_ats,s2_num_bonds,s2_order_bonded_ats
+
+  INTEGER::ntot
+
+  s1_nats=num_ats_nod(core)
+  s1_nats2=num_ats_nod2(core)
+  s1_nnods=num_Hbs_Bs_nod(core)
+  s1_ntot=s1_nats+s1_nats2+s1_nnods+1
+  ll=ats_symm_length(core)
+  ii=ats_symm_in(core)
+  jj=ii+ll
+  ALLOCATE(s1_ats_symm(ll))
+  s1_ats_symm_num_crits=ats_symm_num_crits(core)
+  s1_ats_symm(:)=ats_symm(ii:jj)
+  ALLOCATE(s1_order_ats(s1_nats))
+  ii=in_at_nod(core)
+  s1_order_ats(:)=(/(jj,jj=1,s1_nats)/)+ii
+  ALLOCATE(s1_num_bonds(s1_nats2))
+  ALLOCATE(s1_order_bonded_ats(s1_nnods))
+  kk=1
+  ll=0
+  DO ii=1,s1_nats
+     jj=s1_order_ats(ii)
+     aa=num_Hbs_at(jj)
+     bb=num_Bs_at(jj)
+     cc=aa+bb
+     dd=in_Hbs(jj)
+     ee=in_Bs(jj)
+     s1_num_bonds(kk)=aa
+     s1_num_bonds(kk+1)=bb
+     kk=kk+2
+     s1_order_bonded_ats((ll+1):(ll+cc))=(/Hbs(dd+1:dd+aa),Bs(ee+1:ee+bb)/)
+     ll=ll+cc
+  END DO
+
+  ALLOCATE(s2_nats(s1_nnods),s2_nats2(s1_nnods),s2_nnods(s1_nnods),s2_ntot(s1_nnods),s2_ats_symm_num_crits(s1_nnods))
+  ALLOCATE(s2_ats_symm(s1_nnods),s2_order_ats(s1_nnods),s2_num_bonds(s1_nnods),s2_order_bonded_ats(s1_nnods))
+
+  DO iii=1,s1_nnods
+     core2=s1_order_bonded_ats(iii)
+     core2=at2nod(core2)
+     si_nats=num_ats_nod(core2)
+     si_nats2=num_ats_nod2(core2)
+     si_nnods=num_Hbs_Bs_nod(core2)
+     s2_nats(iii)=si_nats
+     s2_nats2(iii)=si_nats2
+     s2_nnods(iii)=si_nnods
+     s2_ntot(iii)=si_nats+si_nats2+si_nnods+1
+     ll=ats_symm_length(core)
+     ii=ats_symm_in(core)
+     jj=ii+ll
+     ALLOCATE(s2_ats_symm(iii)%p1(ll))
+     s2_ats_symm_num_crits(iii)=ats_symm_num_crits(core2)
+     s2_ats_symm(iii)%p1(:)=ats_symm(ii:jj)
+     ALLOCATE(s2_order_ats(iii)%p1(si_nats))
+     ii=in_at_nod(core2)
+     s2_order_ats(iii)%p1(:)=(/(jj,jj=1,si_nats)/)+ii
+     ALLOCATE(s2_num_bonds(iii)%p1(si_nats2))
+     ALLOCATE(s2_order_bonded_ats(iii)%p1(si_nnods))
+     kk=1
+     ll=0
+     DO ii=1,si_nats
+        jj=s2_order_ats(iii)%p1(ii)
+        aa=num_Hbs_at(jj)
+        bb=num_Bs_at(jj)
+        cc=aa+bb
+        dd=in_Hbs(jj)
+        ee=in_Bs(jj)
+        s2_num_bonds(iii)%p1(kk)=aa
+        s2_num_bonds(iii)%p1(kk+1)=bb
+        kk=kk+2
+        s2_order_bonded_ats(iii)%p1((ll+1):(ll+cc))=(/Hbs(dd+1:dd+aa),Bs(ee+1:ee+bb)/)
+        ll=ll+cc
+     END DO
+  END DO
+
+
+  ! Quito simetrias order bonded 2nd
+
+  DO iii=1,s1_nnods
+     jj=0
+     DO jjj=1,s2_nats2(iii)
+        si_nats=s2_num_bonds(iii)%p1(jjj)
+        jj=jj+si_nats
+        IF (si_nats>1) THEN
+           ii=jj+1
+           num_crits=1
+           dim_symm_crits=si_nats+1
+           ALLOCATE(aux_order(si_nats),aux_nod(si_nats),ALLOCATE(symm_crits(dim_symm_crits)))
+           aux_order(:)=(/(aa,aa=1,si_nats)/)
+           symm_crit(:)=(/si_nats,aux_order(:)/)
+           aux_nod(:)=at2nod(s2_order_bonded_ats(iii)%p1(ii:jj))
+           IF (ANY(aux_nod(:).eqv.core)) THEN
+              IF (nod_in_supsets)
+
+
+
+           IF (superfiltro_sets.eqv..TRUE.) THEN
+              aux_in_supsets(:)=nod_in_supsets(at2nod)
+              IF (ANY(aux_in_supsets)) THEN
+                 IF (ANY(aux_nod(:).eqv.core)) THEN
+                    dim_mat=3
+                    ALLOCATE(valores(dim_symm_crits,dim_mat))
+                    valores(:,:)=0
+                    aa=lev_supsets(core)
+                    bb=lev_sets(core)
+                    cc=core
+                    gg=0
+                    DO nn=1,num_crits
+                       gg=gg+1
+                       DO mm=1,symm_crit(gg)
+                          gg=gg+1
+                          kk=aux_nod(symm_crit(gg))
+                          aaa=lev_supsets(kk)
+                          bbb=lev_sets(kk)
+                          ccc=kk
+                          IF (aa==aaa) THEN
+                             valores(gg,1)=1
+                             IF (bb==bbb) THEN
+                                valores(gg,2)=1
+                                IF (cc==ccc) THEN
+                                   valores(gg,3)=1
+                                END IF
+                             END IF
+                          END IF
+                       END DO
+                    END DO
+                    CALL ASABER()
+                    DEALLOCATE(valores)
+                 END IF
+                 IF (num_crits>1) THEN
+                    dim_mat=3
+                    ALLOCATE(valores(dim_symm_crits,dim_mat))
+                    gg=0
+                    DO nn=1,num_crits
+                       gg=gg+1
+                       DO mm=1,symm_crit(gg)
+                          gg=gg+1
+                          kk=aux_nod(symm_crit(gg))
+                          valores(gg,1)=lev_supsets(kk)
+                          valores(gg,2)=lev_sets(kk)
+                          valores(gg,3)=lev_nods(kk)
+                       END DO
+                    END DO
+                    !! contar nodos por supset en valores(:,2)
+                    CALL ASABER()
+                 END IF
+              ELSE
+                 IF (ANY(aux_nod(:).eqv.core)) THEN
+                    
+
+           ELSE
+
+
+           END IF
+
+        END IF
+     END DO
+  END DO
+
+  ! Quito simetrias order ats 2nd
+lev_ats,lev_nods,lev_sets,lev_supsets
+  ! Quito simetrias order bonded 1st
+
+  ! Quito simetrias order ats 1st
+
+
+
+
+  ntot=s1_ntot+SUM(s2_ntot(:),DIM=1)
+
+  IF (ALLOCATED(mss_ind_ats))   DEALLOCATE(mss_ind_ats)
+  IF (ALLOCATED(mss_ind_nods))  DEALLOCATE(mss_ind_nods)
+  IF (ALLOCATED(mss))           DEALLOCATE(mss)
+
+  ALLOCATE(mss_ind_ats(ntot),mss_ind_nods(ntot),mss(ntot))
+  mss_ind_ats(:)=0
+  mss_ind_nods(:)=0
+  mss(:)=0
+
+  jj=1
+  mss_ind_ats(jj)  = s1_nats
+  mss_ind_nods(jj) = s1_nats
+  ii=jj+1
+  jj=jj+s1_nats
+  mss_ind_ats(ii:jj)  = s1_order_ats(:)
+  mss_ind_nods(ii:jj) = at2nod(s1_order_ats(:))
+  mss_ind_ats(ii:jj)  = trad2py_at(s1_order_ats(:))
+  mss_ind_nods(ii:jj) = trad2py_nod(mss_ind_nods(ii:jj))
+  ii=jj+1
+  jj=jj+s1_nats2
+  mss_ind_ats(ii:jj)  = s1_num_bonds(:)
+  mss_ind_nods(ii:jj) = s1_num_bonds(:)
+  ii=jj+1
+  jj=jj+s1_nnods
+  mss_ind_ats(ii:jj)  = s1_order_bonded_ats(:)
+  mss_ind_nods(ii:jj) = at2nod(s1_order_bonded_ats(:))
+  mss_ind_ats(ii:jj)  = trad2py_at(s1_order_bonded_ats(:))
+  mss_ind_nods(ii:jj) = trad2py_nod(mss_ind_nods(ii:jj))
+
+  DO iii=1,s1_nnods
+     jj=jj+1
+     si_nats=s2_nats(iii) 
+     mss_ind_ats(jj)  = si_nats
+     mss_ind_nods(jj) = si_nats
+     ii=jj+1
+     jj=jj+si_nats
+     mss_ind_ats(ii:jj)  = s2_order_ats(iii)%p1(:)
+     mss_ind_nods(ii:jj) = at2nod(mss_ind_ats(ii:jj))
+     mss_ind_ats(ii:jj)  = trad2py_at(mss_ind_ats(ii:jj))
+     mss_ind_nods(ii:jj) = trad2py_nod(mss_ind_nods(ii:jj))
+     ii=jj+1
+     jj=jj+s2_nats2(iii)
+     mss_ind_ats(ii:jj)  = s2_num_bonds(iii)%p1(:)
+     mss_ind_nods(ii:jj) = mss_ind_ats(ii:jj)
+     ii=jj+1
+     jj=jj+s2_nnods(iii)
+     mss_ind_ats(ii:jj)  = s2_order_bonded_ats(iii)%p1(:)
+     mss_ind_nods(ii:jj) = at2nod(mss_ind_ats(ii:jj))
+     mss_ind_ats(ii:jj)  = trad2py_at(mss_ind_ats(ii:jj))
+     mss_ind_nods(ii:jj) = trad2py_nod(mss_ind_nods(ii:jj))
+     DEALLOCATE(s2_ats_symm(iii)%p1,s2_order_ats(iii)%p1,s2_num_bonds(iii)%p1,s2_order_bonded_ats(iii)%p1)
+  END DO
+
+
+  DEALLOCATE(s1_ats_symm,s1_order_ats,s1_num_bonds,s1_order_bonded_ats)
+  DEALLOCATE(s2_nats,s2_nats2,s2_nnods,s2_ntot,s2_ats_symm_num_crits)
+  DEALLOCATE(s2_ats_symm,s2_order_ats,s2_num_bonds,s2_order_bonded_ats)
+
+END SUBROUTINE build_shell2nd
+
+
+SUBROUTINE build_shell1st_old (core)
  
   IMPLICIT NONE
  
@@ -426,9 +758,7 @@ SUBROUTINE build_shell1st (core)
   DO ii=1,nats
      DO jj=1,2
         IF (dim_tree_core(ii,jj)>1) THEN
-           print*,trad2py_nod(at2nod(tree_core(ii,jj)%p1(:)))
            CALL build_order_bonded_1st(tree_core(ii,jj)%p1(:),dim_tree_core(ii,jj),num_crits)
-           print*,trad2py_nod(at2nod(tree_core(ii,jj)%p1(:)))
            IF (num_crits>0) THEN
               DEALLOCATE(vect_aux)
            END IF
@@ -463,68 +793,106 @@ SUBROUTINE build_shell1st (core)
   mss_ind_ats(ii:jj)  = trad2py_at(mss_ind_ats(ii:jj))
   mss_ind_nods(ii:jj) = trad2py_nod(mss_ind_nods(ii:jj))
 
-END SUBROUTINE build_shell1st
+END SUBROUTINE build_shell1st_old
 
-SUBROUTINE order_ats_1st (core,nats,order)
 
+SUBROUTINE build_shell2nd_old (core)
+ 
   IMPLICIT NONE
-
-  INTEGER,INTENT(IN)::core,nats
-  INTEGER,DIMENSION(nats),INTENT(OUT)::order
-
-  INTEGER::ii,jj,num_crits,dim_aux
-
-  jj=in_at_nod(core)
-  order(:)=(/(ii,ii=jj+1,jj+nats)/)
-
-  num_crits=ats_symm_num_crits(core)
-
-  IF (num_crits>0) THEN
-
-     dim_aux=ats_symm_length(core)
-     ii=ats_symm_in(core)
-     ALLOCATE(vect_aux(dim_aux))
-     vect_aux(:)=ats_symm(ii:(ii+dim_aux-1))
-     CALL SORTBYNUMHBS_ATS_1SH(core,nats,order,num_crits,dim_aux)
-     IF (num_crits>0) CALL SORTBYNUMBS_ATS_1SH(core,nats,order,num_crits,dim_aux)
-     IF (num_crits>0) DEALLOCATE(vect_aux)
-
-  END IF
+ 
+  TYPE iarray_pointer
+     INTEGER,DIMENSION(:),POINTER::p1
+  END TYPE iarray_pointer
 
 
-END SUBROUTINE order_ats_1st
+  INTEGER,INTENT(IN)::core
+ 
+  INTEGER::nats,nats2,nnods,ntot
+  INTEGER::aa,bb,cc,dd
+  INTEGER::ii,jj,kk
+
+  INTEGER,DIMENSION(:),ALLOCATABLE::order_core,eff_order_core,vaux
+  INTEGER,DIMENSION(:,:),ALLOCATABLE::dim_tree_core
+  TYPE(iarray_pointer),DIMENSION(:,:),POINTER::tree_core
+  INTEGER::num_crits
+
+  IF (ALLOCATED(mss_ind_ats))   DEALLOCATE(mss_ind_ats)
+  IF (ALLOCATED(mss_ind_nods))  DEALLOCATE(mss_ind_nods)
+  IF (ALLOCATED(mss))           DEALLOCATE(mss)
+ 
+  !! Comienzo 1st shell
+
+  nats=num_ats_nod(core)
+  nats2=2*nats
+  nnods=num_Hbs_Bs_nod(core)
+
+  ALLOCATE(order_core(nats),eff_order_core(nats))
+
+  ii=in_at_nod(core)
+  eff_order_core=(/(jj,jj=1,nats)/)
+  order_core(:)=eff_order_core(:)+ii
+
+  ALLOCATE(tree_core(nats,2),dim_tree_core(nats,2))
+
+  DO ii=1,nats
+     jj=order_core(ii)
+     aa=num_Hbs_at(jj)
+     bb=num_Bs_at(jj)
+     cc=in_Hbs(jj)
+     dd=in_Bs(jj)
+     ALLOCATE(tree_core(ii,1)%p1(aa),tree_core(ii,2)%p1(bb))
+     dim_tree_core(ii,:)=(/aa,bb/)
+     tree_core(ii,1)%p1(:)=Hbs(cc+1:cc+aa)
+     tree_core(ii,2)%p1(:)= Bs(dd+1:dd+bb)
+  END DO
+
+  !! Quito Simetrias
+
+  DO ii=1,nats
+     DO jj=1,2
+        IF (dim_tree_core(ii,jj)>1) THEN
+           CALL build_order_bonded_1st(tree_core(ii,jj)%p1(:),dim_tree_core(ii,jj),num_crits)
+           IF (num_crits>0) THEN
+              DEALLOCATE(vect_aux)
+           END IF
+        END IF
+     END DO
+  END DO
+
+  !! Comienzo 2nd shell
 
 
-SUBROUTINE build_order_bonded_1st (order,dim_ord,num_crits)
 
-  INTEGER::dim_ord
-  INTEGER,DIMENSION(:),INTENT(INOUT)::order
-  INTEGER,INTENT(OUT)::num_crits
 
-  INTEGER::ii,dim_aux
-  INTEGER,DIMENSION(dim_ord)::lista_nodos
-  INTEGER,DIMENSION(:),ALLOCATABLE::valores
+  ntot=1+nats+nats2+nnods
+  ALLOCATE(mss_ind_ats(ntot),mss_ind_nods(ntot),mss(ntot))
+  mss_ind_ats(:)=0
+  mss_ind_nods(:)=0
+  mss(:)=0
+
+  jj=1
+  mss_ind_ats(jj)  = nats
+  mss_ind_nods(jj) = nats
+  ii=jj+1
+  jj=jj+nats
+  mss_ind_ats(ii:jj)  = order_core(:)
+  mss_ind_nods(ii:jj) = at2nod(mss_ind_ats(ii:jj))
+  mss_ind_ats(ii:jj)  = trad2py_at(mss_ind_ats(ii:jj))
+  mss_ind_nods(ii:jj) = trad2py_nod(mss_ind_nods(ii:jj))
+  ii=jj+1
+  jj=jj+nats2
+  mss_ind_ats(ii:jj)  = (/(dim_tree_core(eff_order_core(kk),:),kk=1,nats)/)
+  mss_ind_nods(ii:jj) = mss_ind_ats(ii:jj)
+  ii=jj+1
+  jj=jj+nnods
+  mss_ind_ats(ii:jj) = (/((/tree_core(eff_order_core(kk),1)%p1(:),tree_core(eff_order_core(kk),2)%p1(:)/),kk=1,nats)/)
+  mss_ind_nods(ii:jj) = at2nod(mss_ind_ats(ii:jj))
+  mss_ind_ats(ii:jj)  = trad2py_at(mss_ind_ats(ii:jj))
+  mss_ind_nods(ii:jj) = trad2py_nod(mss_ind_nods(ii:jj))
+
+END SUBROUTINE build_shell2nd_old
   
-  lista_nodos(:)=at2nod(order(:))
-  
-  ALLOCATE(vect_aux(dim_ord+1),valores(dim_ord+1))
-  vect_aux(:)=(/dim_ord,(/(ii,ii=1,dim_ord)/)/)
-  valores(:)=(/0,(/lev_supsets(lista_nodos(:))/)/)
 
-  num_crits=1
-  dim_aux=dim_ord+1
-
-  CALL SORT_INT_1SH(dim_ord,dim_aux,order,valores,num_crits)
-
-  IF (superfiltro_sets.eqv..TRUE.) THEN
-     IF (ANY(filtro_supsets(lista_nodos(:)),DIM=1).eqv..TRUE.) THEN
-
-     END IF
-  END IF
-
-  DEALLOCATE(valores)
-
-END SUBROUTINE build_order_bonded_1st
 
 !SUBROUTINE build_shell1st_2 (core)
 ! 
@@ -610,6 +978,86 @@ END SUBROUTINE build_order_bonded_1st
 !  DEALLOCATE(order_nods_1sh,order_nods_bonded_1sh)
 ! 
 !END SUBROUTINE build_shell1st_2
+
+
+
+SUBROUTINE order_ats_1st (core,nats,order)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::core,nats
+  INTEGER,DIMENSION(nats),INTENT(OUT)::order
+
+  INTEGER::ii,jj,num_crits,dim_aux
+
+  jj=in_at_nod(core)
+  order(:)=(/(ii,ii=jj+1,jj+nats)/)
+
+  num_crits=ats_symm_num_crits(core)
+
+  IF (num_crits>0) THEN
+
+     dim_aux=ats_symm_length(core)
+     ii=ats_symm_in(core)
+     ALLOCATE(vect_aux(dim_aux))
+     vect_aux(:)=ats_symm(ii:(ii+dim_aux-1))
+     CALL SORTBYNUMHBS_ATS_1SH(core,nats,order,num_crits,dim_aux)
+     IF (num_crits>0) CALL SORTBYNUMBS_ATS_1SH(core,nats,order,num_crits,dim_aux)
+     IF (num_crits>0) DEALLOCATE(vect_aux)
+
+  END IF
+
+END SUBROUTINE order_ats_1st
+
+
+SUBROUTINE build_order_bonded_1st (order,dim_ord,num_crits)
+
+  INTEGER::dim_ord
+  INTEGER,DIMENSION(:),INTENT(INOUT)::order
+  INTEGER,INTENT(OUT)::num_crits
+
+  INTEGER::ii,dim_aux
+  INTEGER,DIMENSION(dim_ord)::lista_nodos
+  INTEGER,DIMENSION(:),ALLOCATABLE::valores
+
+  INTEGER::dim_sop
+  INTEGER,DIMENSION(:),ALLOCATABLE::sop
+  LOGICAL,DIMENSION(:),ALLOCATABLE::filt_sop
+  
+  lista_nodos(:)=at2nod(order(:))
+  
+  ALLOCATE(vect_aux(dim_ord+1),valores(dim_ord+1))
+  vect_aux(:)=(/dim_ord,(/(ii,ii=1,dim_ord)/)/)
+  valores(:)=(/0,(/lev_supsets(lista_nodos(:))/)/)
+
+  num_crits=1
+  dim_aux=dim_ord+1
+
+  CALL SORT_INT_1SH(dim_ord,dim_aux,order,valores,num_crits)
+
+  IF (superfiltro_sets.eqv..TRUE.) THEN
+     IF (num_crits>0) THEN
+        
+        !ALLOCATE(filt_sop(dim_aux))
+        !filt_sop
+
+     !IF (ANY(filtro_supsets(lista_nodos(:)),DIM=1).eqv..TRUE.) THEN
+     !IF (COUNT(filtro_supsets(lista_nodos(:)),DIM=1)>1) THEN
+        !print*,'si'
+        !dim_sop=dim_aux
+        !ALLOCATE(sop(dim_aux))
+        !sop(:)=vect_aux(:)
+        ! 
+        !print*, num_crits
+        !print*, vect_aux(:)
+
+     END IF
+  END IF
+
+  DEALLOCATE(valores)
+
+END SUBROUTINE build_order_bonded_1st
+
 
 
 SUBROUTINE SORTBYNUMHBS_ATS_1SH (core,nats,order,num_crits,dim_aux)

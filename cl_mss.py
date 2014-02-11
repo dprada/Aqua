@@ -251,6 +251,8 @@ class mss():
 
         ## symmetric nodes and categories
         
+        count_category=0 ### BORRAR
+
         self.x_symm_nods=[]
         self.x_symm_nods_num=0
 
@@ -268,13 +270,14 @@ class mss():
                 for ii in aux2:
                     if True in numpy.in1d(node.atoms,symm_nodes_list[ii]):
                         aux[ii].append(node.index+1)
+                        node.category[0]=count_category+ii ### BORRAR
                         break
             for ii in aux2:
                 self.x_symm_nods.append(len(aux[ii]))
                 self.x_symm_nods.extend(aux[ii])
             del(aux,aux2)
             self.x_symm_nods=numpy.array(self.x_symm_nods,dtype=int,order='Fortran')
-
+            count_category+=len(symm_nodes_list) ### BORRAR
 
         ## symmetric sets of nodes
 
@@ -293,14 +296,20 @@ class mss():
                 sets={ii:[] for ii in range(num_sets)}
                 for node in self.node:
                     if True in numpy.in1d(node.atoms,aux):
+                        node.category[0]=count_category ### BORRAR
                         for ii in range(num_sets):
                             if True in numpy.in1d(node.atoms,symm_sets_nodes[ii]):
                                 sets[ii].append(node.index+1)
                                 break
+                count_category+=1 ### BORRAR
                 self.x_symm_sets.append(num_sets)
                 self.x_symm_sets.append(len(sets[0]))
                 for ii in range(num_sets):
                     self.x_symm_sets.extend(sets[ii])
+                    aux=sets[ii] ### BORRAR
+                    for jj in range(len(aux)): ### BORRAR
+                        self.node[aux[jj]-1].category[1]=ii ### BORRAR
+                        self.node[aux[jj]-1].category[2]=jj ### BORRAR
             self.x_symm_sets=numpy.array(self.x_symm_sets,dtype=int,order='Fortran')
 
 
@@ -510,30 +519,28 @@ class mss():
             self.mss2mss_str(node=node,shell1st=True)
         pass
  
-#    def build_shell2nd(self,node='ALL'):
-#     
-#        # x_node_run_ats,x_atom2node,trad2py_node,trad2py_atom
-#        # T_hbs_start,T_hbs_ind,T_bs_start,T_bs_ind,T_num_hbs,T_num_bs
-#        if node=='ALL':
-#            for ii in range(self.num_nodes):
-#                jj=self.trad2f_node[ii]
-#                mss_funcs.build_shell2nd(jj)
-#                self.node[ii].shell2nd.mss           = numpy.copy(mss_funcs.mss)
-#                self.node[ii].shell2nd.mss           = numpy.copy(mss_funcs.mss_ind_nodes) # provisional
-#                self.node[ii].shell2nd.mss_ind_atoms = numpy.copy(mss_funcs.mss_ind_atoms)
-#                self.node[ii].shell2nd.mss_ind_nodes = numpy.copy(mss_funcs.mss_ind_nodes)
-#                self.node[ii].shell2nd.mss_symm      = numpy.copy(mss_funcs.mss_symm)
-#            self.mss2mss_str(shell2nd=True)
-#        elif type(node)==int:
-#            jj=self.trad2f_node[node]
-#            mss_funcs.build_shell2nd(jj)
-#            self.node[node].shell2nd.mss           = numpy.copy(mss_funcs.mss)
-#            self.node[node].shell2nd.mss           = numpy.copy(mss_funcs.mss_ind_nodes) # provisional
-#            self.node[node].shell2nd.mss_ind_atoms = numpy.copy(mss_funcs.mss_ind_atoms)
-#            self.node[node].shell2nd.mss_ind_nodes = numpy.copy(mss_funcs.mss_ind_nodes)
-#            self.node[node].shell2nd.mss_symm      = numpy.copy(mss_funcs.mss_symm)
-#            self.mss2mss_str(node=node,shell2nd=True)
-#        pass
+    def build_shell2nd(self,node='ALL'):
+     
+        if node=='ALL':
+            for ii in range(self.num_nodes):
+                jj=self.trad2f_node[ii]
+                mss_funcs.build_shell2nd(jj)
+                #self.node[ii].shell2nd.mss           = numpy.copy(mss_funcs.mss)
+                self.node[ii].shell2nd.mss           = numpy.copy(mss_funcs.mss_ind_nods) # provisional
+                self.node[ii].shell2nd.mss_ind_atoms = numpy.copy(mss_funcs.mss_ind_ats)
+                self.node[ii].shell2nd.mss_ind_nodes = numpy.copy(mss_funcs.mss_ind_nods)
+                #self.node[ii].shell2nd.mss_symm      = numpy.copy(mss_funcs.mss_symm)
+            self.mss2mss_str(shell2nd=True)
+        elif type(node)==int:
+            jj=self.trad2f_node[node]
+            mss_funcs.build_shell2nd(jj)
+            #self.node[node].shell2nd.mss           = numpy.copy(mss_funcs.mss)
+            self.node[node].shell2nd.mss           = numpy.copy(mss_funcs.mss_ind_nods) # provisional
+            self.node[node].shell2nd.mss_ind_atoms = numpy.copy(mss_funcs.mss_ind_ats)
+            self.node[node].shell2nd.mss_ind_nodes = numpy.copy(mss_funcs.mss_ind_nods)
+            #self.node[node].shell2nd.mss_symm      = numpy.copy(mss_funcs.mss_symm)
+            self.mss2mss_str(node=node,shell2nd=True)
+        pass
  
  
     def mss2mss_str(self,node='ALL',shell1st=False,shell2nd=False):
