@@ -405,7 +405,7 @@ class mss():
 
             del(aux_dict,aux_keys,con_ASP,con_GLU,con_Term)
 
-    def build_net(self,hbonds=None,bonds=None,hbtype='R(o,o)-Ang(o,o,h)',btype='dists'):
+    def load_net(self,hbonds=None,bonds=None,hbtype='R(o,o)-Ang(o,o,h)',btype='dists'):
 
         self.hbtype=hbtype
         self.btype=btype
@@ -451,26 +451,33 @@ class mss():
 
         # Hago red:
 
-        self.T_num_hbs_atom=numpy.zeros((self.num_atoms),dtype=int,order='Fortran')
-        self.T_hbs=[]
-        self.T_num_bs_atom=numpy.zeros((self.num_atoms),dtype=int,order='Fortran')
-        self.T_bs=[]
+        T_num_hbs_atom=numpy.zeros((self.num_atoms),dtype=int,order='Fortran')
+        T_hbs=[]
+        T_num_bs_atom=numpy.zeros((self.num_atoms),dtype=int,order='Fortran')
+        T_bs=[]
 
         jj=0
         for node in self.node:
             for atom in node.atom.values():
-                for ii in atom.hbond:
-                    self.T_hbs.append(self.trad2f_atom[ii])
-                for ii in atom.bond:
-                    self.T_bs.append(self.trad2f_atom[ii])
-                self.T_num_hbs_atom[jj]=atom.num_hbonds
-                self.T_num_bs_atom[jj]=atom.num_bonds
+                T_hbs.extend(atom.hbond)
+                T_bs.extend(atom.bond)
+                T_num_hbs_atom[jj]=atom.num_hbonds
+                T_num_bs_atom[jj]=atom.num_bonds
                 jj+=1
 
-        self.T_hbs=numpy.array(self.T_hbs,dtype=int,order='Fortran')
-        self.T_bs=numpy.array(self.T_bs,dtype=int,order='Fortran')
-        self.T_num_hbs=self.T_hbs.shape[0]
-        self.T_num_bs=self.T_bs.shape[0]
+        T_hbs =numpy.array(T_hbs,dtype=int,order='Fortran')
+        T_bs  =numpy.array(T_bs,dtype=int,order='Fortran')
+        T_num_hbs= T_hbs.shape[0]
+        T_num_bs = T_bs.shape[0]
+        for ii in xrange(T_num_hbs):
+            T_hbs[ii]=self.trad2f_atom[T_hbs[ii]]
+        for ii in xrange(T_num_bs):
+            T_bs[ii]=self.trad2f_atom[T_bs[ii]]
+
+        mss_funcs.load_net(T_hbs,T_bs,T_num_hbs_atom,T_num_bs_atom,
+                           T_num_hbs,T_num_bs,self.num_atoms)
+
+        del(T_hbs,T_bs,T_num_hbs_atom,T_num_bs_atom,T_num_hbs,T_num_bs)
 
     def load_topol(self):
 
@@ -480,11 +487,6 @@ class mss():
                              self.x_symm_sets,self.x_symm_sets_num,
                              self.num_atoms,self.num_nodes,
                              self.x_symm_ats.shape[0],self.x_symm_nods.shape[0],self.x_symm_sets.shape[0])
-
-    def load_net(self):
-
-        mss_funcs.load_net(self.T_hbs,self.T_bs,self.T_num_hbs_atom,self.T_num_bs_atom,
-                           self.T_num_hbs,self.T_num_bs,self.num_atoms)
 
     def reset_topol(self):
 
