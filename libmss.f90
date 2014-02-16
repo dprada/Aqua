@@ -373,18 +373,75 @@ SUBROUTINE build_shell1st (core)
  
   INTEGER,INTENT(IN)::core
   TYPE(p_shell)::shell1st
- 
-  integer::ii
+  TYPE(p_at),POINTER::at_aux
+
+  INTEGER,DIMENSION(:),ALLOCATABLE::privilegios
+  INTEGER::dim_privil
 
   shell1st=list_shells(core)
 
   !! order bonds
-  
-  
 
+  dim_privil=1
+  ALLOCATE(privilegios(1))
+  privilegios(1)=core
+
+  DO ii=1,shell1st%nats
+     at_aux=>shell1st%at(ii)
+       IF (at_aux%hbs%num>1) THEN
+          CALL order_bonded(dim_privil,privilegios,at_aux%hbs%bonded)
+       END IF
+       IF (at_aux%bs%num>1) THEN
+
+       END IF
+
+  !CALL order_bonded_1st(shell1st)
+  !CALL order_ats_1st(shell1st)
   CALL build_mss_shell1st(shell1st)
  
 END SUBROUTINE build_shell1st
+
+SUBROUTINE order_bonded(dim_privil,privilegios,bonded)
+
+  INTEGER,INTENT(IN)::dim_privil
+  INTEGER,DIMENSION(dim_privil),INTENT(IN)::privilegios
+  TYPE(p_bonded),INTENT(INOUT)::bonded
+  
+  INTEGER::ii,jj,priv
+  LOGICAL::sihay
+
+  IF (superfiltro_supersets.eqv..TRUE.) THEN
+     IF (bonded%filtro_supsets.eqv..TRUE.) THEN
+        DO ii=1,dim_privil
+           priv=privilegios(ii)
+           IF (filtro_supsets(priv).eqv..TRUE.) THEN
+              sihay=.FALSE.
+              
+           ELSE
+
+        end DO
+     ELSE
+        ! no hace falta mirar si estan los nodos que son supsets, porque no hay
+        DO ii=1,dim_privil
+           priv=privilegios(ii)
+           IF (filtro_supsets(priv).eqv..FALSE.) THEN
+           END IF
+        END DO
+     END IF
+
+        
+
+
+!TYPE p_bonded
+!   INTEGER,DIMENSION(:),ALLOCATABLE::bonded_ats,bonded_nods
+!   INTEGER,DIMENSION(:),ALLOCATABLE::bonded_ord
+!   INTEGER,DIMENSION(:),ALLOCATABLE::lev_supsets,lev_sets,lev_nods,lev_cantsets
+!   LOGICAL::filtro_supsets
+!   INTEGER::num
+!END TYPE p_bonded
+
+
+END SUBROUTINE order_bonded
 
 SUBROUTINE build_mss_shell1st(shell1st)
  

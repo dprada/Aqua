@@ -225,7 +225,7 @@ libkinanal.so: libkinanal.f90
 
 libmss.so: libmss.f90
 	@ echo '>>>>>> Compiling' $@ >> INSTALL.log
-	@ $(F2PY) --opt=$(FOPTS) --f90flags=$(FFLAGS) --fcompiler=$(FTYPE) -c -m libmss libmss.f90 skip: build_shell sort_int_matrix_ats build_mss_shell1st : $(LAPACK_LIBS) $(SOUT) 
+	@ $(F2PY) --opt=$(FOPTS) --f90flags=$(FFLAGS) --fcompiler=$(FTYPE) -c -m libmss libmss.f90 skip: build_shell sort_int_matrix_ats build_mss_shell1st count_cantsets : $(LAPACK_LIBS) $(SOUT) 
 	@ if [ ! -e $@ ]; then echo '> Error compiling' $@ ': check the file INSTALL.log'; fi
 	@ if [ -e $@ ]; then echo '>' $@ '...         OK'; fi
 
