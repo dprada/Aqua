@@ -269,9 +269,11 @@ SUBROUTINE load_net(xx_hbs,xx_bs,xx_num_Hbs_at,xx_num_Bs_at,&
         at_aux%hbs%num=numhbs
         at_aux%bs%num=numbs
         ALLOCATE(at_aux%hbs%bonded_ats(numhbs),at_aux%hbs%bonded_nods(numhbs),at_aux%hbs%bonded_ord(numhbs))
-        ALLOCATE(at_aux%hbs%lev_supsets(numhbs),at_aux%hbs%lev_sets(numhbs),at_aux%hbs%lev_cantsets(numhbs),at_aux%hbs%lev_nods(numhbs))
+        ALLOCATE(at_aux%hbs%lev_supsets(numhbs),at_aux%hbs%lev_sets(numhbs))
+        ALLOCATE(at_aux%hbs%lev_cantsets(numhbs),at_aux%hbs%lev_nods(numhbs))
         ALLOCATE(at_aux%bs%bonded_ats(numbs),at_aux%bs%bonded_nods(numbs),at_aux%bs%bonded_ord(numbs))
-        ALLOCATE(at_aux%bs%lev_supsets(numbs),at_aux%bs%lev_sets(numbs),at_aux%bs%lev_cantsets(numbs),at_aux%bs%lev_nods(numbs))
+        ALLOCATE(at_aux%bs%lev_supsets(numbs),at_aux%bs%lev_sets(numbs))
+        ALLOCATE(at_aux%bs%lev_cantsets(numbs),at_aux%bs%lev_nods(numbs))
         ALLOCATE(vect_aux_hbs(numhbs),vect_aux_bs(numbs))
         kk=gghb+1
         gghb=gghb+numhbs
@@ -293,20 +295,21 @@ SUBROUTINE load_net(xx_hbs,xx_bs,xx_num_Hbs_at,xx_num_Bs_at,&
         at_aux%bs%lev_nods(:)      = lev_nods(vect_aux_bs(:))
         at_aux%hbs%lev_cantsets(:) = 0
         at_aux%bs%lev_cantsets(:)  = 0
+        at_aux%hbs%filtro_supsets  = .FALSE.
+        at_aux%bs%filtro_supsets   = .FALSE.
         IF (superfiltro_supsets.eqv..TRUE.) THEN
            IF (ANY(filtro_supsets(vect_aux_hbs(:))).eqv..TRUE.) THEN
-
-           ELSE
-              at_aux%hbs%filtro_supsets=.FALSE.
+              at_aux%hbs%filtro_supsets=.TRUE.
+              IF (at_aux%hbs%num>1) THEN
+                 CALL count_cantsets (at_aux%hbs%num,at_aux%hbs%lev_supsets,at_aux%hbs%lev_sets,at_aux%hbs%lev_cantsets)
+              END IF
            END IF
            IF (ANY(filtro_supsets(vect_aux_bs(:))).eqv..TRUE.) THEN
-
-           ELSE
-              at_aux%bs%filtro_supsets=.FALSE.
+              at_aux%bs%filtro_supsets=.TRUE.
+              IF (at_aux%bs%num>1) THEN
+                 CALL count_cantsets (at_aux%bs%num,at_aux%bs%lev_supsets,at_aux%bs%lev_sets,at_aux%bs%lev_cantsets)
+              END IF
            END IF
-        ELSE
-           at_aux%hbs%filtro_supsets=.FALSE.
-           at_aux%bs%filtro_supsets=.FALSE.
         END IF
         DEALLOCATE(vect_aux_hbs,vect_aux_bs)
         shell_aux%nnods=shell_aux%nnods+totnum
@@ -317,6 +320,51 @@ SUBROUTINE load_net(xx_hbs,xx_bs,xx_num_Hbs_at,xx_num_Bs_at,&
   NULLIFY(shell_aux,at_aux)
   
 END SUBROUTINE load_net
+
+
+SUBROUTINE count_cantsets(dim,vector1,vector2,cant)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::dim
+  INTEGER,DIMENSION(dim),INTENT(IN)::vector1,vector2
+  INTEGER,DIMENSION(dim),INTENT(OUT)::cant
+
+  INTEGER::ii,jj,kk,gg,ggg,aa,bb
+  LOGICAL,DIMENSION(dim)::filtro
+  INTEGER,DIMENSION(dim)::cajon
+
+  cant(:)=0
+  filtro(:)=.TRUE.
+
+  ii=0
+  ggg=0
+
+  DO WHILE (ggg<dim)
+     ii=ii+1
+     IF (filtro(ii).eqv..TRUE.) THEN
+        filtro(ii)=.FALSE.
+        gg=1
+        cajon(gg)=ii
+        aa=vector1(ii)
+        bb=vector2(ii)
+        DO jj=ii+1,dim
+           IF (filtro(jj).eqv..TRUE.) THEN
+              IF ((aa==vector1(jj)).AND.(bb==vector2(jj))) THEN
+                 filtro(jj)=.FALSE.
+                 gg=gg+1
+                 cajon(gg)=jj
+              END IF
+           END IF
+        END DO
+        DO kk=1,gg
+           cant(cajon(kk))=gg
+        END DO
+        ggg=ggg+gg
+     END IF
+  END DO
+
+END SUBROUTINE count_cantsets
 
 
 SUBROUTINE build_shell1st (core)
