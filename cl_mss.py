@@ -239,7 +239,7 @@ class mss():
                     if bb:
                         node.symm_ats.append(aa)
                         self.x_symm_ats.append(bb)
-                        self.x_symm_ats.extend(aa.nonzero()[0])
+                        self.x_symm_ats.extend(aa.nonzero()[0]+1) #aqui
                         hh+=1
                         gg+=bb+1
                 self.x_symm_ats_crits[node.index]=hh
