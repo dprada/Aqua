@@ -389,10 +389,15 @@ SUBROUTINE build_shell1st (core)
   DO ii=1,shell1st%nats
      at_aux=>shell1st%at(ii)
        IF (at_aux%hbs%num>1) THEN
-          CALL order_bonded(dim_privil,privilegios,at_aux%hbs%bonded)
+          aux_num=at_aux%hbs%num
+          ALLOCATE(symm_crit(aux_num))
+          num_crits=1
+          symm_crit(:)=(/aux_num,(ii,ii=1,aux_num)/)
+          CALL order_bonded(dim_privil,privilegios,at_aux%hbs%bonded,num_crits)
+
        END IF
        IF (at_aux%bs%num>1) THEN
-
+          CALL order_bonded(dim_privil,privilegios,at_aux%bs%bonded)
        END IF
 
   !CALL order_bonded_1st(shell1st)
@@ -401,44 +406,119 @@ SUBROUTINE build_shell1st (core)
  
 END SUBROUTINE build_shell1st
 
-SUBROUTINE order_bonded(dim_privil,privilegios,bonded)
+SUBROUTINE order_bonded(dim_privil,privilegios,bonded,num_crits)
 
   INTEGER,INTENT(IN)::dim_privil
   INTEGER,DIMENSION(dim_privil),INTENT(IN)::privilegios
   TYPE(p_bonded),INTENT(INOUT)::bonded
+  INTEGER,INTENT(INOUT)::num_crits
   
-  INTEGER::ii,jj,priv
+  INTEGER::ii,jj,gg,priv,aa,bb,numb
+  INTEGER,DIMENSION(:,:),ALLOCATABLE::valores_aux,valores
   LOGICAL::sihay
 
+  numb=bonded%num
+
   IF (superfiltro_supersets.eqv..TRUE.) THEN
+     ALLOCATE(valores_aux(dim_privil*2,numb))
+  ELSE
+     ALLOCATE(valores_aux(dim_privil,numb))
+  END IF
+
+  valores_aux(:,:)=0
+  gg=0
+
+  IF (superfiltro_supersets.eqv..TRUE.) THEN !! si hay supersets en el sistema
      IF (bonded%filtro_supsets.eqv..TRUE.) THEN
         DO ii=1,dim_privil
            priv=privilegios(ii)
-           IF (filtro_supsets(priv).eqv..TRUE.) THEN
-              sihay=.FALSE.
-              
-           ELSE
-
-        end DO
-     ELSE
-        ! no hace falta mirar si estan los nodos que son supsets, porque no hay
+           IF (filtro_supsets(priv).eqv..TRUE.) THEN !! si hay ssets en bonded y priv es ssets
+              aa=lev_supsets(priv)
+              bb=lev_sets(priv)
+              sihay1=.FALSE.
+              sihay2=.FALSE.
+              ggg=gg+1
+              gggg=ggg+1
+              DO hh=1,numb
+                 IF ((bonded%lev_supsets(hh)==aa).AND.(bonded%lev_sets(hh)==bb)) THEN
+                    sihay1=.TRUE.
+                    valores_aux(ggg,hh)=1
+                    IF (priv==bonded%bonded_nods(hh)) THEN
+                       sihay2=.TRUE.
+                       valores_aux(gggg,hh)=1
+                    END IF
+                 END IF
+              END DO
+              IF (sihay2.eqv..TRUE.) THEN
+                 gg=gggg
+              ELSE
+                 IF (sihay1.eqv..TRUE.) THEN
+                    gg=ggg
+                 END IF
+              END IF
+           ELSE !! si hay ssets en bonded y priv no es ssets
+              ggg=gg+1
+              sihay1=.FALSE.
+              DO hh=1,numb
+                 IF (priv==bonded%bonded_nods(hh)) THEN
+                    sihay1=.TRUE.
+                    valores_aux(ggg,hh)=1
+                 END IF
+              END DO
+              IF (sihay1.eqv..TRUE.) THEN
+                 gg=ggg
+              END IF
+           END IF
+        END DO
+     ELSE        ! si no hay ssets en bonded 
         DO ii=1,dim_privil
            priv=privilegios(ii)
            IF (filtro_supsets(priv).eqv..FALSE.) THEN
+              ggg=gg+1
+              sihay1=.FALSE.
+              DO hh=1,numb
+                 IF (priv==bonded%bonded_nods(hh)) THEN
+                    sihay1=.TRUE.
+                    valores_aux(ggg,hh)=1
+                 END IF
+              END DO
+              IF (sihay1.eqv..TRUE.) THEN
+                 gg=ggg
+              END IF
            END IF
         END DO
      END IF
+  ELSE
+     !! si no hay supersets en el sistema
+     ggg=gg+1
+     sihay1=.FALSE.
+     DO hh=1,numb
+        IF (priv==bonded%bonded_nods(hh)) THEN
+           sihay1=.TRUE.
+           valores_aux(ggg,hh)=1
+        END IF
+     END DO
+     IF (sihay1.eqv..TRUE.) THEN
+        gg=ggg
+     END IF
+  END IF
 
-        
+  IF (bonded%filtro_supsets) THEN
+     ALLOCATE(valores(gg+3,numb))
+     valores(1:gg,:)=valores_aux(1:gg,:)
+     valores(gg+1,:)=bonded%lev_supsets(:)
+     valores(gg+2,:)=bonded%lev_cantsets(:)
+     valores(gg+3,:)=bonded%lev_nods(:)
+     gg=gg+3
+     DEALLOCATE(valores_aux)
+  ELSE
+     ALLOCATE(valores(gg+1,numb))
+     valores(1:gg,:)=valores_aux(1:gg,:)
+     valores(gg+1,:)=bonded%lev_supsets(:)
+     gg=gg+1
+  END IF
 
-
-!TYPE p_bonded
-!   INTEGER,DIMENSION(:),ALLOCATABLE::bonded_ats,bonded_nods
-!   INTEGER,DIMENSION(:),ALLOCATABLE::bonded_ord
-!   INTEGER,DIMENSION(:),ALLOCATABLE::lev_supsets,lev_sets,lev_nods,lev_cantsets
-!   LOGICAL::filtro_supsets
-!   INTEGER::num
-!END TYPE p_bonded
+  CALL SORT_INT_MATRIX (numb,gg,bonded%order,valores,num_crits)
 
 
 END SUBROUTINE order_bonded
@@ -493,8 +573,267 @@ SUBROUTINE build_mss_shell1st(shell1st)
 END SUBROUTINE build_mss_shell1st
  
 !!!!!!!!!!!!!!!!!!!!##########
+
+SUBROUTINE SORT_INT_MATRIX (num_ats,dim_matrix,order,valores,num_crits)
+
+  IMPLICIT NONE
+ 
+  INTEGER,INTENT(IN)::num_ats,dim_matrix
+  INTEGER,DIMENSION(num_ats),INTENT(INOUT)::order
+  INTEGER,DIMENSION(num_ats,dim_matrix),INTENT(IN)::valores
+  INTEGER,INTENT(INOUT)::num_crits
+ 
+  pp=1
+  DO WHILE ((num_crits>0).AND.(pp<=dim_matrix))
+
+     gg=0
+     DO ii=1,num_crits
+        gg=gg+1
+        idim=symm_crit(gg)
+        ALLOCATE(val_aux(idim),ind_aux(idim),symm_aux(idim))
+        DO jj=1,idim
+           kk=symm_crit(gg+jj)
+           ll=order(kk)
+           val_aux(jj)=valores(ll,pp)
+           symm_aux(jj)=kk
+           ind_aux(jj)=ll
+        END DO
+        IF (ALL(val_aux(2:).eq.val_aux(1)).eqv..FALSE.) THEN
+           ALLOCATE(filtro(idim),vals(idim),inds(idim))
+           filtro=.TRUE.
+           DO jj=1,idim
+              kk=MAXLOC(val_aux,DIM=1,MASK=filtro(:))
+              filtro(kk)=.FALSE.
+              ll=symm_aux(jj)
+              order(ll)=ind_aux(kk)
+              inds(jj)=ll
+              vals(jj)=val_aux(kk)
+           END DO
+           interruptor=.FALSE.
+           mm=0
+           DO jj=2,idim
+              IF (vals(jj-1)==vals(jj)) THEN
+                 IF (interruptor.eqv..FALSE.) THEN
+                    ll=2
+                    interruptor=.TRUE.
+                    mm=jj-1
+                 ELSE
+                    ll=ll+1
+                 END IF
+              ELSE
+                 IF (interruptor.eqv..True.) THEN
+                    interruptor=.FALSE.
+                    new_num_crits=new_num_crits+1
+                    IF (new_num_crits==1) THEN
+                       tope=ll+1
+                       ALLOCATE(new_symm_aux(tope))
+                       new_symm_aux(1)=ll
+                       new_symm_aux(2:tope)=inds(mm:(mm+ll-1))
+                    ELSE
+                       ALLOCATE(cajon(tope))
+                       cajon(:)=new_symm_aux(:)
+                       DEALLOCATE(new_symm_aux)
+                       ALLOCATE(new_symm_aux(tope+1+ll))
+                       new_symm_aux(1:tope)=cajon(:)
+                       tope=tope+1
+                       new_symm_aux(tope)=ll
+                       new_symm_aux((tope+1):(tope+ll))=order_aux(mm:(mm+ll-1))
+                       tope=tope+ll
+                       DEALLOCATE(cajon)
+                    END IF
+                 END IF
+              END IF
+           END DO
+           IF (interruptor.eqv..True.) THEN
+              interruptor=.FALSE.
+              new_num_crits=new_num_crits+1
+              IF (new_num_crits==1) THEN
+                 tope=ll+1
+                 ALLOCATE(new_symm_aux(tope))
+                 new_symm_aux(1)=ll
+                 new_symm_aux(2:tope)=inds(mm:(mm+ll-1))
+              ELSE
+                 ALLOCATE(cajon(tope))
+                 cajon(:)=new_symm_aux(:)
+                 DEALLOCATE(new_symm_aux)
+                 ALLOCATE(new_symm_aux(tope+1+ll))
+                 new_symm_aux(1:tope)=cajon(:)
+                 tope=tope+1
+                 new_symm_aux(tope)=ll
+                 new_symm_aux((tope+1):(tope+ll))=order_aux(mm:(mm+ll-1))
+                 tope=tope+ll
+                 DEALLOCATE(cajon)
+              END IF
+           END IF
+           DEALLOCATE(filtro,vals,inds)
+        END IF
+        DEALLOCATE(val_aux,ind_aux,symm_aux)
+     END DO
+     num_crits=new_num_crits
+     DEALLOCATE(symm_crit)
+     IF (num_crits==0) THEN
+        dim_vecti_aux=0
+     ELSE
+        ALLOCATE(symm_crit(tope))
+        dim_vecti_aux=tope
+        symm_crit(:)=new_symm_aux(:)
+        DEALLOCATE(new_symm_aux)
+     END IF
+ 
+     pp=pp+1
+  END DO
+
+END SUBROUTINE SORT_INT_MATRIX
+
+SUBROUTINE SORT_INT_MATRIX_ATS (num_ats,dim_matrix,order,valores,num_crits)
+ 
+  IMPLICIT NONE
+ 
+  INTEGER,INTENT(IN)::num_ats,dim_matrix
+  INTEGER,DIMENSION(num_ats),INTENT(INOUT)::order
+  INTEGER,DIMENSION(num_ats,dim_matrix),INTENT(IN)::valores
+  INTEGER,INTENT(INOUT)::num_crits
+ 
+  INTEGER::ii,jj,kk,ll,gg,nn,pp,idim,new_num_crits,tope
+  INTEGER,DIMENSION(:),ALLOCATABLE::val_aux,ind_aux,order_aux
+  INTEGER,DIMENSION(:),ALLOCATABLE::vals,inds
+  INTEGER,DIMENSION(:),ALLOCATABLE::new_symm_aux,cajon
+  LOGICAL,DIMENSION(:),ALLOCATABLE::filtro
+  LOGICAL::interruptor
+ 
+  pp=1
+  DO WHILE ((num_crits>0).AND.(pp<=dim_matrix))
+ 
+     new_num_crits=0
+     
+     gg=0
+     DO ii=1,num_crits
+        gg=gg+1
+        idim=symm_crit(gg)
+        ALLOCATE(val_aux(idim))
+        DO jj=1,idim
+           val_aux(jj)=valores(symm_crit(gg+jj),pp)
+        END DO
+        IF (ALL(val_aux(2:).eq.val_aux(1)).eqv..TRUE.) THEN !! si no entra no debería hacer nada
+           new_num_crits=new_num_crits+1
+           IF (new_num_crits==1) THEN
+              tope=idim+1
+              ALLOCATE(new_symm_aux(tope))
+              new_symm_aux(1)=idim
+              new_symm_aux(2:tope)=symm_crit((gg+1):(gg+idim))
+           ELSE
+              ALLOCATE(cajon(tope))
+              cajon(:)=new_symm_aux(:)
+              DEALLOCATE(new_symm_aux)
+              ALLOCATE(new_symm_aux(tope+1+idim))
+              new_symm_aux(1:tope)=cajon(:)
+              tope=tope+1
+              new_symm_aux(tope)=idim
+              new_symm_aux((tope+1):(tope+idim))=symm_crit((gg+1):(gg+idim))
+              tope=tope+idim
+              DEALLOCATE(cajon)
+           END IF
+           gg=gg+idim
+        ELSE
+           ALLOCATE(ind_aux(idim),order_aux(idim))
+           DO jj=1,idim
+              gg=gg+1
+              kk=symm_crit(gg)
+              ll=order(kk)
+              ind_aux(jj)=kk
+              order_aux(jj)=ll
+           END DO
+           ALLOCATE(filtro(idim),vals(idim),inds(idim))
+           filtro=.TRUE.
+           DO jj=1,idim
+              kk=MAXLOC(val_aux,DIM=1,MASK=filtro(:))
+              filtro(kk)=.FALSE.
+              ll=ind_aux(jj)
+              inds(jj)=ll
+              vals(jj)=val_aux(kk)
+              order(ll)=order_aux(kk)
+           END DO
+           interruptor=.FALSE.
+           DO jj=2,idim
+              IF (vals(jj-1)==vals(jj)) THEN
+                 IF (interruptor.eqv..FALSE.) THEN
+                    order_aux(1)=inds(jj-1)
+                    order_aux(2)=inds(jj)
+                    ll=2
+                    interruptor=.TRUE.
+                 ELSE
+                    ll=ll+1
+                    order_aux(ll)=inds(jj)
+                 END IF
+              ELSE
+                 IF (interruptor.eqv..True.) THEN
+                    interruptor=.FALSE.
+                    new_num_crits=new_num_crits+1
+                    IF (new_num_crits==1) THEN
+                       tope=ll+1
+                       ALLOCATE(new_symm_aux(tope))
+                       new_symm_aux(1)=ll
+                       new_symm_aux(2:tope)=order_aux(1:ll)
+                    ELSE
+                       ALLOCATE(cajon(tope))
+                       cajon(:)=new_symm_aux(:)
+                       DEALLOCATE(new_symm_aux)
+                       ALLOCATE(new_symm_aux(tope+1+ll))
+                       new_symm_aux(1:tope)=cajon(:)
+                       tope=tope+1
+                       new_symm_aux(tope)=ll
+                       new_symm_aux((tope+1):(tope+ll))=order_aux(1:ll)
+                       tope=tope+ll
+                       DEALLOCATE(cajon)
+                    END IF
+                 END IF
+              END IF
+           END DO
+           IF (interruptor.eqv..True.) THEN
+              interruptor=.FALSE.
+              new_num_crits=new_num_crits+1
+              IF (new_num_crits==1) THEN
+                 tope=ll+1
+                 ALLOCATE(new_symm_aux(tope))
+                 new_symm_aux(1)=ll
+                 new_symm_aux(2:tope)=order_aux(1:ll)
+              ELSE
+                 ALLOCATE(cajon(tope))
+                 cajon(:)=new_symm_aux(:)
+                 DEALLOCATE(new_symm_aux)
+                 ALLOCATE(new_symm_aux(tope+1+ll))
+                 new_symm_aux(1:tope)=cajon(:)
+                 tope=tope+1
+                 new_symm_aux(tope)=ll
+                 new_symm_aux((tope+1):(tope+ll))=order_aux(1:ll)
+                 tope=tope+ll
+                 DEALLOCATE(cajon)
+              END IF
+           END IF
+           DEALLOCATE(ind_aux,order_aux)
+           DEALLOCATE(filtro,vals,inds)
+        END IF
+        DEALLOCATE(val_aux)
+     END DO
+     
+     num_crits=new_num_crits
+     DEALLOCATE(symm_crit)
+     IF (num_crits==0) THEN
+        dim_vecti_aux=0
+     ELSE
+        ALLOCATE(symm_crit(tope))
+        dim_vecti_aux=tope
+        symm_crit(:)=new_symm_aux(:)
+        DEALLOCATE(new_symm_aux)
+     END IF
+ 
+     pp=pp+1
+  END DO
  
  
+ 
+END SUBROUTINE SORT_INT_MATRIX_ATS
+
  
  
 
@@ -620,165 +959,6 @@ END SUBROUTINE build_mss_shell1st
 !!$END SUBROUTINE SORT_INT_1SH
 
 
-!SUBROUTINE SORT_INT_MATRIX_ATS (num_ats,dim_vecti_aux,dim_matrix,order,valores,num_crits)
-! 
-!  IMPLICIT NONE
-! 
-!  INTEGER,INTENT(IN)::num_ats,dim_matrix
-!  INTEGER,INTENT(INOUT)::dim_vecti_aux
-!  INTEGER,DIMENSION(num_ats),INTENT(INOUT)::order
-!  INTEGER,DIMENSION(dim_vecti_aux,dim_matrix),INTENT(IN)::valores
-!  INTEGER,INTENT(INOUT)::num_crits
-! 
-!  INTEGER::ii,jj,kk,ll,gg,nn,pp,idim,new_num_crits,tope
-!  INTEGER,DIMENSION(:),ALLOCATABLE::val_aux,ind_aux,order_aux
-!  INTEGER,DIMENSION(:),ALLOCATABLE::vals,inds
-!  INTEGER,DIMENSION(:),ALLOCATABLE::new_symm_aux,cajon
-!  INTEGER,DIMENSION(num_ats)::trad_vals
-!  LOGICAL,DIMENSION(:),ALLOCATABLE::filtro
-!  LOGICAL::interruptor
-! 
-!  gg=0
-!  DO ii=1,num_crits
-!     gg=gg+1
-!     DO jj=1,symm_crit(gg)
-!        gg=gg+1
-!        trad_vals(symm_crit(gg))=gg
-!     END DO
-!  END DO
-! 
-!  pp=1
-!  DO WHILE ((num_crits>0).AND.(pp<=dim_matrix))
-! 
-!     new_num_crits=0
-!     
-!     gg=0
-!     DO ii=1,num_crits
-!        gg=gg+1
-!        idim=symm_crit(gg)
-!        ALLOCATE(val_aux(idim))
-!        DO jj=1,idim
-!           val_aux(jj)=valores(trad_vals(symm_crit(gg+jj)),pp)
-!        END DO
-!        IF (ALL(val_aux(2:).eq.val_aux(1)).eqv..TRUE.) THEN
-!           new_num_crits=new_num_crits+1
-!           IF (new_num_crits==1) THEN
-!              tope=idim+1
-!              ALLOCATE(new_symm_aux(tope))
-!              new_symm_aux(1)=idim
-!              new_symm_aux(2:tope)=symm_crit((gg+1):(gg+idim))
-!           ELSE
-!              ALLOCATE(cajon(tope))
-!              cajon(:)=new_symm_aux(:)
-!              DEALLOCATE(new_symm_aux)
-!              ALLOCATE(new_symm_aux(tope+1+idim))
-!              new_symm_aux(1:tope)=cajon(:)
-!              tope=tope+1
-!              new_symm_aux(tope)=idim
-!              new_symm_aux((tope+1):(tope+idim))=symm_crit((gg+1):(gg+idim))
-!              tope=tope+idim
-!              DEALLOCATE(cajon)
-!           END IF
-!           gg=gg+idim
-!        ELSE
-!           ALLOCATE(ind_aux(idim),order_aux(idim))
-!           DO jj=1,idim
-!              gg=gg+1
-!              kk=symm_crit(gg)
-!              ll=order(kk)
-!              ind_aux(jj)=kk
-!              order_aux(jj)=ll
-!           END DO
-!           ALLOCATE(filtro(idim),vals(idim),inds(idim))
-!           filtro=.TRUE.
-!           DO jj=1,idim
-!              kk=MAXLOC(val_aux,DIM=1,MASK=filtro(:))
-!              filtro(kk)=.FALSE.
-!              ll=ind_aux(jj)
-!              inds(jj)=ll
-!              vals(jj)=val_aux(kk)
-!              order(ll)=order_aux(kk)
-!           END DO
-!           interruptor=.FALSE.
-!           DO jj=2,idim
-!              IF (vals(jj-1)==vals(jj)) THEN
-!                 IF (interruptor.eqv..FALSE.) THEN
-!                    order_aux(1)=inds(jj-1)
-!                    order_aux(2)=inds(jj)
-!                    ll=2
-!                    interruptor=.TRUE.
-!                 ELSE
-!                    ll=ll+1
-!                    order_aux(ll)=inds(jj)
-!                 END IF
-!              ELSE
-!                 IF (interruptor.eqv..True.) THEN
-!                    interruptor=.FALSE.
-!                    new_num_crits=new_num_crits+1
-!                    IF (new_num_crits==1) THEN
-!                       tope=ll+1
-!                       ALLOCATE(new_symm_aux(tope))
-!                       new_symm_aux(1)=ll
-!                       new_symm_aux(2:tope)=order_aux(1:ll)
-!                    ELSE
-!                       ALLOCATE(cajon(tope))
-!                       cajon(:)=new_symm_aux(:)
-!                       DEALLOCATE(new_symm_aux)
-!                       ALLOCATE(new_symm_aux(tope+1+ll))
-!                       new_symm_aux(1:tope)=cajon(:)
-!                       tope=tope+1
-!                       new_symm_aux(tope)=ll
-!                       new_symm_aux((tope+1):(tope+ll))=order_aux(1:ll)
-!                       tope=tope+ll
-!                       DEALLOCATE(cajon)
-!                    END IF
-!                 END IF
-!              END IF
-!           END DO
-!           IF (interruptor.eqv..True.) THEN
-!              interruptor=.FALSE.
-!              new_num_crits=new_num_crits+1
-!              IF (new_num_crits==1) THEN
-!                 tope=ll+1
-!                 ALLOCATE(new_symm_aux(tope))
-!                 new_symm_aux(1)=ll
-!                 new_symm_aux(2:tope)=order_aux(1:ll)
-!              ELSE
-!                 ALLOCATE(cajon(tope))
-!                 cajon(:)=new_symm_aux(:)
-!                 DEALLOCATE(new_symm_aux)
-!                 ALLOCATE(new_symm_aux(tope+1+ll))
-!                 new_symm_aux(1:tope)=cajon(:)
-!                 tope=tope+1
-!                 new_symm_aux(tope)=ll
-!                 new_symm_aux((tope+1):(tope+ll))=order_aux(1:ll)
-!                 tope=tope+ll
-!                 DEALLOCATE(cajon)
-!              END IF
-!           END IF
-!           DEALLOCATE(ind_aux,order_aux)
-!           DEALLOCATE(filtro,vals,inds)
-!        END IF
-!        DEALLOCATE(val_aux)
-!     END DO
-!     
-!     num_crits=new_num_crits
-!     DEALLOCATE(symm_crit)
-!     IF (num_crits==0) THEN
-!        dim_vecti_aux=0
-!     ELSE
-!        ALLOCATE(symm_crit(tope))
-!        dim_vecti_aux=tope
-!        symm_crit(:)=new_symm_aux(:)
-!        DEALLOCATE(new_symm_aux)
-!     END IF
-! 
-!     pp=pp+1
-!  END DO
-! 
-! 
-! 
-!END SUBROUTINE SORT_INT_MATRIX_ATS
 
 
 
