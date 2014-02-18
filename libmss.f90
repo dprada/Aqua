@@ -6,7 +6,7 @@
 MODULE GLOB
 
 TYPE p_bonded
-   INTEGER,DIMENSION(:),ALLOCATABLE::bonded_ats,bonded_nods
+   INTEGER,DIMENSION(:),ALLOCATABLE::bonded_ats,bonded_nods,aux2sh
    INTEGER,DIMENSION(:),ALLOCATABLE::order
    INTEGER,DIMENSION(:),ALLOCATABLE::lev_supsets,lev_sets,lev_nods,lev_cantsets
    LOGICAL::filtro_supsets
@@ -272,9 +272,11 @@ SUBROUTINE load_net(xx_hbs,xx_bs,xx_num_Hbs_at,xx_num_Bs_at,&
         ALLOCATE(at_aux%hbs%bonded_ats(numhbs),at_aux%hbs%bonded_nods(numhbs),at_aux%hbs%order(numhbs))
         ALLOCATE(at_aux%hbs%lev_supsets(numhbs),at_aux%hbs%lev_sets(numhbs))
         ALLOCATE(at_aux%hbs%lev_cantsets(numhbs),at_aux%hbs%lev_nods(numhbs))
+        ALLOCATE(at_aux%hbs%aux2sh(numhbs))
         ALLOCATE(at_aux%bs%bonded_ats(numbs),at_aux%bs%bonded_nods(numbs),at_aux%bs%order(numbs))
         ALLOCATE(at_aux%bs%lev_supsets(numbs),at_aux%bs%lev_sets(numbs))
         ALLOCATE(at_aux%bs%lev_cantsets(numbs),at_aux%bs%lev_nods(numbs))
+        ALLOCATE(at_aux%bs%aux2sh(numbs))
         ALLOCATE(vect_aux_hbs(numhbs),vect_aux_bs(numbs))
         kk=gghb+1
         gghb=gghb+numhbs
@@ -298,6 +300,8 @@ SUBROUTINE load_net(xx_hbs,xx_bs,xx_num_Hbs_at,xx_num_Bs_at,&
         at_aux%bs%order(:)         = (/(kk,kk=1,numbs)/)
         at_aux%hbs%lev_cantsets(:) = 0
         at_aux%bs%lev_cantsets(:)  = 0
+        at_aux%hbs%aux2sh(:)       = 0
+        at_aux%bs%aux2sh(:)        = 0
         at_aux%hbs%filtro_supsets  = .FALSE.
         at_aux%bs%filtro_supsets   = .FALSE.
         IF (superfiltro_supsets.eqv..TRUE.) THEN
@@ -409,6 +413,8 @@ SUBROUTINE build_shell1st (core)
      END IF
   END DO
 
+  !! order ats
+
   IF (shell1st%symm_num_crits>0) THEN
      num_crits=shell1st%symm_num_crits
      ALLOCATE(symm_crit(shell1st%symm_length))
@@ -424,10 +430,195 @@ SUBROUTINE build_shell1st (core)
   END IF
      
   CALL build_mss_shell1st(shell1st)
+  CALL encode_mss()
 
   NULLIFY(at_aux)
 
 END SUBROUTINE build_shell1st
+
+
+
+SUBROUTINE build_shell2nd (core)
+ 
+  IMPLICIT NONE
+ 
+  INTEGER,INTENT(IN)::core
+
+  TYPE(p_shell)::shell1st
+  TYPE(p_shell),DIMENSION(:),ALLOCATABLE::shell2nd
+
+  TYPE(p_at),POINTER::at_aux
+  TYPE(p_shell),POINTER::shell_aux
+
+  INTEGER,DIMENSION(:),ALLOCATABLE::privilegios
+  INTEGER::dim_privil,aux_num,ii,num_crits
+
+  !! Building the structure
+
+  shell1st=list_shells(core)
+
+  nnods=shell1st.nnods
+  totntot=shell1st%ntot
+
+  ALLOCATE(shell2nd(shell1st.nnods))
+  gg=0
+  DO ii=1,shell1st%nats
+     DO jj=1,shell1st%ats(ii)%hbs%num
+        gg=gg+1
+        shell1st%ats(ii)%hbs%aux2sh(jj)=gg
+        kk=shell1st%ats(ii)%hbs%bonded_nods(jj)
+        shell2nd(gg)=list_shells(kk)
+        totntot=totntot+shell2nd(gg)%ntot
+     END DO
+     DO jj=1,shell1st%ats(ii)%bs%num
+        gg=gg+1
+        shell1st%ats(ii)%bs%aux2sh(jj)=gg
+        kk=shell1st%ats(ii)%bs%bonded_nods(jj)
+        shell2nd(gg)=list_shells(kk)
+        totntot=totntot+shell2nd(gg)%ntot
+     END DO
+  END DO
+
+  !! removing symm in 2ndsh
+
+  DO iii=1,nnods
+
+     shell_aux=>shell2nd(iii)
+     core2=shell_aux%ind
+
+     !list of privilegios
+     
+     dim_privil=2
+     ALLOCATE(privilegios(2))
+     privilegios(1)=core
+     privilegios(2)=core2
+
+     ! order bonds 2sh
+     DO ii=1,shell_aux%nats
+        at_aux=>shell_aux%ats(ii)
+        IF (at_aux%hbs%num>1) THEN
+           aux_num=at_aux%hbs%num
+           ALLOCATE(symm_crit(aux_num+1))
+           num_crits=1
+           symm_crit(:)=(/aux_num,at_aux%hbs%order(:)/)
+           CALL order_bonded(dim_privil,privilegios,at_aux%hbs,num_crits)
+           DEALLOCATE(symm_crit)
+        END IF
+        IF (at_aux%bs%num>1) THEN
+           aux_num=at_aux%bs%num
+           ALLOCATE(symm_crit(aux_num+1))
+           num_crits=1
+           symm_crit(:)=(/aux_num,at_aux%bs%order(:)/)
+           CALL order_bonded(dim_privil,privilegios,at_aux%bs,num_crits)
+           DEALLOCATE(symm_crit)
+        END IF
+     END DO
+
+     ! order ats 2sh
+     IF (shell_aux%symm_num_crits>0) THEN
+        num_crits=shell_aux%symm_num_crits
+        ALLOCATE(symm_crit(shell_aux%symm_length))
+        symm_crit(:)=shell_aux%symm(:)
+        CALL order_ats(dim_privil,privilegios,shell_aux,num_crits)
+        shell_aux%symm_num_crits=num_crits
+        DEALLOCATE(shell_aux%symm)
+        ii=SIZE(symm_crit)
+        ALLOCATE(shell_aux%symm(ii))
+        shell_aux%symm(:)=symm_crit(:)
+        shell_aux%symm_length=ii
+        DEALLOCATE(symm_crit)
+     END IF
+
+  END DO
+
+  !! removing symm in 1stsh
+
+  DEALLOCATE(privilegios)
+  dim_privil=1
+  ALLOCATE(privilegios(1))
+  privilegios(1)=core
+
+  ! order bonds 2sh
+  DO ii=1,shell1st%nats
+     at_aux=>shell1st%ats(ii)
+     IF (at_aux%hbs%num>1) THEN
+        aux_num=at_aux%hbs%num
+        ALLOCATE(symm_crit(aux_num+1))
+        num_crits=1
+        symm_crit(:)=(/aux_num,at_aux%hbs%order(:)/)
+        CALL order_bonded(dim_privil,privilegios,at_aux%hbs,num_crits)
+        DEALLOCATE(symm_crit)
+     END IF
+     IF (at_aux%bs%num>1) THEN
+        aux_num=at_aux%bs%num
+        ALLOCATE(symm_crit(aux_num+1))
+        num_crits=1
+        symm_crit(:)=(/aux_num,at_aux%bs%order(:)/)
+        CALL order_bonded(dim_privil,privilegios,at_aux%bs,num_crits)
+        DEALLOCATE(symm_crit)
+     END IF
+  END DO
+
+  ! order ats 2sh
+  IF (shell1st%symm_num_crits>0) THEN
+     num_crits=shell1st%symm_num_crits
+     ALLOCATE(symm_crit(shell1st%symm_length))
+     symm_crit(:)=shell1st%symm(:)
+     CALL order_ats(dim_privil,privilegios,shell1st,num_crits)
+     shell1st%symm_num_crits=num_crits
+     DEALLOCATE(shell1st%symm)
+     ii=SIZE(symm_crit)
+     ALLOCATE(shell1st%symm(ii))
+     shell1st%symm(:)=symm_crit(:)
+     shell1st%symm_length=ii
+     DEALLOCATE(symm_crit)
+  END IF
+
+
+  !! Building the msss
+  
+  IF (ALLOCATED(mss_ind_ats))   DEALLOCATE(mss_ind_ats)
+  IF (ALLOCATED(mss_ind_nods))  DEALLOCATE(mss_ind_nods)
+
+  ALLOCATE(mss_ind_ats(totntot),mss_ind_nods(totntot))
+
+  gg=0
+  ntot1sh=shell1st%ntot
+  nnods1sh=shell1st%nnods
+  ALLOCATE(aux_ind_ats(ntot1sh),aux_ind_nods(ntot1sh),aux_ord(nnods1sh))
+  CALL build_mss_shell2nd(shell1st,aux_ind_ats,aux_ind_nods,aux_ord,ntot1sh,nnods1sh)
+  gg=gg+1
+  gg=gg+ntot1sh
+  mss_ind_ats(ggg:gg)=aux_ind_ats(:)
+  mss_ind_nods(ggg:gg)=aux_ind_nods(:)
+  DEALLOCATE(aux_ind_ats(ntot),aux_ind_nods(ntot))
+
+  DO ii=1,nnods1sh
+     jj=aux_ord(ii)
+     shell_aux=>shell2nd(jj)
+     ntot2sh =shell_aux%ntot
+     nnods2sh=shell_aux%nnods
+     ALLOCATE(aux_ind_ats(ntot2sh),aux_ind_nods(ntot2sh),aux_ord2(nnods2sh))
+     CALL build_mss_shell2nd(shell_aux,aux_ind_ats,aux_ind_nods,aux_ord2,ntot2sh,nnods2sh)
+     gg=gg+1
+     gg=gg+ntot2sh
+     mss_ind_ats(ggg:gg)=aux_ind_ats(:)
+     mss_ind_nods(ggg:gg)=aux_ind_nods(:)
+     DEALLOCATE(aux_ind_ats,aux_ind_nods,aux_ord2)
+  END DO
+
+  DEALLOCATE(aux_ord)
+
+
+  CALL encode_mss()
+
+  NULLIFY(at_aux,shell_aux)
+
+END SUBROUTINE build_shell2nd
+
+
+
+
 
 SUBROUTINE order_ats(dim_privil,privilegios,shell,num_crits)
 
@@ -784,6 +975,8 @@ SUBROUTINE order_bonded(dim_privil,privilegios,bonded,num_crits)
   bonded%bonded_nods(:)=box(bonded%order(:))
   box(:)=bonded%lev_supsets(:)
   bonded%lev_supsets(:)=box(bonded%order(:))
+  box(:)=bonded%aux2sh(:)
+  bonded%aux2sh(:)=box(bonded%order(:))
   IF (bonded%filtro_supsets.eqv..TRUE.) THEN
      box(:)=bonded%lev_sets(:)
      bonded%lev_sets(:)=box(bonded%order(:))
@@ -812,8 +1005,8 @@ SUBROUTINE build_mss_shell1st(shell1st)
  
   IF (ALLOCATED(mss_ind_ats))   DEALLOCATE(mss_ind_ats)
   IF (ALLOCATED(mss_ind_nods))  DEALLOCATE(mss_ind_nods)
-  IF (ALLOCATED(mss))           DEALLOCATE(mss)
- 
+  IF (ALLOCATED(mss))  DEALLOCATE(mss)
+
   ntot = shell1st%ntot
   nats = shell1st%nats
   nats2 = shell1st%nats2
@@ -821,8 +1014,6 @@ SUBROUTINE build_mss_shell1st(shell1st)
  
   ALLOCATE(oo(nats))
   ALLOCATE(mss_ind_ats(ntot),mss_ind_nods(ntot),mss(ntot))
- 
-  mss(:)=0
  
   oo(:)=shell1st%ats_ord(:)
  
@@ -846,10 +1037,73 @@ SUBROUTINE build_mss_shell1st(shell1st)
   mss_ind_ats(ii:jj)  = trad2py_at(mss_ind_ats(ii:jj))
   mss_ind_nods(ii:jj) = trad2py_nod(mss_ind_nods(ii:jj))
  
+
+  ! codifico
+  mss(:)=0
+  !mss(:)=mss_ind_nods(:)
+
+  
+
   DEALLOCATE(oo)
  
 END SUBROUTINE build_mss_shell1st
+
+
+SUBROUTINE build_mss_shell2nd(shell1st)
  
+  TYPE(p_shell),INTENT(IN)::shell1st
+ 
+  INTEGER::ntot,nats,nats2,nnods
+  INTEGER::ii,jj,kk
+  INTEGER,DIMENSION(:),ALLOCATABLE::oo
+  
+ 
+  IF (ALLOCATED(mss_ind_ats))   DEALLOCATE(mss_ind_ats)
+  IF (ALLOCATED(mss_ind_nods))  DEALLOCATE(mss_ind_nods)
+  IF (ALLOCATED(mss))  DEALLOCATE(mss)
+
+  ntot = shell1st%ntot
+  nats = shell1st%nats
+  nats2 = shell1st%nats2
+  nnods = shell1st%nnods
+ 
+  ALLOCATE(oo(nats))
+  ALLOCATE(mss_ind_ats(ntot),mss_ind_nods(ntot),mss(ntot))
+ 
+  oo(:)=shell1st%ats_ord(:)
+ 
+  jj=1
+  mss_ind_ats(1)  = nats
+  mss_ind_nods(1) = nats
+  ii=jj+1
+  jj=jj+nats
+  mss_ind_ats(ii:jj)  = (/(shell1st%ats(oo(kk))%ind,kk=1,nats)/) !! ojo
+  mss_ind_nods(ii:jj) = at2nod(mss_ind_ats(ii:jj))
+  mss_ind_ats(ii:jj)  = trad2py_at(mss_ind_ats(ii:jj))
+  mss_ind_nods(ii:jj) = trad2py_nod(mss_ind_nods(ii:jj))
+  ii=jj+1
+  jj=jj+nats2
+  mss_ind_ats(ii:jj)  = (/((/shell1st%ats(oo(kk))%hbs%num,shell1st%ats(oo(kk))%bs%num/),kk=1,nats)/)
+  mss_ind_nods(ii:jj) = mss_ind_ats(ii:jj)
+  ii=jj+1
+  jj=jj+nnods
+  mss_ind_ats(ii:jj)  = (/((/shell1st%ats(oo(kk))%hbs%bonded_ats(:),shell1st%ats(oo(kk))%bs%bonded_ats(:)/),kk=1,nats)/)
+  mss_ind_nods(ii:jj) = at2nod(mss_ind_ats(ii:jj))
+  mss_ind_ats(ii:jj)  = trad2py_at(mss_ind_ats(ii:jj))
+  mss_ind_nods(ii:jj) = trad2py_nod(mss_ind_nods(ii:jj))
+ 
+
+  ! codifico
+  mss(:)=0
+  !mss(:)=mss_ind_nods(:)
+
+  
+
+  DEALLOCATE(oo)
+ 
+END SUBROUTINE build_mss_shell2nd
+
+
 !!!!!!!!!!!!!!!!!!!!##########
 !!!#################################
 !!!####  GENERAL FUNCTIONS TO SORT  
