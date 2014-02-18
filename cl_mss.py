@@ -458,7 +458,7 @@ class mss():
 
         jj=0
         for node in self.node:
-            for atom in node.atom.values():
+            for ii,atom in sorted(node.atom.iteritems()):
                 T_hbs.extend(atom.hbond)
                 T_bs.extend(atom.bond)
                 T_num_hbs_atom[jj]=atom.num_hbonds
@@ -531,7 +531,7 @@ class mss():
                 self.node[ii].shell2nd.mss           = numpy.copy(mss_funcs.mss_ind_nods) # provisional
                 self.node[ii].shell2nd.mss_ind_atoms = numpy.copy(mss_funcs.mss_ind_ats)
                 self.node[ii].shell2nd.mss_ind_nodes = numpy.copy(mss_funcs.mss_ind_nods)
-                #self.node[ii].shell2nd.mss_symm      = numpy.copy(mss_funcs.mss_symm)
+                self.node[ii].shell2nd.mss_symm      = numpy.copy(mss_funcs.mss_symm)
             self.mss2mss_str(shell2nd=True)
         elif type(node)==int:
             jj=self.trad2f_node[node]
@@ -540,7 +540,7 @@ class mss():
             self.node[node].shell2nd.mss           = numpy.copy(mss_funcs.mss_ind_nods) # provisional
             self.node[node].shell2nd.mss_ind_atoms = numpy.copy(mss_funcs.mss_ind_ats)
             self.node[node].shell2nd.mss_ind_nodes = numpy.copy(mss_funcs.mss_ind_nods)
-            #self.node[node].shell2nd.mss_symm      = numpy.copy(mss_funcs.mss_symm)
+            self.node[node].shell2nd.mss_symm      = numpy.copy(mss_funcs.mss_symm)
             self.mss2mss_str(node=node,shell2nd=True)
         pass
  
@@ -620,34 +620,69 @@ class mss():
                             cc_ion+=1
                     node.shell2nd.mss_str[ii]=aux2_dict[jj]
                 aa1=node.shell2nd.mss_str[0]
-                node.shell2nd.mss_str2.append(aa1)
-                node.shell2nd.mss_str2.append(node.shell2nd.mss_str[1])
                 gg=aa1
                 ggg=0
                 for ii in range(aa1):
-                    node.shell2nd.mss_str2.append(node.shell2nd.mss_str[gg+1])
-                    node.shell2nd.mss_str2.append(node.shell2nd.mss_str[gg+2])
                     ggg+=node.shell2nd.mss_str[gg+1]+node.shell2nd.mss_str[gg+2]
                     gg+=2
                 for iii in range(ggg):
                     gg+=1
-                    node.shell2nd.mss_str2.append(node.shell2nd.mss_str[gg])
                 for iii in range(ggg):
                     gg+=1
                     aa1=node.shell2nd.mss_str[gg]
-                    node.shell2nd.mss_str2.append(aa1)
                     gg+=aa1
                     jjj=0
                     for jj in range(aa1):
-                        node.shell2nd.mss_str2.append(node.shell2nd.mss_str[gg+1])
-                        node.shell2nd.mss_str2.append(node.shell2nd.mss_str[gg+2])
                         jjj+=node.shell2nd.mss_str[gg+1]+node.shell2nd.mss_str[gg+2]
                         gg+=2
                     for jj in range(jjj):
                         gg+=1
-                        node.shell2nd.mss_str2.append(node.shell2nd.mss_str[gg])
- 
+                node.shell2nd.mss_str2=mss2trans(node.shell2nd.mss_str)
         del(aa,pacambiar,aux2_dict,aux2_set)
  
         pass
 
+def mss2trans(mss):
+
+    gg=0
+    mss_out='<'
+    ii=mss[gg]
+    mss_out+=mss[gg+1]
+    gg=gg+ii
+    aa=0
+    mss_out+='|'
+    joe=[]
+    for jj in xrange(ii*2):
+        gg+=1
+        joe.append(str(mss[gg]))
+        aa+=mss[gg]
+    mss_out+=str.join(',',joe)
+    mss_out+='|'
+    joe=[]
+    for jj in xrange(aa):
+        gg+=1
+        joe.append(mss[gg])
+    mss_out+=str.join(',',joe)
+    for jj in xrange(aa):
+        mss_out+='> <'
+        gg+=1
+        ii=mss[gg]
+        mss_out+=mss[gg+1]
+        gg=gg+ii
+        bb=0
+        mss_out+='|'
+        joe=[]
+        for jj in xrange(ii*2):
+            gg+=1
+            joe.append(str(mss[gg]))
+            bb+=mss[gg]
+        mss_out+=str.join(',',joe)
+        mss_out+='|'
+        joe=[]
+        for kk in xrange(bb):
+            gg+=1
+            joe.append(mss[gg])
+        mss_out+=str.join(',',joe)
+    mss_out+='>'
+    return mss_out
+        
