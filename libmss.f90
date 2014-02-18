@@ -609,7 +609,6 @@ SUBROUTINE build_shell2nd (core)
 
   DEALLOCATE(aux_ord)
 
-
   CALL encode_mss()
 
   NULLIFY(at_aux,shell_aux)
