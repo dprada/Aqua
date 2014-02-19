@@ -20,7 +20,7 @@ TYPE p_at
 END TYPE p_at
 
 TYPE p_shell
-   TYPE(p_at),DIMENSION(:),POINTER::ats
+   TYPE(p_at),DIMENSION(:),ALLOCATABLE::ats
    INTEGER,DIMENSION(:),ALLOCATABLE::ats_ord
    INTEGER::nats,nats2,nnods,ntot
    INTEGER::ind
@@ -28,11 +28,10 @@ TYPE p_shell
    INTEGER,DIMENSION(:),ALLOCATABLE::symm,wsymm
    LOGICAL::filtro_supsets
    INTEGER::lev_supsets,lev_sets,lev_nods
-
 END TYPE p_shell
 
 !f2py   intent(hide)::list_shells
-TYPE(p_shell),DIMENSION(:),POINTER::list_shells
+TYPE(p_shell),DIMENSION(:),ALLOCATABLE,TARGET::list_shells
 
 !! TOPOLOGY
 
@@ -99,7 +98,7 @@ SUBROUTINE load_topol(xx_at2nod,&
   IF (ALLOCATED(at2nod))           DEALLOCATE(at2nod)
   IF (ALLOCATED(trad2py_at))       DEALLOCATE(trad2py_at)
   IF (ALLOCATED(trad2py_nod))      DEALLOCATE(trad2py_nod)
-  IF (ASSOCIATED(list_shells))     DEALLOCATE(list_shells) !! cuidado aqui
+  IF (ALLOCATED(list_shells))     DEALLOCATE(list_shells) !! cuidado aqui
 
   IF (ALLOCATED(lev_nods))         DEALLOCATE(lev_nods)
   IF (ALLOCATED(lev_sets))         DEALLOCATE(lev_sets)
@@ -383,7 +382,7 @@ SUBROUTINE build_shell1st (core)
   IMPLICIT NONE
  
   INTEGER,INTENT(IN)::core
-  TYPE(p_shell)::shell1st
+  TYPE(p_shell),TARGET::shell1st
   TYPE(p_at),POINTER::at_aux
 
   INTEGER,DIMENSION(:),ALLOCATABLE::privilegios
@@ -448,7 +447,7 @@ SUBROUTINE build_shell2nd (core)
  
   INTEGER,INTENT(IN)::core
 
-  TYPE(p_shell)::shell1st
+  TYPE(p_shell),TARGET::shell1st
   TYPE(p_shell),DIMENSION(:),ALLOCATABLE,TARGET::shell2nd
 
   TYPE(p_at),POINTER::at_aux
@@ -465,6 +464,7 @@ SUBROUTINE build_shell2nd (core)
   !! Building the structure
 
   shell1st=list_shells(core)
+
 
   nnods=shell1st.nnods
   totntot=shell1st%ntot
@@ -500,7 +500,7 @@ SUBROUTINE build_shell2nd (core)
      core2=shell_aux%ind
 
      !list of privilegios
-      privilegios(1)=core2 
+     privilegios(1)=core2 
 
      ! order bonds 2sh
      DO ii=1,shell_aux%nats
@@ -570,6 +570,7 @@ SUBROUTINE build_shell2nd (core)
 
   END DO
 
+
   !! removing symm in 1stsh
 
   DEALLOCATE(privilegios)
@@ -577,7 +578,7 @@ SUBROUTINE build_shell2nd (core)
   ALLOCATE(privilegios(1))
   privilegios(1)=core
 
-  ! order bonds 2sh
+  ! order bonds 1sh
   DO ii=1,shell1st%nats
      at_aux=>shell1st%ats(ii)
      IF (at_aux%hbs%num>1) THEN
@@ -618,12 +619,15 @@ SUBROUTINE build_shell2nd (core)
      END IF
   END DO
 
-  ! order ats 2sh
+  ! order ats 1sh
   IF (shell1st%symm_num_crits>0) THEN
      num_crits=shell1st%symm_num_crits
      ALLOCATE(symm_crit(shell1st%symm_length))
      symm_crit(:)=shell1st%symm(:)
      CALL order_ats(dim_privil,privilegios,shell1st,num_crits)
+     IF (num_crits>0) THEN 
+        CALL order_ats_w_next_shells(shell1st,shell2nd,nnods,num_crits)
+     END IF
      shell1st%symm_num_crits=num_crits
      DEALLOCATE(shell1st%symm)
      ii=SIZE(symm_crit)
@@ -694,7 +698,7 @@ SUBROUTINE order_ats(dim_privil,privilegios,shell,num_crits)
 
   INTEGER,INTENT(IN)::dim_privil
   INTEGER,DIMENSION(dim_privil),INTENT(IN)::privilegios
-  TYPE(p_shell),INTENT(INOUT)::shell
+  TYPE(p_shell),TARGET,INTENT(INOUT)::shell
   INTEGER,INTENT(INOUT)::num_crits
 
   INTEGER::ii,jj,gg,ggg,gggg,aa,bb
@@ -918,6 +922,38 @@ SUBROUTINE order_ats(dim_privil,privilegios,shell,num_crits)
 END SUBROUTINE order_ats
 
 
+SUBROUTINE order_ats_w_next_shells(shell1st,shell2nd,nnods,num_crits)
+
+  INTEGER,INTENT(IN)::nnods
+  TYPE(p_shell),TARGET,INTENT(INOUT)::shell1st
+  TYPE(p_shell),DIMENSION(nnods),TARGET::shell2nd
+  INTEGER,INTENT(INOUT)::num_crits
+
+  ! tienen igual: privilegios, num hbs y num bs, y los mismos bonded en hbs y bs en su shell
+  ! falta: comparar lo que sucede en las siguientes shell
+
+  print*,'AQUI',trad2py_nod(shell1st%ind)
+
+  dim_matrix=0
+
+  ALLOCATE(box(shell1st%nats))
+  box(:)=0
+
+  gg=0
+  DO ii=1,num_crits
+     gg=gg+1
+     DO jj=1,symm_crit(gg)
+        gg=gg+1
+        kk=symm_crit(gg)
+        aa=0
+        DO ll=1,shell1st%ats(kk)%
+
+        IF (dim_matrix<shell1st%ats(kk)%num_hbs_bs) dim_matrix=shell1st%ats(kk)%num_hbs_bs
+     END DO
+  END DO
+
+
+END SUBROUTINE order_ats_w_next_shells
 
 SUBROUTINE order_bonded(dim_privil,privilegios,bonded,num_crits)
 
@@ -1134,7 +1170,7 @@ SUBROUTINE build_mss_wout(shell2nd,aux_ind_ats,aux_ind_nods,aux_symm)
   aux_ind_nods(1) = nats
   ii=jj+1
   jj=jj+nats
-  aux_symm(ii:jj)     = (/(shell2nd%wsymm(oo(kk)),kk=1,nats)/)
+  aux_symm(ii:jj)     = (/(shell2nd%wsymm(kk),kk=1,nats)/)
   aux_ind_ats(ii:jj)  = (/(shell2nd%ats(oo(kk))%ind,kk=1,nats)/) !! ojo
   aux_ind_nods(ii:jj) = at2nod(aux_ind_ats(ii:jj))
   aux_ind_ats(ii:jj)  = trad2py_at(aux_ind_ats(ii:jj))
@@ -1241,7 +1277,6 @@ SUBROUTINE SORT_INT_MATRIX (num_ats,dim_matrix,order,valores,num_crits)
   LOGICAL,DIMENSION(:),ALLOCATABLE::filtro
   LOGICAL::interruptor
 
-
   pp=1
   DO WHILE ((num_crits>0).AND.(pp<=dim_matrix))
      new_num_crits=0
@@ -1251,7 +1286,8 @@ SUBROUTINE SORT_INT_MATRIX (num_ats,dim_matrix,order,valores,num_crits)
         idim=symm_crit(gg)
         ALLOCATE(val_aux(idim),ind_aux(idim),symm_aux(idim))
         DO jj=1,idim
-           kk=symm_crit(gg+jj)
+           gg=gg+1
+           kk=symm_crit(gg)
            ll=order(kk)
            val_aux(jj)=valores(ll,pp)
            symm_aux(jj)=kk

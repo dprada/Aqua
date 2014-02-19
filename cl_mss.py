@@ -544,7 +544,40 @@ class mss():
             self.mss2mss_str(node=node,shell2nd=True)
         pass
  
- 
+    def filtrosymm(self,node='ALL'):
+
+        if node=='ALL':
+            aa=self.node
+        elif type(node)==int:
+            aa=[self.node[node]]
+
+        for node in aa:
+            gg=0
+            nn1=node.shell2nd.mss_ind_nodes[gg]
+            for ii in xrange(nn1):
+                gg+=1
+            nn2=0
+            for ii in xrange(nn1*2):
+                gg+=1
+                nn2+=node.shell2nd.mss_ind_nodes[gg]
+            for ii in xrange(nn2):
+                gg+=1
+            for ii in xrange(nn2):
+                gg+=1
+                nn3=node.shell2nd.mss_ind_nodes[gg]
+                for jj in xrange(nn3):
+                    gg+=1
+                nn4=0
+                for jj in xrange(nn3*2):
+                    gg+=1
+                    nn4+=node.shell2nd.mss_ind_nodes[gg]
+                for jj in xrange(nn4):
+                    gg+=1
+                    if node.shell2nd.mss_symm[gg]==1:
+                        if node.shell2nd.mss_str[gg].startswith('w'):
+                            node.shell2nd.mss_symm[gg]=0
+
+
     def mss2mss_str(self,node='ALL',shell1st=False,shell2nd=False):
  
         if node=='ALL':
