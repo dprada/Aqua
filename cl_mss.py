@@ -310,7 +310,7 @@ class mss():
                     for jj in range(len(aux)): ### BORRAR
                         self.node[aux[jj]-1].category[1]=ii ### BORRAR
                         self.node[aux[jj]-1].category[2]=jj ### BORRAR
-            self.x_symm_sets=numpy.array(self.x_symm_sets,dtype=int,order='Fortran')
+        self.x_symm_sets=numpy.array(self.x_symm_sets,dtype=int,order='Fortran')
 
 
     def info(self):
@@ -406,6 +406,10 @@ class mss():
             del(aux_dict,aux_keys,con_ASP,con_GLU,con_Term)
 
     def load_net(self,hbonds=None,bonds=None,hbtype='R(o,o)-Ang(o,o,h)',btype='dists'):
+
+        for node in self.node:
+            for ii,atom in node.atom.iteritems():
+                atom.reset()
 
         self.hbtype=hbtype
         self.btype=btype

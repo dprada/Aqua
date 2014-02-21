@@ -240,6 +240,25 @@ SUBROUTINE load_topol(xx_at2nod,&
 
 END SUBROUTINE load_topol
 
+SUBROUTINE reset_at(at_aux)
+
+  TYPE(p_at),INTENT(INOUT)::at_aux
+
+  IF (ALLOCATED(at_aux%hbs%bonded_ats)) THEN
+     DEALLOCATE(at_aux%hbs%bonded_ats,at_aux%hbs%bonded_nods,at_aux%hbs%order)
+     DEALLOCATE(at_aux%hbs%lev_supsets,at_aux%hbs%lev_sets)
+     DEALLOCATE(at_aux%hbs%lev_cantsets,at_aux%hbs%lev_nods)
+     DEALLOCATE(at_aux%hbs%aux2sh,at_aux%hbs%wsymm)
+  END IF
+
+  IF (ALLOCATED(at_aux%bs%bonded_ats)) THEN
+     DEALLOCATE(at_aux%bs%bonded_ats,at_aux%bs%bonded_nods,at_aux%bs%order)
+     DEALLOCATE(at_aux%bs%lev_supsets,at_aux%bs%lev_sets)
+     DEALLOCATE(at_aux%bs%lev_cantsets,at_aux%bs%lev_nods)
+     DEALLOCATE(at_aux%bs%aux2sh,at_aux%bs%wsymm)
+  END IF
+
+END SUBROUTINE reset_at
 
 SUBROUTINE load_net(xx_hbs,xx_bs,xx_num_Hbs_at,xx_num_Bs_at,&
      xx_Total_num_hbs,xx_Total_num_bs,xx_num_ats)
@@ -270,6 +289,7 @@ SUBROUTINE load_net(xx_hbs,xx_bs,xx_num_Hbs_at,xx_num_Bs_at,&
         at_aux%num_hbs_bs=totnum
         at_aux%hbs%num=numhbs
         at_aux%bs%num=numbs
+        CALL RESET_AT(at_aux)
         ALLOCATE(at_aux%hbs%bonded_ats(numhbs),at_aux%hbs%bonded_nods(numhbs),at_aux%hbs%order(numhbs))
         ALLOCATE(at_aux%hbs%lev_supsets(numhbs),at_aux%hbs%lev_sets(numhbs))
         ALLOCATE(at_aux%hbs%lev_cantsets(numhbs),at_aux%hbs%lev_nods(numhbs))
@@ -303,8 +323,8 @@ SUBROUTINE load_net(xx_hbs,xx_bs,xx_num_Hbs_at,xx_num_Bs_at,&
         at_aux%bs%lev_cantsets(:)  = 0
         at_aux%hbs%aux2sh(:)       = 0
         at_aux%bs%aux2sh(:)        = 0
-        at_aux%hbs%wsymm(:)       = 0
-        at_aux%bs%wsymm(:)        = 0
+        at_aux%hbs%wsymm(:)        = 0
+        at_aux%bs%wsymm(:)         = 0
         at_aux%hbs%filtro_supsets  = .FALSE.
         at_aux%bs%filtro_supsets   = .FALSE.
         IF (superfiltro_supsets.eqv..TRUE.) THEN
@@ -589,7 +609,6 @@ SUBROUTINE build_shell2nd (core)
         CALL order_bonded(dim_privil,privilegios,at_aux%hbs,num_crits)
         IF (num_crits>0) THEN
            CALL order_bonded_w_next_shells(at_aux%hbs,shell2nd,nnods,num_crits)
-           IF (num_crits==0) print*,'AQUIIII',trad2py_nod(core)
         END IF
         IF (num_crits>0) THEN !! PARA QUITAR
            mm=0
@@ -611,7 +630,6 @@ SUBROUTINE build_shell2nd (core)
         CALL order_bonded(dim_privil,privilegios,at_aux%bs,num_crits)
         IF (num_crits>0) THEN
            CALL order_bonded_w_next_shells(at_aux%bs,shell2nd,nnods,num_crits)
-           IF (num_crits==0) print*,'AQUIIII',trad2py_nod(core)
         END IF
         IF (num_crits>0) THEN !! PARA QUITAR
            mm=0
@@ -1255,17 +1273,20 @@ SUBROUTINE order_bonded(dim_privil,privilegios,bonded,num_crits)
      END IF
   ELSE
      !! si no hay supersets en el sistema
-     ggg=gg+1
-     sihay1=.FALSE.
-     DO hh=1,numb
-        IF (priv==bonded%bonded_nods(hh)) THEN
-           sihay1=.TRUE.
-           valores_aux(hh,ggg)=1
+     DO ii=1,dim_privil
+        priv=privilegios(ii)
+        ggg=gg+1
+        sihay1=.FALSE.
+        DO hh=1,numb
+           IF (priv==bonded%bonded_nods(hh)) THEN
+              sihay1=.TRUE.
+              valores_aux(hh,ggg)=1
+           END IF
+        END DO
+        IF (sihay1.eqv..TRUE.) THEN
+           gg=ggg
         END IF
      END DO
-     IF (sihay1.eqv..TRUE.) THEN
-        gg=ggg
-     END IF
   END IF
 
   IF (bonded%filtro_supsets.eqv..TRUE.) THEN
@@ -1286,25 +1307,7 @@ SUBROUTINE order_bonded(dim_privil,privilegios,bonded,num_crits)
 
   CALL SORT_INT_MATRIX (numb,gg,bonded%order,valores,num_crits)
 
-  ALLOCATE(box(numb))
-  box(:)=bonded%bonded_ats(:)
-  bonded%bonded_ats(:)=box(bonded%order(:))
-  box(:)=bonded%bonded_nods(:)
-  bonded%bonded_nods(:)=box(bonded%order(:))
-  box(:)=bonded%lev_supsets(:)
-  bonded%lev_supsets(:)=box(bonded%order(:))
-  box(:)=bonded%aux2sh(:)
-  bonded%aux2sh(:)=box(bonded%order(:))
-  IF (bonded%filtro_supsets.eqv..TRUE.) THEN
-     box(:)=bonded%lev_sets(:)
-     bonded%lev_sets(:)=box(bonded%order(:))
-     box(:)=bonded%lev_nods(:)
-     bonded%lev_nods(:)=box(bonded%order(:))
-     box(:)=bonded%lev_cantsets(:)
-     bonded%lev_cantsets(:)=box(bonded%order(:))
-  END IF
-  DEALLOCATE(box)
-  bonded%order(:)=(/(ii,ii=1,numb)/)
+  CALL REORDER_BONDED (bonded)
 
   DEALLOCATE(valores)
 
@@ -1319,7 +1322,7 @@ SUBROUTINE order_bonded_w_next_shells(bonded,shell2nd,nnods,num_crits)
   INTEGER,INTENT(INOUT)::num_crits
 
   INTEGER::num_bs,dim_matrix
-  INTEGER::ii,jj,gg,mm,kk,aa
+  INTEGER::ii,jj,gg,mm,kk,aa,qq,aaa,nn
   INTEGER,DIMENSION(:),ALLOCATABLE::box
   INTEGER,DIMENSION(:,:),ALLOCATABLE::valores
   TYPE(p_shell),POINTER::shell_aux
@@ -1360,16 +1363,110 @@ SUBROUTINE order_bonded_w_next_shells(bonded,shell2nd,nnods,num_crits)
      END DO
   END DO
 
-  DO ii=1,dim_matrix
-     print*,valores(:,ii)
-  END DO
-
-
   CALL SORT_INT_MATRIX (numb,dim_matrix,bonded%order,valores,num_crits)
   DEALLOCATE(valores)
 
+  CALL REORDER_BONDED (bonded)
 
-  ALLOCATE(box(numb))
+  IF (num_crits>0) THEN
+     
+     dim_matrix=0
+     numb=bonded%num
+     
+     gg=0
+     DO ii=1,num_crits
+        gg=gg+1
+        DO jj=1,symm_crit(gg)
+           gg=gg+1
+           kk=bonded%order(symm_crit(gg))
+           mm=bonded%aux2sh(kk)
+           IF (dim_matrix<shell2nd(mm)%nnods) dim_matrix=shell2nd(mm)%nnods
+        END DO
+     END DO
+     
+     IF (dim_matrix>0) THEN
+
+        ALLOCATE(valores(numb,dim_matrix))
+        valores(:,:)=0
+
+        gg=0
+        DO ii=1,num_crits
+           gg=gg+1
+           DO jj=1,symm_crit(gg)
+              gg=gg+1
+              kk=bonded%order(symm_crit(gg))
+              mm=bonded%aux2sh(kk)
+              shell_aux=>shell2nd(mm)
+              aa=0
+              DO nn=1,shell_aux%nats
+                 qq=shell_aux%ats_ord(nn)
+                 aaa=aa+1
+                 aa=aa+shell_aux%ats(qq)%hbs%num
+                 valores(kk,aaa:aa)=shell_aux%ats(qq)%hbs%lev_supsets(:)
+                 aaa=aa+1
+                 aa=aa+shell_aux%ats(qq)%bs%num
+                 valores(kk,aaa:aa)=shell_aux%ats(qq)%bs%lev_supsets(:)
+              END DO
+           END DO
+        END DO
+
+        CALL SORT_INT_MATRIX (numb,dim_matrix,bonded%order,valores,num_crits)
+        DEALLOCATE(valores)
+        CALL REORDER_BONDED (bonded)
+
+        IF ((superfiltro_supsets.eqv..TRUE.).and.(num_crits>0)) THEN
+
+           dim_matrix=dim_matrix*2
+           ALLOCATE(valores(numb,dim_matrix))
+           valores(:,:)=0
+
+           gg=0
+           DO ii=1,num_crits
+              gg=gg+1
+              DO jj=1,symm_crit(gg)
+                 gg=gg+1
+                 kk=bonded%order(symm_crit(gg))
+                 mm=bonded%aux2sh(kk)
+                 shell_aux=>shell2nd(mm)
+                 aa=0
+                 DO nn=1,shell_aux%nats
+                    qq=shell_aux%ats_ord(nn)
+                    aaa=aa+1
+                    aa=aa+shell_aux%ats(qq)%hbs%num
+                    valores(kk,aaa:aa)=shell_aux%ats(qq)%hbs%lev_cantsets(:)
+                    aaa=aa+1
+                    aa=aa+shell_aux%ats(qq)%bs%num
+                    valores(kk,aaa:aa)=shell_aux%ats(qq)%bs%lev_cantsets(:)
+                    aaa=aa+1
+                    aa=aa+shell_aux%ats(qq)%hbs%num
+                    valores(kk,aaa:aa)=shell_aux%ats(qq)%hbs%lev_nods(:)
+                    aaa=aa+1
+                    aa=aa+shell_aux%ats(qq)%bs%num
+                    valores(kk,aaa:aa)=shell_aux%ats(qq)%bs%lev_nods(:)
+                 END DO
+              END DO
+           END DO
+
+           
+           CALL SORT_INT_MATRIX (numb,dim_matrix,bonded%order,valores,num_crits)
+           DEALLOCATE(valores)
+           CALL REORDER_BONDED (bonded)
+
+        END IF
+
+
+     END IF
+     
+  END IF
+
+END SUBROUTINE order_bonded_w_next_shells
+
+SUBROUTINE REORDER_BONDED (bonded)
+
+  TYPE(p_bonded),INTENT(INOUT)::bonded
+  INTEGER,DIMENSION(:),ALLOCATABLE::box
+
+  ALLOCATE(box(bonded%num))
   box(:)=bonded%bonded_ats(:)
   bonded%bonded_ats(:)=box(bonded%order(:))
   box(:)=bonded%bonded_nods(:)
@@ -1389,9 +1486,7 @@ SUBROUTINE order_bonded_w_next_shells(bonded,shell2nd,nnods,num_crits)
   DEALLOCATE(box)
   bonded%order(:)=(/(ii,ii=1,numb)/)
 
-
-END SUBROUTINE order_bonded_w_next_shells
-
+END SUBROUTINE REORDER_BONDED
 
 SUBROUTINE build_mss(shell1st)
  
