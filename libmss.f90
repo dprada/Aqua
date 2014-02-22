@@ -486,10 +486,10 @@ SUBROUTINE build_shell2nd (core)
   shell1st=list_shells(core)
 
 
-  nnods=shell1st.nnods
+  nnods=shell1st%nnods
   totntot=shell1st%ntot
 
-  ALLOCATE(shell2nd(shell1st.nnods))
+  ALLOCATE(shell2nd(shell1st%nnods))
   gg=0
   DO ii=1,shell1st%nats
      DO jj=1,shell1st%ats(ii)%hbs%num
@@ -727,7 +727,7 @@ SUBROUTINE order_ats(dim_privil,privilegios,shell,num_crits)
   TYPE(p_shell),TARGET,INTENT(INOUT)::shell
   INTEGER,INTENT(INOUT)::num_crits
 
-  INTEGER::ii,jj,gg,ggg,gggg,aa,bb
+  INTEGER::ii,jj,gg,ggg,gggg,aa,bb,priv
   INTEGER::numats
   TYPE(p_bonded),POINTER::bonded
   TYPE(p_at),POINTER::at_aux
@@ -1194,7 +1194,7 @@ SUBROUTINE order_bonded(dim_privil,privilegios,bonded,num_crits)
   TYPE(p_bonded),INTENT(INOUT)::bonded
   INTEGER,INTENT(INOUT)::num_crits
   
-  INTEGER::ii,jj,gg,priv,aa,bb,numb,ggg,gggg
+  INTEGER::ii,jj,gg,hh,priv,aa,bb,numb,ggg,gggg
   INTEGER,DIMENSION(:,:),ALLOCATABLE::valores_aux,valores
   INTEGER,DIMENSION(:),ALLOCATABLE::box
   LOGICAL::sihay1,sihay2
