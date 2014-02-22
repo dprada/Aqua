@@ -485,6 +485,7 @@ SUBROUTINE build_shell2nd (core)
 
   shell1st=list_shells(core)
 
+  print*,'ENTRA CON',trad2py_nod(core)
 
   nnods=shell1st%nnods
   totntot=shell1st%ntot
@@ -508,6 +509,7 @@ SUBROUTINE build_shell2nd (core)
      END DO
   END DO
 
+  print*,'paso 1'
   !! removing symm in 2ndsh
 
   dim_privil=2
@@ -590,7 +592,7 @@ SUBROUTINE build_shell2nd (core)
 
   END DO
 
-
+  print*,'paso 2'
   !! removing symm in 1stsh
 
   DEALLOCATE(privilegios)
@@ -606,11 +608,16 @@ SUBROUTINE build_shell2nd (core)
         ALLOCATE(symm_crit(aux_num+1))
         num_crits=1
         symm_crit(:)=(/aux_num,at_aux%hbs%order(:)/)
+        print*,'entra'
         CALL order_bonded(dim_privil,privilegios,at_aux%hbs,num_crits)
+        print*,'sale'
         IF (num_crits>0) THEN
+           print*,'entra2'
            CALL order_bonded_w_next_shells(at_aux%hbs,shell2nd,nnods,num_crits)
+           print*,'sale2'
         END IF
         IF (num_crits>0) THEN !! PARA QUITAR
+           print*,'claro'
            mm=0
            DO nn=1,num_crits
               mm=mm+1
@@ -620,7 +627,11 @@ SUBROUTINE build_shell2nd (core)
               END DO
            END DO
         END IF
+        print*,'casca?',ALLOCATED(symm_crit)
+        print*,symm_crit(:)
         DEALLOCATE(symm_crit)
+        print*,'no casca'
+        print*,'imprime algo'
      END IF
      IF (at_aux%bs%num>1) THEN
         aux_num=at_aux%bs%num
@@ -645,10 +656,13 @@ SUBROUTINE build_shell2nd (core)
      END IF
   END DO
 
+  print*,'paso 3'
+
   ! order ats 1sh
   IF (shell1st%symm_num_crits>0) THEN
      num_crits=shell1st%symm_num_crits
      ALLOCATE(symm_crit(shell1st%symm_length))
+     print*,'dale'
      symm_crit(:)=shell1st%symm(:)
      CALL order_ats(dim_privil,privilegios,shell1st,num_crits)
      IF (num_crits>0) THEN 
@@ -670,15 +684,15 @@ SUBROUTINE build_shell2nd (core)
            END DO
         END DO
      END IF
-     DEALLOCATE(symm_crit)
+     DEALLOCATE(symm_crit)     
   END IF
 
-
+  print*,'ole'
   !! Building the msss
   
   IF (ALLOCATED(mss_ind_ats))   DEALLOCATE(mss_ind_ats)
   IF (ALLOCATED(mss_ind_nods))  DEALLOCATE(mss_ind_nods)
-  IF (ALLOCATED(mss_symm))  DEALLOCATE(mss_symm)
+  IF (ALLOCATED(mss_symm))      DEALLOCATE(mss_symm)
 
   ALLOCATE(mss_ind_ats(totntot),mss_ind_nods(totntot),mss_symm(totntot))
 
@@ -693,9 +707,10 @@ SUBROUTINE build_shell2nd (core)
   mss_ind_nods(ggg:gg)=aux_ind_nods(:)
   mss_symm(ggg:gg)=aux_symm(:)
   DEALLOCATE(aux_ind_ats,aux_ind_nods,aux_symm)
-
+  print*,'seguimos'
   DO ii=1,nnods1sh
      jj=aux_ord(ii)
+     print*,jj
      shell_aux=>shell2nd(jj)
      ntot2sh =shell_aux%ntot
      nnods2sh=shell_aux%nnods
@@ -1323,12 +1338,14 @@ SUBROUTINE order_bonded_w_next_shells(bonded,shell2nd,nnods,num_crits)
 
   INTEGER::num_bs,dim_matrix
   INTEGER::ii,jj,gg,mm,kk,aa,qq,aaa,nn
-  INTEGER,DIMENSION(:),ALLOCATABLE::box
   INTEGER,DIMENSION(:,:),ALLOCATABLE::valores
   TYPE(p_shell),POINTER::shell_aux
 
   dim_matrix=0
   numb=bonded%num
+
+  print*,'ahi va333'
+  print*,symm_crit(:)
 
   gg=0
   DO ii=1,num_crits
@@ -1363,13 +1380,15 @@ SUBROUTINE order_bonded_w_next_shells(bonded,shell2nd,nnods,num_crits)
      END DO
   END DO
 
+  print*,'al menos llega'
   CALL SORT_INT_MATRIX (numb,dim_matrix,bonded%order,valores,num_crits)
+  print*,'y de aqui no pasa',symm_crit(:)
   DEALLOCATE(valores)
-
+  print*,'y de aqui',symm_crit(:)
   CALL REORDER_BONDED (bonded)
-
+  print*,'saleeeee',num_crits
   IF (num_crits>0) THEN
-     
+     print*,'ole1'
      dim_matrix=0
      numb=bonded%num
      
@@ -1458,6 +1477,8 @@ SUBROUTINE order_bonded_w_next_shells(bonded,shell2nd,nnods,num_crits)
      END IF
      
   END IF
+
+  print*,'joder',symm_crit(:)
 
 END SUBROUTINE order_bonded_w_next_shells
 
@@ -1667,6 +1688,8 @@ SUBROUTINE SORT_INT_MATRIX (num_ats,dim_matrix,order,valores,num_crits)
   LOGICAL,DIMENSION(:),ALLOCATABLE::filtro
   LOGICAL::interruptor
 
+  print*,'aqui estamos'
+
   pp=1
   DO WHILE ((num_crits>0).AND.(pp<=dim_matrix))
      new_num_crits=0
@@ -1775,14 +1798,17 @@ SUBROUTINE SORT_INT_MATRIX (num_ats,dim_matrix,order,valores,num_crits)
      END DO
      num_crits=new_num_crits
      IF (num_crits>0) THEN
+        print*,'si',tope,new_symm_aux
         DEALLOCATE(symm_crit)
         ALLOCATE(symm_crit(tope))
         symm_crit(:)=new_symm_aux(:)
         DEALLOCATE(new_symm_aux)
+        print*,'sisi',symm_crit
      END IF
- 
      pp=pp+1
   END DO
+
+print*,'===',symm_crit
 
 END SUBROUTINE SORT_INT_MATRIX
 
