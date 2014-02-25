@@ -500,7 +500,7 @@ class mss():
 
         pass
 
-    def build_shell1st(self,node='ALL'):
+    def build_shell1st(self,node='ALL',tostr=True):
      
         # x_node_run_ats,x_atom2node,trad2py_node,trad2py_atom
         # T_hbs_start,T_hbs_ind,T_bs_start,T_bs_ind,T_num_hbs,T_num_bs
@@ -512,8 +512,9 @@ class mss():
                 self.node[ii].shell1st.mss           = numpy.copy(mss_funcs.mss_ind_nods) # provisional
                 self.node[ii].shell1st.mss_ind_atoms = numpy.copy(mss_funcs.mss_ind_ats)
                 self.node[ii].shell1st.mss_ind_nodes = numpy.copy(mss_funcs.mss_ind_nods)
-                #self.node[ii].shell1st.mss_symm      = numpy.copy(mss_funcs.mss_symm)
-            self.mss2mss_str(shell1st=True)
+                self.node[ii].shell1st.mss_symm      = numpy.copy(mss_funcs.mss_symm)
+            if tostr:
+                self.mss2mss_str(shell1st=True)
         elif type(node)==int:
             jj=self.trad2f_node[node]
             mss_funcs.build_shell1st(jj)
@@ -521,9 +522,9 @@ class mss():
             self.node[node].shell1st.mss           = numpy.copy(mss_funcs.mss_ind_nods) # provisional
             self.node[node].shell1st.mss_ind_atoms = numpy.copy(mss_funcs.mss_ind_ats)
             self.node[node].shell1st.mss_ind_nodes = numpy.copy(mss_funcs.mss_ind_nods)
-            #self.node[node].shell1st.mss_symm      = numpy.copy(mss_funcs.mss_symm)
-            self.mss2mss_str(node=node,shell1st=True)
-            print 'orale'
+            self.node[node].shell1st.mss_symm      = numpy.copy(mss_funcs.mss_symm)
+            if tostr:
+                self.mss2mss_str(node=node,shell1st=True)
         pass
  
     def build_shell2nd(self,node='ALL'):
