@@ -523,6 +523,7 @@ class mss():
             self.node[node].shell1st.mss_ind_nodes = numpy.copy(mss_funcs.mss_ind_nods)
             #self.node[node].shell1st.mss_symm      = numpy.copy(mss_funcs.mss_symm)
             self.mss2mss_str(node=node,shell1st=True)
+            print 'orale'
         pass
  
     def build_shell2nd(self,node='ALL'):

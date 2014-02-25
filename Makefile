@@ -250,3 +250,10 @@ io_formats/libcell2box.so: io_formats/libcell2box.f90
 clean:
 	@ rm *.so io_formats/*.so
 	@ echo "Clean"
+
+
+
+
+### TO DEBUG:
+## make comp=gfortran FOPTS='"-fcheck=all -fimplicit-none -Wall -Wline-truncation -Wcharacter-truncation -Wsurprising -Waliasing -Wimplicit-interface -Wunused-parameter -fwhole-file -fcheck=all -pedantic -fbacktrace -Wextra -fbounds-check"'
+## make FOPTS='"-g -check all -fpe0 -warn -traceback -debug extended"'
