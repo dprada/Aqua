@@ -88,8 +88,10 @@ class shell():
         self.mss_ind_atoms = numpy.array([],dtype='int32',order='Fortran') 
         self.mss_ind_nodes = numpy.array([],dtype='int32',order='Fortran') 
         self.new_symm      = numpy.array([],dtype='int32',order='Fortran') 
-        self.mss_str       = numpy.array([],dtype='int32',order='Fortran')
+        self.mss_str       = []
+        self.mss_str1      = []
         self.mss_str2      = []
+
 
 class node():
 
@@ -169,6 +171,7 @@ class mss():
 
         self.build_nodes()
 
+        self.mss_translator={}
         self.atom2node={}
         self.trad2f_node={}
         self.trad2f_atom={}
@@ -311,6 +314,10 @@ class mss():
                         self.node[aux[jj]-1].category[1]=ii ### BORRAR
                         self.node[aux[jj]-1].category[2]=jj ### BORRAR
         self.x_symm_sets=numpy.array(self.x_symm_sets,dtype=int,order='Fortran')
+
+        ## mss_translator
+
+        
 
 
     def info(self):
@@ -533,8 +540,7 @@ class mss():
             for ii in range(self.num_nodes):
                 jj=self.trad2f_node[ii]
                 mss_funcs.build_shell2nd(jj)
-                #self.node[ii].shell2nd.mss           = numpy.copy(mss_funcs.mss)
-                self.node[ii].shell2nd.mss           = numpy.copy(mss_funcs.mss_ind_nods) # provisional
+                self.node[ii].shell2nd.mss           = numpy.copy(mss_funcs.mss)
                 self.node[ii].shell2nd.mss_ind_atoms = numpy.copy(mss_funcs.mss_ind_ats)
                 self.node[ii].shell2nd.mss_ind_nodes = numpy.copy(mss_funcs.mss_ind_nods)
                 self.node[ii].shell2nd.mss_symm      = numpy.copy(mss_funcs.mss_symm)
@@ -542,8 +548,7 @@ class mss():
         elif type(node)==int:
             jj=self.trad2f_node[node]
             mss_funcs.build_shell2nd(jj)
-            #self.node[node].shell2nd.mss           = numpy.copy(mss_funcs.mss)
-            self.node[node].shell2nd.mss           = numpy.copy(mss_funcs.mss_ind_nods) # provisional
+            self.node[node].shell2nd.mss           = numpy.copy(mss_funcs.mss)
             self.node[node].shell2nd.mss_ind_atoms = numpy.copy(mss_funcs.mss_ind_ats)
             self.node[node].shell2nd.mss_ind_nodes = numpy.copy(mss_funcs.mss_ind_nods)
             self.node[node].shell2nd.mss_symm      = numpy.copy(mss_funcs.mss_symm)
@@ -623,8 +628,39 @@ class mss():
  
         if shell2nd:
  
+            #for node in aa:
+            #    node.shell2nd.mss_str1=node.shell2nd.mss.tolist()
+            #    n_ats=node.shell2nd.mss[0]
+            #    aux_str=self.mss_translator[node.shell2nd.mss[1]]
+            #    ii=1
+            #    jj=ii+n_ats
+            #    for iii in xrange(ii,jj):
+            #        node.shell2nd.mss_str1[iii]=aux_str
+            #    ii=jj+1
+            #    jj=jj+n_ats*2
+            #    n_bs=node.shell2nd.mss[ii:jj].sum()
+            #    ii=jj+1
+            #    jj=jj+n_bs
+            #    for iii in xrange(ii,jj):
+            #        node.shell2nd.mss_str1[iii]=self.mss_translator[node.shell2nd.mss[iii]]
+            #    for jjj in xrange(n_bs):
+            #        jj=jj+1
+            #        n_ats2=node.shell2nd.mss[jj]
+            #        aux_str=self.mss_translator[node.shell2nd.mss[jj+1]]
+            #        ii=jj+1
+            #        jj=jj+n_ats2
+            #        for iii in xrange(ii,jj):
+            #            node.shell2nd.mss_str1[iii]=aux_str
+            #        ii=jj+1
+            #        jj=jj+n_ats*2
+            #        n_bs2=node.shell2nd.mss[ii:jj].sum()
+            #        ii=jj+1
+            #        jj=jj+n_bs2
+            #        for iii in xrange(ii,jj):
+            #            node.shell2nd.mss_str1[iii]=self.mss_translator[node.shell2nd.mss[iii]]
+
             for node in aa:
-                node.shell2nd.mss_str=node.shell2nd.mss.tolist()
+                node.shell2nd.mss_str=node.shell2nd.mss_ind_nodes.tolist()
                 pacambiar=[]
                 iii=0
                 n_ats=node.shell2nd.mss_str[0]

@@ -1338,17 +1338,17 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
 
         setA,nlist_A,nsys_A,setB,nlist_B,nsys_B,diff_syst,diff_set=__read_sets_opt__(self,setA,None,setB)
 
-        xxx=libmath.binning(None,bins,segment,None,None)
         rdf_tot=numpy.zeros(shape=(bins),dtype=float,order='Fortran')
         num_frames=0
         for iframe in __read_frame_opt__(self,traj,frame):
-            dist_frame=faux.distance(1,pbc,setA,iframe.coors,iframe.box,iframe.orthogonal,setB,iframe.coors,nlist_A,nlist_B,nsys_A,nsys_B)
-            rdf_frame=faux.rdf_frame(dist_frame,frame.box,segment[0],segment[1],bins,nlist_A,nlist_B)
+            dist_frame=faux.distance(1,1,pbc,setA,iframe.coors,iframe.box,iframe.orthogonal,setB,iframe.coors,nlist_A,nlist_B,nsys_A,nsys_B)
+            rdf_frame=faux.rdf_frame(dist_frame,iframe.box,segment[0],segment[1],bins,nlist_A,nlist_B)
             rdf_tot+=rdf_frame
             num_frames+=1.0
 
         rdf_tot=rdf_tot/(num_frames*1.0)
-        return xxx,rdf_tot
+
+        return rdf_tot
 
 
     def neighbors(self,setA=None,setB=None,ranking=1,dist=None,asbonds=False,traj=0,frame=0,pbc=True):

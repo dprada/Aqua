@@ -278,7 +278,7 @@ def binning(traj=None,bins=20,segment=None,delta_x=None,prec=None):
 
     if traj==None:
 
-        o_delta_x=libmath.binning_x(opt_range,opt,bins,mmn,mmx,delta_x)
+        o_delta_x=libmath.binning_x(opt_range,opt_delta_x,bins,mmn,mmx,delta_x)
         h_x=copy.deepcopy(libmath.histo_x)
         libmath.free_mem()
         
