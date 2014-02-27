@@ -89,7 +89,6 @@ class shell():
         self.mss_ind_nodes = numpy.array([],dtype='int32',order='Fortran') 
         self.new_symm      = numpy.array([],dtype='int32',order='Fortran') 
         self.mss_str       = []
-        self.mss_str1      = []
         self.mss_str2      = []
 
 
@@ -254,7 +253,7 @@ class mss():
 
         ## symmetric nodes and categories
         
-        count_category=0 ### BORRAR
+        translator_counter=0
 
         self.x_symm_nods=[]
         self.x_symm_nods_num=0
@@ -269,18 +268,22 @@ class mss():
             self.x_symm_nods_num=len(symm_nodes_list)
             aux2=range(self.x_symm_nods_num)
             aux=[[] for ii in aux2]
+            pref=['' for ii in aux2]
             for node in self.node:
                 for ii in aux2:
                     if True in numpy.in1d(node.atoms,symm_nodes_list[ii]):
                         aux[ii].append(node.index+1)
-                        node.category[0]=count_category+ii ### BORRAR
+                        pref[ii]=node.type[0].lower()
                         break
             for ii in aux2:
                 self.x_symm_nods.append(len(aux[ii]))
                 self.x_symm_nods.extend(aux[ii])
+                for jj in xrange(len(aux[ii])):
+                    translator_counter+=1
+                    self.mss_translator[translator_counter]=pref[ii]+str(jj)
             del(aux,aux2)
             self.x_symm_nods=numpy.array(self.x_symm_nods,dtype=int,order='Fortran')
-            count_category+=len(symm_nodes_list) ### BORRAR
+
 
         ## symmetric sets of nodes
 
@@ -292,32 +295,28 @@ class mss():
             for criterium in self.symm_sets_nodes:
                 if criterium == 'lipids':
                     symm_sets_nodes=self.msystem.lipid
+                    pref='l'
                 elif criterium == 'proteins':
                     symm_sets_nodes=self.msystem.protein
+                    pref='p'
                 aux=[item for sublist in symm_sets_nodes for item in sublist]
                 num_sets=len(symm_sets_nodes)
                 sets={ii:[] for ii in range(num_sets)}
                 for node in self.node:
                     if True in numpy.in1d(node.atoms,aux):
-                        node.category[0]=count_category ### BORRAR
                         for ii in range(num_sets):
                             if True in numpy.in1d(node.atoms,symm_sets_nodes[ii]):
                                 sets[ii].append(node.index+1)
                                 break
-                count_category+=1 ### BORRAR
                 self.x_symm_sets.append(num_sets)
                 self.x_symm_sets.append(len(sets[0]))
-                for ii in range(num_sets):
+                for ii in xrange(num_sets):
                     self.x_symm_sets.extend(sets[ii])
-                    aux=sets[ii] ### BORRAR
-                    for jj in range(len(aux)): ### BORRAR
-                        self.node[aux[jj]-1].category[1]=ii ### BORRAR
-                        self.node[aux[jj]-1].category[2]=jj ### BORRAR
+                    for jj in xrange(len(sets[ii])):
+                        translator_counter+=1
+                        self.mss_translator[translator_counter]=pref+str(ii)+'-'+str(jj)
+
         self.x_symm_sets=numpy.array(self.x_symm_sets,dtype=int,order='Fortran')
-
-        ## mss_translator
-
-        
 
 
     def info(self):
@@ -507,7 +506,7 @@ class mss():
 
         pass
 
-    def build_shell1st(self,node='ALL',tostr=True):
+    def build_shell1st(self,node='ALL',tostr=False):
      
         # x_node_run_ats,x_atom2node,trad2py_node,trad2py_atom
         # T_hbs_start,T_hbs_ind,T_bs_start,T_bs_ind,T_num_hbs,T_num_bs
@@ -515,8 +514,7 @@ class mss():
             for ii in range(self.num_nodes):
                 jj=self.trad2f_node[ii]
                 mss_funcs.build_shell1st(jj)
-                #self.node[ii].shell1st.mss           = numpy.copy(mss_funcs.mss)
-                self.node[ii].shell1st.mss           = numpy.copy(mss_funcs.mss_ind_nods) # provisional
+                self.node[ii].shell1st.mss           = numpy.copy(mss_funcs.mss)
                 self.node[ii].shell1st.mss_ind_atoms = numpy.copy(mss_funcs.mss_ind_ats)
                 self.node[ii].shell1st.mss_ind_nodes = numpy.copy(mss_funcs.mss_ind_nods)
                 self.node[ii].shell1st.mss_symm      = numpy.copy(mss_funcs.mss_symm)
@@ -525,8 +523,7 @@ class mss():
         elif type(node)==int:
             jj=self.trad2f_node[node]
             mss_funcs.build_shell1st(jj)
-            #self.node[node].shell1st.mss           = numpy.copy(mss_funcs.mss)
-            self.node[node].shell1st.mss           = numpy.copy(mss_funcs.mss_ind_nods) # provisional
+            self.node[node].shell1st.mss           = numpy.copy(mss_funcs.mss)
             self.node[node].shell1st.mss_ind_atoms = numpy.copy(mss_funcs.mss_ind_ats)
             self.node[node].shell1st.mss_ind_nodes = numpy.copy(mss_funcs.mss_ind_nods)
             self.node[node].shell1st.mss_symm      = numpy.copy(mss_funcs.mss_symm)
@@ -534,7 +531,7 @@ class mss():
                 self.mss2mss_str(node=node,shell1st=True)
         pass
  
-    def build_shell2nd(self,node='ALL'):
+    def build_shell2nd(self,node='ALL',tostr=False):
      
         if node=='ALL':
             for ii in range(self.num_nodes):
@@ -544,7 +541,8 @@ class mss():
                 self.node[ii].shell2nd.mss_ind_atoms = numpy.copy(mss_funcs.mss_ind_ats)
                 self.node[ii].shell2nd.mss_ind_nodes = numpy.copy(mss_funcs.mss_ind_nods)
                 self.node[ii].shell2nd.mss_symm      = numpy.copy(mss_funcs.mss_symm)
-            self.mss2mss_str(shell2nd=True)
+            if tostr:
+                self.mss2mss_str(shell2nd=True)
         elif type(node)==int:
             jj=self.trad2f_node[node]
             mss_funcs.build_shell2nd(jj)
@@ -552,7 +550,8 @@ class mss():
             self.node[node].shell2nd.mss_ind_atoms = numpy.copy(mss_funcs.mss_ind_ats)
             self.node[node].shell2nd.mss_ind_nodes = numpy.copy(mss_funcs.mss_ind_nods)
             self.node[node].shell2nd.mss_symm      = numpy.copy(mss_funcs.mss_symm)
-            self.mss2mss_str(node=node,shell2nd=True)
+            if tostr:
+                self.mss2mss_str(node=node,shell2nd=True)
         pass
  
     def filtrosymm(self,node='ALL'):
@@ -600,122 +599,79 @@ class mss():
  
             for node in aa:
                 node.shell1st.mss_str=node.shell1st.mss.tolist()
-                pacambiar=[]
-                n_ats=node.shell1st.mss_str[0]
-                n_bs=sum(node.shell1st.mss_ind_nodes[(1+n_ats):(1+n_ats*3)])
-                pacambiar.extend(range(1,(1+n_ats)))
-                pacambiar.extend(range((1+n_ats*3),(1+n_ats*3+n_bs)))
-                aux2_dict={}
-                aux2_set={}
-                cc_water=0
-                cc_lipid=0
-                cc_ion=0
-                for ii in pacambiar:
-                    jj=node.shell1st.mss_str[ii]
-                    if aux2_dict.has_key(jj)==False:
-                        if jj in self.waters:
-                            aux2_dict[jj]='w'+str(cc_water)
-                            cc_water+=1
-                        elif jj in self.lipids:
-                            if aux2_set.has_key(self.node[jj].category[1])==False:
-                                aux2_set[self.node[jj].category[1]]=cc_lipid
-                                cc_lipid+=1
-                            aux2_dict[jj]='l'+str(aux2_set[self.node[jj].category[1]])+'-'+str(self.node[jj].category[2])
-                        elif jj in self.ions:
-                            aux2_dict[jj]='i'+str(cc_ion)
-                            cc_ion+=1
-                    node.shell1st.mss_str[ii]=aux2_dict[jj]
- 
+                n_ats=node.shell1st.mss[0]
+                aux_str=self.mss_translator[node.shell1st.mss[1]]
+                ii=1
+                jj=ii+n_ats
+                for iii in xrange(ii,jj):
+                    node.shell1st.mss_str[iii]=aux_str
+                ii=jj
+                jj=jj+n_ats*2
+                n_bs=node.shell1st.mss[ii:jj].sum()
+                ii=jj
+                jj=jj+n_bs
+                for iii in xrange(ii,jj):
+                    node.shell1st.mss_str[iii]=self.mss_translator[node.shell1st.mss[iii]]
+                node.shell1st.mss_str2=mss1trans(node.shell1st.mss_str)
+
         if shell2nd:
  
-            #for node in aa:
-            #    node.shell2nd.mss_str1=node.shell2nd.mss.tolist()
-            #    n_ats=node.shell2nd.mss[0]
-            #    aux_str=self.mss_translator[node.shell2nd.mss[1]]
-            #    ii=1
-            #    jj=ii+n_ats
-            #    for iii in xrange(ii,jj):
-            #        node.shell2nd.mss_str1[iii]=aux_str
-            #    ii=jj+1
-            #    jj=jj+n_ats*2
-            #    n_bs=node.shell2nd.mss[ii:jj].sum()
-            #    ii=jj+1
-            #    jj=jj+n_bs
-            #    for iii in xrange(ii,jj):
-            #        node.shell2nd.mss_str1[iii]=self.mss_translator[node.shell2nd.mss[iii]]
-            #    for jjj in xrange(n_bs):
-            #        jj=jj+1
-            #        n_ats2=node.shell2nd.mss[jj]
-            #        aux_str=self.mss_translator[node.shell2nd.mss[jj+1]]
-            #        ii=jj+1
-            #        jj=jj+n_ats2
-            #        for iii in xrange(ii,jj):
-            #            node.shell2nd.mss_str1[iii]=aux_str
-            #        ii=jj+1
-            #        jj=jj+n_ats*2
-            #        n_bs2=node.shell2nd.mss[ii:jj].sum()
-            #        ii=jj+1
-            #        jj=jj+n_bs2
-            #        for iii in xrange(ii,jj):
-            #            node.shell2nd.mss_str1[iii]=self.mss_translator[node.shell2nd.mss[iii]]
-
             for node in aa:
-                node.shell2nd.mss_str=node.shell2nd.mss_ind_nodes.tolist()
-                pacambiar=[]
-                iii=0
-                n_ats=node.shell2nd.mss_str[0]
-                n_bs=sum(node.shell2nd.mss_ind_nodes[(1+n_ats):(1+n_ats*3)])
-                pacambiar.extend(range(1,(1+n_ats)))
-                pacambiar.extend(range((1+n_ats*3),(1+n_ats*3+n_bs)))
-                iii+=1+n_ats*3+n_bs
-                for ii in range(n_bs):
-                    nn_ats=node.shell2nd.mss_str[iii]
-                    nn_bs=sum(node.shell2nd.mss_ind_nodes[(iii+1+nn_ats):(iii+1+nn_ats*3)])
-                    pacambiar.extend(range(iii+1,(iii+1+nn_ats)))
-                    pacambiar.extend(range((iii+1+nn_ats*3),(iii+1+nn_ats*3+nn_bs)))
-                    iii+=1+nn_ats*3+nn_bs
-                aux2_dict={}
-                aux2_set={}
-                cc_water=0
-                cc_lipid=0
-                cc_ion=0
-                for ii in pacambiar:
-                    jj=node.shell2nd.mss_str[ii]
-                    if aux2_dict.has_key(jj)==False:
-                        if jj in self.waters:
-                            aux2_dict[jj]='w'+str(cc_water)
-                            cc_water+=1
-                        elif jj in self.lipids:
-                            if aux2_set.has_key(self.node[jj].category[1])==False:
-                                aux2_set[self.node[jj].category[1]]=cc_lipid
-                                cc_lipid+=1
-                            aux2_dict[jj]='l'+str(aux2_set[self.node[jj].category[1]])+'-'+str(self.node[jj].category[2])
-                        elif jj in self.ions:
-                            aux2_dict[jj]='i'+str(cc_ion)
-                            cc_ion+=1
-                    node.shell2nd.mss_str[ii]=aux2_dict[jj]
-                aa1=node.shell2nd.mss_str[0]
-                gg=aa1
-                ggg=0
-                for ii in range(aa1):
-                    ggg+=node.shell2nd.mss_str[gg+1]+node.shell2nd.mss_str[gg+2]
-                    gg+=2
-                for iii in range(ggg):
-                    gg+=1
-                for iii in range(ggg):
-                    gg+=1
-                    aa1=node.shell2nd.mss_str[gg]
-                    gg+=aa1
-                    jjj=0
-                    for jj in range(aa1):
-                        jjj+=node.shell2nd.mss_str[gg+1]+node.shell2nd.mss_str[gg+2]
-                        gg+=2
-                    for jj in range(jjj):
-                        gg+=1
+                node.shell2nd.mss_str=node.shell2nd.mss.tolist()
+                n_ats=node.shell2nd.mss[0]
+                aux_str=self.mss_translator[node.shell2nd.mss[1]]
+                ii=1
+                jj=ii+n_ats
+                for iii in xrange(ii,jj):
+                    node.shell2nd.mss_str[iii]=aux_str
+                ii=jj
+                jj=jj+n_ats*2
+                n_bs=node.shell2nd.mss[ii:jj].sum()
+                ii=jj
+                jj=jj+n_bs
+                for iii in xrange(ii,jj):
+                    node.shell2nd.mss_str[iii]=self.mss_translator[node.shell2nd.mss[iii]]
+                for jjj in xrange(n_bs):
+                    n_ats2=node.shell2nd.mss[jj]
+                    aux_str=self.mss_translator[node.shell2nd.mss[jj+1]]
+                    jj+=1
+                    ii=jj
+                    jj=jj+n_ats2
+                    for iii in xrange(ii,jj):
+                        node.shell2nd.mss_str[iii]=aux_str
+                    ii=jj
+                    jj=jj+n_ats2*2
+                    n_bs2=node.shell2nd.mss[ii:jj].sum()
+                    ii=jj
+                    jj=jj+n_bs2
+                    for iii in xrange(ii,jj):
+                        node.shell2nd.mss_str[iii]=self.mss_translator[node.shell2nd.mss[iii]]
                 node.shell2nd.mss_str2=mss2trans(node.shell2nd.mss_str)
-        del(aa,pacambiar,aux2_dict,aux2_set)
- 
         pass
+
+def mss1trans(mss):
+
+    gg=0
+    mss_out='<'
+    ii=mss[gg]
+    mss_out+=mss[gg+1]
+    gg=gg+ii
+    aa=0
+    mss_out+='|'
+    joe=[]
+    for jj in xrange(ii*2):
+        gg+=1
+        joe.append(str(mss[gg]))
+        aa+=mss[gg]
+    mss_out+=str.join(',',joe)
+    mss_out+='|'
+    joe=[]
+    for jj in xrange(aa):
+        gg+=1
+        joe.append(mss[gg])
+    mss_out+=str.join(',',joe)
+    mss_out+='>'
+    return mss_out
 
 def mss2trans(mss):
 

@@ -307,7 +307,7 @@ SUBROUTINE RESET_AT(at_aux)
      DEALLOCATE(at_aux%hbs%lev_supsets,at_aux%hbs%lev_sets)
      DEALLOCATE(at_aux%hbs%lev_cantsets,at_aux%hbs%lev_nods)
      DEALLOCATE(at_aux%hbs%aux2sh,at_aux%hbs%wsymm)
-     DEALLOCATE(at_aux%hbs%aux2sh,at_aux%hbs%symm%crit)
+     DEALLOCATE(at_aux%hbs%symm%crit)
   END IF
 
   IF (ALLOCATED(at_aux%bs%bonded_ats)) THEN
@@ -315,7 +315,7 @@ SUBROUTINE RESET_AT(at_aux)
      DEALLOCATE(at_aux%bs%lev_supsets,at_aux%bs%lev_sets)
      DEALLOCATE(at_aux%bs%lev_cantsets,at_aux%bs%lev_nods)
      DEALLOCATE(at_aux%bs%aux2sh,at_aux%bs%wsymm)
-     DEALLOCATE(at_aux%bs%aux2sh,at_aux%bs%symm%crit)
+     DEALLOCATE(at_aux%bs%symm%crit)
   END IF
 
 END SUBROUTINE RESET_AT
