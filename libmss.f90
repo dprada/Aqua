@@ -16,6 +16,7 @@ TYPE p_bonded
    INTEGER,DIMENSION(:),ALLOCATABLE::bonded_ats,bonded_nods,aux2sh
    INTEGER,DIMENSION(:),ALLOCATABLE::order,wsymm
    INTEGER,DIMENSION(:),ALLOCATABLE::lev_supsets,lev_sets,lev_nods,lev_cantsets
+   INTEGER,DIMENSION(:),ALLOCATABLE::cant_loops_1order
    LOGICAL::filtro_supsets
    INTEGER::num
    TYPE(p_symm)::symm
@@ -306,6 +307,7 @@ SUBROUTINE RESET_AT(at_aux)
      DEALLOCATE(at_aux%hbs%bonded_ats,at_aux%hbs%bonded_nods,at_aux%hbs%order)
      DEALLOCATE(at_aux%hbs%lev_supsets,at_aux%hbs%lev_sets)
      DEALLOCATE(at_aux%hbs%lev_cantsets,at_aux%hbs%lev_nods)
+     DEALLOCATE(at_aux%hbs%cant_loops_1order)
      DEALLOCATE(at_aux%hbs%aux2sh,at_aux%hbs%wsymm)
      DEALLOCATE(at_aux%hbs%symm%crit)
   END IF
@@ -314,6 +316,7 @@ SUBROUTINE RESET_AT(at_aux)
      DEALLOCATE(at_aux%bs%bonded_ats,at_aux%bs%bonded_nods,at_aux%bs%order)
      DEALLOCATE(at_aux%bs%lev_supsets,at_aux%bs%lev_sets)
      DEALLOCATE(at_aux%bs%lev_cantsets,at_aux%bs%lev_nods)
+     DEALLOCATE(at_aux%bs%cant_loops_1order)
      DEALLOCATE(at_aux%bs%aux2sh,at_aux%bs%wsymm)
      DEALLOCATE(at_aux%bs%symm%crit)
   END IF
@@ -354,10 +357,12 @@ SUBROUTINE load_net(xx_hbs,xx_bs,xx_num_Hbs_at,xx_num_Bs_at,&
         ALLOCATE(at_aux%hbs%bonded_ats(numhbs),at_aux%hbs%bonded_nods(numhbs),at_aux%hbs%order(numhbs))
         ALLOCATE(at_aux%hbs%lev_supsets(numhbs),at_aux%hbs%lev_sets(numhbs))
         ALLOCATE(at_aux%hbs%lev_cantsets(numhbs),at_aux%hbs%lev_nods(numhbs))
+        ALLOCATE(at_aux%hbs%cant_loops_1order(numhbs))
         ALLOCATE(at_aux%hbs%aux2sh(numhbs),at_aux%hbs%wsymm(numhbs))
         ALLOCATE(at_aux%bs%bonded_ats(numbs),at_aux%bs%bonded_nods(numbs),at_aux%bs%order(numbs))
         ALLOCATE(at_aux%bs%lev_supsets(numbs),at_aux%bs%lev_sets(numbs))
         ALLOCATE(at_aux%bs%lev_cantsets(numbs),at_aux%bs%lev_nods(numbs))
+        ALLOCATE(at_aux%bs%cant_loops_1order(numbs))
         ALLOCATE(at_aux%bs%aux2sh(numbs),at_aux%bs%wsymm(numbs))
         ALLOCATE(vect_aux_hbs(numhbs),vect_aux_bs(numbs))
         kk=gghb+1
@@ -421,6 +426,15 @@ SUBROUTINE load_net(xx_hbs,xx_bs,xx_num_Hbs_at,xx_num_Bs_at,&
      ALLOCATE(shell_aux%list_nods(shell_aux%nnods))
      shell_aux%list_nods(:)=(/((/shell_aux%ats(kk)%hbs%bonded_nods(:),shell_aux%ats(kk)%bs%bonded_nods(:)/),kk=1,shell_aux%nats)/)
      shell_aux%ntot=1+shell_aux%nats+shell_aux%nats2+shell_aux%nnods
+     DO jj=1,shell_aux%nats
+        at_aux=>shell_aux%ats(jj)
+        IF (at_aux%hbs%num>0) THEN
+           CALL COUNT_NODE_REPE (shell_aux%list_nods,shell_aux%nnods,at_aux%hbs%bonded_nods,at_aux%hbs%num,at_aux%hbs%cant_loops_1order)
+        END IF
+        IF (at_aux%bs%num>0) THEN
+           CALL COUNT_NODE_REPE (shell_aux%list_nods,shell_aux%nnods,at_aux%bs%bonded_nods,at_aux%bs%num,at_aux%bs%cant_loops_1order)
+        END IF
+     END DO
   END DO
 
   NULLIFY(shell_aux,at_aux)
@@ -522,9 +536,6 @@ SUBROUTINE build_shell1st (core)
   INTEGER::dim_privil,ii
 
 
-  !INTEGER,DIMENSION(:),ALLOCATABLE::carro1
-
-
   shell1st=list_shells(core)
    
   !! order bonds
@@ -532,37 +543,31 @@ SUBROUTINE build_shell1st (core)
   dim_privil=1
   ALLOCATE(privilegios(1))
   privilegios(1)=core
-   
+
   DO ii=1,shell1st%nats
      at_aux=>shell1st%ats(ii)
      IF (at_aux%hbs%symm%num_crits>0) THEN
         bs_aux=>at_aux%hbs
         CALL upload_symm(bs_aux%symm)
-        CALL order_bonded(dim_privil,privilegios,bs_aux)
+        CALL order_bonded(dim_privil,privilegios,shell1st%nnods,shell1st%list_nods,bs_aux)
         CALL download_symm(bs_aux%symm)
      END IF
      IF (at_aux%bs%symm%num_crits>0) THEN
         bs_aux=>at_aux%bs
         CALL upload_symm(bs_aux%symm)
-        CALL order_bonded(dim_privil,privilegios,bs_aux)
+        CALL order_bonded(dim_privil,privilegios,shell1st%nnods,shell1st%list_nods,bs_aux)
         CALL download_symm(bs_aux%symm)
      END IF
   END DO
-   
-  !compruebo
-  !ALLOCATE(carro1(shell1st%nnods))
-  !carro1(:)=(/((/shell1st%ats(jj)%hbs%bonded_ats(:),shell1st%ats(jj)%bs%bonded_ats(:)/),jj=1,shell1st%nats)/)
-  !CALL COUNT_REPE(carro1,shell1st%nnods,jj)
-  !if (jj>0) THEN
-  !   print*,'>>>>>>>>>',jj,'in',trad2py_nod(core)
-  !END IF
-  !DEALLOCATE(carro1)
 
   !! order ats
    
   IF (shell1st%symm%num_crits>0) THEN
      CALL upload_symm(shell1st%symm)
-     CALL order_ats(dim_privil,privilegios,shell1st)
+     CALL remove_triv_symm_ats(shell1st)
+     IF (symm%num_crits>0) THEN
+        CALL order_ats(dim_privil,privilegios,shell1st)
+     END IF
      CALL download_symm(shell1st%symm)
   END IF
   
@@ -643,13 +648,13 @@ SUBROUTINE build_shell2nd (core)
         IF (at_aux%hbs%symm%num_crits>0) THEN
            bs_aux=>at_aux%hbs
            CALL upload_symm(bs_aux%symm)
-           CALL order_bonded(dim_privil,privilegios,bs_aux)
+           CALL order_bonded(dim_privil,privilegios,shell_aux%nnods,shell_aux%list_nods,bs_aux)
            CALL download_symm(bs_aux%symm)
         END IF
         IF (at_aux%bs%symm%num_crits>0) THEN
            bs_aux=>at_aux%bs
            CALL upload_symm(bs_aux%symm)
-           CALL order_bonded(dim_privil,privilegios,bs_aux)
+           CALL order_bonded(dim_privil,privilegios,shell_aux%nnods,shell_aux%list_nods,bs_aux)
            CALL download_symm(bs_aux%symm)
         END IF
      END DO
@@ -657,7 +662,10 @@ SUBROUTINE build_shell2nd (core)
      ! order ats 2sh
      IF (shell_aux%symm%num_crits>0) THEN
         CALL upload_symm(shell_aux%symm)
-        CALL order_ats(dim_privil,privilegios,shell_aux)
+        CALL remove_triv_symm_ats(shell_aux) ! el que no tiene nada no tiene ni privilegios
+        IF (symm%num_crits>0) THEN
+           CALL order_ats(dim_privil,privilegios,shell_aux)
+        END IF
         CALL download_symm(shell_aux%symm)
      END IF
  
@@ -676,7 +684,7 @@ SUBROUTINE build_shell2nd (core)
      IF (at_aux%hbs%symm%num_crits>0) THEN
         bs_aux=>at_aux%hbs
         CALL upload_symm(bs_aux%symm)
-        CALL order_bonded(dim_privil,privilegios,bs_aux)
+        CALL order_bonded(dim_privil,privilegios,shell1st%nnods,shell1st%list_nods,bs_aux)
         IF (symm%num_crits>0) THEN
            CALL order_bonded_w_next_shells(bs_aux,shell2nd,nnods)
         END IF
@@ -685,7 +693,7 @@ SUBROUTINE build_shell2nd (core)
      IF (at_aux%bs%symm%num_crits>0) THEN
         bs_aux=>at_aux%bs
         CALL upload_symm(bs_aux%symm)
-        CALL order_bonded(dim_privil,privilegios,bs_aux)
+        CALL order_bonded(dim_privil,privilegios,shell1st%nnods,shell1st%list_nods,bs_aux)
         IF (symm%num_crits>0) THEN
            CALL order_bonded_w_next_shells(bs_aux,shell2nd,nnods)
         END IF
@@ -697,9 +705,12 @@ SUBROUTINE build_shell2nd (core)
   ! order ats 1sh
   IF (shell1st%symm%num_crits>0) THEN
      CALL upload_symm(shell1st%symm)
-     CALL order_ats(dim_privil,privilegios,shell1st)
+     CALL remove_triv_symm_ats(shell1st) ! el que no tiene nada no tiene ni privilegios
      IF (symm%num_crits>0) THEN 
-        CALL order_ats_w_next_shells(shell1st,shell2nd,nnods)
+        CALL order_ats(dim_privil,privilegios,shell1st)
+        IF (symm%num_crits>0) THEN 
+           CALL order_ats_w_next_shells(shell1st,shell2nd,nnods)
+        END IF
      END IF
      CALL download_symm(shell1st%symm)
   END IF
@@ -745,6 +756,77 @@ SUBROUTINE build_shell2nd (core)
   NULLIFY(at_aux,shell_aux,bs_aux)
  
 END SUBROUTINE build_shell2nd
+
+
+SUBROUTINE remove_triv_symm_ats(shell)
+
+  TYPE(p_shell),TARGET,INTENT(INOUT)::shell
+
+  INTEGER::numats
+  INTEGER::ii,gg,ll,idim,mm,nn
+  LOGICAL::interruptor
+  INTEGER::new_length,new_num_crits
+  INTEGER,DIMENSION(:),ALLOCATABLE::new_crit
+  INTEGER,DIMENSION(:,:),ALLOCATABLE::valores
+
+  numats=shell%nats
+
+  ALLOCATE(valores(numats,1))
+
+  DO ii=1,numats
+     IF (shell%ats(ii)%num_hbs_bs>0) THEN
+        valores(ii,1)=1
+     ELSE
+        valores(ii,1)=0
+     END IF
+  END DO
+
+  CALL SORT_INT_MATRIX (numats,1,shell%ats_ord,valores)
+
+  IF (symm%num_crits>0) THEN
+
+     ALLOCATE(new_crit(symm%length))
+     new_num_crits=0
+     new_length=0
+     mm=0
+
+     interruptor=.FALSE.
+     gg=0
+     DO ii=1,symm%num_crits
+        gg=gg+1
+        idim=symm%crit(gg)
+        ll=shell%ats_ord(symm%crit(gg+1))
+        IF (valores(ll,1)==0) THEN
+           interruptor=.true.
+           gg=gg+idim
+        ELSE
+           new_num_crits=new_num_crits+1
+           new_length=new_length+1+idim
+           mm=mm+1
+           new_crit(mm)=idim
+           DO nn=1,idim
+              gg=gg+1
+              mm=mm+1
+              new_crit(mm)=symm%crit(gg)
+           END DO
+        END IF
+     END DO
+
+     IF (interruptor.eqv..TRUE.) THEN
+        symm%num_crits=new_num_crits
+        symm%length=new_length
+        DEALLOCATE(symm%crit)
+        ALLOCATE(symm%crit(new_length))
+        symm%crit(:)=new_crit(1:new_length)
+     END IF
+
+     DEALLOCATE(new_crit)
+
+  END IF
+
+  DEALLOCATE(valores)
+
+END SUBROUTINE remove_triv_symm_ats
 
 
 SUBROUTINE order_ats(dim_privil,privilegios,shell)
@@ -938,6 +1020,14 @@ SUBROUTINE order_ats(dim_privil,privilegios,shell)
            END IF
         END IF
      END IF
+     IF (symm%num_crits>0) THEN
+        valores(:,:)=0
+        DO ii=1,numats
+           valores(ii,1:shell%ats(ii)%hbs%num)=shell%ats(ii)%hbs%cant_loops_1order(:)
+        END DO
+        ii=symm%num_crits
+        CALL SORT_INT_MATRIX (numats,gg,shell%ats_ord,valores)
+     END IF
      DEALLOCATE(valores)
   END IF
 
@@ -967,6 +1057,14 @@ SUBROUTINE order_ats(dim_privil,privilegios,shell)
               CALL SORT_INT_MATRIX (numats,gg,shell%ats_ord,valores)
            END IF
         END IF
+     END IF
+     IF (symm%num_crits>0) THEN
+        valores(:,:)=0
+        DO ii=1,numats
+           valores(ii,1:shell%ats(ii)%bs%num)=shell%ats(ii)%bs%cant_loops_1order(:)
+        END DO
+        ii=symm%num_crits
+        CALL SORT_INT_MATRIX (numats,gg,shell%ats_ord,valores)
      END IF
      DEALLOCATE(valores)
   END IF
@@ -1216,12 +1314,13 @@ SUBROUTINE order_ats_w_next_shells(shell1st,shell2nd,nnods)
  
 END SUBROUTINE order_ats_w_next_shells
 
-SUBROUTINE order_bonded(dim_privil,privilegios,bonded)
+SUBROUTINE order_bonded(dim_privil,privilegios,nnods,carro1,bonded)
   
   IMPLICIT NONE
 
-  INTEGER,INTENT(IN)::dim_privil
+  INTEGER,INTENT(IN)::dim_privil,nnods
   INTEGER,DIMENSION(dim_privil),INTENT(IN)::privilegios
+  INTEGER,DIMENSION(nnods),INTENT(IN)::carro1
   TYPE(p_bonded),INTENT(INOUT)::bonded
   
   INTEGER::ii,gg,hh,priv,aa,bb,numb,ggg,gggg
@@ -1335,10 +1434,32 @@ SUBROUTINE order_bonded(dim_privil,privilegios,bonded)
   DEALLOCATE(valores_aux)
    
   CALL SORT_INT_MATRIX (numb,gg,bonded%order,valores)
-   
+
   CALL REORDER_BONDED (bonded)
    
   DEALLOCATE(valores)
+
+  !Miro los loops en 1er orden
+
+  IF (symm%num_crits>0) THEN
+
+     IF (superfiltro_supsets.eqv..TRUE.) THEN
+        gg=2
+        ALLOCATE(valores(numb,gg))
+        valores(:,:)=0
+        valores(:,1)=bonded%cant_loops_1order(:)
+     ELSE
+        gg=1
+        ALLOCATE(valores(numb,gg))
+        valores(:,1)=bonded%cant_loops_1order(:)
+     END IF
+
+     CALL SORT_INT_MATRIX (numb,gg,bonded%order,valores)
+     DEALLOCATE(valores)
+
+  END IF
+
+  CALL REORDER_BONDED (bonded)
 
 END SUBROUTINE order_bonded
 
@@ -1507,6 +1628,8 @@ SUBROUTINE REORDER_BONDED (bonded)
   bonded%lev_supsets(:)=box(bonded%order(:))
   box(:)=bonded%aux2sh(:)
   bonded%aux2sh(:)=box(bonded%order(:))
+  box(:)=bonded%cant_loops_1order(:)
+  bonded%cant_loops_1order(:)=box(bonded%order(:))
   IF (bonded%filtro_supsets.eqv..TRUE.) THEN
      box(:)=bonded%lev_sets(:)
      bonded%lev_sets(:)=box(bonded%order(:))
@@ -1722,15 +1845,107 @@ SUBROUTINE remato_mss()
 
   IMPLICIT NONE
 
-  INTEGER::ntot
-
+  INTEGER::ii,in_node,out_node,flaga,flagz,aa,bb,tnod,tat
+  INTEGER,DIMENSION(num_nods)::translation
+  LOGICAL,DIMENSION(num_nods)::filtro
+ 
+  filtro=.FALSE.
+ 
   IF (ALLOCATED(mss))  DEALLOCATE(mss)
-  
-  ntot=SIZE(mss_ind_nods)
+  ALLOCATE(mss(SIZE(mss_ind_nods)))
 
-  ALLOCATE(mss(ntot))
-
-  mss(:)=0
+  CALL RESET_TRANSLATOR()
+ 
+  IF (superfiltro_supsets.eqv..TRUE.) THEN
+   
+     flaga=1
+     flagz=2
+     aa=mss_ind_nods(flaga)
+     in_node=mss_ind_nods(flagz)
+     tnod=trad2py_nod(in_node)
+     tat=trad2py_at(mss_ind_ats(flagz))
+     IF (filtro(in_node).eqv..FALSE.) THEN
+        filtro(in_node)=.TRUE.
+        CALL TRANSLATION_W_SUPSETS(in_node,out_node)
+        translation(in_node)=out_node
+     ELSE
+        out_node=translation(in_node)
+     END IF
+     mss(flaga)=aa
+     flaga=flagz
+     flagz=flagz+aa-1
+     DO ii=flaga,flagz
+        mss(ii)=out_node
+        mss_ind_nods(ii)=tnod
+        mss_ind_ats(ii)=tat
+     END DO
+     flaga=flagz+1
+     flagz=flagz+2*aa
+     bb=0
+     DO ii=flaga,flagz
+        bb=bb+mss_ind_nods(ii)
+        mss(ii)=mss_ind_nods(ii)
+     END DO
+     flaga=flagz+1
+     flagz=flagz+bb
+     DO ii=flaga,flagz
+        in_node=mss_ind_nods(ii)
+        IF (filtro(in_node).eqv..FALSE.) THEN
+           filtro(in_node)=.TRUE.
+           CALL TRANSLATION_W_SUPSETS(in_node,out_node)
+           translation(in_node)=out_node
+        ELSE
+           out_node=translation(in_node)
+        END IF
+        mss(ii)=out_node
+        mss_ind_nods(ii)=trad2py_nod(mss_ind_nods(ii))
+        mss_ind_ats(ii)=trad2py_at(mss_ind_ats(ii))
+     END DO
+  ELSE
+     flaga=1
+     flagz=2
+     aa=mss_ind_nods(flaga)
+     in_node=mss_ind_nods(flagz)
+     tnod=trad2py_nod(in_node)
+     tat=trad2py_at(mss_ind_ats(flagz))
+     IF (filtro(in_node).eqv..FALSE.) THEN
+        filtro(in_node)=.TRUE.
+        CALL TRANSLATION_WO_SUPSETS(in_node,out_node)
+        translation(in_node)=out_node
+     ELSE
+        out_node=translation(in_node)
+     END IF
+     mss(flaga)=aa
+     flaga=flagz
+     flagz=flagz+aa-1
+     DO ii=flaga,flagz
+        mss(ii)=out_node
+        mss_ind_nods(ii)=tnod
+        mss_ind_ats(ii)=tat
+     END DO
+     flaga=flagz+1
+     flagz=flagz+2*aa
+     bb=0
+     DO ii=flaga,flagz
+        bb=bb+mss_ind_nods(ii)
+        mss(ii)=mss_ind_nods(ii)
+     END DO
+     flaga=flagz+1
+     flagz=flagz+bb
+     DO ii=flaga,flagz
+        in_node=mss_ind_nods(ii)
+        IF (filtro(in_node).eqv..FALSE.) THEN
+           filtro(in_node)=.TRUE.
+           CALL TRANSLATION_WO_SUPSETS(in_node,out_node)
+           translation(in_node)=out_node
+        ELSE
+           out_node=translation(in_node)
+        END IF
+        mss(ii)=out_node
+        mss_ind_nods(ii)=trad2py_nod(mss_ind_nods(ii))
+        mss_ind_ats(ii)=trad2py_at(mss_ind_ats(ii))
+     END DO
+  END IF
 
 END SUBROUTINE remato_mss
 
@@ -2131,7 +2346,29 @@ SUBROUTINE SORT_INT_MATRIX (num_ats,dim_matrix,order,valores)
 
 END SUBROUTINE SORT_INT_MATRIX
 
-SUBROUTINE COUNT_REPE (carro,dim_carro,salida)
+SUBROUTINE COUNT_NODE_REPE (carro,dim_carro,nodes,nnods,salida)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::dim_carro,nnods
+  INTEGER,DIMENSION(dim_carro),INTENT(IN)::carro
+  INTEGER,DIMENSION(nnods),INTENT(IN)::nodes
+  INTEGER,DIMENSION(nnods),INTENT(OUT)::salida
+
+  INTEGER::ii,jj,kk,gg
+
+  DO ii=1,nnods
+     jj=nodes(ii)
+     gg=0
+     DO kk=1,dim_carro
+        IF (jj==carro(kk)) gg=gg+1
+     END DO
+     salida(ii)=gg
+  END DO
+
+END SUBROUTINE COUNT_NODE_REPE
+
+SUBROUTINE COUNT_TOT_REPE (carro,dim_carro,salida)
 
   IMPLICIT NONE
 
@@ -2163,9 +2400,9 @@ SUBROUTINE COUNT_REPE (carro,dim_carro,salida)
      END IF
   END DO
 
-END SUBROUTINE COUNT_REPE
+END SUBROUTINE COUNT_TOT_REPE
 
-SUBROUTINE COUNT_REPE2 (carro,dim_carro,salida)
+SUBROUTINE COUNT_TOT_REPE2 (carro,dim_carro,salida)
 
   IMPLICIT NONE
 
@@ -2190,7 +2427,7 @@ SUBROUTINE COUNT_REPE2 (carro,dim_carro,salida)
 
   salida=COUNT((aux(:)>1))
 
-END SUBROUTINE COUNT_REPE2
+END SUBROUTINE COUNT_TOT_REPE2
 
 END MODULE GLOB
 
