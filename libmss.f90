@@ -16,7 +16,7 @@ TYPE p_bonded
    INTEGER,DIMENSION(:),ALLOCATABLE::bonded_ats,bonded_nods,aux2sh
    INTEGER,DIMENSION(:),ALLOCATABLE::order,wsymm
    INTEGER,DIMENSION(:),ALLOCATABLE::lev_supsets,lev_sets,lev_nods,lev_cantsets
-   INTEGER,DIMENSION(:),ALLOCATABLE::cant_loops_1order
+   INTEGER,DIMENSION(:),ALLOCATABLE::cant_loops_1order,cant_loops_2order,cant_loops_3order
    LOGICAL::filtro_supsets
    INTEGER::num
    TYPE(p_symm)::symm
@@ -31,13 +31,13 @@ END TYPE p_at
 TYPE p_shell
    TYPE(p_at),DIMENSION(:),ALLOCATABLE::ats
    INTEGER,DIMENSION(:),ALLOCATABLE::ats_ord
-   INTEGER::nats,nats2,nnods,ntot
+   INTEGER::nats,nats2,nnods,nnods_norepe,nnods_repe,ntot
    INTEGER::ind
    INTEGER,DIMENSION(:),ALLOCATABLE::wsymm
    TYPE(p_symm)::symm
    LOGICAL::filtro_supsets
    INTEGER::lev_supsets,lev_sets,lev_nods
-   INTEGER,DIMENSION(:),ALLOCATABLE::list_nods
+   INTEGER,DIMENSION(:),ALLOCATABLE::list_nods_norepe,list_nods_repe,list_cant_repe
 
 END TYPE p_shell
 
@@ -185,7 +185,7 @@ SUBROUTINE load_topol(xx_at2nod,&
      shell_aux%symm%length=mm
      ALLOCATE(shell_aux%symm%crit(mm))
      shell_aux%symm%crit(:)=xx_symm_ats((kk+1):(kk+mm))
-     ALLOCATE(shell_aux%list_nods(0))
+     ALLOCATE(shell_aux%list_nods_norepe(0),shell_aux%list_nods_repe(0),shell_aux%list_cant_repe(0))
   END DO
   
 
@@ -307,7 +307,8 @@ SUBROUTINE RESET_AT(at_aux)
      DEALLOCATE(at_aux%hbs%bonded_ats,at_aux%hbs%bonded_nods,at_aux%hbs%order)
      DEALLOCATE(at_aux%hbs%lev_supsets,at_aux%hbs%lev_sets)
      DEALLOCATE(at_aux%hbs%lev_cantsets,at_aux%hbs%lev_nods)
-     DEALLOCATE(at_aux%hbs%cant_loops_1order)
+     DEALLOCATE(at_aux%hbs%cant_loops_1order,at_aux%hbs%cant_loops_2order)
+     DEALLOCATE(at_aux%hbs%cant_loops_3order)
      DEALLOCATE(at_aux%hbs%aux2sh,at_aux%hbs%wsymm)
      DEALLOCATE(at_aux%hbs%symm%crit)
   END IF
@@ -316,7 +317,8 @@ SUBROUTINE RESET_AT(at_aux)
      DEALLOCATE(at_aux%bs%bonded_ats,at_aux%bs%bonded_nods,at_aux%bs%order)
      DEALLOCATE(at_aux%bs%lev_supsets,at_aux%bs%lev_sets)
      DEALLOCATE(at_aux%bs%lev_cantsets,at_aux%bs%lev_nods)
-     DEALLOCATE(at_aux%bs%cant_loops_1order)
+     DEALLOCATE(at_aux%bs%cant_loops_1order,at_aux%bs%cant_loops_2order)
+     DEALLOCATE(at_aux%bs%cant_loops_3order)
      DEALLOCATE(at_aux%bs%aux2sh,at_aux%bs%wsymm)
      DEALLOCATE(at_aux%bs%symm%crit)
   END IF
@@ -343,7 +345,7 @@ SUBROUTINE load_net(xx_hbs,xx_bs,xx_num_Hbs_at,xx_num_Bs_at,&
   DO ii=1,num_nods
      shell_aux=>list_shells(ii)
      shell_aux%nnods=0
-     DEALLOCATE(shell_aux%list_nods)
+     DEALLOCATE(shell_aux%list_nods_norepe,shell_aux%list_nods_repe,shell_aux%list_cant_repe)
      DO jj=1,shell_aux%nats
         at_aux=>shell_aux%ats(jj)
         ggat=at_aux%ind
@@ -358,11 +360,15 @@ SUBROUTINE load_net(xx_hbs,xx_bs,xx_num_Hbs_at,xx_num_Bs_at,&
         ALLOCATE(at_aux%hbs%lev_supsets(numhbs),at_aux%hbs%lev_sets(numhbs))
         ALLOCATE(at_aux%hbs%lev_cantsets(numhbs),at_aux%hbs%lev_nods(numhbs))
         ALLOCATE(at_aux%hbs%cant_loops_1order(numhbs))
+        ALLOCATE(at_aux%hbs%cant_loops_2order(numhbs))
+        ALLOCATE(at_aux%hbs%cant_loops_3order(numhbs))
         ALLOCATE(at_aux%hbs%aux2sh(numhbs),at_aux%hbs%wsymm(numhbs))
         ALLOCATE(at_aux%bs%bonded_ats(numbs),at_aux%bs%bonded_nods(numbs),at_aux%bs%order(numbs))
         ALLOCATE(at_aux%bs%lev_supsets(numbs),at_aux%bs%lev_sets(numbs))
         ALLOCATE(at_aux%bs%lev_cantsets(numbs),at_aux%bs%lev_nods(numbs))
         ALLOCATE(at_aux%bs%cant_loops_1order(numbs))
+        ALLOCATE(at_aux%bs%cant_loops_2order(numbs))
+        ALLOCATE(at_aux%bs%cant_loops_3order(numbs))
         ALLOCATE(at_aux%bs%aux2sh(numbs),at_aux%bs%wsymm(numbs))
         ALLOCATE(vect_aux_hbs(numhbs),vect_aux_bs(numbs))
         kk=gghb+1
@@ -387,6 +393,12 @@ SUBROUTINE load_net(xx_hbs,xx_bs,xx_num_Hbs_at,xx_num_Bs_at,&
         at_aux%bs%order(:)         = (/(kk,kk=1,numbs)/)
         at_aux%hbs%lev_cantsets(:) = 0
         at_aux%bs%lev_cantsets(:)  = 0
+        at_aux%hbs%cant_loops_1order(:) = 0
+        at_aux%bs%cant_loops_1order(:)  = 0
+        at_aux%hbs%cant_loops_2order(:) = 0
+        at_aux%bs%cant_loops_2order(:)  = 0
+        at_aux%hbs%cant_loops_3order(:) = 0
+        at_aux%bs%cant_loops_3order(:)  = 0
         at_aux%hbs%aux2sh(:)       = 0
         at_aux%bs%aux2sh(:)        = 0
         at_aux%hbs%wsymm(:)        = 0
@@ -423,16 +435,18 @@ SUBROUTINE load_net(xx_hbs,xx_bs,xx_num_Hbs_at,xx_num_Bs_at,&
         DEALLOCATE(vect_aux_hbs,vect_aux_bs)
         shell_aux%nnods=shell_aux%nnods+totnum
      END DO
-     ALLOCATE(shell_aux%list_nods(shell_aux%nnods))
-     shell_aux%list_nods(:)=(/((/shell_aux%ats(kk)%hbs%bonded_nods(:),shell_aux%ats(kk)%bs%bonded_nods(:)/),kk=1,shell_aux%nats)/)
+     ALLOCATE(shell_aux%list_nods_norepe(shell_aux%nnods))
+     shell_aux%list_nods_norepe(:)=(/((/shell_aux%ats(kk)%hbs%bonded_nods(:),shell_aux%ats(kk)%bs%bonded_nods(:)/),kk=1,shell_aux%nats)/)
+     CALL BUILDING_REPE_LIST (shell_aux%nnods,shell_aux%list_nods_norepe(:),&
+          & shell_aux%nnods_norepe,shell_aux%list_nods_repe(:),shell_aux%list_cant_repe(:),shell_aux%nnods_norepe)
      shell_aux%ntot=1+shell_aux%nats+shell_aux%nats2+shell_aux%nnods
      DO jj=1,shell_aux%nats
         at_aux=>shell_aux%ats(jj)
         IF (at_aux%hbs%num>0) THEN
-           CALL COUNT_NODE_REPE (shell_aux%list_nods,shell_aux%nnods,at_aux%hbs%bonded_nods,at_aux%hbs%num,at_aux%hbs%cant_loops_1order)
+           CALL COUNT_NODE_REPE (shell_aux%list_nods_norepe,shell_aux%nnods_norepe,at_aux%hbs%bonded_nods,at_aux%hbs%num,at_aux%hbs%cant_loops_1order)
         END IF
         IF (at_aux%bs%num>0) THEN
-           CALL COUNT_NODE_REPE (shell_aux%list_nods,shell_aux%nnods,at_aux%bs%bonded_nods,at_aux%bs%num,at_aux%bs%cant_loops_1order)
+           CALL COUNT_NODE_REPE (shell_aux%list_nods_norepe,shell_aux%nnods_norepe,at_aux%bs%bonded_nods,at_aux%bs%num,at_aux%bs%cant_loops_1order)
         END IF
      END DO
   END DO
@@ -549,13 +563,13 @@ SUBROUTINE build_shell1st (core)
      IF (at_aux%hbs%symm%num_crits>0) THEN
         bs_aux=>at_aux%hbs
         CALL upload_symm(bs_aux%symm)
-        CALL order_bonded(dim_privil,privilegios,shell1st%nnods,shell1st%list_nods,bs_aux)
+        CALL order_bonded(dim_privil,privilegios,shell1st%nnods_norepe,shell1st%list_nods_norepe,bs_aux)
         CALL download_symm(bs_aux%symm)
      END IF
      IF (at_aux%bs%symm%num_crits>0) THEN
         bs_aux=>at_aux%bs
         CALL upload_symm(bs_aux%symm)
-        CALL order_bonded(dim_privil,privilegios,shell1st%nnods,shell1st%list_nods,bs_aux)
+        CALL order_bonded(dim_privil,privilegios,shell1st%nnods_norepe,shell1st%list_nods_norepe,bs_aux)
         CALL download_symm(bs_aux%symm)
      END IF
   END DO
@@ -600,6 +614,8 @@ SUBROUTINE build_shell2nd (core)
   INTEGER,DIMENSION(:),ALLOCATABLE::privilegios
   INTEGER::dim_privil
   INTEGER,DIMENSION(:),ALLOCATABLE::aux_ind_ats,aux_ind_nods,aux_ord,aux_symm
+  INTEGER,DIMENSION(:),ALLOCATABLE::carro_loops2,carro_loops3
+  LOGICAL,DIMENSION(:),ALLOCATABLE::filtro_loops
  
  
   !! Building the structure
@@ -628,6 +644,20 @@ SUBROUTINE build_shell2nd (core)
      END DO
   END DO
  
+  !! Building cant_loops_2order(:) and cant_loops_3order(:):
+
+  !ALLOCATE(carro_loops2(nnods))
+  !carro_loops2(:)=shell1st%list_nods_norepe(:)
+  !ALLOCATE(filtro_loops(num_nods))
+  !filtro_loops=.FALSE.
+  !gg=0
+  !DO ii=1,nnods
+  !   DO jj=1,shell2nd(ii)%
+  ! 
+  ! 
+  !ALLOCATE(carro_loops3())
+
+
   !! removing symm in 2ndsh
  
   dim_privil=2
@@ -648,13 +678,13 @@ SUBROUTINE build_shell2nd (core)
         IF (at_aux%hbs%symm%num_crits>0) THEN
            bs_aux=>at_aux%hbs
            CALL upload_symm(bs_aux%symm)
-           CALL order_bonded(dim_privil,privilegios,shell_aux%nnods,shell_aux%list_nods,bs_aux)
+           CALL order_bonded(dim_privil,privilegios,shell_aux%nnods,shell_aux%list_nods_norepe,bs_aux)
            CALL download_symm(bs_aux%symm)
         END IF
         IF (at_aux%bs%symm%num_crits>0) THEN
            bs_aux=>at_aux%bs
            CALL upload_symm(bs_aux%symm)
-           CALL order_bonded(dim_privil,privilegios,shell_aux%nnods,shell_aux%list_nods,bs_aux)
+           CALL order_bonded(dim_privil,privilegios,shell_aux%nnods,shell_aux%list_nods_norepe,bs_aux)
            CALL download_symm(bs_aux%symm)
         END IF
      END DO
@@ -684,7 +714,7 @@ SUBROUTINE build_shell2nd (core)
      IF (at_aux%hbs%symm%num_crits>0) THEN
         bs_aux=>at_aux%hbs
         CALL upload_symm(bs_aux%symm)
-        CALL order_bonded(dim_privil,privilegios,shell1st%nnods,shell1st%list_nods,bs_aux)
+        CALL order_bonded(dim_privil,privilegios,shell1st%nnods,shell1st%list_nods_norepe,bs_aux)
         IF (symm%num_crits>0) THEN
            CALL order_bonded_w_next_shells(bs_aux,shell2nd,nnods)
         END IF
@@ -693,7 +723,7 @@ SUBROUTINE build_shell2nd (core)
      IF (at_aux%bs%symm%num_crits>0) THEN
         bs_aux=>at_aux%bs
         CALL upload_symm(bs_aux%symm)
-        CALL order_bonded(dim_privil,privilegios,shell1st%nnods,shell1st%list_nods,bs_aux)
+        CALL order_bonded(dim_privil,privilegios,shell1st%nnods,shell1st%list_nods_norepe,bs_aux)
         IF (symm%num_crits>0) THEN
            CALL order_bonded_w_next_shells(bs_aux,shell2nd,nnods)
         END IF
@@ -2345,6 +2375,59 @@ SUBROUTINE SORT_INT_MATRIX (num_ats,dim_matrix,order,valores)
   END DO
 
 END SUBROUTINE SORT_INT_MATRIX
+
+CALL BUILDING_REPE_LIST (shell_aux%nnods,shell_aux%list_nods_norepe(:),&
+          & shell_aux%nnods_norepe,shell_aux%list_nods_repe(:),shell_aux%list_cant_repe(:),shell_aux%nnods_repe)
+
+SUBROUTINE REMOVE_REPE_LIST (dim_carro_in,carro,dim_carro_out,carro_repe,count_repe,num_rep)
+
+  IMPLICIT NONE
+  INTEGER,INTENT(IN)::dim_carro_in
+  INTEGER,DIMENSION(dim_carro_in),ALLOCATABLE,INTENT(INOUT)::carro
+  INTEGER,DIMENSION(0),ALLOCATABLE,INTENT(INOUT)::carro_repe,count_repe
+  INTEGER,INTENT(OUT)::dim_carro_out,num_repe
+
+  LOGICAL,DIMENSION(dim_carro_in)::filtro,filtro2
+  INTEGER,DIMENSION(dim_carro_in)::box,repetitions
+  LOGICAL::interruptor
+  INTEGER::ii,jj,gg
+
+  filtro(:)=.FALSE.
+  filtro2(:)=.FALSE.
+  repetitions(:)=0
+  DO ii=1,dim_carro_in
+     IF (filtro(ii).eqv..FALSE.) THEN
+        filtro(ii)=.TRUE.
+        gg=carro(ii)
+        kk=1
+        DO jj=ii+1,dim_carro_in
+           IF (filtro(ii).eqv..FALSE.) THEN
+              IF (carro(jj)==gg) THEN
+                 filtro(jj)=.TRUE.
+                 kk=kk+1
+              END IF
+           END IF
+        END DO
+        filtro2(ii)=.TRUE.
+        repetitions(ii)=kk
+     END IF
+  END DO
+
+  dim_carro_out=COUNT(filtro2(:),DIM=1)
+  IF (dim_carro_out<dim_carro_in) THEN
+     box(:)=carro(:)
+     DEALLOCATE(carro)
+     ALLOCATE(carro(dim_carro_out))
+     jj=0
+     DO ii=1,dim_carro_in
+        IF (filtro(ii)==.TRUE.) THEN
+           jj=jj+1
+           carro(jj)=box(ii)
+        END IF
+     END DO
+  END IF
+
+END SUBROUTINE REMOVE_REPE_LIST
 
 SUBROUTINE COUNT_NODE_REPE (carro,dim_carro,nodes,nnods,salida)
 
