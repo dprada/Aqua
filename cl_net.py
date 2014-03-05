@@ -815,7 +815,7 @@ class network():
             for ii in range(self.num_nodes):
                 scratch.append(self.node[ii].weight-self.node[ii].link[ii])
 
-        xx,yy=pyn_math.histogram(scratch,bins,segment,delta_x,None,norm,plot=False)
+        xx,yy=pyn_math.histogram(scratch,bins,segment,delta_x,None,norm)
         
         return xx, yy
 
