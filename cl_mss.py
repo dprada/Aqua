@@ -1,7 +1,9 @@
  # tendria que pensar si incluyo los centros de los aromaticos para hacer hbonds
 import numpy
 import copy
-from libmss import glob as mss_funcs
+from libmss_sets import glob as mss_funcs_sets
+from libmss_nosets import glob as mss_funcs_nosets
+
 
 class atom():
 
@@ -143,6 +145,7 @@ class mss():
 
     def __init__(self,msystem=None,sets='chains',symm_ats=None,symm_nodes=None,symm_sets_nodes=None,verbose=True):
 
+        self.__sets__=False
         self.type=sets   #'chains','residues','molecules'
         self.msystem=msystem
         self.node=[]
@@ -259,6 +262,7 @@ class mss():
         self.x_symm_nods_num=0
 
         if self.symm_nodes:
+            self.__sets__=True
             symm_nodes_list=[]
             if type(self.symm_nodes) in [list,tuple]:
                 for sel in self.symm_nodes:
@@ -484,533 +488,543 @@ class mss():
         for ii in xrange(T_num_bs):
             T_bs[ii]=self.trad2f_atom[T_bs[ii]]
 
-        mss_funcs.load_net(T_hbs,T_bs,T_num_hbs_atom,T_num_bs_atom,
-                           T_num_hbs,T_num_bs,self.num_atoms)
+        if self.__sets__ :
+
+            mss_funcs_sets.load_net(T_hbs,T_bs,T_num_hbs_atom,T_num_bs_atom,
+                                    T_num_hbs,T_num_bs,self.num_atoms)
+
+        else:
+
+            mss_funcs_nosets.load_net(T_hbs,T_bs,T_num_hbs_atom,T_num_bs_atom,
+                                      T_num_hbs,T_num_bs,self.num_atoms)
+
 
         del(T_hbs,T_bs,T_num_hbs_atom,T_num_bs_atom,T_num_hbs,T_num_bs)
 
     def load_topol(self):
 
-        mss_funcs.load_topol(self.x_atom2node,self.trad2py_atom,self.trad2py_node,
-                             self.x_symm_ats_start,self.x_symm_ats_crits,self.x_symm_ats,
-                             self.x_symm_nods,self.x_symm_nods_num,
-                             self.x_symm_sets,self.x_symm_sets_num,
-                             self.num_atoms,self.num_nodes,
-                             self.x_symm_ats.shape[0],self.x_symm_nods.shape[0],self.x_symm_sets.shape[0])
+        if self.__sets__ :
 
-    def reset_topol(self):
+            mss_funcs_sets.load_topol(self.x_atom2node,self.trad2py_atom,self.trad2py_node,
+                                      self.x_symm_ats_start,self.x_symm_ats_crits,self.x_symm_ats,
+                                      self.x_symm_nods,self.x_symm_nods_num,
+                                      self.x_symm_sets,self.x_symm_sets_num,
+                                      self.num_atoms,self.num_nodes,
+                                      self.x_symm_ats.shape[0],self.x_symm_nods.shape[0],self.x_symm_sets.shape[0])
+        else:
 
-        pass
+            mss_funcs_nosets.load_topol(self.x_atom2node,self.trad2py_atom,self.trad2py_node,
+                                        self.x_symm_ats_start,self.x_symm_ats_crits,self.x_symm_ats,
+                                        self.x_symm_nods,self.x_symm_nods_num,
+                                        self.num_atoms,self.num_nodes,
+                                        self.x_symm_ats.shape[0],self.x_symm_nods.shape[0])
 
-    def reset_net(self):
 
-        pass
-
-    def build_shell1st(self,node='ALL',tostr=False):
-     
-        # x_node_run_ats,x_atom2node,trad2py_node,trad2py_atom
-        # T_hbs_start,T_hbs_ind,T_bs_start,T_bs_ind,T_num_hbs,T_num_bs
-        if node=='ALL':
-            for ii in range(self.num_nodes):
-                jj=self.trad2f_node[ii]
-                mss_funcs.build_shell1st(jj)
-                self.node[ii].shell1st.mss           = numpy.copy(mss_funcs.mss)
-                self.node[ii].shell1st.mss_ind_atoms = numpy.copy(mss_funcs.mss_ind_ats)
-                self.node[ii].shell1st.mss_ind_nodes = numpy.copy(mss_funcs.mss_ind_nods)
-                self.node[ii].shell1st.mss_symm      = numpy.copy(mss_funcs.mss_symm)
-            if tostr:
-                self.mss2mss_str(shell1st=True)
-        elif type(node)==int:
-            jj=self.trad2f_node[node]
-            mss_funcs.build_shell1st(jj)
-            self.node[node].shell1st.mss           = numpy.copy(mss_funcs.mss)
-            self.node[node].shell1st.mss_ind_atoms = numpy.copy(mss_funcs.mss_ind_ats)
-            self.node[node].shell1st.mss_ind_nodes = numpy.copy(mss_funcs.mss_ind_nods)
-            self.node[node].shell1st.mss_symm      = numpy.copy(mss_funcs.mss_symm)
-            if tostr:
-                self.mss2mss_str(node=node,shell1st=True)
-        pass
+#    def build_shell1st(self,node='ALL',tostr=False):
+#     
+#        # x_node_run_ats,x_atom2node,trad2py_node,trad2py_atom
+#        # T_hbs_start,T_hbs_ind,T_bs_start,T_bs_ind,T_num_hbs,T_num_bs
+#        if node=='ALL':
+#            for ii in range(self.num_nodes):
+#                jj=self.trad2f_node[ii]
+#                mss_funcs.build_shell1st(jj)
+#                self.node[ii].shell1st.mss           = numpy.copy(mss_funcs.mss)
+#                self.node[ii].shell1st.mss_ind_atoms = numpy.copy(mss_funcs.mss_ind_ats)
+#                self.node[ii].shell1st.mss_ind_nodes = numpy.copy(mss_funcs.mss_ind_nods)
+#                self.node[ii].shell1st.mss_symm      = numpy.copy(mss_funcs.mss_symm)
+#            if tostr:
+#                self.mss2mss_str(shell1st=True)
+#        elif type(node)==int:
+#            jj=self.trad2f_node[node]
+#            mss_funcs.build_shell1st(jj)
+#            self.node[node].shell1st.mss           = numpy.copy(mss_funcs.mss)
+#            self.node[node].shell1st.mss_ind_atoms = numpy.copy(mss_funcs.mss_ind_ats)
+#            self.node[node].shell1st.mss_ind_nodes = numpy.copy(mss_funcs.mss_ind_nods)
+#            self.node[node].shell1st.mss_symm      = numpy.copy(mss_funcs.mss_symm)
+#            if tostr:
+#                self.mss2mss_str(node=node,shell1st=True)
+#        pass
  
-    def build_shell2nd(self,node='ALL',tostr=False):
-     
-        if node=='ALL':
-            for ii in range(self.num_nodes):
-                jj=self.trad2f_node[ii]
-                mss_funcs.build_shell2nd(jj)
-                self.node[ii].shell2nd.mss           = numpy.copy(mss_funcs.mss)
-                self.node[ii].shell2nd.mss_ind_atoms = numpy.copy(mss_funcs.mss_ind_ats)
-                self.node[ii].shell2nd.mss_ind_nodes = numpy.copy(mss_funcs.mss_ind_nods)
-                self.node[ii].shell2nd.mss_symm      = numpy.copy(mss_funcs.mss_symm)
-            if tostr:
-                self.mss2mss_str(shell2nd=True)
-        elif type(node)==int:
-            jj=self.trad2f_node[node]
-            mss_funcs.build_shell2nd(jj)
-            self.node[node].shell2nd.mss           = numpy.copy(mss_funcs.mss)
-            self.node[node].shell2nd.mss_ind_atoms = numpy.copy(mss_funcs.mss_ind_ats)
-            self.node[node].shell2nd.mss_ind_nodes = numpy.copy(mss_funcs.mss_ind_nods)
-            self.node[node].shell2nd.mss_symm      = numpy.copy(mss_funcs.mss_symm)
-            if tostr:
-                self.mss2mss_str(node=node,shell2nd=True)
-        pass
+#    def build_shell2nd(self,node='ALL',tostr=False):
+#     
+#        if node=='ALL':
+#            for ii in range(self.num_nodes):
+#                jj=self.trad2f_node[ii]
+#                mss_funcs.build_shell2nd(jj)
+#                self.node[ii].shell2nd.mss           = numpy.copy(mss_funcs.mss)
+#                self.node[ii].shell2nd.mss_ind_atoms = numpy.copy(mss_funcs.mss_ind_ats)
+#                self.node[ii].shell2nd.mss_ind_nodes = numpy.copy(mss_funcs.mss_ind_nods)
+#                self.node[ii].shell2nd.mss_symm      = numpy.copy(mss_funcs.mss_symm)
+#            if tostr:
+#                self.mss2mss_str(shell2nd=True)
+#        elif type(node)==int:
+#            jj=self.trad2f_node[node]
+#            mss_funcs.build_shell2nd(jj)
+#            self.node[node].shell2nd.mss           = numpy.copy(mss_funcs.mss)
+#            self.node[node].shell2nd.mss_ind_atoms = numpy.copy(mss_funcs.mss_ind_ats)
+#            self.node[node].shell2nd.mss_ind_nodes = numpy.copy(mss_funcs.mss_ind_nods)
+#            self.node[node].shell2nd.mss_symm      = numpy.copy(mss_funcs.mss_symm)
+#            if tostr:
+#                self.mss2mss_str(node=node,shell2nd=True)
+#        pass
  
-    def filtrosymm(self,shell1st=False,shell2nd=False,node='ALL'):
-
-        if node=='ALL':
-            aa=self.node
-        elif type(node)==int:
-            aa=[self.node[node]]
-
-        if shell2nd==True:
-
-            for node in aa:
-
-                gg=0
-                nn1=node.shell2nd.mss_ind_nodes[gg]
-                for ii in xrange(nn1):
-                    gg+=1
-                nn11=0
-                for ii in xrange(nn1*2):
-                    gg+=1
-                    nn11+=node.shell2nd.mss_ind_nodes[gg]
-                for ii in xrange(nn11):
-                    gg+=1
-                interruptor=False
-                for ii in xrange(nn11):
-                    gg+=1
-                    bb=gg
-                    nn2=node.shell2nd.mss_ind_nodes[gg]
-                    veo=[]
-                    for jj in xrange(nn2):
-                        gg+=1
-                        veo.append(node.shell2nd.mss_symm[gg])
-                    interruptor=False
-                    if 1 in veo:
-                        ayuda=[]
-                        for ii in xrange(nn2*2):
-                            gg+=1
-                            ayuda.append(node.shell2nd.mss_ind_nodes[gg])
-                        ll=-1
-                        for dd in xrange(nn2):
-                            for kk in xrange(2):
-                                ll+=1
-                                if veo[dd]==1:
-                                    tt=0
-                                    for pp in xrange(ayuda[ll]):
-                                        gg+=1
-                                        if (node.shell2nd.mss_str.count(node.shell2nd.mss_str[gg])==1):
-                                            tt+=1
-                                    if ayuda[ll]>0:
-                                        if ayuda[ll]==tt:
-                                            node.shell2nd.mss_symm[dd+1+bb]=0
-                                            interruptor=True
-                                else:
-                                    for jj in xrange(ayuda[ll]):
-                                        gg+=1
-                    else:
-                        nn22=0
-                        for jj in xrange(nn2*2):
-                            gg+=1
-                            nn22+=node.shell2nd.mss_ind_nodes[gg]
-                        for jj in xrange(nn22):
-                            gg+=1
-                #if interruptor==True and sum(node.shell2nd.mss_symm)==0:
-                #    print node.index
-
-            for node in aa:
-
-                gg=0
-                nn1=node.shell2nd.mss_ind_nodes[gg]
-                for ii in xrange(nn1):
-                    gg+=1
-                nn11=0
-                for ii in xrange(nn1*2):
-                    gg+=1
-                    nn11+=node.shell2nd.mss_ind_nodes[gg]
-                for ii in xrange(nn11):
-                    gg+=1
-                interruptor=False
-                for ii in xrange(nn11):
-                    gg+=1
-                    bb=gg
-                    nn2=node.shell2nd.mss_ind_nodes[gg]
-                    for jj in xrange(nn2):
-                        gg+=1
-                    nn22=0
-                    for jj in xrange(nn2*2):
-                        gg+=1
-                        nn22+=node.shell2nd.mss_ind_nodes[gg]
-                    for jj in xrange(nn22):
-                        gg+=1
-                        if node.shell2nd.mss_symm[gg]==1:
-                            if node.shell2nd.mss_str[gg].startswith('w'):
-                                if (node.shell2nd.mss_str.count(node.shell2nd.mss_str[gg])==1):
-                                    node.shell2nd.mss_symm[gg]=0
-                                    interruptor=True
-                            if node.shell2nd.mss_str[gg].startswith('i'):
-                                if (node.shell2nd.mss_str.count(node.shell2nd.mss_str[gg])==1):
-                                    node.shell2nd.mss_symm[gg]=0
-                                    interruptor=True
-                #if interruptor==True and (sum(node.shell2nd.mss_symm)==0):
-                #    print node.index
-
-
-            for node in aa:
-
-                gg=0
-                nn1=node.shell2nd.mss_ind_nodes[gg]
-                for ii in xrange(nn1):
-                    gg+=1
-                nn11=0
-                for ii in xrange(nn1*2):
-                    gg+=1
-                    nn11+=node.shell2nd.mss_ind_nodes[gg]
-                veo=[]
-                bb=gg
-                for ii in xrange(nn11):
-                    gg+=1
-                    if (node.shell2nd.mss_symm[gg]==1):
-                        veo.append(True)
-                    else:
-                        veo.append(False)
-                interruptor2=False
-                interruptor=True
-                if True in veo:
-                    #print 'Aqui puede haber', node.index
-                    interruptor2=True
-                for ii in xrange(nn11):
-                    if veo[ii]==False:
-                        gg+=1
-                        nn2=node.shell2nd.mss_ind_nodes[gg]
-                        for jj in xrange(nn2):
-                            gg+=1
-                        nn22=0
-                        for jj in xrange(nn2*2):
-                            gg+=1
-                            nn22+=node.shell2nd.mss_ind_nodes[gg]
-                        for jj in xrange(nn22):
-                            gg+=1
-                    else:
-                        gg+=1
-                        nn2=node.shell2nd.mss_ind_nodes[gg]
-                        for jj in xrange(nn2):
-                            gg+=1
-                            if (node.shell2nd.mss_symm[gg]==1):
-                                interruptor=False
-                        nn22=0
-                        for jj in xrange(nn2*2):
-                            gg+=1
-                            nn22+=node.shell2nd.mss_ind_nodes[gg]
-                        for jj in xrange(nn22):
-                            gg+=1
-                            if (node.shell2nd.mss_symm[gg]==1):
-                                interruptor=False
-                if interruptor==True and interruptor2==True:
-                    #print '......pues hay'
-                    gg=bb
-                    for ii in xrange(nn11):
-                        gg+=1
-                        if veo[ii]==True:
-                            node.shell2nd.mss_symm[gg]=0
-                    #if sum(node.shell2nd.mss_symm[:])==0:
-                    #    print 'le di'
-
-
-            for node in aa:
-
-                gg=0
-                nn1=node.shell2nd.mss_ind_nodes[gg]
-                veo=[]
-                bb=gg
-                interruptor2=False
-                interruptor=True
-                for ii in xrange(nn1):
-                    gg+=1
-                    if (node.shell2nd.mss_symm[gg]==1):
-                        veo.append(True)
-                    else:
-                        veo.append(False)
-                if True in veo:
-                    print 'Aqui puede haber', node.index
-                    interruptor2=True
-                nn11=0
-                lista=[]
-                for ii in xrange(nn1*2):
-                    gg+=1
-                    nn11+=node.shell2nd.mss_ind_nodes[gg]
-                    lista.append(node.shell2nd.mss_ind_nodes[gg])
-                ggg=0
-                for ii in xrange(nn1):
-                    for jj in range(lista[ggg]):
-                        gg+=1
-                        if veo[ii]:
-                            if (node.shell2nd.mss_symm[gg]==1):
-                                interruptor=False
-                    ggg+=1
-                    for jj in range(lista[ggg]):
-                        gg+=1
-                        if veo[ii]:
-                            if (node.shell2nd.mss_symm[gg]==1):
-                                interruptor=False
-                    ggg+=1
-                ggg=0
-                for ii in xrange(nn1):
-                    if veo[ii]==False:
-                        for jj in range(lista[ggg]):
-                            gg+=1
-                            nn2=node.shell2nd.mss_ind_nodes[gg]
-                            for jjj in xrange(nn2):
-                                gg+=1
-                            nn22=0
-                            for jjj in xrange(nn2*2):
-                                gg+=1
-                                nn22+=node.shell2nd.mss_ind_nodes[gg]
-                            for jjj in xrange(nn22):
-                                gg+=1
-                        ggg+=1
-                        for jj in range(lista[ggg]):
-                            gg+=1
-                            nn2=node.shell2nd.mss_ind_nodes[gg]
-                            for jjj in xrange(nn2):
-                                gg+=1
-                            nn22=0
-                            for jjj in xrange(nn2*2):
-                                gg+=1
-                                nn22+=node.shell2nd.mss_ind_nodes[gg]
-                            for jjj in xrange(nn22):
-                                gg+=1
-                        ggg+=1
-                    else:
-                        for jj in range(lista[ggg]):
-                            gg+=1
-                            nn2=node.shell2nd.mss_ind_nodes[gg]
-                            for jjj in xrange(nn2):
-                                gg+=1
-                                if (node.shell2nd.mss_symm[gg]==1):
-                                    interruptor=False
-                            nn22=0
-                            for jjj in xrange(nn2*2):
-                                gg+=1
-                                nn22+=node.shell2nd.mss_ind_nodes[gg]
-                            for jjj in xrange(nn22):
-                                gg+=1
-                                if (node.shell2nd.mss_symm[gg]==1):
-                                    interruptor=False
-                        ggg+=1
-                        for jj in range(lista[ggg]):
-                            gg+=1
-                            nn2=node.shell2nd.mss_ind_nodes[gg]
-                            for jjj in xrange(nn2):
-                                gg+=1
-                                if (node.shell2nd.mss_symm[gg]==1):
-                                    interruptor=False
-                            nn22=0
-                            for jjj in xrange(nn2*2):
-                                gg+=1
-                                nn22+=node.shell2nd.mss_ind_nodes[gg]
-                            for jjj in xrange(nn22):
-                                gg+=1
-                                if (node.shell2nd.mss_symm[gg]==1):
-                                    interruptor=False
-                        ggg+=1
-                if interruptor==True and interruptor2==True:
-                    print '......pues hay'
-                    gg=bb
-                    for ii in xrange(nn1):
-                        gg+=1
-                        if veo[ii]==True:
-                            node.shell2nd.mss_symm[gg]=0
-                    if sum(node.shell2nd.mss_symm[:])==0:
-                        print 'le di'
-
-
-
-
-        if shell1st==True:
-
-            for node in aa:
-                gg=0
-                nn1=node.shell1st.mss_ind_nodes[gg]
-                veo=[]
-                for ii in xrange(nn1):
-                    gg+=1
-                    veo.append(node.shell1st.mss_symm[gg])
-                interruptor=False
-                if 1 in veo:
-                    ayuda=[]
-                    for ii in xrange(nn1*2):
-                        gg+=1
-                        ayuda.append(node.shell1st.mss_ind_nodes[gg])
-                    ll=-1
-                    for ii in xrange(nn1):
-                        for kk in xrange(2):
-                            ll+=1
-                            if veo[ii]==1:
-                                tt=0
-                                for pp in xrange(ayuda[ll]):
-                                    gg+=1
-                                    if (node.shell1st.mss_str.count(node.shell1st.mss_str[gg])==1):
-                                        tt+=1
-                                if ayuda[ll]>0:
-                                    if ayuda[ll]==tt:
-                                        node.shell1st.mss_symm[ii+1]=0
-                                        interruptor=True
-                            else:
-                                for jj in xrange(ayuda[ll]):
-                                    gg+=1
-                    #if interruptor==True and sum(node.shell1st.mss_symm)==0:
-                    #    print node.index
-
-            for node in aa:
-                interruptor=False
-                gg=0
-                nn1=node.shell1st.mss_ind_nodes[gg]
-                for ii in xrange(nn1):
-                    gg+=1
-                nn2=0
-                for ii in xrange(nn1*2):
-                    gg+=1
-                    nn2+=node.shell1st.mss_ind_nodes[gg]
-                for ii in xrange(nn2):
-                        gg+=1
-                        if node.shell1st.mss_symm[gg]==1:
-                            if node.shell1st.mss_str[gg].startswith('w'):
-                                if (node.shell1st.mss_str.count(node.shell1st.mss_str[gg])==1):
-                                    node.shell1st.mss_symm[gg]=0
-                                    interruptor=True
-                            if node.shell1st.mss_str[gg].startswith('i'):
-                                if (node.shell1st.mss_str.count(node.shell1st.mss_str[gg])==1):
-                                    node.shell1st.mss_symm[gg]=0
-                                    interruptor=True
-                #if interruptor==True and (sum(node.shell1st.mss_symm)==0):
-                #    print node.index
-
-    def mss2mss_str(self,node='ALL',shell1st=False,shell2nd=False):
- 
-        if node=='ALL':
-            aa=self.node
-        elif type(node)==int:
-            aa=[self.node[node]]
- 
-        if shell1st:
- 
-            for node in aa:
-                node.shell1st.mss_str=node.shell1st.mss.tolist()
-                n_ats=node.shell1st.mss[0]
-                aux_str=self.mss_translator[node.shell1st.mss[1]]
-                ii=1
-                jj=ii+n_ats
-                for iii in xrange(ii,jj):
-                    node.shell1st.mss_str[iii]=aux_str
-                ii=jj
-                jj=jj+n_ats*2
-                n_bs=node.shell1st.mss[ii:jj].sum()
-                ii=jj
-                jj=jj+n_bs
-                for iii in xrange(ii,jj):
-                    node.shell1st.mss_str[iii]=self.mss_translator[node.shell1st.mss[iii]]
-                node.shell1st.mss_str2=mss1trans(node.shell1st.mss_str)
-
-        if shell2nd:
- 
-            for node in aa:
-                node.shell2nd.mss_str=node.shell2nd.mss.tolist()
-                n_ats=node.shell2nd.mss[0]
-                aux_str=self.mss_translator[node.shell2nd.mss[1]]
-                ii=1
-                jj=ii+n_ats
-                for iii in xrange(ii,jj):
-                    node.shell2nd.mss_str[iii]=aux_str
-                ii=jj
-                jj=jj+n_ats*2
-                n_bs=node.shell2nd.mss[ii:jj].sum()
-                ii=jj
-                jj=jj+n_bs
-                for iii in xrange(ii,jj):
-                    node.shell2nd.mss_str[iii]=self.mss_translator[node.shell2nd.mss[iii]]
-                for jjj in xrange(n_bs):
-                    n_ats2=node.shell2nd.mss[jj]
-                    aux_str=self.mss_translator[node.shell2nd.mss[jj+1]]
-                    jj+=1
-                    ii=jj
-                    jj=jj+n_ats2
-                    for iii in xrange(ii,jj):
-                        node.shell2nd.mss_str[iii]=aux_str
-                    ii=jj
-                    jj=jj+n_ats2*2
-                    n_bs2=node.shell2nd.mss[ii:jj].sum()
-                    ii=jj
-                    jj=jj+n_bs2
-                    for iii in xrange(ii,jj):
-                        node.shell2nd.mss_str[iii]=self.mss_translator[node.shell2nd.mss[iii]]
-                node.shell2nd.mss_str2=mss2trans(node.shell2nd.mss_str)
-        pass
-
-def mss1trans(mss):
-
-    gg=0
-    mss_out='<'
-    ii=mss[gg]
-    mss_out+=mss[gg+1]
-    gg=gg+ii
-    aa=0
-    mss_out+='|'
-    joe=[]
-    for jj in xrange(ii*2):
-        gg+=1
-        joe.append(str(mss[gg]))
-        aa+=mss[gg]
-    mss_out+=str.join(',',joe)
-    mss_out+='|'
-    joe=[]
-    for jj in xrange(aa):
-        gg+=1
-        joe.append(mss[gg])
-    mss_out+=str.join(',',joe)
-    mss_out+='>'
-    return mss_out
-
-def mss2trans(mss):
-
-    gg=0
-    mss_out='<'
-    ii=mss[gg]
-    mss_out+=mss[gg+1]
-    gg=gg+ii
-    aa=0
-    mss_out+='|'
-    joe=[]
-    for jj in xrange(ii*2):
-        gg+=1
-        joe.append(str(mss[gg]))
-        aa+=mss[gg]
-    mss_out+=str.join(',',joe)
-    mss_out+='|'
-    joe=[]
-    for jj in xrange(aa):
-        gg+=1
-        joe.append(mss[gg])
-    mss_out+=str.join(',',joe)
-    for jj in xrange(aa):
-        mss_out+='> <'
-        gg+=1
-        ii=mss[gg]
-        mss_out+=mss[gg+1]
-        gg=gg+ii
-        bb=0
-        mss_out+='|'
-        joe=[]
-        for jj in xrange(ii*2):
-            gg+=1
-            joe.append(str(mss[gg]))
-            bb+=mss[gg]
-        mss_out+=str.join(',',joe)
-        mss_out+='|'
-        joe=[]
-        for kk in xrange(bb):
-            gg+=1
-            joe.append(mss[gg])
-        mss_out+=str.join(',',joe)
-    mss_out+='>'
-    return mss_out
+#    def filtrosymm(self,shell1st=False,shell2nd=False,node='ALL'):
+# 
+#        if node=='ALL':
+#            aa=self.node
+#        elif type(node)==int:
+#            aa=[self.node[node]]
+# 
+#        if shell2nd==True:
+# 
+#            for node in aa:
+# 
+#                gg=0
+#                nn1=node.shell2nd.mss_ind_nodes[gg]
+#                for ii in xrange(nn1):
+#                    gg+=1
+#                nn11=0
+#                for ii in xrange(nn1*2):
+#                    gg+=1
+#                    nn11+=node.shell2nd.mss_ind_nodes[gg]
+#                for ii in xrange(nn11):
+#                    gg+=1
+#                interruptor=False
+#                for ii in xrange(nn11):
+#                    gg+=1
+#                    bb=gg
+#                    nn2=node.shell2nd.mss_ind_nodes[gg]
+#                    veo=[]
+#                    for jj in xrange(nn2):
+#                        gg+=1
+#                        veo.append(node.shell2nd.mss_symm[gg])
+#                    interruptor=False
+#                    if 1 in veo:
+#                        ayuda=[]
+#                        for ii in xrange(nn2*2):
+#                            gg+=1
+#                            ayuda.append(node.shell2nd.mss_ind_nodes[gg])
+#                        ll=-1
+#                        for dd in xrange(nn2):
+#                            for kk in xrange(2):
+#                                ll+=1
+#                                if veo[dd]==1:
+#                                    tt=0
+#                                    for pp in xrange(ayuda[ll]):
+#                                        gg+=1
+#                                        if (node.shell2nd.mss_str.count(node.shell2nd.mss_str[gg])==1):
+#                                            tt+=1
+#                                    if ayuda[ll]>0:
+#                                        if ayuda[ll]==tt:
+#                                            node.shell2nd.mss_symm[dd+1+bb]=0
+#                                            interruptor=True
+#                                else:
+#                                    for jj in xrange(ayuda[ll]):
+#                                        gg+=1
+#                    else:
+#                        nn22=0
+#                        for jj in xrange(nn2*2):
+#                            gg+=1
+#                            nn22+=node.shell2nd.mss_ind_nodes[gg]
+#                        for jj in xrange(nn22):
+#                            gg+=1
+#                #if interruptor==True and sum(node.shell2nd.mss_symm)==0:
+#                #    print node.index
+# 
+#            for node in aa:
+# 
+#                gg=0
+#                nn1=node.shell2nd.mss_ind_nodes[gg]
+#                for ii in xrange(nn1):
+#                    gg+=1
+#                nn11=0
+#                for ii in xrange(nn1*2):
+#                    gg+=1
+#                    nn11+=node.shell2nd.mss_ind_nodes[gg]
+#                for ii in xrange(nn11):
+#                    gg+=1
+#                interruptor=False
+#                for ii in xrange(nn11):
+#                    gg+=1
+#                    bb=gg
+#                    nn2=node.shell2nd.mss_ind_nodes[gg]
+#                    for jj in xrange(nn2):
+#                        gg+=1
+#                    nn22=0
+#                    for jj in xrange(nn2*2):
+#                        gg+=1
+#                        nn22+=node.shell2nd.mss_ind_nodes[gg]
+#                    for jj in xrange(nn22):
+#                        gg+=1
+#                        if node.shell2nd.mss_symm[gg]==1:
+#                            if node.shell2nd.mss_str[gg].startswith('w'):
+#                                if (node.shell2nd.mss_str.count(node.shell2nd.mss_str[gg])==1):
+#                                    node.shell2nd.mss_symm[gg]=0
+#                                    interruptor=True
+#                            if node.shell2nd.mss_str[gg].startswith('i'):
+#                                if (node.shell2nd.mss_str.count(node.shell2nd.mss_str[gg])==1):
+#                                    node.shell2nd.mss_symm[gg]=0
+#                                    interruptor=True
+#                #if interruptor==True and (sum(node.shell2nd.mss_symm)==0):
+#                #    print node.index
+# 
+# 
+#            for node in aa:
+# 
+#                gg=0
+#                nn1=node.shell2nd.mss_ind_nodes[gg]
+#                for ii in xrange(nn1):
+#                    gg+=1
+#                nn11=0
+#                for ii in xrange(nn1*2):
+#                    gg+=1
+#                    nn11+=node.shell2nd.mss_ind_nodes[gg]
+#                veo=[]
+#                bb=gg
+#                for ii in xrange(nn11):
+#                    gg+=1
+#                    if (node.shell2nd.mss_symm[gg]==1):
+#                        veo.append(True)
+#                    else:
+#                        veo.append(False)
+#                interruptor2=False
+#                interruptor=True
+#                if True in veo:
+#                    #print 'Aqui puede haber', node.index
+#                    interruptor2=True
+#                for ii in xrange(nn11):
+#                    if veo[ii]==False:
+#                        gg+=1
+#                        nn2=node.shell2nd.mss_ind_nodes[gg]
+#                        for jj in xrange(nn2):
+#                            gg+=1
+#                        nn22=0
+#                        for jj in xrange(nn2*2):
+#                            gg+=1
+#                            nn22+=node.shell2nd.mss_ind_nodes[gg]
+#                        for jj in xrange(nn22):
+#                            gg+=1
+#                    else:
+#                        gg+=1
+#                        nn2=node.shell2nd.mss_ind_nodes[gg]
+#                        for jj in xrange(nn2):
+#                            gg+=1
+#                            if (node.shell2nd.mss_symm[gg]==1):
+#                                interruptor=False
+#                        nn22=0
+#                        for jj in xrange(nn2*2):
+#                            gg+=1
+#                            nn22+=node.shell2nd.mss_ind_nodes[gg]
+#                        for jj in xrange(nn22):
+#                            gg+=1
+#                            if (node.shell2nd.mss_symm[gg]==1):
+#                                interruptor=False
+#                if interruptor==True and interruptor2==True:
+#                    #print '......pues hay'
+#                    gg=bb
+#                    for ii in xrange(nn11):
+#                        gg+=1
+#                        if veo[ii]==True:
+#                            node.shell2nd.mss_symm[gg]=0
+#                    #if sum(node.shell2nd.mss_symm[:])==0:
+#                    #    print 'le di'
+# 
+# 
+#            for node in aa:
+# 
+#                gg=0
+#                nn1=node.shell2nd.mss_ind_nodes[gg]
+#                veo=[]
+#                bb=gg
+#                interruptor2=False
+#                interruptor=True
+#                for ii in xrange(nn1):
+#                    gg+=1
+#                    if (node.shell2nd.mss_symm[gg]==1):
+#                        veo.append(True)
+#                    else:
+#                        veo.append(False)
+#                if True in veo:
+#                    print 'Aqui puede haber', node.index
+#                    interruptor2=True
+#                nn11=0
+#                lista=[]
+#                for ii in xrange(nn1*2):
+#                    gg+=1
+#                    nn11+=node.shell2nd.mss_ind_nodes[gg]
+#                    lista.append(node.shell2nd.mss_ind_nodes[gg])
+#                ggg=0
+#                for ii in xrange(nn1):
+#                    for jj in range(lista[ggg]):
+#                        gg+=1
+#                        if veo[ii]:
+#                            if (node.shell2nd.mss_symm[gg]==1):
+#                                interruptor=False
+#                    ggg+=1
+#                    for jj in range(lista[ggg]):
+#                        gg+=1
+#                        if veo[ii]:
+#                            if (node.shell2nd.mss_symm[gg]==1):
+#                                interruptor=False
+#                    ggg+=1
+#                ggg=0
+#                for ii in xrange(nn1):
+#                    if veo[ii]==False:
+#                        for jj in range(lista[ggg]):
+#                            gg+=1
+#                            nn2=node.shell2nd.mss_ind_nodes[gg]
+#                            for jjj in xrange(nn2):
+#                                gg+=1
+#                            nn22=0
+#                            for jjj in xrange(nn2*2):
+#                                gg+=1
+#                                nn22+=node.shell2nd.mss_ind_nodes[gg]
+#                            for jjj in xrange(nn22):
+#                                gg+=1
+#                        ggg+=1
+#                        for jj in range(lista[ggg]):
+#                            gg+=1
+#                            nn2=node.shell2nd.mss_ind_nodes[gg]
+#                            for jjj in xrange(nn2):
+#                                gg+=1
+#                            nn22=0
+#                            for jjj in xrange(nn2*2):
+#                                gg+=1
+#                                nn22+=node.shell2nd.mss_ind_nodes[gg]
+#                            for jjj in xrange(nn22):
+#                                gg+=1
+#                        ggg+=1
+#                    else:
+#                        for jj in range(lista[ggg]):
+#                            gg+=1
+#                            nn2=node.shell2nd.mss_ind_nodes[gg]
+#                            for jjj in xrange(nn2):
+#                                gg+=1
+#                                if (node.shell2nd.mss_symm[gg]==1):
+#                                    interruptor=False
+#                            nn22=0
+#                            for jjj in xrange(nn2*2):
+#                                gg+=1
+#                                nn22+=node.shell2nd.mss_ind_nodes[gg]
+#                            for jjj in xrange(nn22):
+#                                gg+=1
+#                                if (node.shell2nd.mss_symm[gg]==1):
+#                                    interruptor=False
+#                        ggg+=1
+#                        for jj in range(lista[ggg]):
+#                            gg+=1
+#                            nn2=node.shell2nd.mss_ind_nodes[gg]
+#                            for jjj in xrange(nn2):
+#                                gg+=1
+#                                if (node.shell2nd.mss_symm[gg]==1):
+#                                    interruptor=False
+#                            nn22=0
+#                            for jjj in xrange(nn2*2):
+#                                gg+=1
+#                                nn22+=node.shell2nd.mss_ind_nodes[gg]
+#                            for jjj in xrange(nn22):
+#                                gg+=1
+#                                if (node.shell2nd.mss_symm[gg]==1):
+#                                    interruptor=False
+#                        ggg+=1
+#                if interruptor==True and interruptor2==True:
+#                    print '......pues hay'
+#                    gg=bb
+#                    for ii in xrange(nn1):
+#                        gg+=1
+#                        if veo[ii]==True:
+#                            node.shell2nd.mss_symm[gg]=0
+#                    if sum(node.shell2nd.mss_symm[:])==0:
+#                        print 'le di'
+# 
+# 
+# 
+# 
+#        if shell1st==True:
+# 
+#            for node in aa:
+#                gg=0
+#                nn1=node.shell1st.mss_ind_nodes[gg]
+#                veo=[]
+#                for ii in xrange(nn1):
+#                    gg+=1
+#                    veo.append(node.shell1st.mss_symm[gg])
+#                interruptor=False
+#                if 1 in veo:
+#                    ayuda=[]
+#                    for ii in xrange(nn1*2):
+#                        gg+=1
+#                        ayuda.append(node.shell1st.mss_ind_nodes[gg])
+#                    ll=-1
+#                    for ii in xrange(nn1):
+#                        for kk in xrange(2):
+#                            ll+=1
+#                            if veo[ii]==1:
+#                                tt=0
+#                                for pp in xrange(ayuda[ll]):
+#                                    gg+=1
+#                                    if (node.shell1st.mss_str.count(node.shell1st.mss_str[gg])==1):
+#                                        tt+=1
+#                                if ayuda[ll]>0:
+#                                    if ayuda[ll]==tt:
+#                                        node.shell1st.mss_symm[ii+1]=0
+#                                        interruptor=True
+#                            else:
+#                                for jj in xrange(ayuda[ll]):
+#                                    gg+=1
+#                    #if interruptor==True and sum(node.shell1st.mss_symm)==0:
+#                    #    print node.index
+# 
+#            for node in aa:
+#                interruptor=False
+#                gg=0
+#                nn1=node.shell1st.mss_ind_nodes[gg]
+#                for ii in xrange(nn1):
+#                    gg+=1
+#                nn2=0
+#                for ii in xrange(nn1*2):
+#                    gg+=1
+#                    nn2+=node.shell1st.mss_ind_nodes[gg]
+#                for ii in xrange(nn2):
+#                        gg+=1
+#                        if node.shell1st.mss_symm[gg]==1:
+#                            if node.shell1st.mss_str[gg].startswith('w'):
+#                                if (node.shell1st.mss_str.count(node.shell1st.mss_str[gg])==1):
+#                                    node.shell1st.mss_symm[gg]=0
+#                                    interruptor=True
+#                            if node.shell1st.mss_str[gg].startswith('i'):
+#                                if (node.shell1st.mss_str.count(node.shell1st.mss_str[gg])==1):
+#                                    node.shell1st.mss_symm[gg]=0
+#                                    interruptor=True
+#                #if interruptor==True and (sum(node.shell1st.mss_symm)==0):
+#                #    print node.index
+# 
+#    def mss2mss_str(self,node='ALL',shell1st=False,shell2nd=False):
+# 
+#        if node=='ALL':
+#            aa=self.node
+#        elif type(node)==int:
+#            aa=[self.node[node]]
+# 
+#        if shell1st:
+# 
+#            for node in aa:
+#                node.shell1st.mss_str=node.shell1st.mss.tolist()
+#                n_ats=node.shell1st.mss[0]
+#                aux_str=self.mss_translator[node.shell1st.mss[1]]
+#                ii=1
+#                jj=ii+n_ats
+#                for iii in xrange(ii,jj):
+#                    node.shell1st.mss_str[iii]=aux_str
+#                ii=jj
+#                jj=jj+n_ats*2
+#                n_bs=node.shell1st.mss[ii:jj].sum()
+#                ii=jj
+#                jj=jj+n_bs
+#                for iii in xrange(ii,jj):
+#                    node.shell1st.mss_str[iii]=self.mss_translator[node.shell1st.mss[iii]]
+#                node.shell1st.mss_str2=mss1trans(node.shell1st.mss_str)
+# 
+#        if shell2nd:
+# 
+#            for node in aa:
+#                node.shell2nd.mss_str=node.shell2nd.mss.tolist()
+#                n_ats=node.shell2nd.mss[0]
+#                aux_str=self.mss_translator[node.shell2nd.mss[1]]
+#                ii=1
+#                jj=ii+n_ats
+#                for iii in xrange(ii,jj):
+#                    node.shell2nd.mss_str[iii]=aux_str
+#                ii=jj
+#                jj=jj+n_ats*2
+#                n_bs=node.shell2nd.mss[ii:jj].sum()
+#                ii=jj
+#                jj=jj+n_bs
+#                for iii in xrange(ii,jj):
+#                    node.shell2nd.mss_str[iii]=self.mss_translator[node.shell2nd.mss[iii]]
+#                for jjj in xrange(n_bs):
+#                    n_ats2=node.shell2nd.mss[jj]
+#                    aux_str=self.mss_translator[node.shell2nd.mss[jj+1]]
+#                    jj+=1
+#                    ii=jj
+#                    jj=jj+n_ats2
+#                    for iii in xrange(ii,jj):
+#                        node.shell2nd.mss_str[iii]=aux_str
+#                    ii=jj
+#                    jj=jj+n_ats2*2
+#                    n_bs2=node.shell2nd.mss[ii:jj].sum()
+#                    ii=jj
+#                    jj=jj+n_bs2
+#                    for iii in xrange(ii,jj):
+#                        node.shell2nd.mss_str[iii]=self.mss_translator[node.shell2nd.mss[iii]]
+#                node.shell2nd.mss_str2=mss2trans(node.shell2nd.mss_str)
+#        pass
+# 
+#def mss1trans(mss):
+# 
+#    gg=0
+#    mss_out='<'
+#    ii=mss[gg]
+#    mss_out+=mss[gg+1]
+#    gg=gg+ii
+#    aa=0
+#    mss_out+='|'
+#    joe=[]
+#    for jj in xrange(ii*2):
+#        gg+=1
+#        joe.append(str(mss[gg]))
+#        aa+=mss[gg]
+#    mss_out+=str.join(',',joe)
+#    mss_out+='|'
+#    joe=[]
+#    for jj in xrange(aa):
+#        gg+=1
+#        joe.append(mss[gg])
+#    mss_out+=str.join(',',joe)
+#    mss_out+='>'
+#    return mss_out
+# 
+#def mss2trans(mss):
+# 
+#    gg=0
+#    mss_out='<'
+#    ii=mss[gg]
+#    mss_out+=mss[gg+1]
+#    gg=gg+ii
+#    aa=0
+#    mss_out+='|'
+#    joe=[]
+#    for jj in xrange(ii*2):
+#        gg+=1
+#        joe.append(str(mss[gg]))
+#        aa+=mss[gg]
+#    mss_out+=str.join(',',joe)
+#    mss_out+='|'
+#    joe=[]
+#    for jj in xrange(aa):
+#        gg+=1
+#        joe.append(mss[gg])
+#    mss_out+=str.join(',',joe)
+#    for jj in xrange(aa):
+#        mss_out+='> <'
+#        gg+=1
+#        ii=mss[gg]
+#        mss_out+=mss[gg+1]
+#        gg=gg+ii
+#        bb=0
+#        mss_out+='|'
+#        joe=[]
+#        for jj in xrange(ii*2):
+#            gg+=1
+#            joe.append(str(mss[gg]))
+#            bb+=mss[gg]
+#        mss_out+=str.join(',',joe)
+#        mss_out+='|'
+#        joe=[]
+#        for kk in xrange(bb):
+#            gg+=1
+#            joe.append(mss[gg])
+#        mss_out+=str.join(',',joe)
+#    mss_out+='>'
+#    return mss_out
         

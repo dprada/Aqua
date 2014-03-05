@@ -24,7 +24,7 @@ import datetime as datetime
 from cl_coors import *
 import top_par as tp
 from libgeneral import glob as faux
-from libmss import glob as mss_funcs
+#from libmss import glob as mss_funcs
 import libmath as libmath
 
 ### topologies added by user
@@ -1897,176 +1897,176 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
         pass
 
 
-    def mss_hbonds_wat(self,definition=1,hbonds=None,bonds=None,verbose=True):
-        
-        mss_funcs.definition_hbs=faux.hbdefinition
+#    def mss_hbonds_wat(self,definition=1,hbonds=None,bonds=None,verbose=True):
+#        
+#        mss_funcs.definition_hbs=faux.hbdefinition
+# 
+#        if hbonds==None:
+#            print '# hbonds needed.'
+#            return
+# 
+#        if definition==1:
+# 
+#            aux=numpy.zeros((self.num_atoms,3),dtype=int,order='F')
+# 
+#            for ii in range(len(self.water)):
+#                jo=self.water[ii].O.index
+#                jh1=self.water[ii].H1.index
+#                jh2=self.water[ii].H2.index
+#                aux[jo,0]=ii
+#                aux[jo,1]=0
+#                aux[jh1,0]=ii
+#                aux[jh1,1]=1
+#                aux[jh2,0]=ii
+#                aux[jh2,1]=2
+# 
+# 
+#            #for hbs in hbonds:
+#            #    print hbs[1]
+#            #print hbonds[0].shape,hbonds[1].shape
+#            aux=numpy.array(aux,dtype=int,order='F')
+# 
+#            if type(hbonds[0][0][0]) in [numpy.ndarray]:
+#                mss_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
+#                mss_ind_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
+#                for jj in range(len(hbonds)):
+#                    num_hbs=hbonds[jj][0].shape[0]
+#                    mss_ind=mss_funcs.ind_wat_limit_4_nosim(aux,hbonds[jj][0],hbonds[jj][1],self.num_waters,self.num_atoms,num_hbs)
+#                    mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
+#                    mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
+#                    mss_tot[jj,:,:]=mss[:,:]
+#                    mss_ind_tot[jj,:,:]=mss_ind[:,:]
+#                return mss_tot,mss_ind_tot
+# 
+#            else:
+#                num_hbs=hbonds[0].shape[0]
+#                mss_ind=mss_funcs.ind_wat_limit_4_nosim(aux,hbonds[0],hbonds[1],self.num_waters,self.num_atoms,num_hbs)
+#                mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
+#                mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
+# 
+#                return mss,mss_ind
 
-        if hbonds==None:
-            print '# hbonds needed.'
-            return
-
-        if definition==1:
-
-            aux=numpy.zeros((self.num_atoms,3),dtype=int,order='F')
-
-            for ii in range(len(self.water)):
-                jo=self.water[ii].O.index
-                jh1=self.water[ii].H1.index
-                jh2=self.water[ii].H2.index
-                aux[jo,0]=ii
-                aux[jo,1]=0
-                aux[jh1,0]=ii
-                aux[jh1,1]=1
-                aux[jh2,0]=ii
-                aux[jh2,1]=2
-
-
-            #for hbs in hbonds:
-            #    print hbs[1]
-            #print hbonds[0].shape,hbonds[1].shape
-            aux=numpy.array(aux,dtype=int,order='F')
-
-            if type(hbonds[0][0][0]) in [numpy.ndarray]:
-                mss_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
-                mss_ind_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
-                for jj in range(len(hbonds)):
-                    num_hbs=hbonds[jj][0].shape[0]
-                    mss_ind=mss_funcs.ind_wat_limit_4_nosim(aux,hbonds[jj][0],hbonds[jj][1],self.num_waters,self.num_atoms,num_hbs)
-                    mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
-                    mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
-                    mss_tot[jj,:,:]=mss[:,:]
-                    mss_ind_tot[jj,:,:]=mss_ind[:,:]
-                return mss_tot,mss_ind_tot
-
-            else:
-                num_hbs=hbonds[0].shape[0]
-                mss_ind=mss_funcs.ind_wat_limit_4_nosim(aux,hbonds[0],hbonds[1],self.num_waters,self.num_atoms,num_hbs)
-                mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
-                mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
-
-                return mss,mss_ind
-
-    def mss_hbonds_wat_prot(self,definition=1,hbonds=None,verbose=True):
-        
-        mss_funcs.definition_hbs=faux.hbdefinition
-
-        if hbonds==None:
-            print '# hbonds needed.'
-            return
-
-        if definition==1:
-
-            aux=numpy.zeros((self.num_atoms,3),dtype=int,order='F')
-            filt_water=numpy.zeros(self.num_atoms,dtype=bool,order='F')
-
-            for ii in range(len(self.water)):
-                jo=self.water[ii].O.index
-                jh1=self.water[ii].H1.index
-                jh2=self.water[ii].H2.index
-                aux[jo,0]=ii
-                aux[jo,1]=0
-                aux[jh1,0]=ii
-                aux[jh1,1]=1
-                aux[jh2,0]=ii
-                aux[jh2,1]=2
-                filt_water[jo]=True
-                filt_water[jh1]=True
-                filt_water[jh2]=True
-
-            #for hbs in hbonds:
-            #    print hbs[1]
-            #print hbonds[0].shape,hbonds[1].shape
-            aux=numpy.array(aux,dtype=int,order='F')
-
-            if type(hbonds[0][0][0]) in [numpy.ndarray]:
-                mss_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
-                mss_ind_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
-                for jj in range(len(hbonds)):
-                    num_hbs=hbonds[jj][0].shape[0]
-                    mss_ind=mss_funcs.ind_wat_limit_4_nosim_prot(aux,hbonds[jj][0],hbonds[jj][1],self.num_waters,self.num_atoms,num_hbs)
-                    mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
-                    mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
-                    mss_tot[jj,:,:]=mss[:,:]
-                    mss_ind_tot[jj,:,:]=mss_ind[:,:]
-                return mss_tot,mss_ind_tot
-
-            else:
-                num_hbs=hbonds[0].shape[0]
-                mss_ind=mss_funcs.ind_wat_limit_4_nosim_prot(aux,filt_water,hbonds[0],hbonds[1],self.num_waters,self.num_atoms,num_hbs)
-                mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
-                mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
-
-                return mss,mss_ind
-
-
-    def mss_hbonds_wation(self,definition=1,hbonds=None,bonds=None,tipo=1,verbose=True):
-        
-        mss_funcs.definition_hbs=faux.hbdefinition
-
-        if hbonds==None:
-            print '# hbonds needed.'
-            return
-
-        if definition==1:
-
-            aux=numpy.zeros((self.num_atoms,3),dtype=int,order='F')
-
-            for ii in range(len(self.water)):
-                jo=self.water[ii].O.index
-                jh1=self.water[ii].H1.index
-                jh2=self.water[ii].H2.index
-                aux[jo,0]=ii
-                aux[jo,1]=0
-                aux[jh1,0]=ii
-                aux[jh1,1]=1
-                aux[jh2,0]=ii
-                aux[jh2,1]=2
+#    def mss_hbonds_wat_prot(self,definition=1,hbonds=None,verbose=True):
+#        
+#        mss_funcs.definition_hbs=faux.hbdefinition
+# 
+#        if hbonds==None:
+#            print '# hbonds needed.'
+#            return
+# 
+#        if definition==1:
+# 
+#            aux=numpy.zeros((self.num_atoms,3),dtype=int,order='F')
+#            filt_water=numpy.zeros(self.num_atoms,dtype=bool,order='F')
+# 
+#            for ii in range(len(self.water)):
+#                jo=self.water[ii].O.index
+#                jh1=self.water[ii].H1.index
+#                jh2=self.water[ii].H2.index
+#                aux[jo,0]=ii
+#                aux[jo,1]=0
+#                aux[jh1,0]=ii
+#                aux[jh1,1]=1
+#                aux[jh2,0]=ii
+#                aux[jh2,1]=2
+#                filt_water[jo]=True
+#                filt_water[jh1]=True
+#                filt_water[jh2]=True
+# 
+#            #for hbs in hbonds:
+#            #    print hbs[1]
+#            #print hbonds[0].shape,hbonds[1].shape
+#            aux=numpy.array(aux,dtype=int,order='F')
+# 
+#            if type(hbonds[0][0][0]) in [numpy.ndarray]:
+#                mss_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
+#                mss_ind_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
+#                for jj in range(len(hbonds)):
+#                    num_hbs=hbonds[jj][0].shape[0]
+#                    mss_ind=mss_funcs.ind_wat_limit_4_nosim_prot(aux,hbonds[jj][0],hbonds[jj][1],self.num_waters,self.num_atoms,num_hbs)
+#                    mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
+#                    mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
+#                    mss_tot[jj,:,:]=mss[:,:]
+#                    mss_ind_tot[jj,:,:]=mss_ind[:,:]
+#                return mss_tot,mss_ind_tot
+# 
+#            else:
+#                num_hbs=hbonds[0].shape[0]
+#                mss_ind=mss_funcs.ind_wat_limit_4_nosim_prot(aux,filt_water,hbonds[0],hbonds[1],self.num_waters,self.num_atoms,num_hbs)
+#                mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
+#                mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
+# 
+#                return mss,mss_ind
 
 
-            #for hbs in hbonds:
-            #    print hbs[1]
-            #print hbonds[0].shape,hbonds[1].shape
-            aux=numpy.array(aux,dtype=int,order='F')
-            
-            if bonds==None:
-                if type(hbonds[0][0][0]) in [numpy.ndarray]:
-                    mss_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
-                    mss_ind_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
-                    for jj in range(len(hbonds)):
-                        num_hbs=hbonds[jj][0].shape[0]
-                        mss_ind=mss_funcs.ind_wat_limit_4_nosim(aux,hbonds[jj][0],hbonds[jj][1],self.num_waters,self.num_atoms,num_hbs)
-                        mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
-                        mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
-                        mss_tot[jj,:,:]=mss[:,:]
-                        mss_ind_tot[jj,:,:]=mss_ind[:,:]
-                    return mss_tot,mss_ind_tot
-                else:
-                    num_hbs=hbonds[0].shape[0]
-                    mss_ind=mss_funcs.ind_wat_limit_4_nosim(aux,hbonds[0],hbonds[1],self.num_waters,self.num_atoms,num_hbs)
-                    mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
-                    mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
-                    return mss,mss_ind
-            else:
-                num_bonds=len(bonds)
-                if type(hbonds[0][0][0]) in [numpy.ndarray]:
-                    mss_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
-                    mss_ind_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
-                    for jj in range(len(hbonds)):
-                        num_hbs=hbonds[jj][0].shape[0]
-                        mss_ind=mss_funcs.ind_wat_limit_4_nosim(aux,hbonds[jj][0],hbonds[jj][1],self.num_waters,self.num_atoms,num_hbs)
-                        mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
-                        mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
-                        mss_tot[jj,:,:]=mss[:,:]
-                        mss_funcs.addbonds(tipo,mss,mss_ind,bonds,self.num_waters,num_bonds)
-                        mss_ind_tot[jj,:,:]=mss_ind[:,:]
-                    return mss_tot,mss_ind_tot
-                else:
-                    num_hbs=hbonds[0].shape[0]
-                    mss_ind=mss_funcs.ind_wat_limit_4_nosim(aux,hbonds[0],hbonds[1],self.num_waters,self.num_atoms,num_hbs)
-                    mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
-                    mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
-                    mss_funcs.addbonds(tipo,mss,mss_ind,bonds,self.num_waters,num_bonds)
-                    return mss,mss_ind
+#    def mss_hbonds_wation(self,definition=1,hbonds=None,bonds=None,tipo=1,verbose=True):
+#        
+#        mss_funcs.definition_hbs=faux.hbdefinition
+# 
+#        if hbonds==None:
+#            print '# hbonds needed.'
+#            return
+# 
+#        if definition==1:
+# 
+#            aux=numpy.zeros((self.num_atoms,3),dtype=int,order='F')
+# 
+#            for ii in range(len(self.water)):
+#                jo=self.water[ii].O.index
+#                jh1=self.water[ii].H1.index
+#                jh2=self.water[ii].H2.index
+#                aux[jo,0]=ii
+#                aux[jo,1]=0
+#                aux[jh1,0]=ii
+#                aux[jh1,1]=1
+#                aux[jh2,0]=ii
+#                aux[jh2,1]=2
+# 
+# 
+#            #for hbs in hbonds:
+#            #    print hbs[1]
+#            #print hbonds[0].shape,hbonds[1].shape
+#            aux=numpy.array(aux,dtype=int,order='F')
+#            
+#            if bonds==None:
+#                if type(hbonds[0][0][0]) in [numpy.ndarray]:
+#                    mss_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
+#                    mss_ind_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
+#                    for jj in range(len(hbonds)):
+#                        num_hbs=hbonds[jj][0].shape[0]
+#                        mss_ind=mss_funcs.ind_wat_limit_4_nosim(aux,hbonds[jj][0],hbonds[jj][1],self.num_waters,self.num_atoms,num_hbs)
+#                        mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
+#                        mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
+#                        mss_tot[jj,:,:]=mss[:,:]
+#                        mss_ind_tot[jj,:,:]=mss_ind[:,:]
+#                    return mss_tot,mss_ind_tot
+#                else:
+#                    num_hbs=hbonds[0].shape[0]
+#                    mss_ind=mss_funcs.ind_wat_limit_4_nosim(aux,hbonds[0],hbonds[1],self.num_waters,self.num_atoms,num_hbs)
+#                    mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
+#                    mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
+#                    return mss,mss_ind
+#            else:
+#                num_bonds=len(bonds)
+#                if type(hbonds[0][0][0]) in [numpy.ndarray]:
+#                    mss_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
+#                    mss_ind_tot=numpy.empty((len(hbonds),self.num_waters,17),dtype=int,order='F')
+#                    for jj in range(len(hbonds)):
+#                        num_hbs=hbonds[jj][0].shape[0]
+#                        mss_ind=mss_funcs.ind_wat_limit_4_nosim(aux,hbonds[jj][0],hbonds[jj][1],self.num_waters,self.num_atoms,num_hbs)
+#                        mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
+#                        mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
+#                        mss_tot[jj,:,:]=mss[:,:]
+#                        mss_funcs.addbonds(tipo,mss,mss_ind,bonds,self.num_waters,num_bonds)
+#                        mss_ind_tot[jj,:,:]=mss_ind[:,:]
+#                    return mss_tot,mss_ind_tot
+#                else:
+#                    num_hbs=hbonds[0].shape[0]
+#                    mss_ind=mss_funcs.ind_wat_limit_4_nosim(aux,hbonds[0],hbonds[1],self.num_waters,self.num_atoms,num_hbs)
+#                    mss=mss_funcs.remove_index_mol(mss_ind,self.num_waters)
+#                    mss_funcs.remove_permutations_limit_4_nosim(mss,mss_ind,self.num_waters)
+#                    mss_funcs.addbonds(tipo,mss,mss_ind,bonds,self.num_waters,num_bonds)
+#                    return mss,mss_ind
 
 
 

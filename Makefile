@@ -179,7 +179,7 @@ io_formats/libtngfile.so: trajng-0.6.1.tar.gz
 	cd tngfiles/lib; ar -x libtrajng.a; gcc -shared *.o -o $(ltnglib); cd ../../; cp tngfiles/lib/$(ltnglib) io_formats/libtngfile.so; rm -r tngfiles; fi
 
 f90_libraries: libgeneral.so libwater.so libenm.so libnet.so libmath.so libanaltrajs.so \
-	libkinanal.so libmss.so io_formats/libdcdfile.so io_formats/libbinfile.so io_formats/libcell2box.so
+	libkinanal.so libmss_sets.so libmss_nosets.so io_formats/libdcdfile.so io_formats/libbinfile.so io_formats/libcell2box.so
 
 libgeneral.so: libgeneral.f90
 	@ echo '>>>>>> Compiling' $@ >> INSTALL.log
@@ -223,9 +223,15 @@ libkinanal.so: libkinanal.f90
 	@ if [ ! -e $@ ]; then echo '> Error compiling' $@ ': check the file INSTALL.log'; fi
 	@ if [ -e $@ ]; then echo '>' $@ '...     OK'; fi
 
-libmss.so: libmss.f90
+libmss_sets.so: libmss_sets.f90
 	@ echo '>>>>>> Compiling' $@ >> INSTALL.log
-	@ $(F2PY) --opt=$(FOPTS) --f90flags=$(FFLAGS) --fcompiler=$(FTYPE) -c -m libmss libmss.f90 only: load_topol load_net build_shell1st build_shell2nd : $(LAPACK_LIBS) $(SOUT) 
+	@ $(F2PY) --opt=$(FOPTS) --f90flags=$(FFLAGS) --fcompiler=$(FTYPE) -c -m libmss_sets libmss_sets.f90 only: load_topol load_net build_shell1st build_shell2nd : $(LAPACK_LIBS) $(SOUT) 
+	@ if [ ! -e $@ ]; then echo '> Error compiling' $@ ': check the file INSTALL.log'; fi
+	@ if [ -e $@ ]; then echo '>' $@ '...         OK'; fi
+
+libmss_nosets.so: libmss_nosets.f90
+	@ echo '>>>>>> Compiling' $@ >> INSTALL.log
+	@ $(F2PY) --opt=$(FOPTS) --f90flags=$(FFLAGS) --fcompiler=$(FTYPE) -c -m libmss_nosets libmss_nosets.f90 only: load_topol load_net build_shell1st build_shell2nd : $(LAPACK_LIBS) $(SOUT) 
 	@ if [ ! -e $@ ]; then echo '> Error compiling' $@ ': check the file INSTALL.log'; fi
 	@ if [ -e $@ ]; then echo '>' $@ '...         OK'; fi
 
