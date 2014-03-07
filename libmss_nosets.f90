@@ -20,6 +20,8 @@ TYPE p_bonded
    LOGICAL::with_loops_1order,with_loops_2order,with_loops_3order
    INTEGER::num
    LOGICAL::unsolved_loops
+   INTEGER::num_permutations
+   INTEGER,DIMENSION(:),ALLOCATABLE::permutations
    TYPE(p_symm)::symm
 END TYPE p_bonded
 
@@ -39,6 +41,8 @@ TYPE p_shell
    INTEGER::lev_supsets
    INTEGER::nnods_norepe,nnods_repe
    LOGICAL::unsolved_loops
+   INTEGER::num_permutations
+   INTEGER,DIMENSION(:),ALLOCATABLE::permutations
    INTEGER,DIMENSION(:),ALLOCATABLE::list_nods,list_nods_norepe,list_nods_repe,list_cant_repe
 END TYPE p_shell
 
@@ -747,7 +751,10 @@ SUBROUTINE build_shell2nd (core)
   END IF
  
   !! Building the msss
-  
+  ! Poner aqui un if
+  CALL solving_last_symmetries_permuting (shell1st,shell2nd,nnods)
+
+
   IF (ALLOCATED(mss_ind_ats))   DEALLOCATE(mss_ind_ats)
   IF (ALLOCATED(mss_ind_nods))  DEALLOCATE(mss_ind_nods)
   IF (ALLOCATED(mss_symm))      DEALLOCATE(mss_symm)
@@ -2860,6 +2867,51 @@ SUBROUTINE quito_falsos_ats_symm2(shell1st,shell2nd,nnods)
   END IF
 
 END SUBROUTINE quito_falsos_ats_symm2
+
+
+SUBROUTINE SOLVING_LAST_SYMMETRIES_PERMUTING (shell1st,shell2nd,nnods)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::nnods
+  TYPE(p_shell),INTENT(INOUT)::shell1st
+  TYPE(p_shell),DIMENSION(nnods),TARGET,INTENT(IN)::shell2nd
+
+  INTEGER::ii,jj
+
+  INTEGER,DIMENSION(:),ALLOCATABLE::num_permutaciones_shell1st
+
+  !1st shell
+
+  IF (shell1st%unsolved_loops.eqv..TRUE.) THEN
+     print*,'si',trad2py_nod(shell1st%ind),'en el 1'
+  END IF
+
+  DO ii=1,shell1st%nats
+     IF (shell1st%ats(ii)%hbs%unsolved_loops) THEN
+        print*,'si',trad2py_nod(shell1st%ind),'en el 11 hbs'
+     END IF
+     IF (shell1st%ats(ii)%bs%unsolved_loops) THEN
+        print*,'si',trad2py_nod(shell1st%ind),'en el 11 bs'
+     END IF
+  END DO
+
+  DO jj=1,nnods
+     IF (shell2nd(jj)%unsolved_loops.eqv..TRUE.) THEN
+        print*,'si',trad2py_nod(shell1st%ind),'en el 2',jj
+     END IF
+     DO ii=1,shell2nd(jj)%nats
+        IF (shell2nd(jj)%ats(ii)%hbs%unsolved_loops) THEN
+           print*,'si',trad2py_nod(shell1st%ind),'en el 2 hbs', jj
+        END IF
+        IF (shell2nd(jj)%ats(ii)%bs%unsolved_loops) THEN
+           print*,'si',trad2py_nod(shell1st%ind),'en el 2 bs', jj
+        END IF
+     END DO
+  END DO
+
+
+END SUBROUTINE SOLVING_LAST_SYMMETRIES_PERMUTING
 
 
 END MODULE GLOB
