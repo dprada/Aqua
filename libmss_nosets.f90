@@ -21,7 +21,7 @@ TYPE p_bonded
    INTEGER::num
    LOGICAL::unsolved_loops
    INTEGER::num_permutations
-   INTEGER,DIMENSION(:),ALLOCATABLE::permutations
+   INTEGER,DIMENSION(:,:),ALLOCATABLE::permutations
    TYPE(p_symm)::symm
 END TYPE p_bonded
 
@@ -42,7 +42,7 @@ TYPE p_shell
    INTEGER::nnods_norepe,nnods_repe
    LOGICAL::unsolved_loops
    INTEGER::num_permutations
-   INTEGER,DIMENSION(:),ALLOCATABLE::permutations
+   INTEGER,DIMENSION(:,:),ALLOCATABLE::permutations
    INTEGER,DIMENSION(:),ALLOCATABLE::list_nods,list_nods_norepe,list_nods_repe,list_cant_repe
 END TYPE p_shell
 
@@ -76,6 +76,24 @@ INTEGER,DIMENSION(:),ALLOCATABLE::trad2py_nod,trad2py_at
 !f2py   intent(hide)::symm,translator
 TYPE(p_symm)::symm
 TYPE(p_translation),TARGET::translator
+
+!f2py intent(hide)::precalc_2, precalc2_num
+!f2py intent(hide)::precalc_3, precalc3_num
+!f2py intent(hide)::precalc_4, precalc4_num
+INTEGER,PARAMETER::precalc2_num=2
+INTEGER,PARAMETER::precalc3_num=6
+INTEGER,PARAMETER::precalc4_num=24
+INTEGER,DIMENSION(2,2),PARAMETER::&
+       precalc2=(/(/1,2/),(/2,1/)/)
+INTEGER,DIMENSION(3,6),PARAMETER::&
+       precalc3=(/(/1,2,3/),(/1,3,2/),(/2,1,3/),&
+       (/2,3,1/),(/3,1,2/),(/3,2,1/)/)
+INTEGER,DIMENSION(4,24),PARAMETER::&
+       precalc4=(/(/1,2,3,4/),(/1,2,4,3/),(/1,3,2,4/),(/1,3,4,2/),(/1,4,2,3/),(/1,4,3,2/),&
+       (/2,1,3,4/),(/2,1,4,3/),(/2,3,1,4/),(/2,3,4,1/),(/2,4,1,3/),(/2,4,3,1/),&
+       (/3,1,2,4/),(/3,1,4,2/),(/3,2,1,4/),(/3,2,4,1/),(/3,4,1,2/),(/3,4,2,1/),&
+       (/4,1,2,3/),(/4,1,3,2/),(/4,2,1,3/),(/4,2,3,1/),(/4,3,1,2/),(/4,3,2,1/)/)
+
 
 !!! OUTPUT
 
@@ -752,7 +770,7 @@ SUBROUTINE build_shell2nd (core)
  
   !! Building the msss
   ! Poner aqui un if
-  CALL solving_last_symmetries_permuting (shell1st,shell2nd,nnods)
+  CALL solving_last_symmetries_permuting (shell1st,shell2nd,nnods,totntot)
 
 
   IF (ALLOCATED(mss_ind_ats))   DEALLOCATE(mss_ind_ats)
@@ -2869,49 +2887,327 @@ SUBROUTINE quito_falsos_ats_symm2(shell1st,shell2nd,nnods)
 END SUBROUTINE quito_falsos_ats_symm2
 
 
-SUBROUTINE SOLVING_LAST_SYMMETRIES_PERMUTING (shell1st,shell2nd,nnods)
+SUBROUTINE SOLVING_LAST_SYMMETRIES_PERMUTING (shell1st,shell2nd,nnods,totntot)
 
   IMPLICIT NONE
 
-  INTEGER,INTENT(IN)::nnods
+  INTEGER,INTENT(IN)::nnods,totntot
   TYPE(p_shell),INTENT(INOUT)::shell1st
-  TYPE(p_shell),DIMENSION(nnods),TARGET,INTENT(IN)::shell2nd
+  TYPE(p_shell),DIMENSION(nnods),TARGET,INTENT(INOUT)::shell2nd
 
-  INTEGER::ii,jj
+  INTEGER::total_num_permutations
+  INTEGER::ii,jj,iii
+  INTEGER::gg,kk,ll,hh,extra_dim,kkk,ggg
 
-  INTEGER,DIMENSION(:),ALLOCATABLE::num_permutaciones_shell1st
+  INTEGER,DIMENSION(:),ALLOCATABLE::num_permutaciones
+  INTEGER,DIMENSION(:,:),ALLOCATABLE::dale
+
+  INTEGER::ntot1sh,nnods1sh,ntot2sh,nnods2sh
+  INTEGER,DIMENSION(:),ALLOCATABLE::aux_ind_ats,aux_ind_nods,aux_ord,aux_symm
+
+  TYPE(p_shell),POINTER::shell_aux
+
 
   !1st shell
 
+  total_num_permutations=1
+  extra_dim=shell1st%nats2+1
+  DO ii=1,nnods
+     extra_dim=extra_dim+shell2nd(ii)%nats2+1
+  END DO
+  ALLOCATE(num_permutaciones(extra_dim))
+  hh=0
+
   IF (shell1st%unsolved_loops.eqv..TRUE.) THEN
-     print*,'si',trad2py_nod(shell1st%ind),'en el 1'
+     CALL upload_symm(shell1st%symm)
+     CALL permuto (shell1st%ats_ord,shell1st%nats,shell1st%permutations,shell1st%num_permutations)
+     CALL download_symm(shell1st%symm)
+  ELSE
+     shell1st%num_permutations=1
   END IF
+  total_num_permutations=total_num_permutations*shell1st%num_permutations
+  hh=hh+1
+  num_permutaciones(hh)=shell1st%num_permutations
 
   DO ii=1,shell1st%nats
      IF (shell1st%ats(ii)%hbs%unsolved_loops) THEN
-        print*,'si',trad2py_nod(shell1st%ind),'en el 11 hbs'
+        CALL upload_symm(shell1st%ats(ii)%hbs%symm)
+        CALL permuto (shell1st%ats(ii)%hbs%order,shell1st%ats(ii)%hbs%num,shell1st%ats(ii)%hbs%permutations,shell1st%ats(ii)%hbs%num_permutations)
+        CALL download_symm(shell1st%ats(ii)%hbs%symm)
+     ELSE
+        shell1st%ats(ii)%hbs%num_permutations=1
      END IF
+     total_num_permutations=total_num_permutations*shell1st%ats(ii)%hbs%num_permutations
+     hh=hh+1
+     num_permutaciones(hh)=shell1st%ats(ii)%hbs%num_permutations
      IF (shell1st%ats(ii)%bs%unsolved_loops) THEN
-        print*,'si',trad2py_nod(shell1st%ind),'en el 11 bs'
+        CALL upload_symm(shell1st%ats(ii)%bs%symm)
+        CALL permuto (shell1st%ats(ii)%bs%order,shell1st%ats(ii)%bs%num,shell1st%ats(ii)%bs%permutations,shell1st%ats(ii)%bs%num_permutations)
+        CALL download_symm(shell1st%ats(ii)%bs%symm)
+     ELSE
+        shell1st%ats(ii)%bs%num_permutations=1
      END IF
+     total_num_permutations=total_num_permutations*shell1st%ats(ii)%bs%num_permutations
+     hh=hh+1
+     num_permutaciones(hh)=shell1st%ats(ii)%bs%num_permutations
   END DO
-
+  
   DO jj=1,nnods
      IF (shell2nd(jj)%unsolved_loops.eqv..TRUE.) THEN
-        print*,'si',trad2py_nod(shell1st%ind),'en el 2',jj
+        CALL upload_symm(shell2nd(jj)%symm)
+        CALL permuto (shell2nd(jj)%ats_ord,shell2nd(jj)%nats,shell2nd(jj)%permutations,shell2nd(jj)%num_permutations)
+        CALL download_symm(shell2nd(jj)%symm)
+     ELSE
+        shell2nd(jj)%num_permutations=1
      END IF
+     total_num_permutations=total_num_permutations*shell2nd(jj)%num_permutations
+     hh=hh+1
+     num_permutaciones(hh)=shell2nd(jj)%num_permutations
      DO ii=1,shell2nd(jj)%nats
         IF (shell2nd(jj)%ats(ii)%hbs%unsolved_loops) THEN
-           print*,'si',trad2py_nod(shell1st%ind),'en el 2 hbs', jj
+           CALL upload_symm(shell2nd(jj)%ats(ii)%hbs%symm)
+           CALL permuto (shell2nd(jj)%ats(ii)%hbs%order,shell2nd(jj)%ats(ii)%hbs%num,shell2nd(jj)%ats(ii)%hbs%permutations,shell2nd(jj)%ats(ii)%hbs%num_permutations)
+           CALL download_symm(shell2nd(jj)%ats(ii)%hbs%symm)
+        ELSE
+           shell2nd(jj)%ats(ii)%hbs%num_permutations=1
         END IF
+        total_num_permutations=total_num_permutations*shell2nd(jj)%ats(ii)%hbs%num_permutations
+        hh=hh+1
+        num_permutaciones(hh)=shell2nd(jj)%ats(ii)%hbs%num_permutations
         IF (shell2nd(jj)%ats(ii)%bs%unsolved_loops) THEN
-           print*,'si',trad2py_nod(shell1st%ind),'en el 2 bs', jj
+           CALL upload_symm(shell2nd(jj)%ats(ii)%bs%symm)
+           CALL permuto (shell2nd(jj)%ats(ii)%bs%order,shell2nd(jj)%ats(ii)%bs%num,shell2nd(jj)%ats(ii)%bs%permutations,shell2nd(jj)%ats(ii)%bs%num_permutations)
+           CALL download_symm(shell2nd(jj)%ats(ii)%bs%symm)
+        ELSE
+           shell2nd(jj)%ats(ii)%bs%num_permutations=1
         END IF
+        total_num_permutations=total_num_permutations*shell2nd(jj)%ats(ii)%bs%num_permutations
+        hh=hh+1
+        num_permutaciones(hh)=shell2nd(jj)%ats(ii)%bs%num_permutations
      END DO
   END DO
 
+  
+  IF (total_num_permutations>1) THEN
+
+     ALLOCATE(dale(total_num_permutations,extra_dim))
+     DO ii=1,extra_dim
+        kkk=1
+        DO kk=ii+1,extra_dim
+           kkk=kkk*num_permutaciones(kk)
+        END DO
+        ll=1
+        DO WHILE (ll<=total_num_permutations)
+           DO jj=1,num_permutaciones(ii)
+              DO kk=1,kkk
+                 dale(ll,ii)=jj
+                 ll=ll+1
+              END DO
+           END DO
+        END DO
+     END DO
+
+     DO iii=1,total_num_permutations
+
+        hh=0
+        hh=hh+1
+        IF (shell1st%unsolved_loops.eqv..TRUE.) THEN
+           shell1st%ats_ord(:)=shell1st%permutations(dale(iii,hh),:)
+        END IF
+        
+        DO ii=1,shell1st%nats
+           hh=hh+1
+           IF (shell1st%ats(ii)%hbs%unsolved_loops) THEN
+              shell1st%ats(ii)%hbs%order(:)=shell1st%ats(ii)%hbs%permutations(dale(iii,hh),:)
+              CALL REORDER_BONDED (shell1st%ats(ii)%hbs)
+           END IF
+           hh=hh+1
+           IF (shell1st%ats(ii)%bs%unsolved_loops) THEN
+              shell1st%ats(ii)%bs%order(:)=shell1st%ats(ii)%bs%permutations(dale(iii,hh),:)
+              CALL REORDER_BONDED (shell1st%ats(ii)%bs)
+           END IF
+        END DO
+
+        DO jj=1,nnods
+           hh=hh+1
+           IF (shell2nd(jj)%unsolved_loops.eqv..TRUE.) THEN
+              shell2nd(jj)%ats_ord(:)=shell2nd(jj)%permutations(dale(iii,hh),:)
+           END IF
+           DO ii=1,shell2nd(jj)%nats
+              hh=hh+1
+              IF (shell2nd(jj)%ats(ii)%hbs%unsolved_loops) THEN
+                 shell2nd(jj)%ats(ii)%hbs%order(:)=shell2nd(jj)%ats(ii)%hbs%permutations(dale(iii,hh),:)
+                 CALL REORDER_BONDED (shell2nd(jj)%ats(ii)%hbs)
+              END IF
+              hh=hh+1
+              IF (shell2nd(jj)%ats(ii)%bs%unsolved_loops) THEN
+                 shell2nd(jj)%ats(ii)%bs%order(:)=shell2nd(jj)%ats(ii)%bs%permutations(dale(iii,hh),:)
+                 CALL REORDER_BONDED (shell2nd(jj)%ats(ii)%bs)
+              END IF
+           END DO
+        END DO
+
+        IF (ALLOCATED(mss_ind_ats))   DEALLOCATE(mss_ind_ats)
+        IF (ALLOCATED(mss_ind_nods))  DEALLOCATE(mss_ind_nods)
+        IF (ALLOCATED(mss_symm))      DEALLOCATE(mss_symm)
+        
+
+        ALLOCATE(mss_ind_ats(totntot),mss_ind_nods(totntot),mss_symm(totntot))
+        
+        gg=0
+        ntot1sh=shell1st%ntot
+        nnods1sh=shell1st%nnods
+        ALLOCATE(aux_ind_ats(ntot1sh),aux_ind_nods(ntot1sh),aux_symm(ntot1sh),aux_ord(nnods1sh))
+        CALL build_mss_wout_word(shell1st,aux_ind_ats,aux_ind_nods,aux_symm,aux_ord)
+        ggg=gg+1
+        gg=gg+ntot1sh
+        mss_ind_ats(ggg:gg)=aux_ind_ats(:)
+        mss_ind_nods(ggg:gg)=aux_ind_nods(:)
+        mss_symm(ggg:gg)=aux_symm(:)
+        DEALLOCATE(aux_ind_ats,aux_ind_nods,aux_symm)
+        
+        DO ii=1,nnods1sh
+           jj=aux_ord(ii)
+           shell_aux=>shell2nd(jj)
+           ntot2sh =shell_aux%ntot
+           nnods2sh=shell_aux%nnods
+           ALLOCATE(aux_ind_ats(ntot2sh),aux_ind_nods(ntot2sh),aux_symm(ntot2sh))
+           CALL build_mss_wout(shell_aux,aux_ind_ats,aux_ind_nods,aux_symm)
+           ggg=gg+1
+           gg=gg+ntot2sh
+           mss_ind_ats(ggg:gg)=aux_ind_ats(:)
+           mss_ind_nods(ggg:gg)=aux_ind_nods(:)
+           mss_symm(ggg:gg)=aux_symm(:)
+           DEALLOCATE(aux_ind_ats,aux_ind_nods,aux_symm)
+        END DO
+        DEALLOCATE(aux_ord)
+
+        CALL remato_mss2sh()
+        print*,'>>'
+        print*,mss(:)
+ 
+     END DO
+     NULLIFY(shell_aux)
+     print*,'&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&'
+  END IF
+
 
 END SUBROUTINE SOLVING_LAST_SYMMETRIES_PERMUTING
+
+
+SUBROUTINE PERMUTO (orden_original,dim_orden,permutations,num_permutations)
+
+  IMPLICIT NONE
+
+  TYPE int_2d_pointer
+     INTEGER,DIMENSION(:,:),ALLOCATABLE::p2d
+  END type int_2d_pointer
+
+  INTEGER,INTENT(IN)::dim_orden
+  INTEGER,DIMENSION(dim_orden),INTENT(IN)::orden_original
+  INTEGER,INTENT(INOUT)::num_permutations
+  INTEGER,DIMENSION(:,:),ALLOCATABLE,INTENT(INOUT)::permutations
+
+  TYPE(int_2d_pointer),DIMENSION(symm%num_crits)::perms
+  INTEGER,DIMENSION(symm%num_crits)::num_perms,num_permats
+  INTEGER,ALLOCATABLE,DIMENSION(:,:)::dale
+
+  INTEGER::ii,jj,kk,gg,kkk,ll,cantidad,pos,ind,aa
+  INTEGER,DIMENSION(:),ALLOCATABLE::desord
+
+  !print*,'###'
+  !print*,symm%crit(:)
+  !print*,orden_original(:)
+  !print*,'###'
+
+  gg=0
+  num_permutations=1
+  DO ii=1,symm%num_crits
+     gg=gg+1
+     cantidad=symm%crit(gg)
+     num_perms(ii)=cantidad
+     ALLOCATE(desord(cantidad))
+     desord(:)=symm%crit((gg+1):(gg+cantidad))
+     SELECT CASE (cantidad)
+     CASE (2)
+        num_perms(ii)=2
+        num_permats(ii)=2
+        ALLOCATE(perms(ii)%p2d(2,2))
+        DO aa=1,2
+           perms(ii)%p2d(:,aa)=desord(precalc2(:,aa))
+        END DO
+        num_permutations=num_permutations*2
+     CASE (3)
+        num_perms(ii)=6
+        num_permats(ii)=3
+        ALLOCATE(perms(ii)%p2d(3,6))
+        DO aa=1,6
+           perms(ii)%p2d(:,aa)=desord(precalc3(:,aa))
+        END DO
+        num_permutations=num_permutations*6
+     CASE (4)
+        num_perms(ii)=24
+        num_permats(ii)=4
+        ALLOCATE(perms(ii)%p2d(4,24))
+        DO aa=1,24
+           perms(ii)%p2d(:,aa)=desord(precalc4(:,aa))
+        END DO
+        num_permutations=num_permutations*24
+     CASE DEFAULT
+        print*,'# Error: there is no precalculated list for', cantidad,' elements permutations.'
+        exit
+     END SELECT
+     DEALLOCATE(desord)
+     gg=gg+cantidad
+  END DO
+
+  !print*,'>>>>>>>>>>'
+  !DO ii=1,symm%num_crits
+  !   print*,'>>'
+  !   DO jj=1,num_perms(ii)
+  !      print*,perms(ii)%p2d(:,jj)
+  !   END DO
+  !END DO
+
+  ALLOCATE(permutations(num_permutations,dim_orden))
+  ALLOCATE(dale(num_permutations,symm%num_crits))
+
+  DO ii=1,symm%num_crits
+     kkk=1
+     DO kk=ii+1,symm%num_crits
+        kkk=kkk*num_perms(kk)
+     END DO
+     ll=1
+     DO WHILE (ll<=num_permutations)
+        DO jj=1,num_perms(ii)
+           DO kk=1,kkk
+              dale(ll,ii)=jj
+              ll=ll+1
+           END DO
+        END DO
+     END DO
+  END DO
+
+  DO ii=1,num_permutations
+     permutations(ii,:)=orden_original(:)
+     DO jj=1,symm%num_crits
+        ll=dale(ii,jj)
+        DO kk=1,num_permats(jj)
+           pos=perms(jj)%p2d(1,kk)
+           ind=orden_original(perms(jj)%p2d(ll,kk))
+           permutations(ii,pos)=ind
+        END DO
+     END DO
+  END DO
+
+! PRINT*,'*********************************'
+! DO ii=1,num_permutations
+!    print*,permutations(ii,:)
+! END DO
+! PRINT*,'*********************************'
+
+
+END SUBROUTINE PERMUTO
 
 
 END MODULE GLOB
