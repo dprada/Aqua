@@ -13,7 +13,7 @@ TYPE p_symm
 END TYPE p_symm
 
 TYPE p_bonded
-   INTEGER,DIMENSION(:),ALLOCATABLE::ats,nods,aux2sh
+   INTEGER,DIMENSION(:),ALLOCATABLE::bonded_ats,bonded_nods,aux2sh
    INTEGER,DIMENSION(:),ALLOCATABLE::order,wsymm
    INTEGER,DIMENSION(:),ALLOCATABLE::lev_supsets
    INTEGER,DIMENSION(:),ALLOCATABLE::cant_loops_1order,cant_loops_2order,cant_loops_3order
@@ -26,7 +26,7 @@ TYPE p_bonded
 END TYPE p_bonded
 
 TYPE p_at
-   TYPE(p_bonded),DIMENSION(2)::bonded
+   TYPE(p_bonded)::hbs,bs
    INTEGER::num_hbs_bs
    INTEGER::ind
 END TYPE p_at
@@ -264,81 +264,33 @@ SUBROUTINE RESET_TRANSLATOR()
   END DO
  
 END SUBROUTINE RESET_TRANSLATOR
-
-
-SUBROUTINE ATS_UP(at)
+ 
+SUBROUTINE RESET_AT(at_aux)
  
   IMPLICIT NONE
  
-  TYPE(p_at),TARGET,INTENT(INOUT)::at
-  TYPE(p_bonded),POINTER::bonded
-  INTEGER::ii,kk,num
-
-  DO ii=1,2
-     bonded=>at%bonded(ii)
-     num=bonded%num
-     ALLOCATE(bonded%ats(num))
-     ALLOCATE(bonded%nods(num))
-     ALLOCATE(bonded%order(num))
-     ALLOCATE(bonded%lev_supsets(num))
-     ALLOCATE(bonded%cant_loops_1order(num))
-     ALLOCATE(bonded%cant_loops_2order(num))
-     ALLOCATE(bonded%cant_loops_3order(num))
-     ALLOCATE(bonded%aux2sh(num)) 
-     ALLOCATE(bonded%wsymm(num)) 
-     ALLOCATE(bonded%symm%crit(num+1)) !!!
-     bonded%order                =(/(kk,kk=1,num)/)
-     bonded%cant_loops_1order(:) = 0
-     bonded%cant_loops_2order(:) = 0
-     bonded%cant_loops_3order(:) = 0
-     bonded%aux2sh(:)            = 0
-     bonded%wsymm(:)             = 0
-     bonded%symm%length          = num+1
-     IF (num>1) THEN
-        bonded%symm%num_crits    = 1
-        bonded%symm%crit(:)      = (/num,bonded%order(:)/)
-     ELSE
-        bonded%symm%num_crits    = 0
-        bonded%symm%crit(:)      = 0
-     END IF
-     bonded%unsolved_loops       =.FALSE.
-     bonded%with_loops_1order    =.FALSE.
-     bonded%with_loops_2order    =.FALSE.
-     bonded%with_loops_3order    =.FALSE.
-  END DO
-
-  NULLIFY(bonded)
-
-END SUBROUTINE ATS_UP
-
-SUBROUTINE ATS_DOWN(at)
+  TYPE(p_at),INTENT(INOUT)::at_aux
  
-  IMPLICIT NONE
+  IF (ALLOCATED(at_aux%hbs%bonded_ats)) THEN
+     DEALLOCATE(at_aux%hbs%bonded_ats,at_aux%hbs%bonded_nods,at_aux%hbs%order)
+     DEALLOCATE(at_aux%hbs%lev_supsets)
+     DEALLOCATE(at_aux%hbs%cant_loops_1order,at_aux%hbs%cant_loops_2order)
+     DEALLOCATE(at_aux%hbs%cant_loops_3order)
+     DEALLOCATE(at_aux%hbs%aux2sh,at_aux%hbs%wsymm)
+     DEALLOCATE(at_aux%hbs%symm%crit)
+  END IF
  
-  TYPE(p_at),TARGET,INTENT(INOUT)::at
-  TYPE(p_bonded),POINTER::bonded
-  INTEGER::ii
-
-  DO ii=1,2
-     bonded=>at%bonded(ii)
-     DEALLOCATE(bonded%ats)
-     DEALLOCATE(bonded%nods)
-     DEALLOCATE(bonded%order)
-     DEALLOCATE(bonded%lev_supsets)
-     DEALLOCATE(bonded%cant_loops_1order)
-     DEALLOCATE(bonded%cant_loops_2order)
-     DEALLOCATE(bonded%cant_loops_3order)
-     DEALLOCATE(bonded%aux2sh)
-     DEALLOCATE(bonded%wsymm)
-     DEALLOCATE(bonded%symm%crit)
-  END DO
-
-  NULLIFY(bonded)
-
-END SUBROUTINE ATS_DOWN
-
-
-
+  IF (ALLOCATED(at_aux%bs%bonded_ats)) THEN
+     DEALLOCATE(at_aux%bs%bonded_ats,at_aux%bs%bonded_nods,at_aux%bs%order)
+     DEALLOCATE(at_aux%bs%lev_supsets)
+     DEALLOCATE(at_aux%bs%cant_loops_1order,at_aux%bs%cant_loops_2order)
+     DEALLOCATE(at_aux%bs%cant_loops_3order)
+     DEALLOCATE(at_aux%bs%aux2sh,at_aux%bs%wsymm)
+     DEALLOCATE(at_aux%bs%symm%crit)
+  END IF
+ 
+END SUBROUTINE RESET_AT
+ 
 SUBROUTINE load_net(xx_hbs,xx_bs,xx_num_Hbs_at,xx_num_Bs_at,&
      xx_Total_num_hbs,xx_Total_num_bs,xx_num_ats)
  
@@ -351,69 +303,113 @@ SUBROUTINE load_net(xx_hbs,xx_bs,xx_num_Hbs_at,xx_num_Bs_at,&
  
   INTEGER::ii,jj,kk,gghb,ggb,ggat,numhbs,numbs,totnum
   INTEGER,DIMENSION(:),ALLOCATABLE::vect_aux_hbs,vect_aux_bs
-  TYPE(p_shell),POINTER::shell
-  TYPE(p_bonded),POINTER::bonded
-  TYPE(p_at),POINTER::at
+  TYPE(p_shell),POINTER::shell_aux
+  TYPE(p_at),POINTER::at_aux
  
   gghb=0
   ggb=0
   DO ii=1,num_nods
-     shell=>list_shells(ii)
-     shell%unsolved_loops=.FALSE.
-     shell%nnods=0
-     DEALLOCATE(shell%list_nods_norepe)
-     DEALLOCATE(shell%list_nods_repe)
-     DEALLOCATE(shell%list_cant_repe)
-     DEALLOCATE(shell%list_nods)
-     DO jj=1,shell%nats
-        at=>shell%ats(jj)
-        CALL ATS_DOWN(at)
-        ggat=at%ind
+     shell_aux=>list_shells(ii)
+     shell_aux%unsolved_loops=.FALSE.
+     shell_aux%nnods=0
+     DEALLOCATE(shell_aux%list_nods_norepe,shell_aux%list_nods_repe,shell_aux%list_cant_repe)
+     DEALLOCATE(shell_aux%list_nods)
+     DO jj=1,shell_aux%nats
+        at_aux=>shell_aux%ats(jj)
+        ggat=at_aux%ind
         numhbs=xx_num_hbs_at(ggat)
         numbs=xx_num_bs_at(ggat)
-        at%bonded(1)%num=numhbs
-        at%bonded(2)%num=numbs
-        CALL ATS_UP(at)
-        !HBS
+        totnum=numhbs+numbs
+        at_aux%num_hbs_bs=totnum
+        at_aux%hbs%num=numhbs
+        at_aux%bs%num=numbs
+        at_aux%hbs%unsolved_loops=.FALSE.
+        at_aux%bs%unsolved_loops=.FALSE.
+        at_aux%hbs%with_loops_1order=.FALSE.
+        at_aux%bs%with_loops_1order=.FALSE.
+        at_aux%hbs%with_loops_2order=.FALSE.
+        at_aux%bs%with_loops_2order=.FALSE.
+        at_aux%hbs%with_loops_3order=.FALSE.
+        at_aux%bs%with_loops_3order=.FALSE.
+        CALL RESET_AT(at_aux)
+        ALLOCATE(at_aux%hbs%bonded_ats(numhbs),at_aux%hbs%bonded_nods(numhbs),at_aux%hbs%order(numhbs))
+        ALLOCATE(at_aux%hbs%lev_supsets(numhbs))
+        ALLOCATE(at_aux%hbs%cant_loops_1order(numhbs))
+        ALLOCATE(at_aux%hbs%cant_loops_2order(numhbs))
+        ALLOCATE(at_aux%hbs%cant_loops_3order(numhbs))
+        ALLOCATE(at_aux%hbs%aux2sh(numhbs),at_aux%hbs%wsymm(numhbs))
+        ALLOCATE(at_aux%bs%bonded_ats(numbs),at_aux%bs%bonded_nods(numbs),at_aux%bs%order(numbs))
+        ALLOCATE(at_aux%bs%lev_supsets(numbs))
+        ALLOCATE(at_aux%bs%cant_loops_1order(numbs))
+        ALLOCATE(at_aux%bs%cant_loops_2order(numbs))
+        ALLOCATE(at_aux%bs%cant_loops_3order(numbs))
+        ALLOCATE(at_aux%bs%aux2sh(numbs),at_aux%bs%wsymm(numbs))
+        ALLOCATE(vect_aux_hbs(numhbs),vect_aux_bs(numbs))
         kk=gghb+1
-        gghb=gghb+num
-        at%bonded(1)%ats(:)=xx_hbs(kk:gghb)
-        !BS
+        gghb=gghb+numhbs
+        vect_aux_hbs(:)=xx_hbs(kk:gghb)
         kk=ggb+1
-        ggb=ggb+num
-        at%bonded(2)%ats(:)=xx_bs(kk:ggb)
-        !! RECOLOCO
-        DO ll=1,2
-           bonded=>at%bonded(ll)
-           at%num_hbs_bs=at%num_hbs_bs+bonded%num
-           shell%nnods=shell%nnods+bonded%num
-           ALLOCATE(vect_aux(bonded%num))
-           vect_aux(:)                 = at2nod(bonded%ats(:))
-           bonded%nods(:)              = vect_aux(:)
-           bonded%lev_supsets(:)       = lev_supsets(vect_aux(:))
-           DEALLOCATE(vect_aux)
-        END DO
+        ggb=ggb+numbs
+        vect_aux_bs(:)=xx_bs(kk:ggb)
+        at_aux%hbs%bonded_ats(:)   = vect_aux_hbs(:)
+        at_aux%bs%bonded_ats(:)    = vect_aux_bs(:)
+        vect_aux_hbs(:)            = at2nod(vect_aux_hbs(:))
+        vect_aux_bs(:)             = at2nod(vect_aux_bs(:))
+        at_aux%hbs%bonded_nods(:)  = vect_aux_hbs(:)
+        at_aux%bs%bonded_nods(:)   = vect_aux_bs(:)
+        at_aux%hbs%lev_supsets(:)  = lev_supsets(vect_aux_hbs(:))
+        at_aux%bs%lev_supsets(:)   = lev_supsets(vect_aux_bs(:))
+        at_aux%hbs%order(:)        = (/(kk,kk=1,numhbs)/)
+        at_aux%bs%order(:)         = (/(kk,kk=1,numbs)/)
+        at_aux%hbs%cant_loops_1order(:) = 0
+        at_aux%bs%cant_loops_1order(:)  = 0
+        at_aux%hbs%cant_loops_2order(:) = 0
+        at_aux%bs%cant_loops_2order(:)  = 0
+        at_aux%hbs%cant_loops_3order(:) = 0
+        at_aux%bs%cant_loops_3order(:)  = 0
+        at_aux%hbs%aux2sh(:)       = 0
+        at_aux%bs%aux2sh(:)        = 0
+        at_aux%hbs%wsymm(:)        = 0
+        at_aux%bs%wsymm(:)         = 0
+        at_aux%hbs%symm%num_crits  = 0
+        at_aux%bs%symm%num_crits   = 0
+        at_aux%hbs%symm%length     = numhbs+1
+        at_aux%bs%symm%length      = numbs+1
+        ALLOCATE(at_aux%hbs%symm%crit(numhbs+1),at_aux%bs%symm%crit(numbs+1))
+        IF (numhbs>1) THEN
+           at_aux%hbs%symm%num_crits   = 1
+           at_aux%hbs%symm%crit(:)     = (/numhbs,at_aux%hbs%order(:)/)
+        END IF
+        IF (numbs>1) THEN
+           at_aux%bs%symm%num_crits    = 1
+           at_aux%bs%symm%crit(:)      = (/numbs,at_aux%bs%order(:)/)
+        END IF
+        DEALLOCATE(vect_aux_hbs,vect_aux_bs)
+        shell_aux%nnods=shell_aux%nnods+totnum
      END DO
-     ALLOCATE(shell%list_nods(shell%nnods))
-     shell%list_nods(:)=(/((/shell%ats(kk)%bonded(1)%nods(:),shell%ats(kk)%bonded(2)%nods(:)/),kk=1,shell%nats)/)
-     CALL BUILDING_REPE_LIST (shell%list_nods,shell%nnods,shell%list_nods_norepe,&
-          shell%nnods_norepe,shell%list_nods_repe,shell%list_cant_repe,shell%nnods_repe)
-     shell%ntot=1+shell%nats+shell%nats2+shell%nnods
-     IF (shell%nnods_repe>0) THEN
-        DO jj=1,shell%nats
-           at=>shell%ats(jj)
-           DO ll=1,2
-              IF (at%bonded(ll)%num>0) THEN
-                 CALL COUNT_NODE_REPE (shell%list_nods_repe,shell%list_cant_repe,shell%nnods_repe,&
-                      at%bonded(ll)%nods,at%bonded(ll)%num,at%bonded(ll)%cant_loops_1order)
-                 IF (SUM(at%bonded(ll)%cant_loops_1order(:))>0) at%bonded(ll)%with_loops_1order=.TRUE.
-              END IF
-           END DO
+     ALLOCATE(shell_aux%list_nods(shell_aux%nnods))
+     shell_aux%list_nods(:)=(/((/shell_aux%ats(kk)%hbs%bonded_nods(:),shell_aux%ats(kk)%bs%bonded_nods(:)/),kk=1,shell_aux%nats)/)
+     CALL BUILDING_REPE_LIST (shell_aux%list_nods,shell_aux%nnods,shell_aux%list_nods_norepe,&
+          &shell_aux%nnods_norepe,shell_aux%list_nods_repe,shell_aux%list_cant_repe,shell_aux%nnods_repe)
+     shell_aux%ntot=1+shell_aux%nats+shell_aux%nats2+shell_aux%nnods
+     IF (shell_aux%nnods_repe>0) THEN
+        DO jj=1,shell_aux%nats
+           at_aux=>shell_aux%ats(jj)
+           IF (at_aux%hbs%num>0) THEN
+              CALL COUNT_NODE_REPE (shell_aux%list_nods_repe,shell_aux%list_cant_repe,shell_aux%nnods_repe,&
+                   &at_aux%hbs%bonded_nods,at_aux%hbs%num,at_aux%hbs%cant_loops_1order)
+              IF (SUM(at_aux%hbs%cant_loops_1order(:))>0) at_aux%hbs%with_loops_1order=.TRUE.
+           END IF
+           IF (at_aux%bs%num>0) THEN
+              CALL COUNT_NODE_REPE (shell_aux%list_nods_repe,shell_aux%list_cant_repe,shell_aux%nnods_repe,&
+                   &at_aux%bs%bonded_nods,at_aux%bs%num,at_aux%bs%cant_loops_1order)
+              IF (SUM(at_aux%bs%cant_loops_1order(:))>0) at_aux%bs%with_loops_1order=.TRUE.
+           END IF
         END DO
      END IF
   END DO
  
-  NULLIFY(shell,bonded,at)
+  NULLIFY(shell_aux,at_aux)
   
 END SUBROUTINE load_net
  
@@ -458,9 +454,9 @@ SUBROUTINE build_shell1st (core)
   IMPLICIT NONE
  
   INTEGER,INTENT(IN)::core
-  TYPE(p_shell),TARGET::shell
-  TYPE(p_at),POINTER::at
-  TYPE(p_bonded),POINTER::bonded
+  TYPE(p_shell),TARGET::shell1st
+  TYPE(p_at),POINTER::at_aux
+  TYPE(p_bonded),POINTER::bs_aux
  
   INTEGER,DIMENSION(:),ALLOCATABLE::privilegios
   INTEGER::dim_privil,ii
@@ -475,15 +471,19 @@ SUBROUTINE build_shell1st (core)
   privilegios(1)=core
  
   DO ii=1,shell1st%nats
-     at=>shell1st%ats(ii)
-     DO jj=1,2
-        IF (at%bonded(jj)%symm%num_crits>0) THEN
-           bonded=>at%bonded(jj)
-           CALL upload_symm(bonded%symm)
-           CALL order_bonded(dim_privil,privilegios,bonded)
-           CALL download_symm(bonded%symm)
-        END IF
-     END DO
+     at_aux=>shell1st%ats(ii)
+     IF (at_aux%hbs%symm%num_crits>0) THEN
+        bs_aux=>at_aux%hbs
+        CALL upload_symm(bs_aux%symm)
+        CALL order_bonded(dim_privil,privilegios,bs_aux)
+        CALL download_symm(bs_aux%symm)
+     END IF
+     IF (at_aux%bs%symm%num_crits>0) THEN
+        bs_aux=>at_aux%bs
+        CALL upload_symm(bs_aux%symm)
+        CALL order_bonded(dim_privil,privilegios,bs_aux)
+        CALL download_symm(bs_aux%symm)
+     END IF
   END DO
  
   !! order ats
@@ -502,7 +502,7 @@ SUBROUTINE build_shell1st (core)
   CALL build_mss(shell1st)
   CALL remato_mss()
    
-  NULLIFY(at,bonded,shell1st)
+  NULLIFY(at_aux,bs_aux)
  
 END SUBROUTINE build_shell1st
  
@@ -522,7 +522,7 @@ SUBROUTINE build_shell2nd (core)
  
   INTEGER::nnods,totntot,core2
   INTEGER::ntot1sh,nnods1sh,ntot2sh,nnods2sh
-  INTEGER::ii,jj,kk,gg,iii,ggg,ll
+  INTEGER::ii,jj,kk,gg,iii,ggg
   INTEGER,DIMENSION(:),ALLOCATABLE::privilegios
   INTEGER::dim_privil,dim_repe
   INTEGER,DIMENSION(:),ALLOCATABLE::aux_ind_ats,aux_ind_nods,aux_ord,aux_symm
@@ -539,14 +539,19 @@ SUBROUTINE build_shell2nd (core)
   ALLOCATE(shell2nd(shell1st%nnods))
   gg=0
   DO ii=1,shell1st%nats
-     DO ll=1,2
-        DO jj=1,shell1st%ats(ii)%bonded(ll)%num
-           gg=gg+1
-           shell1st%ats(ii)%bonded(ll)%aux2sh(jj)=gg
-           kk=shell1st%ats(ii)%bonded(ll)%bonded_nods(jj)
-           shell2nd(gg)=list_shells(kk)
-           totntot=totntot+shell2nd(gg)%ntot
-        END DO
+     DO jj=1,shell1st%ats(ii)%hbs%num
+        gg=gg+1
+        shell1st%ats(ii)%hbs%aux2sh(jj)=gg
+        kk=shell1st%ats(ii)%hbs%bonded_nods(jj)
+        shell2nd(gg)=list_shells(kk)
+        totntot=totntot+shell2nd(gg)%ntot
+     END DO
+     DO jj=1,shell1st%ats(ii)%bs%num
+        gg=gg+1
+        shell1st%ats(ii)%bs%aux2sh(jj)=gg
+        kk=shell1st%ats(ii)%bs%bonded_nods(jj)
+        shell2nd(gg)=list_shells(kk)
+        totntot=totntot+shell2nd(gg)%ntot
      END DO
   END DO
  
@@ -556,17 +561,20 @@ SUBROUTINE build_shell2nd (core)
      shell_aux=>shell2nd(iii)
      DO ii=1,shell_aux%nats
         at_aux=>shell_aux%ats(ii)
-        DO ll=1,2
-           bonded=>at%bonded(ll)
-           DO jj=1,bonded%num
-              gg=COUNT((shell1st%list_nods(:)==bonded%nods(jj)),DIM=1)
-              bonded%cant_loops_2order(jj)=gg
-              IF (gg>1) bonded%with_loops_2order=.TRUE.
-           END DO
+        bs_aux=>at_aux%hbs
+        DO jj=1,bs_aux%num
+           gg=COUNT((shell1st%list_nods(:)==bs_aux%bonded_nods(jj)),DIM=1)
+           bs_aux%cant_loops_2order(jj)=gg
+           IF (gg>1) bs_aux%with_loops_2order=.TRUE.
+        END DO
+        bs_aux=>at_aux%bs
+        DO jj=1,bs_aux%num
+           gg=COUNT((shell1st%list_nods(:)==bs_aux%bonded_nods(jj)),DIM=1)
+           bs_aux%cant_loops_2order(jj)=gg
+           IF (gg>1) bs_aux%with_loops_2order=.TRUE.
         END DO
      END DO
   END DO
-
 
   !! Building cant_loops_3order(:) !! hay que quitar el core
  
@@ -588,32 +596,46 @@ SUBROUTINE build_shell2nd (core)
      DO iii=1,nnods
         shell_aux=>shell2nd(iii)
         DO ii=1,shell_aux%nats
-           at=>shell_aux%ats(ii)
-           DO ll=1,2
-              bonded=>at%bonded(ll)
-              DO jj=1,bonded%num
-                 DO ggg=1,dim_repe
-                    IF (bonded%nods(jj)==list_repe(ggg)) THEN
-                       bonded%cant_loops_3order(jj)=cant_repe(ggg)
-                       IF (cant_repe(ggg)>0) bonded%with_loops_3order=.TRUE.
-                    END IF
-                 END DO
+           at_aux=>shell_aux%ats(ii)
+           bs_aux=>at_aux%hbs
+           DO jj=1,bs_aux%num
+              DO ggg=1,dim_repe
+                 IF (bs_aux%bonded_nods(jj)==list_repe(ggg)) THEN
+                    bs_aux%cant_loops_3order(jj)=cant_repe(ggg)
+                    IF (cant_repe(ggg)>0) bs_aux%with_loops_3order=.TRUE.
+                 END IF
+              END DO
+           END DO
+           bs_aux=>at_aux%bs
+           DO jj=1,bs_aux%num
+              DO ggg=1,dim_repe
+                 IF (bs_aux%bonded_nods(jj)==list_repe(ggg)) THEN
+                    bs_aux%cant_loops_3order(jj)=cant_repe(ggg)
+                    IF (cant_repe(ggg)>0) bs_aux%with_loops_3order=.TRUE.
+                 END IF
               END DO
            END DO
         END DO
      END DO
      shell_aux=>shell1st
      DO ii=1,shell_aux%nats
-        at=>shell_aux%ats(ii)
-        DO ll=1,2
-           bonded=>at%bonded(ll)
-           DO jj=1,bonded%num
-              DO ggg=1,dim_repe
-                 IF (bonded%nods(jj)==list_repe(ggg)) THEN
-                    bonded%cant_loops_2order(jj)=cant_repe(ggg)
-                    IF (cant_repe(ggg)>0) bonded%with_loops_2order=.TRUE.
-                 END IF
-              END DO
+        at_aux=>shell_aux%ats(ii)
+        bs_aux=>at_aux%hbs
+        DO jj=1,bs_aux%num
+           DO ggg=1,dim_repe
+              IF (bs_aux%bonded_nods(jj)==list_repe(ggg)) THEN
+                 bs_aux%cant_loops_2order(jj)=cant_repe(ggg)
+                 IF (cant_repe(ggg)>0) bs_aux%with_loops_2order=.TRUE.
+              END IF
+           END DO
+        END DO
+        bs_aux=>at_aux%bs
+        DO jj=1,bs_aux%num
+           DO ggg=1,dim_repe
+              IF (bs_aux%bonded_nods(jj)==list_repe(ggg)) THEN
+                 bs_aux%cant_loops_2order(jj)=cant_repe(ggg)
+                 IF (cant_repe(ggg)>0) bs_aux%with_loops_2order=.TRUE.
+              END IF
            END DO
         END DO
      END DO
@@ -637,22 +659,33 @@ SUBROUTINE build_shell2nd (core)
  
      ! order bonds 2sh
      DO ii=1,shell_aux%nats
-        at=>shell_aux%ats(ii)
-        DO ll=1,2
-           IF (at%bonded(ll)%symm%num_crits>0) THEN
-              bonded=>at%bonded(ll)
-              CALL upload_symm(bonded%symm)
-              CALL order_bonded(dim_privil,privilegios,bonded)
-              IF (symm%num_crits>0) THEN
-                 CALL order_bonded_w_23order(bonded)
-              END IF
-              IF (symm%num_crits>0) THEN 
-                 !! quito falsas simetrias porque me quede sin criterios para los nodos que aparecen una sola vez
-                 CALL quito_falsos_bonded_symm(bonded)
-              END IF
-              CALL download_symm(bonded%symm)
+        at_aux=>shell_aux%ats(ii)
+        IF (at_aux%hbs%symm%num_crits>0) THEN
+           bs_aux=>at_aux%hbs
+           CALL upload_symm(bs_aux%symm)
+           CALL order_bonded(dim_privil,privilegios,bs_aux)
+           IF (symm%num_crits>0) THEN
+              CALL order_bonded_w_23order(bs_aux)
            END IF
-        END DO
+           IF (symm%num_crits>0) THEN 
+              !! quito falsas simetrias porque me quede sin criterios para los nodos que aparecen una sola vez
+              CALL quito_falsos_bonded_symm(bs_aux)
+           END IF
+           CALL download_symm(bs_aux%symm)
+        END IF
+        IF (at_aux%bs%symm%num_crits>0) THEN
+           bs_aux=>at_aux%bs
+           CALL upload_symm(bs_aux%symm)
+           CALL order_bonded(dim_privil,privilegios,bs_aux)
+           IF (symm%num_crits>0) THEN
+              CALL order_bonded_w_23order(bs_aux)
+           END IF
+           IF (symm%num_crits>0) THEN 
+              !! quito falsas simetrias porque me quede sin criterios para los nodos que aparecen una sola vez
+              CALL quito_falsos_bonded_symm(bs_aux)
+           END IF
+           CALL download_symm(bs_aux%symm)
+        END IF
      END DO
  
      ! order ats 2sh
@@ -682,26 +715,40 @@ SUBROUTINE build_shell2nd (core)
  
   ! order bonds 1sh
   DO ii=1,shell1st%nats
-     at=>shell1st%ats(ii)
-     DO ll=1,2
-        IF (at%bonded(ll)%symm%num_crits>0) THEN
-           bonded=>at%bonded(ll)
-           CALL upload_symm(bonded%symm)
-           CALL order_bonded(dim_privil,privilegios,bonded)
-           IF (symm%num_crits>0) THEN
-              CALL order_bonded_w_2order(bonded)
-           END IF
-           IF (symm%num_crits>0) THEN
-              CALL order_bonded_w_next_shells(bonded,shell2nd,nnods)
-           END IF
-           IF (symm%num_crits>0) THEN
-              CALL quito_falsos_bonded_symm2(bonded,shell2nd,nnods)
-           END IF
-           CALL download_symm(bonded%symm)
+     at_aux=>shell1st%ats(ii)
+     IF (at_aux%hbs%symm%num_crits>0) THEN
+        bs_aux=>at_aux%hbs
+        CALL upload_symm(bs_aux%symm)
+        CALL order_bonded(dim_privil,privilegios,bs_aux)
+        IF (symm%num_crits>0) THEN
+           CALL order_bonded_w_2order(bs_aux)
         END IF
-     END DO
+        IF (symm%num_crits>0) THEN
+           CALL order_bonded_w_next_shells(bs_aux,shell2nd,nnods)
+        END IF
+        IF (symm%num_crits>0) THEN
+           CALL quito_falsos_bonded_symm2(bs_aux,shell2nd,nnods)
+        END IF
+        CALL download_symm(bs_aux%symm)
+     END IF
+     IF (at_aux%bs%symm%num_crits>0) THEN
+        bs_aux=>at_aux%bs
+        CALL upload_symm(bs_aux%symm)
+        CALL order_bonded(dim_privil,privilegios,bs_aux)
+        IF (symm%num_crits>0) THEN
+           CALL order_bonded_w_2order(bs_aux)
+        END IF
+        IF (symm%num_crits>0) THEN
+           CALL order_bonded_w_next_shells(bs_aux,shell2nd,nnods)
+        END IF
+        IF (symm%num_crits>0) THEN
+           CALL quito_falsos_bonded_symm2(bs_aux,shell2nd,nnods)
+        END IF
+        CALL download_symm(bs_aux%symm)
+     END IF
   END DO
-  
+ 
+ 
   ! order ats 1sh
   IF (shell1st%symm%num_crits>0) THEN
      CALL upload_symm(shell1st%symm)
@@ -846,7 +893,7 @@ SUBROUTINE order_ats(dim_privil,privilegios,shell)
   INTEGER,DIMENSION(dim_privil),INTENT(IN)::privilegios
   TYPE(p_shell),TARGET,INTENT(INOUT)::shell
  
-  INTEGER::ii,jj,kk,gg,priv,ll
+  INTEGER::ii,jj,kk,gg,priv
   INTEGER::numats
   TYPE(p_bonded),POINTER::bonded
   TYPE(p_at),POINTER::at_aux
@@ -860,17 +907,24 @@ SUBROUTINE order_ats(dim_privil,privilegios,shell)
   gg=0
   DO ii=1,dim_privil
      priv=privilegios(ii)
+     gg=gg+1
      DO jj=1,numats
-        DO ll=1,2
-           bonded=>shell%ats(jj)%bonded(ll)
-           DO kk=1,bonded%num
-              IF (priv==bonded%bonded_nods(kk)) THEN
-                 valores(jj,gg+ll)=valores(jj,gg+ll)+1
-              END IF
-           END DO
+        bonded=>shell%ats(jj)%hbs
+        DO kk=1,bonded%num
+           IF (priv==bonded%bonded_nods(kk)) THEN
+              valores(jj,gg)=valores(jj,gg)+1
+           END IF
         END DO
      END DO
-     gg=gg+2
+     gg=gg+1
+     DO jj=1,numats
+        bonded=>shell%ats(jj)%bs
+        DO kk=1,bonded%num
+           IF (priv==bonded%bonded_nods(kk)) THEN
+              valores(jj,gg)=valores(jj,gg)+1
+           END IF
+        END DO
+     END DO
   END DO
 
   CALL SORT_INT_MATRIX (numats,gg,shell%ats_ord,valores)
@@ -882,9 +936,8 @@ SUBROUTINE order_ats(dim_privil,privilegios,shell)
      ALLOCATE(valores(numats,2))
      DO jj=1,numats
         at_aux=>shell%ats(jj)
-        DO ll=1,2
-           valores(jj,ll)=at_aux%bonded(ll)%num
-        END DO
+        valores(jj,1)=at_aux%hbs%num
+        valores(jj,2)=at_aux%bs%num
      END DO
  
      CALL SORT_INT_MATRIX (numats,2,shell%ats_ord,valores)
@@ -893,34 +946,52 @@ SUBROUTINE order_ats(dim_privil,privilegios,shell)
 
   END IF
  
-  DO ll=1,2
+  IF (symm%num_crits>0) THEN !los ligados a hbs
+
+     gg=0
+     DO ii=1,numats
+        IF (gg<shell%ats(ii)%hbs%num) gg=shell%ats(ii)%hbs%num
+     END DO
+     ALLOCATE(valores(numats,gg))
+     valores(:,:)=0
+     DO ii=1,numats
+        valores(ii,1:shell%ats(ii)%hbs%num)=shell%ats(ii)%hbs%lev_supsets(:)
+     END DO
+     CALL SORT_INT_MATRIX (numats,gg,shell%ats_ord,valores)
 
      IF (symm%num_crits>0) THEN
-
-        gg=0
-        DO ii=1,numats
-           IF (gg<shell%ats(ii)%bonded(ll)%num) gg=shell%ats(ii)%bonded(ll)%num
-        END DO
-        ALLOCATE(valores(numats,gg))
         valores(:,:)=0
         DO ii=1,numats
-           valores(ii,1:shell%ats(ii)%bonded(ll)%num)=shell%ats(ii)%bonded(ll)%lev_supsets(:)
+           valores(ii,1:shell%ats(ii)%hbs%num)=shell%ats(ii)%hbs%cant_loops_1order(:)
         END DO
+        ii=symm%num_crits
         CALL SORT_INT_MATRIX (numats,gg,shell%ats_ord,valores)
-
-        IF (symm%num_crits>0) THEN
-           valores(:,:)=0
-           DO ii=1,numats
-              valores(ii,1:shell%ats(ii)%bonded(ll)%num)=shell%ats(ii)%bonded(ll)%cant_loops_1order(:)
-           END DO
-           ii=symm%num_crits
-           CALL SORT_INT_MATRIX (numats,gg,shell%ats_ord,valores)
-        END IF
-        DEALLOCATE(valores)
-
      END IF
+     DEALLOCATE(valores)
 
-  END DO
+  END IF
+ 
+  IF (symm%num_crits>0) THEN !los ligados a bs
+     gg=0
+     DO ii=1,numats
+        IF (gg<shell%ats(ii)%bs%num) gg=shell%ats(ii)%bs%num
+     END DO
+     ALLOCATE(valores(numats,gg))
+     valores(:,:)=0
+     DO ii=1,numats
+        valores(ii,1:shell%ats(ii)%bs%num)=shell%ats(ii)%bs%lev_supsets(:)
+     END DO
+     CALL SORT_INT_MATRIX (numats,gg,shell%ats_ord,valores)
+     IF (symm%num_crits>0) THEN
+        valores(:,:)=0
+        DO ii=1,numats
+           valores(ii,1:shell%ats(ii)%bs%num)=shell%ats(ii)%bs%cant_loops_1order(:)
+        END DO
+        ii=symm%num_crits
+        CALL SORT_INT_MATRIX (numats,gg,shell%ats_ord,valores)
+     END IF
+     DEALLOCATE(valores)
+  END IF
  
   NULLIFY(bonded,at_aux)
  
@@ -932,41 +1003,56 @@ SUBROUTINE order_ats_w_23order(shell)
  
   TYPE(p_shell),TARGET,INTENT(INOUT)::shell
  
-  INTEGER::ii,gg,ll
+  INTEGER::ii,gg
   INTEGER::numats
   INTEGER,DIMENSION(:,:),ALLOCATABLE::valores
  
   numats=shell%nats
  
-  DO ll=1,2
-
-     IF (symm%num_crits>0) THEN
-        
-        gg=0
-        DO ii=1,numats
-           IF (gg<shell%ats(ii)%bonded(ll)%num) gg=shell%ats(ii)%bonded(ll)%num
-        END DO
-        ALLOCATE(valores(numats,gg))
-        valores(:,:)=0
-        
-        DO ii=1,numats
-           valores(ii,1:shell%ats(ii)%bonded(ll)%num)=shell%ats(ii)%bonded(ll)%cant_loops_2order(:)
-        END DO
-        
-        CALL SORT_INT_MATRIX (numats,gg,shell%ats_ord,valores)
-        
-        IF (symm%num_crits>0) THEN
-           DO ii=1,numats
-              valores(ii,1:shell%ats(ii)%bonded(ll)%num)=shell%ats(ii)%bonded(ll)%cant_loops_3order(:)
-           END DO
-           CALL SORT_INT_MATRIX (numats,gg,shell%ats_ord,valores)
-        END IF
+  gg=0
+  DO ii=1,numats
+     IF (gg<shell%ats(ii)%hbs%num) gg=shell%ats(ii)%hbs%num
+  END DO
+  ALLOCATE(valores(numats,gg))
+  valores(:,:)=0
+ 
+  DO ii=1,numats
+     valores(ii,1:shell%ats(ii)%hbs%num)=shell%ats(ii)%hbs%cant_loops_2order(:)
+  END DO
+ 
+  CALL SORT_INT_MATRIX (numats,gg,shell%ats_ord,valores)
+ 
+  IF (symm%num_crits>0) THEN
+     DO ii=1,numats
+        valores(ii,1:shell%ats(ii)%hbs%num)=shell%ats(ii)%hbs%cant_loops_3order(:)
+     END DO
+     CALL SORT_INT_MATRIX (numats,gg,shell%ats_ord,valores)
+  END IF
+ 
+  DEALLOCATE(valores)
+ 
+  IF (symm%num_crits>0) THEN
+     gg=0
+     DO ii=1,numats
+        IF (gg<shell%ats(ii)%bs%num) gg=shell%ats(ii)%bs%num
+     END DO
+     ALLOCATE(valores(numats,gg))
+     valores(:,:)=0
+ 
+     DO ii=1,numats
+        valores(ii,1:shell%ats(ii)%bs%num)=shell%ats(ii)%bs%cant_loops_2order(:)
+     END DO
+     CALL SORT_INT_MATRIX (numats,gg,shell%ats_ord,valores)
      
-        DEALLOCATE(valores)
-
+     IF (symm%num_crits>0) THEN
+        DO ii=1,numats
+           valores(ii,1:shell%ats(ii)%bs%num)=shell%ats(ii)%bs%cant_loops_3order(:)
+        END DO
+        CALL SORT_INT_MATRIX (numats,gg,shell%ats_ord,valores)
      END IF
  
-  END DO
+     DEALLOCATE(valores)
+  END IF
  
 END SUBROUTINE order_ats_w_23order
 
@@ -976,30 +1062,41 @@ SUBROUTINE order_ats_w_2order(shell)
  
   TYPE(p_shell),TARGET,INTENT(INOUT)::shell
  
-  INTEGER::ii,gg,ll
+  INTEGER::ii,gg
   INTEGER::numats
   INTEGER,DIMENSION(:,:),ALLOCATABLE::valores
  
   numats=shell%nats
  
-  DO ll=1,2
-     IF (symm%num_crits>0) THEN
-        gg=0
-        DO ii=1,numats
-           IF (gg<shell%ats(ii)%bonded(ll)%num) gg=shell%ats(ii)%bonded(ll)%num
-        END DO
-        ALLOCATE(valores(numats,gg))
-        valores(:,:)=0
-        
-        DO ii=1,numats
-           valores(ii,1:shell%ats(ii)%bonded(ll)%num)=shell%ats(ii)%bonded(ll)%cant_loops_2order(:)
-        END DO
-        
-        CALL SORT_INT_MATRIX (numats,gg,shell%ats_ord,valores)
-        
-        DEALLOCATE(valores)
-     END IF
+  gg=0
+  DO ii=1,numats
+     IF (gg<shell%ats(ii)%hbs%num) gg=shell%ats(ii)%hbs%num
   END DO
+  ALLOCATE(valores(numats,gg))
+  valores(:,:)=0
+ 
+  DO ii=1,numats
+     valores(ii,1:shell%ats(ii)%hbs%num)=shell%ats(ii)%hbs%cant_loops_2order(:)
+  END DO
+ 
+  CALL SORT_INT_MATRIX (numats,gg,shell%ats_ord,valores)
+ 
+  DEALLOCATE(valores)
+ 
+  IF (symm%num_crits>0) THEN
+     gg=0
+     DO ii=1,numats
+        IF (gg<shell%ats(ii)%bs%num) gg=shell%ats(ii)%bs%num
+     END DO
+     ALLOCATE(valores(numats,gg))
+     valores(:,:)=0
+ 
+     DO ii=1,numats
+        valores(ii,1:shell%ats(ii)%bs%num)=shell%ats(ii)%bs%cant_loops_2order(:)
+     END DO
+     CALL SORT_INT_MATRIX (numats,gg,shell%ats_ord,valores)
+     DEALLOCATE(valores)
+  END IF
  
 END SUBROUTINE order_ats_w_2order
 
