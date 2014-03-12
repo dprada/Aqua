@@ -2987,7 +2987,7 @@ SUBROUTINE SOLVING_LAST_SYMMETRIES_PERMUTING (shell1st,shell2nd,nnods,totntot)
      END DO
   END DO
 
-  
+
   IF (total_num_permutations>1) THEN
 
      ALLOCATE(dale(total_num_permutations,extra_dim))
@@ -3005,6 +3005,11 @@ SUBROUTINE SOLVING_LAST_SYMMETRIES_PERMUTING (shell1st,shell2nd,nnods,totntot)
               END DO
            END DO
         END DO
+     END DO
+
+     DO iii=1,total_num_permutations
+        PRINT*,dale(iii,:)
+        print*,'--'
      END DO
 
      DO iii=1,total_num_permutations
