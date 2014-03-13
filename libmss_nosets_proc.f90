@@ -1848,7 +1848,7 @@ SUBROUTINE build_mss(shell)
   nats = shell%nats
   nats2 = shell%nats2
   nnods = shell%nnods
- 
+
   ALLOCATE(oo(nats))
   ALLOCATE(mss_ind_ats(ntot),mss_ind_nods(ntot),mss_symm(ntot))
  
