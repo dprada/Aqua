@@ -46,6 +46,8 @@ TYPE p_shell
    INTEGER::num_permutations
    INTEGER,DIMENSION(:,:),ALLOCATABLE::permutations
 
+   LOGICAL::with_loops_in,with_loops_same,with_loops_ant,with_loops_post
+
    LOGICAL::unsolved_loops
    INTEGER::nnods_norepe,nnods_repe
    INTEGER,DIMENSION(:),ALLOCATABLE::nods_norepe,nods_repe,nods_cant_repe
@@ -134,7 +136,10 @@ SUBROUTINE SHELL_DOWN(shell)
      DEALLOCATE(shell%nods_repe)
      DEALLOCATE(shell%nods_cant_repe)
   END IF
-
+  shell%with_loops_in             =.FALSE.
+  shell%with_loops_same           =.FALSE.
+  shell%with_loops_post           =.FALSE.
+  shell%with_loops_ant            =.FALSE.
 
 END SUBROUTINE SHELL_DOWN
 
@@ -299,6 +304,7 @@ SUBROUTINE BUILD_LOOPS_IN(shell)
                     IF (jj==bonded%nods(kk)) THEN
                        bonded%loops_in(kk)=shell%nods_cant_repe(ii)
                        bonded%with_loops_in=.TRUE.
+                       shell%with_loops_in =.TRUE.
                     END IF
                  END DO
               END DO
@@ -608,7 +614,7 @@ SUBROUTINE BUILD_SHELL2ND (core)
   INTEGER::dim_privil,dim_repe,dim_carro1,dim_carro2
   INTEGER,DIMENSION(:),ALLOCATABLE::aux_ind_ats,aux_ind_nods,aux_ord,aux_symm
   INTEGER,DIMENSION(:),ALLOCATABLE::carro,carro_aux,cant_repe1,cant_repe2
- 
+  LOGICAL::interruptor
  
   !! Building the structure
  
@@ -662,6 +668,7 @@ SUBROUTINE BUILD_SHELL2ND (core)
                  IF (bonded%nods(jj)==gg) THEN
                     bonded%loops_same(jj)=cant_repe2(kk)
                     bonded%with_loops_same=.TRUE.
+                    shell%with_loops_same=.TRUE.
                  END IF
               END DO
            END DO
@@ -687,6 +694,7 @@ SUBROUTINE BUILD_SHELL2ND (core)
                  IF (bonded%nods(jj)==gg) THEN
                     bonded%loops_ant(jj)=cant_repe2(kk)
                     bonded%with_loops_ant=.TRUE.
+                    shell%with_loops_ant=.TRUE.
                  END IF
               END DO
            END DO
@@ -705,6 +713,7 @@ SUBROUTINE BUILD_SHELL2ND (core)
                  IF (bonded%nods(jj)==gg) THEN
                     bonded%loops_post(jj)=cant_repe1(kk)
                     bonded%with_loops_post=.TRUE.
+                    shell%with_loops_post=.TRUE.
                  END IF
               END DO
            END DO
@@ -714,151 +723,176 @@ SUBROUTINE BUILD_SHELL2ND (core)
 
   DEALLOCATE(carro,cant_repe1,cant_repe2)
  
-!  !! removing symm in 2ndsh
-! 
-!  dim_privil=2
-!  ALLOCATE(privilegios(2))
-!  privilegios(2)=core
-! 
-!  DO iii=1,nnods
-! 
-!     shell=>shell2nd(iii)
-!     core2=shell%ind
-! 
-!     !list of privilegios
-!     privilegios(1)=core2 
-! 
-!     ! order bonds 2sh
-!     DO ii=1,shell%nats
-!        at=>shell%ats(ii)
-!        DO ll=1,2
-!           IF (at%bonded(ll)%symm%num_crits>0) THEN
-!              bonded=>at%bonded(ll)
-!              CALL upload_symm(bonded%symm)
-!              CALL order_bonded(dim_privil,privilegios,bonded)
-!              IF (symm%num_crits>0) THEN
-!                 CALL order_bonded_w_23order(bonded)
-!              END IF
-!              IF (symm%num_crits>0) THEN 
-!                 !! quito falsas simetrias porque me quede sin criterios para los nodos que aparecen una sola vez
-!                 CALL quito_falsos_bonded_symm(bonded)
-!              END IF
-!              CALL download_symm(bonded%symm)
-!           END IF
-!        END DO
-!     END DO
-! 
-!     ! order ats 2sh
-!     IF (shell%symm%num_crits>0) THEN
-!        CALL upload_symm(shell%symm)
-!        CALL remove_triv_symm_ats(shell) ! el que no tiene nada no tiene ni privilegios
-!        IF (symm%num_crits>0) THEN
-!           CALL order_ats(dim_privil,privilegios,shell)
-!        END IF
-!        IF (symm%num_crits>0) THEN
-!           CALL order_ats_w_23order(shell)
-!        END IF
-!        IF (symm%num_crits>0) THEN
-!           CALL quito_falsos_ats_symm(shell)
-!        END IF
-!        CALL download_symm(shell%symm)
-!     END IF
-! 
-!  END DO
-! 
-!  !! removing symm in 1stsh
-! 
-!  DEALLOCATE(privilegios)
-!  dim_privil=1
-!  ALLOCATE(privilegios(1))
-!  privilegios(1)=core
-! 
-!  ! order bonds 1sh
-!  DO ii=1,shell1st%nats
-!     at=>shell1st%ats(ii)
-!     DO ll=1,2
-!        IF (at%bonded(ll)%symm%num_crits>0) THEN
-!           bonded=>at%bonded(ll)
-!           CALL upload_symm(bonded%symm)
-!           CALL order_bonded(dim_privil,privilegios,bonded)
-!           IF (symm%num_crits>0) THEN
-!              CALL order_bonded_w_2order(bonded)
-!           END IF
-!           IF (symm%num_crits>0) THEN
-!              CALL order_bonded_w_next_shells(bonded,shell2nd,nnods)
-!           END IF
-!           IF (symm%num_crits>0) THEN
-!              CALL quito_falsos_bonded_symm2(bonded,shell2nd,nnods)
-!           END IF
-!           CALL download_symm(bonded%symm)
-!        END IF
-!     END DO
-!  END DO
-!  
-!  ! order ats 1sh
-!  IF (shell1st%symm%num_crits>0) THEN
-!     CALL upload_symm(shell1st%symm)
-!     CALL remove_triv_symm_ats(shell1st) ! el que no tiene nada no tiene ni privilegios
-!     IF (symm%num_crits>0) THEN 
-!        CALL order_ats(dim_privil,privilegios,shell1st)
-!        IF (symm%num_crits>0) THEN 
-!           CALL order_ats_w_2order(shell1st)
-!        END IF
-!        IF (symm%num_crits>0) THEN 
-!           CALL order_ats_w_next_shells(shell1st,shell2nd,nnods)
-!        END IF
-!        IF (symm%num_crits>0) THEN
-!           CALL quito_falsos_ats_symm2(shell1st,shell2nd,nnods)
-!        END IF
-!     END IF
-!     CALL download_symm(shell1st%symm)
-!  END IF
-! 
-!  !! Building the msss
-!  ! Poner aqui un if
-!  CALL solving_last_symmetries_permuting (shell1st,shell2nd,nnods,totntot)
-! 
-! 
-!  IF (ALLOCATED(mss_ind_ats))   DEALLOCATE(mss_ind_ats)
-!  IF (ALLOCATED(mss_ind_nods))  DEALLOCATE(mss_ind_nods)
-!  IF (ALLOCATED(mss_symm))      DEALLOCATE(mss_symm)
-! 
-!  ALLOCATE(mss_ind_ats(totntot),mss_ind_nods(totntot),mss_symm(totntot))
-! 
-!  gg=0
-!  ntot1sh=shell1st%ntot
-!  nnods1sh=shell1st%nnods
-!  ALLOCATE(aux_ind_ats(ntot1sh),aux_ind_nods(ntot1sh),aux_symm(ntot1sh),aux_ord(nnods1sh))
-!  CALL build_mss_wout_word(shell1st,aux_ind_ats,aux_ind_nods,aux_symm,aux_ord)
-!  ggg=gg+1
-!  gg=gg+ntot1sh
-!  mss_ind_ats(ggg:gg)=aux_ind_ats(:)
-!  mss_ind_nods(ggg:gg)=aux_ind_nods(:)
-!  mss_symm(ggg:gg)=aux_symm(:)
-!  DEALLOCATE(aux_ind_ats,aux_ind_nods,aux_symm)
-! 
-!  DO ii=1,nnods1sh
-!     jj=aux_ord(ii)
-!     shell=>shell2nd(jj)
-!     ntot2sh =shell%ntot
-!     nnods2sh=shell%nnods
-!     ALLOCATE(aux_ind_ats(ntot2sh),aux_ind_nods(ntot2sh),aux_symm(ntot2sh))
-!     CALL build_mss_wout(shell,aux_ind_ats,aux_ind_nods,aux_symm)
-!     ggg=gg+1
-!     gg=gg+ntot2sh
-!     mss_ind_ats(ggg:gg)=aux_ind_ats(:)
-!     mss_ind_nods(ggg:gg)=aux_ind_nods(:)
-!     mss_symm(ggg:gg)=aux_symm(:)
-!     DEALLOCATE(aux_ind_ats,aux_ind_nods,aux_symm)
-!  END DO
-! 
-!  CALL remato_mss2sh()
-! 
-!  DEALLOCATE(aux_ord,shell2nd,privilegios)
-!  NULLIFY(at,shell,bonded)
+  !! removing symm in 2ndsh
+ 
+  dim_privil=2
+  ALLOCATE(privilegios(2))
+  privilegios(2)=core
+ 
+  DO iii=1,nnods
+ 
+     shell=>shell2nd(iii)
+     core2=shell%ind
+ 
+     !list of privilegios
+     privilegios(1)=core2 
+ 
+     ! order bonds 2sh
+     DO ii=1,shell%nats
+        at=>shell%ats(ii)
+        DO ll=1,2
+           IF (at%bonded(ll)%symm%num_crits>0) THEN
+              bonded=>at%bonded(ll)
+              CALL upload_symm(bonded%symm)
+              CALL order_bonded(dim_privil,privilegios,bonded)
+              IF ((symm%num_crits>0).AND.(bonded%with_loops_same.EQV..TRUE.)) CALL order_bonded_w_loops_same(bonded)
+              IF ((symm%num_crits>0).AND.(bonded%with_loops_ant.EQV..TRUE.)) CALL order_bonded_w_loops_ant(bonded)
+              IF (symm%num_crits>0) CALL quito_falsos_bonded_symm(bonded)
+              CALL download_symm(bonded%symm)
+           END IF
+        END DO
+     END DO
+
+     ! order ats 2sh
+     IF (shell%symm%num_crits>0) THEN
+        CALL upload_symm(shell%symm)
+        CALL remove_triv_symm_ats(shell) ! el que no tiene nada no tiene ni privilegios
+        IF (symm%num_crits>0) CALL order_ats(dim_privil,privilegios,shell)
+        IF ((symm%num_crits>0).AND.(shell%with_loops_same.EQV..TRUE.)) CALL order_ats_w_loops_same(shell)
+        IF ((symm%num_crits>0).AND.(shell%with_loops_ant.EQV..TRUE.)) CALL order_ats_w_loops_ant(shell)
+        IF (symm%num_crits>0) CALL quito_falsos_ats_symm(shell)
+        CALL download_symm(shell%symm)
+     END IF
+
+  END DO
+ 
+  !! removing symm in 1stsh
+ 
+  DEALLOCATE(privilegios)
+  dim_privil=1
+  ALLOCATE(privilegios(1))
+  privilegios(1)=core
+ 
+  ! order bonds 1sh
+  DO ii=1,shell1st%nats
+     at=>shell1st%ats(ii)
+     DO ll=1,2
+        IF (at%bonded(ll)%symm%num_crits>0) THEN
+           bonded=>at%bonded(ll)
+           CALL upload_symm(bonded%symm)
+           CALL order_bonded(dim_privil,privilegios,bonded)
+           IF ((symm%num_crits>0).AND.(bonded%with_loops_post.EQV..TRUE.)) CALL order_bonded_w_loops_post(bonded)
+           IF (symm%num_crits>0) CALL order_bonded_w_next_shells(bonded,shell2nd,nnods)
+           IF (symm%num_crits>0) CALL quito_falsos_bonded_symm2(bonded,shell2nd,nnods)
+           CALL download_symm(bonded%symm)
+        END IF
+     END DO
+  END DO
+  
+  ! order ats 1sh
+  IF (shell1st%symm%num_crits>0) THEN
+     CALL upload_symm(shell1st%symm)
+     CALL remove_triv_symm_ats(shell1st)
+     IF (symm%num_crits>0) CALL order_ats(dim_privil,privilegios,shell1st)
+     IF ((symm%num_crits>0).AND.(shell1st%with_loops_post.EQV..TRUE.)) CALL order_ats_w_loops_post(shell1st)
+     IF (symm%num_crits>0) CALL order_ats_w_next_shells(shell1st,shell2nd,nnods)
+     IF (symm%num_crits>0) CALL quito_falsos_ats_symm2(shell1st,shell2nd,nnods)
+     CALL download_symm(shell1st%symm)
+  END IF
+ 
+  !! SOLVING PERMUTATIONS
+  
+  interruptor=.FALSE.
+  IF (shell1st%unsolved_loops.EQV..TRUE.) THEN
+     interruptor=.TRUE.
+  ELSE
+     DO ii=1,shell1st%nats
+        IF (interruptor.EQV..FALSE.) THEN
+           DO ll=1,2
+              IF (shell1st%ats(ii)%bonded(ll)%unsolved_loops.EQV..TRUE.) THEN
+                 interruptor=.TRUE.
+                 EXIT
+              END IF
+           END DO
+        END IF
+     END DO
+  END IF
+  IF (interruptor.EQV..FALSE.) THEN
+     DO ii=1,nnods
+        IF (interruptor.EQV..FALSE.) THEN
+           shell=>shell2nd(ii)
+           IF (shell1st%unsolved_loops.EQV..TRUE.) THEN
+              interruptor=.TRUE.
+              EXIT
+           ELSE
+              DO jj=1,shell%nats
+                 IF (interruptor.EQV..FALSE.) THEN
+                    DO ll=1,2
+                       IF (shell%ats(jj)%bonded(ll)%unsolved_loops.EQV..TRUE.) THEN
+                          interruptor=.TRUE.
+                          EXIT
+                       END IF
+                    END DO
+                 END IF
+              END DO
+           END IF
+        END IF
+     END DO
+  END IF
+
+  IF (interruptor.EQV..TRUE.) CALL solving_last_symmetries_permuting (shell1st,shell2nd,nnods,totntot)
+
+
+  !! BUILDING MSS
+ 
+!  CALL build_mss_ats(shell)
+!  CALL build_mss_nods()
+!  CALL build_mss_symm(shell)
+!  CALL build_mss()
+!  CALL build_trans_mss_ats()
+!  CALL build_trans_mss_nods()
+
+  ALLOCATE(aux_mss_ind_ats(totntot),aux_mss_symm(totntot),aux_mss_pattern(totntot))
+  gg=0
+  ntot1sh=shell1st%ntot
+  nnods1sh=shell1st%nnods
+  CALL build_mss_ats(shell1st)
+  CALL build_mss_symm(shell1st)
+  ggg=gg+1
+  gg=gg+ntot1sh
+  aux_mss_ind_ats(ggg:gg)      =mss_ind_ats(:)
+  aux_mss_pattern(ggg:gg)      =mss_pattern(:)
+  aux_mss_symm(ggg:gg)         =mss_symm(:)
+  aux_ord
+
+  DO ii=1,nnods1sh
+     jj=aux_ord(ii)
+     shell=>shell2nd(jj)
+     ntot2sh =shell%ntot
+     nnods2sh=shell%nnods
+     CALL build_mss_ats(shell)
+     CALL build_mss_symm(shell)
+     ggg=gg+1
+     gg=gg+ntot2sh
+     aux_mss_ind_ats(ggg:gg)      =mss_ind_ats(:)
+     aux_mss_pattern(ggg:gg)      =mss_pattern(:)
+     aux_mss_symm(ggg:gg)         =mss_symm(:)
+  END DO
+
+  DEALLOCATE(mss_ind_ats,mss_symm,mss_pattern)
+  ALLOCATE(mss_ind_ats(totntot),mss_symm(totntot),mss_pattern(totntot))
+  mss_ind_ats = aux_mss_ind_ats
+  mss_symm    = aux_mss_symm
+  mss_pattern = aux_mss_pattern
+  CALL build_mss()
+  CALL build_trans_mss_ats()
+  CALL build_trans_mss_nods()
+ 
+  DEALLOCATE(aux_ord,shell2nd,privilegios)
+  NULLIFY(at,shell,bonded)
  
 END SUBROUTINE BUILD_SHELL2ND
-
+!############################
 
 
 !!!###################################################################################################
@@ -906,6 +940,478 @@ SUBROUTINE ORDER_BONDED(dim_privil,privilegios,bonded)
   END IF
  
 END SUBROUTINE ORDER_BONDED
+!############################
+
+SUBROUTINE ORDER_BONDED_W_LOOPS_SAME (bonded)
+
+  TYPE(p_bonded),INTENT(INOUT)::bonded
+  
+  INTEGER::numb
+  INTEGER,DIMENSION(:,:),ALLOCATABLE::valores
+
+  numb=bonded%num
+  
+  ALLOCATE(valores(numb,2))
+  valores(:,1)=bonded%loops_same(:)
+  
+  CALL SORT_INT_MATRIX (numb,1,bonded%order,valores)
+  
+  DEALLOCATE(valores)
+
+END SUBROUTINE ORDER_BONDED_W_LOOPS_SAME
+!############################
+
+SUBROUTINE ORDER_BONDED_W_LOOPS_ANT (bonded)
+
+  TYPE(p_bonded),INTENT(INOUT)::bonded
+  
+  INTEGER::numb
+  INTEGER,DIMENSION(:,:),ALLOCATABLE::valores
+
+  numb=bonded%num
+  
+  ALLOCATE(valores(numb,2))
+  valores(:,1)=bonded%loops_ant(:)
+  
+  CALL SORT_INT_MATRIX (numb,1,bonded%order,valores)
+  
+  DEALLOCATE(valores)
+
+END SUBROUTINE ORDER_BONDED_W_LOOPS_ANT
+!############################
+
+SUBROUTINE ORDER_BONDED_W_LOOPS_POST (bonded)
+
+  TYPE(p_bonded),INTENT(INOUT)::bonded
+  
+  INTEGER::numb
+  INTEGER,DIMENSION(:,:),ALLOCATABLE::valores
+
+  numb=bonded%num
+  
+  ALLOCATE(valores(numb,2))
+  valores(:,1)=bonded%loops_post(:)
+  
+  CALL SORT_INT_MATRIX (numb,1,bonded%order,valores)
+  
+  DEALLOCATE(valores)
+
+END SUBROUTINE ORDER_BONDED_W_LOOPS_POST
+!############################
+
+SUBROUTINE ORDER_BONDED_W_NEXT_SHELLS(bonded,shell2nd,nnods)
+
+  IMPLICIT NONE
+ 
+  INTEGER,INTENT(IN)::nnods
+  TYPE(p_bonded),INTENT(INOUT)::bonded
+  TYPE(p_shell),DIMENSION(nnods),TARGET,INTENT(IN)::shell2nd
+ 
+  INTEGER::numb,dim_matrix
+  INTEGER::ii,jj,gg,mm,kk,aa,qq,aaa,nn
+  INTEGER,DIMENSION(:,:),ALLOCATABLE::valores
+  TYPE(p_shell),POINTER::shell
+ 
+  dim_matrix=0
+  numb=bonded%num
+ 
+  gg=0
+  DO ii=1,symm%num_crits
+     gg=gg+1
+     DO jj=1,symm%crit(gg)
+        gg=gg+1
+        kk=bonded%order(symm%crit(gg))
+        mm=bonded%aux2sh(kk)
+        IF (dim_matrix<shell2nd(mm)%nats2) dim_matrix=shell2nd(mm)%nats2
+     END DO
+  END DO
+ 
+  ALLOCATE(valores(numb,dim_matrix))
+  valores(:,:)=0
+ 
+  gg=0
+  DO ii=1,symm%num_crits
+     gg=gg+1
+     DO jj=1,symm%crit(gg)
+        gg=gg+1
+        kk=bonded%order(symm%crit(gg))
+        mm=bonded%aux2sh(kk)
+        shell=>shell2nd(mm)
+        aa=0
+        DO nn=1,shell%nats
+           qq=shell%order(nn)
+           DO ll=1,2
+              aa=aa+1
+              valores(kk,aa)=shell%ats(qq)%bonded(ll)%num
+           END DO
+        END DO
+     END DO
+  END DO
+ 
+  CALL SORT_INT_MATRIX (numb,dim_matrix,bonded%order,valores)
+  DEALLOCATE(valores)
+
+ 
+  IF (symm%num_crits>0) THEN
+ 
+     dim_matrix=0
+     
+     gg=0
+     DO ii=1,symm%num_crits
+        gg=gg+1
+        DO jj=1,symm%crit(gg)
+           gg=gg+1
+           kk=bonded%order(symm%crit(gg))
+           mm=bonded%aux2sh(kk)
+           IF (dim_matrix<shell2nd(mm)%nnods) dim_matrix=shell2nd(mm)%nnods
+        END DO
+     END DO
+     
+     IF (dim_matrix>0) THEN
+ 
+        ALLOCATE(valores(numb,dim_matrix))
+        valores(:,:)=0
+ 
+        gg=0
+        DO ii=1,symm%num_crits
+           gg=gg+1
+           DO jj=1,symm%crit(gg)
+              gg=gg+1
+              kk=bonded%order(symm%crit(gg))
+              mm=bonded%aux2sh(kk)
+              shell=>shell2nd(mm)
+              aa=0
+              DO nn=1,shell%nats
+                 qq=shell%order(nn)
+                 DO ll=1,2
+                    bonded2=>shell%ats(qq)%bonded(ll)
+                    num_aux=bonded2%num
+                    aaa=aa+1
+                    aa=aa+num_aux
+                    ALLOCATE(val_aux(num_aux))
+                    CALL ordered_version(bonded2%order,bonded2%lev_supsets,val_aux,num_aux)
+                    valores(kk,aaa:aa)=val_aux(:)
+                    DEALLOCATE(val_aux)
+                 END DO
+              END DO
+           END DO
+        END DO
+ 
+        CALL SORT_INT_MATRIX (numb,dim_matrix,bonded%order,valores)
+        DEALLOCATE(valores)
+ 
+     END IF
+  END IF
+ 
+ 
+  IF (symm%num_crits>0) THEN
+ 
+     dim_matrix=0
+     numb=bonded%num
+     
+     gg=0
+     DO ii=1,symm%num_crits
+        gg=gg+1
+        DO jj=1,symm%crit(gg)
+           gg=gg+1
+           kk=bonded%order(symm%crit(gg))
+           mm=bonded%aux2sh(kk)
+           IF (shell2nd(mm)%with_loops_in.EQV..TRUE.) THEN
+              IF (dim_matrix<shell2nd(mm)%nnods) dim_matrix=shell2nd(mm)%nnods
+           END IF
+        END DO
+     END DO
+     
+     IF (dim_matrix>0) THEN
+ 
+        ALLOCATE(valores(numb,dim_matrix))
+        valores(:,:)=0
+ 
+        gg=0
+        DO ii=1,symm%num_crits
+           gg=gg+1
+           DO jj=1,symm%crit(gg)
+              gg=gg+1
+              kk=bonded%order(symm%crit(gg))
+              mm=bonded%aux2sh(kk)
+              shell=>shell2nd(mm)
+              IF (shell%with_loops_in.EQV..TRUE.) THEN
+                 aa=0
+                 DO nn=1,shell%nats
+                    qq=shell%order(nn)
+                    DO ll=1,2
+                       bonded2=>shell%ats(qq)%bonded(ll)
+                       num_aux=bonded2%num
+                       aaa=aa+1
+                       aa=aa+num_aux
+                       ALLOCATE(val_aux(num_aux))
+                       CALL ordered_version(bonded2%order,bonded2%loops_in,val_aux,num_aux)
+                       valores(kk,aaa:aa)=val_aux(:)
+                       DEALLOCATE(val_aux)
+                    END DO
+                 END DO
+              END IF
+           END DO
+        END DO
+ 
+        CALL SORT_INT_MATRIX (numb,dim_matrix,bonded%order,valores)
+        DEALLOCATE(valores)
+
+     END IF
+  END IF
+ 
+  IF (symm%num_crits>0) THEN
+ 
+     dim_matrix=0
+     numb=bonded%num
+     
+     gg=0
+     DO ii=1,symm%num_crits
+        gg=gg+1
+        DO jj=1,symm%crit(gg)
+           gg=gg+1
+           kk=bonded%order(symm%crit(gg))
+           mm=bonded%aux2sh(kk)
+           IF (shell2nd(mm)%with_loops_same.EQV..TRUE.) THEN
+              IF (dim_matrix<shell2nd(mm)%nnods) dim_matrix=shell2nd(mm)%nnods
+           END IF
+        END DO
+     END DO
+     
+     IF (dim_matrix>0) THEN
+ 
+        ALLOCATE(valores(numb,dim_matrix))
+        valores(:,:)=0
+ 
+        gg=0
+        DO ii=1,symm%num_crits
+           gg=gg+1
+           DO jj=1,symm%crit(gg)
+              gg=gg+1
+              kk=bonded%order(symm%crit(gg))
+              mm=bonded%aux2sh(kk)
+              shell=>shell2nd(mm)
+              IF (shell%with_loops_same.EQV..TRUE.) THEN
+                 aa=0
+                 DO nn=1,shell%nats
+                    qq=shell%order(nn)
+                    DO ll=1,2
+                       bonded2=>shell%ats(qq)%bonded(ll)
+                       num_aux=bonded2%num
+                       aaa=aa+1
+                       aa=aa+num_aux
+                       ALLOCATE(val_aux(num_aux))
+                       CALL ordered_version(bonded2%order,bonded2%loops_same,val_aux,num_aux)
+                       valores(kk,aaa:aa)=val_aux(:)
+                       DEALLOCATE(val_aux)
+                    END DO
+                 END DO
+              END IF
+           END DO
+        END DO
+ 
+        CALL SORT_INT_MATRIX (numb,dim_matrix,bonded%order,valores)
+        DEALLOCATE(valores)
+
+     END IF
+  END IF
+
+  IF (symm%num_crits>0) THEN
+ 
+     dim_matrix=0
+     numb=bonded%num
+     
+     gg=0
+     DO ii=1,symm%num_crits
+        gg=gg+1
+        DO jj=1,symm%crit(gg)
+           gg=gg+1
+           kk=bonded%order(symm%crit(gg))
+           mm=bonded%aux2sh(kk)
+           IF (shell2nd(mm)%with_loops_ant.EQV..TRUE.) THEN
+              IF (dim_matrix<shell2nd(mm)%nnods) dim_matrix=shell2nd(mm)%nnods
+           END IF
+        END DO
+     END DO
+     
+     IF (dim_matrix>0) THEN
+ 
+        ALLOCATE(valores(numb,dim_matrix))
+        valores(:,:)=0
+ 
+        gg=0
+        DO ii=1,symm%num_crits
+           gg=gg+1
+           DO jj=1,symm%crit(gg)
+              gg=gg+1
+              kk=bonded%order(symm%crit(gg))
+              mm=bonded%aux2sh(kk)
+              shell=>shell2nd(mm)
+              IF (shell%with_loops_ant.EQV..TRUE.) THEN
+                 aa=0
+                 DO nn=1,shell%nats
+                    qq=shell%order(nn)
+                    DO ll=1,2
+                       bonded2=>shell%ats(qq)%bonded(ll)
+                       num_aux=bonded2%num
+                       aaa=aa+1
+                       aa=aa+num_aux
+                       ALLOCATE(val_aux(num_aux))
+                       CALL ordered_version(bonded2%order,bonded2%loops_ant,val_aux,num_aux)
+                       valores(kk,aaa:aa)=val_aux(:)
+                       DEALLOCATE(val_aux)
+                    END DO
+                 END DO
+              END IF
+           END DO
+        END DO
+ 
+        CALL SORT_INT_MATRIX (numb,dim_matrix,bonded%order,valores)
+        DEALLOCATE(valores)
+
+     END IF
+  END IF
+
+END SUBROUTINE ORDER_BONDED_W_NEXT_SHELLS
+!############################
+
+SUBROUTINE QUITO_FALSOS_BONDED_SYMM(bonded)
+
+  IMPLICIT NONE
+  
+  TYPE(p_bonded),INTENT(INOUT)::bonded
+
+  INTEGER::ii,jj,gg,kk,ll
+  INTEGER::new_num_crits
+  INTEGER,DIMENSION(symm%length)::new_crit
+  LOGICAL::interruptor,interruptor2
+
+  new_num_crits=0
+  ll=0
+
+  interruptor2=.FALSE.
+  gg=0
+  DO ii=1,symm%num_crits
+     gg=gg+1
+     kk=symm%crit(gg+1)
+     interruptor=.TRUE.
+     IF (bonded%loops_same(kk)==0) THEN
+        IF (bonded%loops_ant(kk)==0) THEN
+           IF (bonded%loops_post(kk)==0) THEN
+              interruptor=.TRUE.
+           END IF
+        END IF
+     END IF
+     IF (interruptor.eqv..TRUE.) THEN
+        interruptor2=.TRUE.
+        gg=gg+symm%crit(gg)
+     ELSE
+        new_num_crits=new_num_crits+1
+        ll=ll+1
+        new_crit(ll)=symm%crit(gg)
+        DO jj=1,symm%crit(gg)
+           ll=ll+1
+           gg=gg+1
+           new_crit(ll)=symm%crit(gg)
+        END DO
+     END IF
+  END DO
+
+  IF (new_num_crits==0) THEN
+     symm%num_crits=0
+  ELSE
+     bonded%unsolved_loops=.TRUE.
+     IF (interruptor2.eqv..TRUE.) THEN
+        symm%length=ll
+        symm%num_crits=new_num_crits
+        DEALLOCATE(symm%crit)
+        ALLOCATE(symm%crit(ll))
+        symm%crit(:)=new_crit(1:ll)
+     END IF
+  END IF
+
+END SUBROUTINE QUITO_FALSOS_BONDED_SYMM
+!############################
+
+SUBROUTINE QUITO_FALSOS_BONDED_SYMM2(bonded,shell2nd,nnods)
+
+  INTEGER,INTENT(IN)::nnods
+  TYPE(p_bonded),INTENT(INOUT)::bonded
+  TYPE(p_shell),DIMENSION(nnods),TARGET,INTENT(IN)::shell2nd
+
+  TYPE(p_bonded),POINTER::bonded2
+  INTEGER::ii,jj,gg,kk,ll,mm,pp,ggg,nn
+  INTEGER::new_num_crits
+  INTEGER,DIMENSION(symm%length)::new_crit
+  LOGICAL::interruptor,interruptor2,interruptor3
+
+  new_num_crits=0
+  ll=0
+  interruptor2=.FALSE.
+  gg=0
+  DO ii=1,symm%num_crits
+     gg=gg+1
+     kk=symm%crit(gg+1)
+     interruptor=.FALSE.
+     IF (bonded%loops_same(kk)==0) THEN
+        IF (bonded%loops_post(kk)==0) THEN
+           IF (bonded%loops_ant(kk)==0) THEN
+              interruptor=.TRUE.
+           END IF
+        END IF
+     END IF
+     IF (interruptor.eqv..TRUE.) THEN
+        interruptor3=.FALSE.
+        ggg=gg
+        DO jj=1,symm%crit(gg)
+           ggg=ggg+1
+           kk=bonded%order(symm%crit(ggg))
+           mm=bonded%aux2sh(kk)
+           interruptor3=interruptor3.OR.shell2nd(mm)%unsolved_loops
+           DO pp=1,shell2nd(mm)%nats
+              DO nn=1,2
+                 interruptor3=interruptor3.OR.shell2nd(mm)%ats(pp)%bonded(nn)%with_loops_same
+                 interruptor3=interruptor3.OR.shell2nd(mm)%ats(pp)%bonded(nn)%with_loops_ant
+              END DO
+           END DO
+        END DO
+        IF (interruptor3.eqv..TRUE.) THEN
+           interruptor=.FALSE.
+        END IF
+        IF (interruptor.eqv..TRUE.) THEN
+           interruptor2=.TRUE.
+           gg=gg+symm%crit(gg)
+        ELSE
+           new_num_crits=new_num_crits+1
+           ll=ll+1
+           new_crit(ll)=symm%crit(gg)
+           DO jj=1,symm%crit(gg)
+              ll=ll+1
+              gg=gg+1
+              new_crit(ll)=symm%crit(gg)
+           END DO
+        END IF
+     END IF
+  END DO
+
+  IF (new_num_crits==0) THEN
+     symm%num_crits=0
+  ELSE
+     bonded%unsolved_loops=.TRUE.
+     IF (interruptor2.eqv..TRUE.) THEN
+        print*,'AQUIIIIIIIIIIIIIIIII 2'
+        symm%length=ll
+        symm%num_crits=new_num_crits
+        DEALLOCATE(symm%crit)
+        ALLOCATE(symm%crit(ll))
+        symm%crit(:)=new_crit(1:ll)
+     END IF
+  END IF
+
+  NULLIFY(bonded2)
+
+END SUBROUTINE QUITO_FALSOS_BONDED_SYMM2
+
 
 !!!###################################################################################################
 !!!####  ORDER ATS FUNCTIONS
@@ -1038,53 +1544,598 @@ SUBROUTINE ORDER_ATS(dim_privil,privilegios,shell)
      DEALLOCATE(valores)
 
   END IF
+
+  IF (symm%num_crits==0) THEN
+
+     DO ll=1,2
+        gg=0
+        DO ii=1,numats
+           IF (gg<shell%ats(ii)%bonded(ll)%num) gg=shell%ats(ii)%bonded(ll)%num
+        END DO
+        ALLOCATE(valores(numats,gg))
+        valores(:,:)=0
+        DO ii=1,numats
+           bonded=>shell%ats(ii)%bonded(ll)
+           num_aux=bonded%num
+           ALLOCATE(val_aux(num_aux))
+           CALL ordered_version(bonded%order,bonded%lev_supsets,val_aux,num_aux)
+           valores(ii,1:num_aux)=val_aux(:)
+           DEALLOCATE(val_aux)
+        END DO
+        CALL SORT_INT_MATRIX (numats,gg,shell%order,valores)
+        DEALLOCATE(valores)
+        IF (symm%num_crits==0) EXIT
+     END DO
+  END IF
+
+  IF (symm%num_crits==0) THEN
+     IF (shell%with_loops_in.eqv..TRUE.) THEN
+
+        DO ll=1,2
+
+           gg=0
+           DO ii=1,numats
+              IF (gg<shell%ats(ii)%bonded(ll)%num) gg=shell%ats(ii)%bonded(ll)%num
+           END DO
+           ALLOCATE(valores(numats,gg))
+           valores(:,:)=0
+           DO ii=1,numats
+              bonded=>shell%ats(ii)%bonded(ll)
+              num_aux=bonded%num
+              ALLOCATE(val_aux(num_aux))
+              CALL ordered_version(bonded%order,bonded%loops_in,val_aux,num_aux)
+              valores(ii,1:num_aux)=val_aux(:)
+              DEALLOCATE(val_aux)
+           END DO
+           CALL SORT_INT_MATRIX (numats,gg,shell%order,valores)
+           DEALLOCATE(valores)
+           IF (symm%num_crits==0) EXIT
+
+        END DO
+
+     END IF
+  END IF
+
+  NULLIFY(bonded,at)
  
+END SUBROUTINE ORDER_ATS
+!############################
+
+SUBROUTINE ORDER_ATS_W_LOOPS_SAME(shell)
+
+  IMPLICIT NONE
+ 
+  TYPE(p_shell),TARGET,INTENT(INOUT)::shell
+ 
+  INTEGER::ii,gg,ll
+  INTEGER::numats,num_aux
+  INTEGER,DIMENSION(:,:),ALLOCATABLE::valores
+  TYPE(p_bonded),POINTER::bonded
+
+  numats=shell%nats
+  
   DO ll=1,2
-
-     IF (symm%num_crits==0) EXIT
-
+     
      gg=0
      DO ii=1,numats
         IF (gg<shell%ats(ii)%bonded(ll)%num) gg=shell%ats(ii)%bonded(ll)%num
      END DO
      ALLOCATE(valores(numats,gg))
      valores(:,:)=0
+     
      DO ii=1,numats
         bonded=>shell%ats(ii)%bonded(ll)
         num_aux=bonded%num
         ALLOCATE(val_aux(num_aux))
-        CALL ordered_version(bonded%order,bonded%lev_supsets,val_aux,num_aux)
+        CALL ordered_version(bonded%order,bonded%loops_same,val_aux,num_aux)
         valores(ii,1:num_aux)=val_aux(:)
         DEALLOCATE(val_aux)
      END DO
+     
      CALL SORT_INT_MATRIX (numats,gg,shell%order,valores)
-
      DEALLOCATE(valores)
-
      IF (symm%num_crits==0) EXIT
 
+  END DO
+  
+  NULLIFY(bonded)
+
+END SUBROUTINE ORDER_ATS_W_LOOPS_SAME
+!############################
+
+SUBROUTINE ORDER_ATS_W_LOOPS_ANT(shell)
+
+  IMPLICIT NONE
+ 
+  TYPE(p_shell),TARGET,INTENT(INOUT)::shell
+ 
+  INTEGER::ii,gg,ll
+  INTEGER::numats,num_aux
+  INTEGER,DIMENSION(:,:),ALLOCATABLE::valores
+  TYPE(p_bonded),POINTER::bonded
+
+  numats=shell%nats
+  
+  DO ll=1,2
+     
+     gg=0
+     DO ii=1,numats
+        IF (gg<shell%ats(ii)%bonded(ll)%num) gg=shell%ats(ii)%bonded(ll)%num
+     END DO
      ALLOCATE(valores(numats,gg))
      valores(:,:)=0
-
+     
      DO ii=1,numats
         bonded=>shell%ats(ii)%bonded(ll)
         num_aux=bonded%num
         ALLOCATE(val_aux(num_aux))
-        CALL ordered_version(bonded%order,bonded%loops_in,val_aux,num_aux)
+        CALL ordered_version(bonded%order,bonded%loops_ant,val_aux,num_aux)
         valores(ii,1:num_aux)=val_aux(:)
         DEALLOCATE(val_aux)
      END DO
-
+     
      CALL SORT_INT_MATRIX (numats,gg,shell%order,valores)
-
      DEALLOCATE(valores)
-
+     IF (symm%num_crits==0) EXIT
+     
   END DO
 
-  NULLIFY(bonded,at)
- 
-END SUBROUTINE ORDER_ATS
+  NULLIFY(bonded)
 
+END SUBROUTINE ORDER_ATS_W_LOOPS_ANT
+!############################
+
+SUBROUTINE ORDER_ATS_W_LOOPS_POST(shell)
+
+  IMPLICIT NONE
+ 
+  TYPE(p_shell),TARGET,INTENT(INOUT)::shell
+ 
+  INTEGER::ii,gg,ll
+  INTEGER::numats,num_aux
+  INTEGER,DIMENSION(:,:),ALLOCATABLE::valores
+  TYPE(p_bonded),POINTER::bonded
+
+  numats=shell%nats
+  
+  DO ll=1,2
+     
+     gg=0
+     DO ii=1,numats
+        IF (gg<shell%ats(ii)%bonded(ll)%num) gg=shell%ats(ii)%bonded(ll)%num
+     END DO
+     ALLOCATE(valores(numats,gg))
+     valores(:,:)=0
+     
+     DO ii=1,numats
+        bonded=>shell%ats(ii)%bonded(ll)
+        num_aux=bonded%num
+        ALLOCATE(val_aux(num_aux))
+        CALL ordered_version(bonded%order,bonded%loops_post,val_aux,num_aux)
+        valores(ii,1:num_aux)=val_aux(:)
+        DEALLOCATE(val_aux)
+     END DO
+     
+     CALL SORT_INT_MATRIX (numats,gg,shell%order,valores)
+     DEALLOCATE(valores)
+     IF (symm%num_crits==0) EXIT
+     
+  END DO
+  
+  NULLIFY(bonded)
+
+END SUBROUTINE ORDER_ATS_W_LOOPS_POST
+!############################
+
+SUBROUTINE ORDER_ATS_W_NEXT_SHELLS(shell1st,shell2nd,nnods)
+ 
+  IMPLICIT NONE
+ 
+  INTEGER,INTENT(IN)::nnods
+  TYPE(p_shell),TARGET,INTENT(INOUT)::shell1st
+  TYPE(p_shell),DIMENSION(nnods),TARGET,INTENT(IN)::shell2nd
+ 
+  ! tienen igual: privilegios, num hbs y num bs, y los mismos bonded en hbs y bs en su shell
+  ! falta: comparar lo que sucede en las siguientes shell
+ 
+  INTEGER::numats
+  INTEGER::ii,jj,kk,gg,ll,mm,nn,qq,pp,lll,aa,aaa,dim_matrix
+  INTEGER,DIMENSION(:),ALLOCATABLE::aux_ord
+  INTEGER,DIMENSION(:,:),ALLOCATABLE::valores
+  TYPE(p_at),POINTER::at
+  TYPE(p_shell),POINTER::shell
+
+  dim_matrix=0
+  numats=shell1st%nats
+   
+  ALLOCATE(aux_ord(numats))
+  aux_ord=shell1st%order(:)
+ 
+  gg=0
+  DO ii=1,symm%num_crits
+     gg=gg+1
+     DO jj=1,symm%crit(gg)
+        gg=gg+1
+        kk=aux_ord(symm%crit(gg))
+        at=>shell1st%ats(kk)
+        aa=0
+        DO ll=1,2
+           DO qq=1,at%bonded(ll)%num
+              mm=at%bonded(ll)%aux2sh(qq)
+              aa=aa+shell2nd(mm)%nats2
+           END DO
+        END DO
+        IF (dim_matrix<aa) dim_matrix=aa
+     END DO
+  END DO
+ 
+  ALLOCATE(valores(numats,dim_matrix))
+  valores(:,:)=0
+ 
+  gg=0
+  DO ii=1,symm%num_crits
+     gg=gg+1
+     DO jj=1,symm%crit(gg)
+        gg=gg+1
+        kk=aux_ord(symm%crit(gg))
+        at=>shell1st%ats(kk)
+        aa=0
+        DO ll=1,2
+           DO pp=1,at%bonded(ll)%num
+              mm=at%bonded(ll)%aux2sh(pp)
+              shell=>shell2nd(mm)
+              DO nn=1,shell%nats
+                 qq=shell%order(nn)
+                 DO lll=1,2
+                    aa=aa+1
+                    valores(kk,aa)=shell%ats(qq)%bonded(lll)%num
+                 END DO
+              END DO
+           END DO
+        END DO
+     END DO
+  END DO
+ 
+  CALL SORT_INT_MATRIX (numats,dim_matrix,shell1st%order,valores)
+  DEALLOCATE(valores)
+ 
+ 
+  IF (symm%num_crits>0) THEN
+ 
+     dim_matrix=0
+ 
+     gg=0
+     DO ii=1,symm%num_crits
+        gg=gg+1
+        DO jj=1,symm%crit(gg)
+           gg=gg+1
+           kk=aux_ord(symm%crit(gg))
+           at=>shell1st%ats(kk)
+           aa=0
+           DO ll=1,2
+              DO qq=1,at%bonded(ll)%num
+                 mm=at%bonded(ll)%aux2sh(qq)
+                 aa=aa+shell2nd(mm)%nnods
+              END DO
+           END DO
+           IF (dim_matrix<aa) dim_matrix=aa
+        END DO
+     END DO
+
+     ALLOCATE(valores(numats,dim_matrix))
+
+  END IF
+
+  IF (symm%num_crits>0) THEN
+     IF (dim_matrix>0) THEN
+
+        valores(:,:)=0
+        
+        gg=0
+        DO ii=1,symm%num_crits
+           gg=gg+1
+           DO jj=1,symm%crit(gg)
+              gg=gg+1
+              kk=aux_ord(symm%crit(gg))
+              at=>shell1st%ats(kk)
+              aa=0
+              DO ll=1,2
+                 DO pp=1,at%bonded(ll)%num
+                    mm=at%bonded(ll)%aux2sh(pp)
+                    shell=>shell2nd(mm)
+                    DO nn=1,shell%nats
+                       qq=shell%order(nn)
+                       DO lll=1,2
+                          bonded2=>shell%ats(ii)%bonded(lll)
+                          num_aux=bonded2%num
+                          ALLOCATE(val_aux(num_aux))
+                          CALL ordered_version(bonded2%order,bonded2%lev_supsets,val_aux,num_aux)
+                          aaa=aa+1
+                          aa=aa+num_aux
+                          valores(kk,aaa:aa)=val_aux(:)
+                          DEALLOCATE(val_aux)
+                       END DO
+                    END DO
+                 END DO
+              END DO
+           END DO
+        END DO
+ 
+        CALL SORT_INT_MATRIX (numats,dim_matrix,shell1st%order,valores)
+  
+     END IF
+   END IF
+ 
+  IF (symm%num_crits>0) THEN
+     IF (dim_matrix>0) THEN
+ 
+        valores(:,:)=0
+ 
+        gg=0
+        DO ii=1,symm%num_crits
+           gg=gg+1
+           DO jj=1,symm%crit(gg)
+              gg=gg+1
+              kk=aux_ord(symm%crit(gg))
+              at=>shell1st%ats(kk)
+              aa=0
+              DO ll=1,2
+                 DO pp=1,at%bonded(ll)%num
+                    mm=at%bonded(ll)%aux2sh(pp)
+                    shell=>shell2nd(mm)
+                    IF (shell%with_loops_in.EQV..TRUE.) THEN
+                       DO nn=1,shell%nats
+                          qq=shell%order(nn)
+                          DO lll=1,2
+                             bonded2=>shell%ats(ii)%bonded(lll)
+                             num_aux=bonded2%num
+                             ALLOCATE(val_aux(num_aux))
+                             CALL ordered_version(bonded2%order,bonded2%loops_in,val_aux,num_aux)
+                             aaa=aa+1
+                             aa=aa+num_aux
+                             valores(kk,aaa:aa)=val_aux(:)
+                             DEALLOCATE(val_aux)
+                          END DO
+                       END DO
+                    ELSE
+                       aa=aa+shell%nnods
+                    END IF
+                 END DO
+              END DO
+           END DO
+        END DO
+ 
+        CALL SORT_INT_MATRIX (numats,dim_matrix,shell1st%order,valores)
+ 
+     END IF
+  END IF
+ 
+  IF (symm%num_crits>0) THEN
+     IF (dim_matrix>0) THEN
+        
+        valores(:,:)=0
+        
+        gg=0
+        DO ii=1,symm%num_crits
+           gg=gg+1
+           DO jj=1,symm%crit(gg)
+              gg=gg+1
+              kk=aux_ord(symm%crit(gg))
+              at=>shell1st%ats(kk)
+              aa=0
+              DO ll=1,2
+                 DO pp=1,at%bonded(ll)%num
+                    mm=at%bonded(ll)%aux2sh(pp)
+                    shell=>shell2nd(mm)
+                    IF (shell%with_loops_same.EQV..TRUE.) THEN
+                       DO nn=1,shell%nats
+                          qq=shell%order(nn)
+                          DO lll=1,2
+                             bonded2=>shell%ats(ii)%bonded(lll)
+                             num_aux=bonded2%num
+                             ALLOCATE(val_aux(num_aux))
+                             CALL ordered_version(bonded2%order,bonded2%loops_same,val_aux,num_aux)
+                             aaa=aa+1
+                             aa=aa+num_aux
+                             valores(kk,aaa:aa)=val_aux(:)
+                             DEALLOCATE(val_aux)
+                          END DO
+                       END DO
+                    ELSE
+                       aa=aa+shell%nnods
+                    END IF
+                 END DO
+              END DO
+           END DO
+        END DO
+ 
+        CALL SORT_INT_MATRIX (numats,dim_matrix,shell1st%order,valores)
+ 
+     END IF
+  END IF
+ 
+  IF (symm%num_crits>0) THEN
+     IF (dim_matrix>0) THEN
+ 
+        valores(:,:)=0
+ 
+        gg=0
+        DO ii=1,symm%num_crits
+           gg=gg+1
+           DO jj=1,symm%crit(gg)
+              gg=gg+1
+              kk=aux_ord(symm%crit(gg))
+              at=>shell1st%ats(kk)
+              aa=0
+              DO ll=1,2
+                 DO pp=1,at%bonded(ll)%num
+                    mm=at%bonded(ll)%aux2sh(pp)
+                    shell=>shell2nd(mm)
+                    IF (shell%with_loops_ant.EQV..TRUE.) THEN
+                       DO nn=1,shell%nats
+                          qq=shell%order(nn)
+                          DO lll=1,2
+                             bonded2=>shell%ats(ii)%bonded(lll)
+                             num_aux=bonded2%num
+                             ALLOCATE(val_aux(num_aux))
+                             CALL ordered_version(bonded2%order,bonded2%loops_ant,val_aux,num_aux)
+                             aaa=aa+1
+                             aa=aa+num_aux
+                             valores(kk,aaa:aa)=val_aux(:)
+                             DEALLOCATE(val_aux)
+                          END DO
+                       END DO
+                    ELSE
+                       aa=aa+shell%nnods
+                    END IF
+                 END DO
+              END DO
+           END DO
+        END DO
+ 
+        CALL SORT_INT_MATRIX (numats,dim_matrix,shell1st%order,valores)
+ 
+     END IF
+  END IF
+
+  IF (ALLOCATED(valores)) DEALLOCATE(valores)
+
+  DEALLOCATE(aux_ord)
+  
+END SUBROUTINE ORDER_ATS_W_NEXT_SHELLS
+!############################
+
+SUBROUTINE QUITO_FALSOS_ATS_SYMM(shell)
+
+  IMPLICIT NONE
+  
+  TYPE(p_shell),INTENT(INOUT)::shell
+ 
+  INTEGER::ii,jj,gg,ggg,kk,ll,nn
+  INTEGER::new_num_crits
+  INTEGER,DIMENSION(symm%length)::new_crit
+  LOGICAL::interruptor,interruptor2
+
+  new_num_crits=0
+  ll=0
+
+  interruptor2=.FALSE.
+  gg=0
+  DO ii=1,symm%num_crits
+     gg=gg+1
+     interruptor=.FALSE.
+     ggg=gg
+     DO jj=1,symm%crit(gg)
+        ggg=ggg+1
+        kk=symm%crit(gg+1)
+        kk=shell%order(kk)
+        DO nn=1,2
+           interruptor=interruptor.OR.shell%ats(kk)%bonded(nn)%with_loops_same
+           interruptor=interruptor.OR.shell%ats(kk)%bonded(nn)%with_loops_ant
+        END DO
+     END DO
+     IF (interruptor.eqv..FALSE.) THEN
+        interruptor2=.TRUE.
+        gg=gg+symm%crit(gg)
+     ELSE
+        new_num_crits=new_num_crits+1
+        ll=ll+1
+        new_crit(ll)=symm%crit(gg)
+        DO jj=1,symm%crit(gg)
+           ll=ll+1
+           gg=gg+1
+           new_crit(ll)=symm%crit(gg)
+        END DO
+     END IF
+  END DO
+
+  IF (new_num_crits==0) THEN
+     symm%num_crits=0
+  ELSE
+     shell%unsolved_loops=.TRUE.
+     IF (interruptor2.eqv..TRUE.) THEN
+        symm%length=ll
+        symm%num_crits=new_num_crits
+        DEALLOCATE(symm%crit)
+        ALLOCATE(symm%crit(ll))
+        symm%crit(:)=new_crit(1:ll)
+     END IF
+  END IF
+
+END SUBROUTINE QUITO_FALSOS_ATS_SYMM
+!############################
+
+SUBROUTINE QUITO_FALSOS_ATS_SYMM2(shell1st,shell2nd,nnods)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::nnods
+  TYPE(p_shell),INTENT(INOUT)::shell1st
+  TYPE(p_shell),DIMENSION(nnods),TARGET,INTENT(IN)::shell2nd
+
+ 
+  INTEGER::ii,jj,gg,ggg,kk,ll,pp,qq,mm,nn,hh
+  INTEGER::new_num_crits
+  INTEGER,DIMENSION(symm%length)::new_crit
+  LOGICAL::interruptor,interruptor2
+
+  new_num_crits=0
+  ll=0
+
+  interruptor2=.FALSE.
+  gg=0
+  DO ii=1,symm%num_crits
+     gg=gg+1
+     interruptor=.FALSE.
+     ggg=gg
+     DO jj=1,symm%crit(gg)
+        ggg=ggg+1
+        kk=symm%crit(gg+1)
+        kk=shell1st%order(kk)
+        DO hh=1,2
+           interruptor=interruptor.OR.shell1st%ats(kk)%bonded(hh)%with_loops_post
+           DO pp=1,shell1st%ats(kk)%bonded(hh)%num
+              mm=shell1st%ats(kk)%bonded(hh)%aux2sh(pp)
+              interruptor=interruptor.OR.shell2nd(mm)%unsolved_loops
+              DO qq=1,shell2nd(mm)%nats
+                 DO nn=1,2
+                    interruptor=interruptor.OR.shell2nd(mm)%ats(qq)%bonded(nn)%with_loops_same
+                    interruptor=interruptor.OR.shell2nd(mm)%ats(qq)%bonded(nn)%with_loops_ant
+                 END DO
+              END DO
+           END DO
+        END DO
+     END DO
+     IF (interruptor.eqv..FALSE.) THEN
+        interruptor2=.TRUE.
+        gg=gg+symm%crit(gg)
+     ELSE
+        new_num_crits=new_num_crits+1
+        ll=ll+1
+        new_crit(ll)=symm%crit(gg)
+        DO jj=1,symm%crit(gg)
+           ll=ll+1
+           gg=gg+1
+           new_crit(ll)=symm%crit(gg)
+        END DO
+     END IF
+  END DO
+
+  IF (new_num_crits==0) THEN
+     symm%num_crits=0
+  ELSE
+     shell1st%unsolved_loops=.TRUE.
+     IF (interruptor2.eqv..TRUE.) THEN
+        symm%length=ll
+        symm%num_crits=new_num_crits
+        DEALLOCATE(symm%crit)
+        ALLOCATE(symm%crit(ll))
+        symm%crit(:)=new_crit(1:ll)
+     END IF
+  END IF
+
+END SUBROUTINE QUITO_FALSOS_ATS_SYMM2
+!############################
 
 !!!###################################################################################################
 !!!####  REPETITION AND ORDER FUNCTIONS
@@ -1395,6 +2446,303 @@ SUBROUTINE SORT_INT_MATRIX (num_ats,dim_matrix,order,valores)
   END DO
  
 END SUBROUTINE SORT_INT_MATRIX
+
+!!!###################################################################################################
+!!!####  SYMMETRIES AND PERMUTATION FUNCTIONS
+!!!###################################################################################################
+
+SUBROUTINE SOLVING_LAST_SYMMETRIES_PERMUTING (shell1st,shell2nd,nnods,totntot)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::nnods,totntot
+  TYPE(p_shell),INTENT(INOUT)::shell1st
+  TYPE(p_shell),DIMENSION(nnods),TARGET,INTENT(INOUT)::shell2nd
+
+  INTEGER::total_num_permutations
+  INTEGER::ii,jj,iii
+  INTEGER::gg,kk,ll,hh,extra_dim,kkk,ggg
+
+  INTEGER,DIMENSION(:),ALLOCATABLE::num_permutaciones
+  INTEGER,DIMENSION(:,:),ALLOCATABLE::dale
+
+  INTEGER::ntot1sh,nnods1sh,ntot2sh,nnods2sh
+  INTEGER,DIMENSION(:),ALLOCATABLE::aux_ind_ats,aux_ind_nods,aux_ord,aux_symm
+
+  TYPE(p_shell),POINTER::shell
+
+
+
+  total_num_permutations=1
+  extra_dim=shell1st%nats2+1
+  DO ii=1,nnods
+     extra_dim=extra_dim+shell2nd(ii)%nats2+1
+  END DO
+  ALLOCATE(num_permutaciones(extra_dim))
+  hh=0
+
+  !1st shell
+
+  IF (shell1st%unsolved_loops.eqv..TRUE.) THEN
+     CALL upload_symm(shell1st%symm)
+     CALL permuto (shell1st%order,shell1st%nats,shell1st%permutations,shell1st%num_permutations)
+     CALL download_symm(shell1st%symm)
+  ELSE
+     shell1st%num_permutations=1
+  END IF
+  total_num_permutations=total_num_permutations*shell1st%num_permutations
+  hh=hh+1
+  num_permutaciones(hh)=shell1st%num_permutations
+
+  DO ii=1,shell1st%nats
+     at=>shell1st%ats(ii)
+     DO ll=1,2
+        bonded=>at%bonded(ll)
+        IF (bonded%unsolved_loops) THEN
+           CALL upload_symm(bonded%symm)
+           CALL permuto (bonded%order,bonded%num,bonded%permutations,bonded%num_permutations)
+           CALL download_symm(bonded%symm)
+        ELSE
+           bonded%num_permutations=1
+        END IF
+        total_num_permutations=total_num_permutations*bonded%num_permutations
+        hh=hh+1
+        num_permutaciones(hh)=bonded%num_permutations
+     END DO
+  END DO
+  
+  !2nd shell
+
+  DO jj=1,nnods
+     shell=>shell2nd(jj)
+     IF (shell%unsolved_loops.eqv..TRUE.) THEN
+        CALL upload_symm(shell%symm)
+        CALL permuto (shell%order,shell%nats,shell%permutations,shell%num_permutations)
+        CALL download_symm(shell%symm)
+     ELSE
+        shell%num_permutations=1
+     END IF
+     total_num_permutations=total_num_permutations*shell%num_permutations
+     hh=hh+1
+     num_permutaciones(hh)=shell%num_permutations
+     DO ii=1,shell%nats
+        at=>shell%ats(ii)
+        DO ll=1,2
+           bonded=>at%bonded(ll)
+           IF (bonded%unsolved_loops) THEN
+              CALL upload_symm(bonded%symm)
+              CALL permuto (bonded%order,bonded%num,bonded%permutations,bonded%num_permutations)
+              CALL download_symm(bonded%symm)
+           ELSE
+              bonded%num_permutations=1
+           END IF
+           total_num_permutations=total_num_permutations*bonded%num_permutations
+           hh=hh+1
+           num_permutaciones(hh)=bonded%num_permutations
+        END DO
+     END DO
+  END DO
+
+
+  IF (total_num_permutations>1) THEN
+
+     ALLOCATE(dale(total_num_permutations,extra_dim))
+     DO ii=1,extra_dim
+        kkk=1
+        DO kk=ii+1,extra_dim
+           kkk=kkk*num_permutaciones(kk)
+        END DO
+        ll=1
+        DO WHILE (ll<=total_num_permutations)
+           DO jj=1,num_permutaciones(ii)
+              DO kk=1,kkk
+                 dale(ll,ii)=jj
+                 ll=ll+1
+              END DO
+           END DO
+        END DO
+     END DO
+
+     DO iii=1,total_num_permutations
+
+        hh=0
+        hh=hh+1
+        IF (shell1st%unsolved_loops.eqv..TRUE.) THEN
+           shell1st%order(:)=shell1st%permutations(dale(iii,hh),:)
+        END IF
+        
+        DO ii=1,shell1st%nats
+           at=>shell1st%ats(ii)
+           DO ll=1,2
+              hh=hh+1
+              IF (at%bonded(ll)%unsolved_loops) THEN
+                 at%bonded(ll)%order(:)=at%bonded(ll)%permutations(dale(iii,hh),:)
+              END IF
+           END DO
+        END DO
+
+        DO jj=1,nnods
+           shell=>shell2nd(jj)
+           hh=hh+1
+           IF (shell%unsolved_loops.eqv..TRUE.) THEN
+              shell%order(:)=shell%permutations(dale(iii,hh),:)
+           END IF
+           DO ii=1,shell%nats
+              at=>shell%ats(ii)
+              DO ll=1,2
+                 hh=hh+1
+                 IF (at%bonded(ll)%unsolved_loops) THEN
+                    at%bonded(ll)%order(:)=at%bonded(ll)%permutations(dale(iii,hh),:)
+                 END IF
+              END DO
+           END DO
+        END DO
+
+        patata
+
+        IF (ALLOCATED(mss_ind_ats))   DEALLOCATE(mss_ind_ats)
+        IF (ALLOCATED(mss_ind_nods))  DEALLOCATE(mss_ind_nods)
+        IF (ALLOCATED(mss_symm))      DEALLOCATE(mss_symm)
+        
+
+        ALLOCATE(mss_ind_ats(totntot),mss_ind_nods(totntot),mss_symm(totntot))
+        
+        gg=0
+        ntot1sh=shell1st%ntot
+        nnods1sh=shell1st%nnods
+        ALLOCATE(aux_ind_ats(ntot1sh),aux_ind_nods(ntot1sh),aux_symm(ntot1sh),aux_ord(nnods1sh))
+        CALL build_mss_wout_word(shell1st,aux_ind_ats,aux_ind_nods,aux_symm,aux_ord)
+        ggg=gg+1
+        gg=gg+ntot1sh
+        mss_ind_ats(ggg:gg)=aux_ind_ats(:)
+        mss_ind_nods(ggg:gg)=aux_ind_nods(:)
+        mss_symm(ggg:gg)=aux_symm(:)
+        DEALLOCATE(aux_ind_ats,aux_ind_nods,aux_symm)
+        
+        DO ii=1,nnods1sh
+           jj=aux_ord(ii)
+           shell=>shell2nd(jj)
+           ntot2sh =shell%ntot
+           nnods2sh=shell%nnods
+           ALLOCATE(aux_ind_ats(ntot2sh),aux_ind_nods(ntot2sh),aux_symm(ntot2sh))
+           CALL build_mss_wout(shell,aux_ind_ats,aux_ind_nods,aux_symm)
+           ggg=gg+1
+           gg=gg+ntot2sh
+           mss_ind_ats(ggg:gg)=aux_ind_ats(:)
+           mss_ind_nods(ggg:gg)=aux_ind_nods(:)
+           mss_symm(ggg:gg)=aux_symm(:)
+           DEALLOCATE(aux_ind_ats,aux_ind_nods,aux_symm)
+        END DO
+        DEALLOCATE(aux_ord)
+
+        CALL remato_mss2sh()
+        print*,'>>'
+        print'(85I3)',mss(:)
+ 
+     END DO
+     NULLIFY(shell)
+     print*,'&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&'
+  END IF
+
+
+END SUBROUTINE SOLVING_LAST_SYMMETRIES_PERMUTING
+!############################
+
+SUBROUTINE PERMUTO (orden_original,dim_orden,permutations,num_permutations)
+
+  IMPLICIT NONE
+
+  TYPE int_2d_pointer
+     INTEGER,DIMENSION(:,:),ALLOCATABLE::p2d
+  END type int_2d_pointer
+
+  INTEGER,INTENT(IN)::dim_orden
+  INTEGER,DIMENSION(dim_orden),INTENT(IN)::orden_original
+  INTEGER,INTENT(INOUT)::num_permutations
+  INTEGER,DIMENSION(:,:),ALLOCATABLE,INTENT(INOUT)::permutations
+
+  TYPE(int_2d_pointer),DIMENSION(symm%num_crits)::perms
+  INTEGER,DIMENSION(symm%num_crits)::num_perms,num_permats
+  INTEGER,ALLOCATABLE,DIMENSION(:,:)::dale
+
+  INTEGER::ii,jj,kk,gg,kkk,ll,cantidad,pos,ind,aa
+  INTEGER,DIMENSION(:),ALLOCATABLE::desord
+
+
+  gg=0
+  num_permutations=1
+  DO ii=1,symm%num_crits
+     gg=gg+1
+     cantidad=symm%crit(gg)
+     num_perms(ii)=cantidad
+     ALLOCATE(desord(cantidad))
+     desord(:)=symm%crit((gg+1):(gg+cantidad))
+     SELECT CASE (cantidad)
+     CASE (2)
+        num_perms(ii)=2
+        num_permats(ii)=2
+        ALLOCATE(perms(ii)%p2d(2,2))
+        DO aa=1,2
+           perms(ii)%p2d(:,aa)=desord(precalc2(:,aa))
+        END DO
+        num_permutations=num_permutations*2
+     CASE (3)
+        num_perms(ii)=6
+        num_permats(ii)=3
+        ALLOCATE(perms(ii)%p2d(3,6))
+        DO aa=1,6
+           perms(ii)%p2d(:,aa)=desord(precalc3(:,aa))
+        END DO
+        num_permutations=num_permutations*6
+     CASE (4)
+        num_perms(ii)=24
+        num_permats(ii)=4
+        ALLOCATE(perms(ii)%p2d(4,24))
+        DO aa=1,24
+           perms(ii)%p2d(:,aa)=desord(precalc4(:,aa))
+        END DO
+        num_permutations=num_permutations*24
+     CASE DEFAULT
+        print*,'# Error: there is no precalculated list for', cantidad,' elements permutations.'
+        exit
+     END SELECT
+     DEALLOCATE(desord)
+     gg=gg+cantidad
+  END DO
+
+  ALLOCATE(permutations(num_permutations,dim_orden))
+  ALLOCATE(dale(num_permutations,symm%num_crits))
+
+  DO ii=1,symm%num_crits
+     kkk=1
+     DO kk=ii+1,symm%num_crits
+        kkk=kkk*num_perms(kk)
+     END DO
+     ll=1
+     DO WHILE (ll<=num_permutations)
+        DO jj=1,num_perms(ii)
+           DO kk=1,kkk
+              dale(ll,ii)=jj
+              ll=ll+1
+           END DO
+        END DO
+     END DO
+  END DO
+
+  DO ii=1,num_permutations
+     permutations(ii,:)=orden_original(:)
+     DO jj=1,symm%num_crits
+        ll=dale(ii,jj)
+        DO kk=1,num_permats(jj)
+           pos=perms(jj)%p2d(1,kk)
+           ind=orden_original(perms(jj)%p2d(ll,kk))
+           permutations(ii,pos)=ind
+        END DO
+     END DO
+  END DO
+
+
+END SUBROUTINE PERMUTO
 
 
 !!!###################################################################################################
