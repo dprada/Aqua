@@ -845,13 +845,6 @@ SUBROUTINE BUILD_SHELL2ND (core)
 
 
   !! BUILDING MSS
- 
-!  CALL build_mss_ats(shell)
-!  CALL build_mss_nods()
-!  CALL build_mss_symm(shell)
-!  CALL build_mss()
-!  CALL build_trans_mss_ats()
-!  CALL build_trans_mss_nods()
 
   ALLOCATE(aux_mss_ind_ats(totntot),aux_mss_symm(totntot),aux_mss_template(totntot))
   gg=0
@@ -886,6 +879,7 @@ SUBROUTINE BUILD_SHELL2ND (core)
   mss_ind_ats = aux_mss_ind_ats
   mss_symm    = aux_mss_symm
   mss_template = aux_mss_template
+  CALL build_mss_nods()
   CALL build_mss()
   CALL build_trans_mss_ats()
   CALL build_trans_mss_nods()
@@ -1761,7 +1755,7 @@ SUBROUTINE ORDER_ATS_W_NEXT_SHELLS(shell1st,shell2nd,nnods)
    
   ALLOCATE(aux_ord(numats))
   aux_ord=shell1st%order(:)
- 
+
   gg=0
   DO ii=1,symm%num_crits
      gg=gg+1
@@ -1834,6 +1828,7 @@ SUBROUTINE ORDER_ATS_W_NEXT_SHELLS(shell1st,shell2nd,nnods)
      END DO
 
      ALLOCATE(valores(numats,dim_matrix))
+     
 
   END IF
 
@@ -1841,28 +1836,35 @@ SUBROUTINE ORDER_ATS_W_NEXT_SHELLS(shell1st,shell2nd,nnods)
      IF (dim_matrix>0) THEN
 
         valores(:,:)=0
+        aux_ord(:)=shell1st%order(:)
         
         gg=0
         DO ii=1,symm%num_crits
            gg=gg+1
            DO jj=1,symm%crit(gg)
               gg=gg+1
-              kk=aux_ord(symm%crit(gg))
+              kk=aux_ord(symm%crit(gg)) !aux_ord
               at=>shell1st%ats(kk)
               aa=0
               DO ll=1,2
+                 bonded=>at%bonded(ll)
+                 ! ## ARREGLAR ESTO AQUI, ARRIBA Y ABAJO. MIRAR SI METIA LA PATA
+                 ! ## EN ALGUN OTRO SITIO
+                 CALL ordered_version(at%bonded(ll)%order,at%bonded(ll)%aux2sh)
                  DO pp=1,at%bonded(ll)%num
-                    mm=at%bonded(ll)%aux2sh(pp)
+                    mm=at%bonded(ll)%aux2sh(pp) !no esta ordenado aqui y deberia
                     shell=>shell2nd(mm)
                     DO nn=1,shell%nats
                        qq=shell%order(nn)
                        DO lll=1,2
-                          bonded2=>shell%ats(ii)%bonded(lll)
+                          bonded2=>shell%ats(qq)%bonded(lll)
                           num_aux=bonded2%num
                           ALLOCATE(val_aux(num_aux))
                           CALL ordered_version(bonded2%order,bonded2%lev_supsets,val_aux,num_aux)
                           aaa=aa+1
                           aa=aa+num_aux
+                          print*,ll,nn,lll,num_aux
+                          print*,dim_matrix,aa
                           valores(kk,aaa:aa)=val_aux(:)
                           DEALLOCATE(val_aux)
                        END DO
@@ -1881,7 +1883,8 @@ SUBROUTINE ORDER_ATS_W_NEXT_SHELLS(shell1st,shell2nd,nnods)
      IF (dim_matrix>0) THEN
  
         valores(:,:)=0
- 
+        aux_ord(:)=shell1st%order(:)
+
         gg=0
         DO ii=1,symm%num_crits
            gg=gg+1
@@ -1898,7 +1901,7 @@ SUBROUTINE ORDER_ATS_W_NEXT_SHELLS(shell1st,shell2nd,nnods)
                        DO nn=1,shell%nats
                           qq=shell%order(nn)
                           DO lll=1,2
-                             bonded2=>shell%ats(ii)%bonded(lll)
+                             bonded2=>shell%ats(qq)%bonded(lll)
                              num_aux=bonded2%num
                              ALLOCATE(val_aux(num_aux))
                              CALL ordered_version(bonded2%order,bonded2%loops_in,val_aux,num_aux)
@@ -1925,6 +1928,7 @@ SUBROUTINE ORDER_ATS_W_NEXT_SHELLS(shell1st,shell2nd,nnods)
      IF (dim_matrix>0) THEN
         
         valores(:,:)=0
+        aux_ord(:)=shell1st%order(:)
         
         gg=0
         DO ii=1,symm%num_crits
@@ -1942,7 +1946,7 @@ SUBROUTINE ORDER_ATS_W_NEXT_SHELLS(shell1st,shell2nd,nnods)
                        DO nn=1,shell%nats
                           qq=shell%order(nn)
                           DO lll=1,2
-                             bonded2=>shell%ats(ii)%bonded(lll)
+                             bonded2=>shell%ats(qq)%bonded(lll)
                              num_aux=bonded2%num
                              ALLOCATE(val_aux(num_aux))
                              CALL ordered_version(bonded2%order,bonded2%loops_same,val_aux,num_aux)
@@ -1969,7 +1973,8 @@ SUBROUTINE ORDER_ATS_W_NEXT_SHELLS(shell1st,shell2nd,nnods)
      IF (dim_matrix>0) THEN
  
         valores(:,:)=0
- 
+        aux_ord(:)=shell1st%order(:) 
+
         gg=0
         DO ii=1,symm%num_crits
            gg=gg+1
@@ -1986,7 +1991,7 @@ SUBROUTINE ORDER_ATS_W_NEXT_SHELLS(shell1st,shell2nd,nnods)
                        DO nn=1,shell%nats
                           qq=shell%order(nn)
                           DO lll=1,2
-                             bonded2=>shell%ats(ii)%bonded(lll)
+                             bonded2=>shell%ats(qq)%bonded(lll)
                              num_aux=bonded2%num
                              ALLOCATE(val_aux(num_aux))
                              CALL ordered_version(bonded2%order,bonded2%loops_ant,val_aux,num_aux)
@@ -2181,6 +2186,7 @@ SUBROUTINE BUILDING_REPE_LISTS (carro,dim_carro,nods_norepe,dim_norepe,nods_repe
   INTEGER,DIMENSION(dim_carro)::box,repetitions,box2
   INTEGER::ii,jj,gg,kk
  
+
   filtro(:)=.FALSE.
   filtro2(:)=.FALSE.
   repetitions(:)=0
@@ -2228,7 +2234,7 @@ SUBROUTINE BUILDING_REPE_LISTS (carro,dim_carro,nods_norepe,dim_norepe,nods_repe
      nods_norepe(:)=carro(:)
      ALLOCATE(nods_repe(0),cant_repe(0))
   END IF
- 
+
 END SUBROUTINE BUILDING_REPE_LISTS
 !############################
 
@@ -2255,7 +2261,7 @@ SUBROUTINE BUILDING_REPE_LIST2 (core,carro,dim_carro,cant_repe)
         filtro(ii)=.TRUE.
         gg=carro(ii)
         kk=1
-        aux(kk)=gg
+        aux(kk)=ii
         DO jj=ii+1,dim_carro
            IF (filtro(jj).eqv..FALSE.) THEN
               IF (carro(jj)==gg) THEN
@@ -2272,7 +2278,7 @@ SUBROUTINE BUILDING_REPE_LIST2 (core,carro,dim_carro,cant_repe)
         END IF
      END IF
   END DO
- 
+
 END SUBROUTINE BUILDING_REPE_LIST2
 !############################
 
@@ -2644,6 +2650,7 @@ SUBROUTINE SOLVING_LAST_SYMMETRIES_PERMUTING (shell1st,shell2nd,nnods,totntot)
         mss_ind_ats  = aux_mss_ind_ats
         mss_symm     = aux_mss_symm
         mss_template = aux_mss_template
+        CALL build_mss_nods()
         CALL build_mss()
         CALL build_trans_mss_ats()
         CALL build_trans_mss_nods()
