@@ -612,7 +612,8 @@ SUBROUTINE BUILD_SHELL2ND (core)
   INTEGER::ii,jj,kk,gg,iii,ggg,ll
   INTEGER,DIMENSION(:),ALLOCATABLE::privilegios
   INTEGER::dim_privil,dim_repe,dim_carro1,dim_carro2
-  INTEGER,DIMENSION(:),ALLOCATABLE::aux_ind_ats,aux_ind_nods,aux_ord,aux_symm
+  INTEGER,DIMENSION(:),ALLOCATABLE::aux_mss_ind_ats,aux_mss_symm,aux_ord
+  LOGICAL,DIMENSION(:),ALLOCATABLE::aux_mss_template
   INTEGER,DIMENSION(:),ALLOCATABLE::carro,carro_aux,cant_repe1,cant_repe2
   LOGICAL::interruptor
  
@@ -852,18 +853,19 @@ SUBROUTINE BUILD_SHELL2ND (core)
 !  CALL build_trans_mss_ats()
 !  CALL build_trans_mss_nods()
 
-  ALLOCATE(aux_mss_ind_ats(totntot),aux_mss_symm(totntot),aux_mss_pattern(totntot))
+  ALLOCATE(aux_mss_ind_ats(totntot),aux_mss_symm(totntot),aux_mss_template(totntot))
   gg=0
   ntot1sh=shell1st%ntot
   nnods1sh=shell1st%nnods
   CALL build_mss_ats(shell1st)
   CALL build_mss_symm(shell1st)
+  ALLOCATE(aux_ord(nnods1sh))
+  CALL build_total_aux2sh(shell1st,aux_ord,nnods1sh)
   ggg=gg+1
   gg=gg+ntot1sh
   aux_mss_ind_ats(ggg:gg)      =mss_ind_ats(:)
-  aux_mss_pattern(ggg:gg)      =mss_pattern(:)
+  aux_mss_template(ggg:gg)      =mss_template(:)
   aux_mss_symm(ggg:gg)         =mss_symm(:)
-  aux_ord
 
   DO ii=1,nnods1sh
      jj=aux_ord(ii)
@@ -875,19 +877,20 @@ SUBROUTINE BUILD_SHELL2ND (core)
      ggg=gg+1
      gg=gg+ntot2sh
      aux_mss_ind_ats(ggg:gg)      =mss_ind_ats(:)
-     aux_mss_pattern(ggg:gg)      =mss_pattern(:)
+     aux_mss_template(ggg:gg)      =mss_template(:)
      aux_mss_symm(ggg:gg)         =mss_symm(:)
   END DO
 
-  DEALLOCATE(mss_ind_ats,mss_symm,mss_pattern)
-  ALLOCATE(mss_ind_ats(totntot),mss_symm(totntot),mss_pattern(totntot))
+  DEALLOCATE(mss_ind_ats,mss_symm,mss_template)
+  ALLOCATE(mss_ind_ats(totntot),mss_symm(totntot),mss_template(totntot))
   mss_ind_ats = aux_mss_ind_ats
   mss_symm    = aux_mss_symm
-  mss_pattern = aux_mss_pattern
+  mss_template = aux_mss_template
   CALL build_mss()
   CALL build_trans_mss_ats()
   CALL build_trans_mss_nods()
  
+  DEALLOCATE(aux_mss_ind_ats,aux_mss_symm,aux_mss_template)
   DEALLOCATE(aux_ord,shell2nd,privilegios)
   NULLIFY(at,shell,bonded)
  
@@ -1007,10 +1010,12 @@ SUBROUTINE ORDER_BONDED_W_NEXT_SHELLS(bonded,shell2nd,nnods)
   TYPE(p_bonded),INTENT(INOUT)::bonded
   TYPE(p_shell),DIMENSION(nnods),TARGET,INTENT(IN)::shell2nd
  
-  INTEGER::numb,dim_matrix
-  INTEGER::ii,jj,gg,mm,kk,aa,qq,aaa,nn
+  INTEGER::numb,dim_matrix,num_aux
+  INTEGER::ii,jj,ll,gg,mm,kk,aa,qq,aaa,nn
   INTEGER,DIMENSION(:,:),ALLOCATABLE::valores
+  INTEGER,DIMENSION(:),ALLOCATABLE::val_aux
   TYPE(p_shell),POINTER::shell
+  TYPE(p_bonded),POINTER::bonded2
  
   dim_matrix=0
   numb=bonded%num
@@ -1271,6 +1276,8 @@ SUBROUTINE ORDER_BONDED_W_NEXT_SHELLS(bonded,shell2nd,nnods)
 
      END IF
   END IF
+
+  NULLIFY(bonded2,shell)
 
 END SUBROUTINE ORDER_BONDED_W_NEXT_SHELLS
 !############################
@@ -1609,6 +1616,7 @@ SUBROUTINE ORDER_ATS_W_LOOPS_SAME(shell)
  
   INTEGER::ii,gg,ll
   INTEGER::numats,num_aux
+  INTEGER,DIMENSION(:),ALLOCATABLE::val_aux
   INTEGER,DIMENSION(:,:),ALLOCATABLE::valores
   TYPE(p_bonded),POINTER::bonded
 
@@ -1651,6 +1659,7 @@ SUBROUTINE ORDER_ATS_W_LOOPS_ANT(shell)
  
   INTEGER::ii,gg,ll
   INTEGER::numats,num_aux
+  INTEGER,DIMENSION(:),ALLOCATABLE::val_aux
   INTEGER,DIMENSION(:,:),ALLOCATABLE::valores
   TYPE(p_bonded),POINTER::bonded
 
@@ -1693,6 +1702,7 @@ SUBROUTINE ORDER_ATS_W_LOOPS_POST(shell)
  
   INTEGER::ii,gg,ll
   INTEGER::numats,num_aux
+  INTEGER,DIMENSION(:),ALLOCATABLE::val_aux
   INTEGER,DIMENSION(:,:),ALLOCATABLE::valores
   TYPE(p_bonded),POINTER::bonded
 
@@ -1738,12 +1748,13 @@ SUBROUTINE ORDER_ATS_W_NEXT_SHELLS(shell1st,shell2nd,nnods)
   ! tienen igual: privilegios, num hbs y num bs, y los mismos bonded en hbs y bs en su shell
   ! falta: comparar lo que sucede en las siguientes shell
  
-  INTEGER::numats
+  INTEGER::numats,num_aux
   INTEGER::ii,jj,kk,gg,ll,mm,nn,qq,pp,lll,aa,aaa,dim_matrix
-  INTEGER,DIMENSION(:),ALLOCATABLE::aux_ord
+  INTEGER,DIMENSION(:),ALLOCATABLE::aux_ord,val_aux
   INTEGER,DIMENSION(:,:),ALLOCATABLE::valores
   TYPE(p_at),POINTER::at
   TYPE(p_shell),POINTER::shell
+  TYPE(p_bonded),POINTER::bonded2
 
   dim_matrix=0
   numats=shell1st%nats
@@ -2456,7 +2467,7 @@ SUBROUTINE SOLVING_LAST_SYMMETRIES_PERMUTING (shell1st,shell2nd,nnods,totntot)
   IMPLICIT NONE
 
   INTEGER,INTENT(IN)::nnods,totntot
-  TYPE(p_shell),INTENT(INOUT)::shell1st
+  TYPE(p_shell),TARGET,INTENT(INOUT)::shell1st
   TYPE(p_shell),DIMENSION(nnods),TARGET,INTENT(INOUT)::shell2nd
 
   INTEGER::total_num_permutations
@@ -2467,10 +2478,12 @@ SUBROUTINE SOLVING_LAST_SYMMETRIES_PERMUTING (shell1st,shell2nd,nnods,totntot)
   INTEGER,DIMENSION(:,:),ALLOCATABLE::dale
 
   INTEGER::ntot1sh,nnods1sh,ntot2sh,nnods2sh
-  INTEGER,DIMENSION(:),ALLOCATABLE::aux_ind_ats,aux_ind_nods,aux_ord,aux_symm
+  INTEGER,DIMENSION(:),ALLOCATABLE::aux_mss_ind_ats,aux_mss_symm,aux_ord
+  LOGICAL,DIMENSION(:),ALLOCATABLE::aux_mss_template
 
+  TYPE(p_at),POINTER::at
   TYPE(p_shell),POINTER::shell
-
+  TYPE(p_bonded),POINTER::bonded
 
 
   total_num_permutations=1
@@ -2598,52 +2611,55 @@ SUBROUTINE SOLVING_LAST_SYMMETRIES_PERMUTING (shell1st,shell2nd,nnods,totntot)
            END DO
         END DO
 
-        patata
-
-        IF (ALLOCATED(mss_ind_ats))   DEALLOCATE(mss_ind_ats)
-        IF (ALLOCATED(mss_ind_nods))  DEALLOCATE(mss_ind_nods)
-        IF (ALLOCATED(mss_symm))      DEALLOCATE(mss_symm)
-        
-
-        ALLOCATE(mss_ind_ats(totntot),mss_ind_nods(totntot),mss_symm(totntot))
-        
+        ALLOCATE(aux_mss_ind_ats(totntot),aux_mss_symm(totntot),aux_mss_template(totntot))
         gg=0
         ntot1sh=shell1st%ntot
         nnods1sh=shell1st%nnods
-        ALLOCATE(aux_ind_ats(ntot1sh),aux_ind_nods(ntot1sh),aux_symm(ntot1sh),aux_ord(nnods1sh))
-        CALL build_mss_wout_word(shell1st,aux_ind_ats,aux_ind_nods,aux_symm,aux_ord)
+        CALL build_mss_ats(shell1st)
+        CALL build_mss_symm(shell1st)
+        ALLOCATE(aux_ord(nnods1sh))
+        CALL build_total_aux2sh(shell1st,aux_ord,nnods1sh)
         ggg=gg+1
         gg=gg+ntot1sh
-        mss_ind_ats(ggg:gg)=aux_ind_ats(:)
-        mss_ind_nods(ggg:gg)=aux_ind_nods(:)
-        mss_symm(ggg:gg)=aux_symm(:)
-        DEALLOCATE(aux_ind_ats,aux_ind_nods,aux_symm)
+        aux_mss_ind_ats(ggg:gg)      = mss_ind_ats(:)
+        aux_mss_template(ggg:gg)     = mss_template(:)
+        aux_mss_symm(ggg:gg)         = mss_symm(:)
         
         DO ii=1,nnods1sh
            jj=aux_ord(ii)
            shell=>shell2nd(jj)
            ntot2sh =shell%ntot
            nnods2sh=shell%nnods
-           ALLOCATE(aux_ind_ats(ntot2sh),aux_ind_nods(ntot2sh),aux_symm(ntot2sh))
-           CALL build_mss_wout(shell,aux_ind_ats,aux_ind_nods,aux_symm)
+           CALL build_mss_ats(shell)
+           CALL build_mss_symm(shell)
            ggg=gg+1
            gg=gg+ntot2sh
-           mss_ind_ats(ggg:gg)=aux_ind_ats(:)
-           mss_ind_nods(ggg:gg)=aux_ind_nods(:)
-           mss_symm(ggg:gg)=aux_symm(:)
-           DEALLOCATE(aux_ind_ats,aux_ind_nods,aux_symm)
+           aux_mss_ind_ats(ggg:gg)      = mss_ind_ats(:)
+           aux_mss_template(ggg:gg)     = mss_template(:)
+           aux_mss_symm(ggg:gg)         = mss_symm(:)
         END DO
+        
+        DEALLOCATE(mss_ind_ats,mss_symm,mss_template)
+        ALLOCATE(mss_ind_ats(totntot),mss_symm(totntot),mss_template(totntot))
+        mss_ind_ats  = aux_mss_ind_ats
+        mss_symm     = aux_mss_symm
+        mss_template = aux_mss_template
+        CALL build_mss()
+        CALL build_trans_mss_ats()
+        CALL build_trans_mss_nods()
+        
+        DEALLOCATE(aux_mss_ind_ats,aux_mss_symm,aux_mss_template)
         DEALLOCATE(aux_ord)
 
-        CALL remato_mss2sh()
         print*,'>>'
         print'(85I3)',mss(:)
  
      END DO
-     NULLIFY(shell)
+
      print*,'&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&'
   END IF
 
+  NULLIFY(at,bonded,shell)
 
 END SUBROUTINE SOLVING_LAST_SYMMETRIES_PERMUTING
 !############################
@@ -2813,6 +2829,54 @@ SUBROUTINE BUILD_MSS_ATS(shell)
 
 END SUBROUTINE BUILD_MSS_ATS
 !############################
+
+SUBROUTINE BUILD_TOTAL_AUX2SH(shell,aux_ord,nnods)
+
+  IMPLICIT NONE
+ 
+  INTEGER,INTENT(IN)::nnods
+  TYPE(p_shell),TARGET,INTENT(INOUT)::shell
+  INTEGER,DIMENSION(nnods),INTENT(OUT)::aux_ord
+
+  INTEGER::nats
+  INTEGER::ii,jj,kk,ll,num_aux
+  INTEGER,DIMENSION(:),ALLOCATABLE::oo,val_aux
+
+  TYPE(p_at),POINTER::at
+  TYPE(p_bonded),POINTER::bonded
+
+  nats = shell%nats
+
+  ALLOCATE(oo(nats))
+
+  oo(:)=shell%order(:)
+
+  jj=0
+  DO kk=1,nats
+     at=>shell%ats(oo(kk))
+     IF (at%empty.eqv..FALSE.) THEN
+        DO ll=1,2
+           IF (at%bonded(ll)%num>0) THEN
+              bonded=>at%bonded(ll)
+              num_aux=bonded%num
+              ii=jj+1
+              jj=jj+num_aux
+              ALLOCATE(val_aux(num_aux))
+              CALL ordered_version(bonded%order,bonded%aux2sh,val_aux,num_aux)
+              aux_ord(ii:jj) = (/val_aux(:)/)
+              DEALLOCATE(val_aux)
+           END IF
+        END DO
+     END IF
+  END DO
+
+  DEALLOCATE(oo)
+
+  NULLIFY(at,bonded)
+
+END SUBROUTINE BUILD_TOTAL_AUX2SH
+!############################
+
 
 SUBROUTINE BUILD_MSS_NODS()
 
