@@ -822,7 +822,7 @@ SUBROUTINE BUILD_SHELL2ND (core)
      DO ii=1,nnods
         IF (interruptor.EQV..FALSE.) THEN
            shell=>shell2nd(ii)
-           IF (shell1st%unsolved_loops.EQV..TRUE.) THEN
+           IF (shell%unsolved_loops.EQV..TRUE.) THEN
               interruptor=.TRUE.
               EXIT
            ELSE
@@ -948,9 +948,9 @@ SUBROUTINE ORDER_BONDED_W_LOOPS_SAME (bonded)
 
   numb=bonded%num
   
-  ALLOCATE(valores(numb,2))
+  ALLOCATE(valores(numb,1))
   valores(:,1)=bonded%loops_same(:)
-  
+
   CALL SORT_INT_MATRIX (numb,1,bonded%order,valores)
   
   DEALLOCATE(valores)
@@ -967,7 +967,7 @@ SUBROUTINE ORDER_BONDED_W_LOOPS_ANT (bonded)
 
   numb=bonded%num
   
-  ALLOCATE(valores(numb,2))
+  ALLOCATE(valores(numb,1))
   valores(:,1)=bonded%loops_ant(:)
   
   CALL SORT_INT_MATRIX (numb,1,bonded%order,valores)
@@ -986,9 +986,8 @@ SUBROUTINE ORDER_BONDED_W_LOOPS_POST (bonded)
 
   numb=bonded%num
   
-  ALLOCATE(valores(numb,2))
+  ALLOCATE(valores(numb,1))
   valores(:,1)=bonded%loops_post(:)
-  
   CALL SORT_INT_MATRIX (numb,1,bonded%order,valores)
   
   DEALLOCATE(valores)
@@ -1282,7 +1281,7 @@ SUBROUTINE QUITO_FALSOS_BONDED_SYMM(bonded)
   
   TYPE(p_bonded),INTENT(INOUT)::bonded
 
-  INTEGER::ii,jj,gg,kk,ll
+  INTEGER::ii,jj,gg,kk,ll,ff
   INTEGER::new_num_crits
   INTEGER,DIMENSION(symm%length)::new_crit
   LOGICAL::interruptor,interruptor2
@@ -1295,10 +1294,11 @@ SUBROUTINE QUITO_FALSOS_BONDED_SYMM(bonded)
   DO ii=1,symm%num_crits
      gg=gg+1
      kk=symm%crit(gg+1)
-     interruptor=.TRUE.
-     IF (bonded%loops_same(kk)==0) THEN
-        IF (bonded%loops_ant(kk)==0) THEN
-           IF (bonded%loops_post(kk)==0) THEN
+     interruptor=.FALSE.
+     ff=bonded%order(kk)
+     IF (bonded%loops_same(ff)==0) THEN
+        IF (bonded%loops_ant(ff)==0) THEN
+           IF (bonded%loops_post(ff)==0) THEN
               interruptor=.TRUE.
            END IF
         END IF
@@ -1341,7 +1341,7 @@ SUBROUTINE QUITO_FALSOS_BONDED_SYMM2(bonded,shell2nd,nnods)
   TYPE(p_shell),DIMENSION(nnods),TARGET,INTENT(IN)::shell2nd
 
   TYPE(p_bonded),POINTER::bonded2
-  INTEGER::ii,jj,gg,kk,ll,mm,pp,ggg,nn
+  INTEGER::ii,jj,gg,kk,ll,mm,pp,ggg,nn,ff
   INTEGER::new_num_crits
   INTEGER,DIMENSION(symm%length)::new_crit
   LOGICAL::interruptor,interruptor2,interruptor3
@@ -1353,10 +1353,11 @@ SUBROUTINE QUITO_FALSOS_BONDED_SYMM2(bonded,shell2nd,nnods)
   DO ii=1,symm%num_crits
      gg=gg+1
      kk=symm%crit(gg+1)
+     ff=bonded%order(kk)
      interruptor=.FALSE.
-     IF (bonded%loops_same(kk)==0) THEN
-        IF (bonded%loops_post(kk)==0) THEN
-           IF (bonded%loops_ant(kk)==0) THEN
+     IF (bonded%loops_same(ff)==0) THEN
+        IF (bonded%loops_post(ff)==0) THEN
+           IF (bonded%loops_ant(ff)==0) THEN
               interruptor=.TRUE.
            END IF
         END IF
@@ -1743,7 +1744,7 @@ SUBROUTINE ORDER_ATS_W_NEXT_SHELLS(shell1st,shell2nd,nnods)
   ! falta: comparar lo que sucede en las siguientes shell
  
   INTEGER::numats,num_aux
-  INTEGER::ii,jj,kk,gg,ll,mm,nn,qq,pp,lll,aa,aaa,dim_matrix
+  INTEGER::ii,jj,kk,gg,ll,mm,nn,qq,pp,ff,lll,aa,aaa,dim_matrix
   INTEGER,DIMENSION(:),ALLOCATABLE::aux_ord,val_aux
   INTEGER,DIMENSION(:,:),ALLOCATABLE::valores
   TYPE(p_at),POINTER::at
@@ -1766,7 +1767,8 @@ SUBROUTINE ORDER_ATS_W_NEXT_SHELLS(shell1st,shell2nd,nnods)
         aa=0
         DO ll=1,2
            DO qq=1,at%bonded(ll)%num
-              mm=at%bonded(ll)%aux2sh(qq)
+              ff=at%bonded(ll)%order(qq)
+              mm=at%bonded(ll)%aux2sh(ff)
               aa=aa+shell2nd(mm)%nats2
            END DO
         END DO
@@ -1787,7 +1789,8 @@ SUBROUTINE ORDER_ATS_W_NEXT_SHELLS(shell1st,shell2nd,nnods)
         aa=0
         DO ll=1,2
            DO pp=1,at%bonded(ll)%num
-              mm=at%bonded(ll)%aux2sh(pp)
+              ff=at%bonded(ll)%order(pp)
+              mm=at%bonded(ll)%aux2sh(ff)
               shell=>shell2nd(mm)
               DO nn=1,shell%nats
                  qq=shell%order(nn)
@@ -1808,7 +1811,8 @@ SUBROUTINE ORDER_ATS_W_NEXT_SHELLS(shell1st,shell2nd,nnods)
   IF (symm%num_crits>0) THEN
  
      dim_matrix=0
- 
+     aux_ord(:)=shell1st%order(:)
+
      gg=0
      DO ii=1,symm%num_crits
         gg=gg+1
@@ -1819,7 +1823,8 @@ SUBROUTINE ORDER_ATS_W_NEXT_SHELLS(shell1st,shell2nd,nnods)
            aa=0
            DO ll=1,2
               DO qq=1,at%bonded(ll)%num
-                 mm=at%bonded(ll)%aux2sh(qq)
+                 ff=at%bonded(ll)%order(qq)
+                 mm=at%bonded(ll)%aux2sh(ff)
                  aa=aa+shell2nd(mm)%nnods
               END DO
            END DO
@@ -1829,14 +1834,9 @@ SUBROUTINE ORDER_ATS_W_NEXT_SHELLS(shell1st,shell2nd,nnods)
 
      ALLOCATE(valores(numats,dim_matrix))
      
-
-  END IF
-
-  IF (symm%num_crits>0) THEN
      IF (dim_matrix>0) THEN
 
         valores(:,:)=0
-        aux_ord(:)=shell1st%order(:)
         
         gg=0
         DO ii=1,symm%num_crits
@@ -1847,12 +1847,9 @@ SUBROUTINE ORDER_ATS_W_NEXT_SHELLS(shell1st,shell2nd,nnods)
               at=>shell1st%ats(kk)
               aa=0
               DO ll=1,2
-                 bonded=>at%bonded(ll)
-                 ! ## ARREGLAR ESTO AQUI, ARRIBA Y ABAJO. MIRAR SI METIA LA PATA
-                 ! ## EN ALGUN OTRO SITIO
-                 CALL ordered_version(at%bonded(ll)%order,at%bonded(ll)%aux2sh)
                  DO pp=1,at%bonded(ll)%num
-                    mm=at%bonded(ll)%aux2sh(pp) !no esta ordenado aqui y deberia
+                    ff=at%bonded(ll)%order(pp)
+                    mm=at%bonded(ll)%aux2sh(ff)
                     shell=>shell2nd(mm)
                     DO nn=1,shell%nats
                        qq=shell%order(nn)
@@ -1863,8 +1860,6 @@ SUBROUTINE ORDER_ATS_W_NEXT_SHELLS(shell1st,shell2nd,nnods)
                           CALL ordered_version(bonded2%order,bonded2%lev_supsets,val_aux,num_aux)
                           aaa=aa+1
                           aa=aa+num_aux
-                          print*,ll,nn,lll,num_aux
-                          print*,dim_matrix,aa
                           valores(kk,aaa:aa)=val_aux(:)
                           DEALLOCATE(val_aux)
                        END DO
@@ -1877,9 +1872,35 @@ SUBROUTINE ORDER_ATS_W_NEXT_SHELLS(shell1st,shell2nd,nnods)
         CALL SORT_INT_MATRIX (numats,dim_matrix,shell1st%order,valores)
   
      END IF
+     DEALLOCATE(valores)
    END IF
  
   IF (symm%num_crits>0) THEN
+
+     dim_matrix=0
+     aux_ord(:)=shell1st%order(:)
+
+     gg=0
+     DO ii=1,symm%num_crits
+        gg=gg+1
+        DO jj=1,symm%crit(gg)
+           gg=gg+1
+           kk=aux_ord(symm%crit(gg))
+           at=>shell1st%ats(kk)
+           aa=0
+           DO ll=1,2
+              DO qq=1,at%bonded(ll)%num
+                 ff=at%bonded(ll)%order(qq)
+                 mm=at%bonded(ll)%aux2sh(ff)
+                 aa=aa+shell2nd(mm)%nnods
+              END DO
+           END DO
+           IF (dim_matrix<aa) dim_matrix=aa
+        END DO
+     END DO
+
+     ALLOCATE(valores(numats,dim_matrix))
+
      IF (dim_matrix>0) THEN
  
         valores(:,:)=0
@@ -1895,7 +1916,8 @@ SUBROUTINE ORDER_ATS_W_NEXT_SHELLS(shell1st,shell2nd,nnods)
               aa=0
               DO ll=1,2
                  DO pp=1,at%bonded(ll)%num
-                    mm=at%bonded(ll)%aux2sh(pp)
+                    ff=at%bonded(ll)%order(pp)
+                    mm=at%bonded(ll)%aux2sh(ff)
                     shell=>shell2nd(mm)
                     IF (shell%with_loops_in.EQV..TRUE.) THEN
                        DO nn=1,shell%nats
@@ -1922,9 +1944,35 @@ SUBROUTINE ORDER_ATS_W_NEXT_SHELLS(shell1st,shell2nd,nnods)
         CALL SORT_INT_MATRIX (numats,dim_matrix,shell1st%order,valores)
  
      END IF
+     DEALLOCATE(valores)
   END IF
  
   IF (symm%num_crits>0) THEN
+
+     dim_matrix=0
+     aux_ord(:)=shell1st%order(:)
+
+     gg=0
+     DO ii=1,symm%num_crits
+        gg=gg+1
+        DO jj=1,symm%crit(gg)
+           gg=gg+1
+           kk=aux_ord(symm%crit(gg))
+           at=>shell1st%ats(kk)
+           aa=0
+           DO ll=1,2
+              DO qq=1,at%bonded(ll)%num
+                 ff=at%bonded(ll)%order(qq)
+                 mm=at%bonded(ll)%aux2sh(ff)
+                 aa=aa+shell2nd(mm)%nnods
+              END DO
+           END DO
+           IF (dim_matrix<aa) dim_matrix=aa
+        END DO
+     END DO
+
+     ALLOCATE(valores(numats,dim_matrix))
+
      IF (dim_matrix>0) THEN
         
         valores(:,:)=0
@@ -1940,7 +1988,8 @@ SUBROUTINE ORDER_ATS_W_NEXT_SHELLS(shell1st,shell2nd,nnods)
               aa=0
               DO ll=1,2
                  DO pp=1,at%bonded(ll)%num
-                    mm=at%bonded(ll)%aux2sh(pp)
+                    ff=at%bonded(ll)%order(pp)
+                    mm=at%bonded(ll)%aux2sh(ff)
                     shell=>shell2nd(mm)
                     IF (shell%with_loops_same.EQV..TRUE.) THEN
                        DO nn=1,shell%nats
@@ -1967,9 +2016,35 @@ SUBROUTINE ORDER_ATS_W_NEXT_SHELLS(shell1st,shell2nd,nnods)
         CALL SORT_INT_MATRIX (numats,dim_matrix,shell1st%order,valores)
  
      END IF
+     DEALLOCATE(valores)
   END IF
  
   IF (symm%num_crits>0) THEN
+
+     dim_matrix=0
+     aux_ord(:)=shell1st%order(:)
+
+     gg=0
+     DO ii=1,symm%num_crits
+        gg=gg+1
+        DO jj=1,symm%crit(gg)
+           gg=gg+1
+           kk=aux_ord(symm%crit(gg))
+           at=>shell1st%ats(kk)
+           aa=0
+           DO ll=1,2
+              DO qq=1,at%bonded(ll)%num
+                 ff=at%bonded(ll)%order(qq)
+                 mm=at%bonded(ll)%aux2sh(ff)
+                 aa=aa+shell2nd(mm)%nnods
+              END DO
+           END DO
+           IF (dim_matrix<aa) dim_matrix=aa
+        END DO
+     END DO
+
+     ALLOCATE(valores(numats,dim_matrix))
+
      IF (dim_matrix>0) THEN
  
         valores(:,:)=0
@@ -1985,7 +2060,8 @@ SUBROUTINE ORDER_ATS_W_NEXT_SHELLS(shell1st,shell2nd,nnods)
               aa=0
               DO ll=1,2
                  DO pp=1,at%bonded(ll)%num
-                    mm=at%bonded(ll)%aux2sh(pp)
+                    ff=at%bonded(ll)%order(pp)
+                    mm=at%bonded(ll)%aux2sh(ff)
                     shell=>shell2nd(mm)
                     IF (shell%with_loops_ant.EQV..TRUE.) THEN
                        DO nn=1,shell%nats
@@ -2012,11 +2088,12 @@ SUBROUTINE ORDER_ATS_W_NEXT_SHELLS(shell1st,shell2nd,nnods)
         CALL SORT_INT_MATRIX (numats,dim_matrix,shell1st%order,valores)
  
      END IF
+     DEALLOCATE(valores)
   END IF
 
-  IF (ALLOCATED(valores)) DEALLOCATE(valores)
 
   DEALLOCATE(aux_ord)
+  NULLIFY(bonded2,at,shell)
   
 END SUBROUTINE ORDER_ATS_W_NEXT_SHELLS
 !############################
@@ -2090,7 +2167,7 @@ SUBROUTINE QUITO_FALSOS_ATS_SYMM2(shell1st,shell2nd,nnods)
   TYPE(p_shell),DIMENSION(nnods),TARGET,INTENT(IN)::shell2nd
 
  
-  INTEGER::ii,jj,gg,ggg,kk,ll,pp,qq,mm,nn,hh
+  INTEGER::ii,jj,gg,ggg,kk,ll,pp,qq,mm,nn,hh,ff
   INTEGER::new_num_crits
   INTEGER,DIMENSION(symm%length)::new_crit
   LOGICAL::interruptor,interruptor2
@@ -2111,7 +2188,8 @@ SUBROUTINE QUITO_FALSOS_ATS_SYMM2(shell1st,shell2nd,nnods)
         DO hh=1,2
            interruptor=interruptor.OR.shell1st%ats(kk)%bonded(hh)%with_loops_post
            DO pp=1,shell1st%ats(kk)%bonded(hh)%num
-              mm=shell1st%ats(kk)%bonded(hh)%aux2sh(pp)
+              ff=shell1st%ats(kk)%bonded(hh)%order(pp)
+              mm=shell1st%ats(kk)%bonded(hh)%aux2sh(ff)
               interruptor=interruptor.OR.shell2nd(mm)%unsolved_loops
               DO qq=1,shell2nd(mm)%nats
                  DO nn=1,2
@@ -2309,7 +2387,7 @@ SUBROUTINE BUILDING_REPE_LIST3 (core,carro1,carro2,dim_carro1,dim_carro2,cant_re
      gg=carro1(ii)
      kk=0
      DO jj=1,dim_carro2
-        IF (filtro(ii).eqv..FALSE.) THEN
+        IF (filtro(jj).eqv..FALSE.) THEN
            IF (carro2(jj)==gg) THEN
               filtro(jj)=.TRUE.
               kk=kk+1
@@ -2476,7 +2554,7 @@ SUBROUTINE SOLVING_LAST_SYMMETRIES_PERMUTING (shell1st,shell2nd,nnods,totntot)
   TYPE(p_shell),TARGET,INTENT(INOUT)::shell1st
   TYPE(p_shell),DIMENSION(nnods),TARGET,INTENT(INOUT)::shell2nd
 
-  INTEGER::total_num_permutations
+  INTEGER::total_num_permutations,candidato
   INTEGER::ii,jj,iii
   INTEGER::gg,kk,ll,hh,extra_dim,kkk,ggg
 
@@ -2484,7 +2562,7 @@ SUBROUTINE SOLVING_LAST_SYMMETRIES_PERMUTING (shell1st,shell2nd,nnods,totntot)
   INTEGER,DIMENSION(:,:),ALLOCATABLE::dale
 
   INTEGER::ntot1sh,nnods1sh,ntot2sh,nnods2sh
-  INTEGER,DIMENSION(:),ALLOCATABLE::aux_mss_ind_ats,aux_mss_symm,aux_ord
+  INTEGER,DIMENSION(:),ALLOCATABLE::aux_mss_ind_ats,aux_ord,comparo
   LOGICAL,DIMENSION(:),ALLOCATABLE::aux_mss_template
 
   TYPE(p_at),POINTER::at
@@ -2617,19 +2695,17 @@ SUBROUTINE SOLVING_LAST_SYMMETRIES_PERMUTING (shell1st,shell2nd,nnods,totntot)
            END DO
         END DO
 
-        ALLOCATE(aux_mss_ind_ats(totntot),aux_mss_symm(totntot),aux_mss_template(totntot))
+        ALLOCATE(aux_mss_ind_ats(totntot),aux_mss_template(totntot))
         gg=0
         ntot1sh=shell1st%ntot
         nnods1sh=shell1st%nnods
         CALL build_mss_ats(shell1st)
-        CALL build_mss_symm(shell1st)
         ALLOCATE(aux_ord(nnods1sh))
         CALL build_total_aux2sh(shell1st,aux_ord,nnods1sh)
         ggg=gg+1
         gg=gg+ntot1sh
         aux_mss_ind_ats(ggg:gg)      = mss_ind_ats(:)
         aux_mss_template(ggg:gg)     = mss_template(:)
-        aux_mss_symm(ggg:gg)         = mss_symm(:)
         
         DO ii=1,nnods1sh
            jj=aux_ord(ii)
@@ -2637,35 +2713,80 @@ SUBROUTINE SOLVING_LAST_SYMMETRIES_PERMUTING (shell1st,shell2nd,nnods,totntot)
            ntot2sh =shell%ntot
            nnods2sh=shell%nnods
            CALL build_mss_ats(shell)
-           CALL build_mss_symm(shell)
            ggg=gg+1
            gg=gg+ntot2sh
            aux_mss_ind_ats(ggg:gg)      = mss_ind_ats(:)
            aux_mss_template(ggg:gg)     = mss_template(:)
-           aux_mss_symm(ggg:gg)         = mss_symm(:)
         END DO
         
-        DEALLOCATE(mss_ind_ats,mss_symm,mss_template)
-        ALLOCATE(mss_ind_ats(totntot),mss_symm(totntot),mss_template(totntot))
+        DEALLOCATE(mss_ind_ats,mss_template)
+        ALLOCATE(mss_ind_ats(totntot),mss_template(totntot))
         mss_ind_ats  = aux_mss_ind_ats
-        mss_symm     = aux_mss_symm
         mss_template = aux_mss_template
         CALL build_mss_nods()
         CALL build_mss()
-        CALL build_trans_mss_ats()
-        CALL build_trans_mss_nods()
         
-        DEALLOCATE(aux_mss_ind_ats,aux_mss_symm,aux_mss_template)
+        DEALLOCATE(aux_mss_ind_ats,aux_mss_template)
         DEALLOCATE(aux_ord)
 
-        print*,'>>'
-        print'(85I3)',mss(:)
- 
+        IF (iii==1) THEN
+           candidato=1
+           ALLOCATE(comparo(totntot))
+           comparo(:)=mss(:)
+        ELSE
+           DO jj=1,totntot
+              IF (mss(jj)/=comparo(jj)) THEN
+                 IF (mss(jj)<comparo(jj)) THEN
+                    candidato=iii
+                    DO gg=jj,totntot
+                       comparo(gg)=mss(gg)
+                    END DO
+                 END IF
+                 EXIT
+              END IF
+           END DO
+        END IF
+
      END DO
 
-     print*,'&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&'
+     hh=0
+     hh=hh+1
+     IF (shell1st%unsolved_loops.eqv..TRUE.) THEN
+        shell1st%order(:)=shell1st%permutations(dale(candidato,hh),:)
+     END IF
+     
+     DO ii=1,shell1st%nats
+        at=>shell1st%ats(ii)
+        DO ll=1,2
+           hh=hh+1
+           IF (at%bonded(ll)%unsolved_loops) THEN
+              at%bonded(ll)%order(:)=at%bonded(ll)%permutations(dale(candidato,hh),:)
+           END IF
+        END DO
+     END DO
+     
+     DO jj=1,nnods
+        shell=>shell2nd(jj)
+        hh=hh+1
+        IF (shell%unsolved_loops.eqv..TRUE.) THEN
+           shell%order(:)=shell%permutations(dale(candidato,hh),:)
+        END IF
+        DO ii=1,shell%nats
+           at=>shell%ats(ii)
+           DO ll=1,2
+              hh=hh+1
+              IF (at%bonded(ll)%unsolved_loops) THEN
+                 at%bonded(ll)%order(:)=at%bonded(ll)%permutations(dale(candidato,hh),:)
+              END IF
+           END DO
+        END DO
+     END DO
+
+     DEALLOCATE(dale)
+     !print*,'&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&'
   END IF
 
+  DEALLOCATE(num_permutaciones)
   NULLIFY(at,bonded,shell)
 
 END SUBROUTINE SOLVING_LAST_SYMMETRIES_PERMUTING
