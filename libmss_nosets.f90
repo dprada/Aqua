@@ -87,28 +87,12 @@ INTEGER,DIMENSION(:),ALLOCATABLE::trad2py_nod,trad2py_at
 TYPE(p_symm)::symm
 TYPE(p_translation),TARGET::translator
 
-!f2py intent(hide)::pff2,precalc2,precalc2_num
-!f2py intent(hide)::pff3,precalc3,precalc3_num
-!f2py intent(hide)::pff4,precalc4,precalc4_num
-INTEGER,PARAMETER::precalc2_num=2
-INTEGER,PARAMETER::precalc3_num=6
-INTEGER,PARAMETER::precalc4_num=24
-INTEGER,DIMENSION(2*2)::&
-     pff2=(/1,2, 2,1/)
-INTEGER,DIMENSION(3*6)::&
-     pff3=(/1,2,3, 1,3,2, 2,1,3,&
-            2,3,1, 3,1,2, 3,2,1/)
-INTEGER,DIMENSION(4*24)::&
-     pff4=(/1,2,3,4, 1,2,4,3, 1,3,2,4, 1,3,4,2, 1,4,2,3, 1,4,3,2,&
-            2,1,3,4, 2,1,4,3, 2,3,1,4, 2,3,4,1, 2,4,1,3, 2,4,3,1,&
-            3,1,2,4, 3,1,4,2, 3,2,1,4, 3,2,4,1, 3,4,1,2, 3,4,2,1,&
-            4,1,2,3, 4,1,3,2, 4,2,1,3, 4,2,3,1, 4,3,1,2, 4,3,2,1/)
+!f2py intent(hide)::precalc2,precalc3,precalc4,permutation
 INTEGER,DIMENSION(2,2)::precalc2
 INTEGER,DIMENSION(3,6)::precalc3
 INTEGER,DIMENSION(4,24)::precalc4
-equivalence(pff2,precalc2)
-equivalence(pff3,precalc3)
-equivalence(pff4,precalc4)
+INTEGER,DIMENSION(:),ALLOCATABLE::permutation
+
 
 !!! OUTPUT
 
@@ -347,6 +331,7 @@ SUBROUTINE load_topol(xx_at2nod,&
   INTEGER,DIMENSION(:),ALLOCATABLE::num_ats_nod
   TYPE(p_shell),POINTER::shell
 
+  CALL BUILD_PRECALC_PERMS()
 
   num_ats     = xx_num_ats
   num_nods    = xx_num_nods
@@ -1401,7 +1386,6 @@ SUBROUTINE QUITO_FALSOS_BONDED_SYMM2(bonded,shell2nd,nnods)
   ELSE
      bonded%unsolved_loops=.TRUE.
      IF (interruptor2.eqv..TRUE.) THEN
-        print*,'AQUIIIIIIIIIIIIIIIII 2'
         symm%length=ll
         symm%num_crits=new_num_crits
         DEALLOCATE(symm%crit)
@@ -2570,6 +2554,8 @@ SUBROUTINE SOLVING_LAST_SYMMETRIES_PERMUTING (shell1st,shell2nd,nnods,totntot)
   TYPE(p_bonded),POINTER::bonded
 
 
+  
+
   total_num_permutations=1
   extra_dim=shell1st%nats2+1
   DO ii=1,nnods
@@ -2847,8 +2833,15 @@ SUBROUTINE PERMUTO (orden_original,dim_orden,permutations,num_permutations)
         END DO
         num_permutations=num_permutations*24
      CASE DEFAULT
-        print*,'# Error: there is no precalculated list for', cantidad,' elements permutations.'
-        exit
+        kk=1
+        DO jj=2,cantidad
+           kk=kk*jj
+        END DO
+        num_perms(ii)=kk
+        num_permats(ii)=cantidad
+        ALLOCATE(perms(ii)%p2d(cantidad,kk))
+        CALL GENERATOR_PERMS(perms(ii)%p2d(:,:),cantidad,kk)
+        num_permutations=num_permutations*kk
      END SELECT
      DEALLOCATE(desord)
      gg=gg+cantidad
@@ -2878,16 +2871,66 @@ SUBROUTINE PERMUTO (orden_original,dim_orden,permutations,num_permutations)
      DO jj=1,symm%num_crits
         ll=dale(ii,jj)
         DO kk=1,num_permats(jj)
-           pos=perms(jj)%p2d(1,kk)
-           ind=orden_original(perms(jj)%p2d(ll,kk))
+           pos=perms(jj)%p2d(kk,1)
+           ind=orden_original(perms(jj)%p2d(kk,ll))
            permutations(ii,pos)=ind
         END DO
      END DO
   END DO
 
+  DO jj=1,symm%num_crits
+     DEALLOCATE(perms(jj)%p2d)
+  END DO
 
 END SUBROUTINE PERMUTO
 
+SUBROUTINE BUILD_PRECALC_PERMS()
+
+  INTEGER::ii
+
+  CALL GENERATOR_PERMS(precalc2,2,2)
+  CALL GENERATOR_PERMS(precalc3,3,6)
+  CALL GENERATOR_PERMS(precalc4,4,24)
+
+END SUBROUTINE BUILD_PRECALC_PERMS
+
+SUBROUTINE GENERATOR_PERMS(matriz,top,dim)
+
+  IMPLICIT NONE
+  INTEGER::ii
+  INTEGER,INTENT(IN)::top,dim
+  INTEGER,DIMENSION(top,dim),INTENT(INOUT)::matriz
+
+  ALLOCATE(permutation(1:top))
+  ii=0
+  CALL GENERATE (1,top,ii,dim,matriz)
+
+  DEALLOCATE(permutation)
+ 
+END SUBROUTINE GENERATOR_PERMS
+
+RECURSIVE SUBROUTINE GENERATE (position,top,ii,dim,matriz)
+ 
+  implicit none
+  integer, intent (in) :: position,top,dim
+  INTEGER, INTENT (INOUT) ::ii 
+  INTEGER,DIMENSION(top,dim),INTENT(INOUT)::matriz
+  integer :: val
+  
+  if (position > top) then
+     ii=ii+1
+     matriz(:,ii)=permutation(:)
+  else
+     do val = 1, top
+        if (.not. any (permutation (: position - 1) == val)) then
+           permutation (position) = val
+           CALL GENERATE (position + 1,top,ii,dim,matriz)
+        end if
+     end do
+  end if
+  
+END SUBROUTINE GENERATE
+ 
 
 !!!###################################################################################################
 !!!####  AUXILIAR FUNCTIONS TO BUILD MSS
