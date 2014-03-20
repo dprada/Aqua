@@ -143,6 +143,9 @@ class cl_node():
         self.coors=[]
         self.color=''
         self.size=''
+        self.att1=None
+        self.att2=None
+        self.att3=None
 
     def most_weighted_links(self,length=1):
         """ Indexes **of** the ranked N most weighted links.
@@ -399,15 +402,15 @@ class network():
          
         # merging the labels and weights of nodes
          
-        net_to_total=[]
+        net_to_total=numpy.zeros(net.num_nodes,dtype=int)
         labels_aux=copy.deepcopy(self.labels)
-        for ii in range(net.num_nodes):
+        for ii in xrange(net.num_nodes):
             try :
                 no=labels_aux[net.node[ii].label]
             except:
                 no=self.add_node(net.node[ii].label,iout=True)
             self.node[no].weight+=net.node[ii].weight
-            net_to_total.append(no)
+            net_to_total[ii]=no
 
         # merging the links
          
