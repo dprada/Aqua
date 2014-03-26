@@ -893,7 +893,7 @@ class network():
 
         return vect_out
 
-    def weight_core(self,threshold=None,new=False):
+    def weight_core(self,threshold=None,new=False,verbose=False):
 
         if threshold==None:
             print '# threshold needed.'
@@ -947,6 +947,9 @@ class network():
 
         del(pfff)
         del(labels)
+
+        if verbose:
+            temp.info()
 
         if new:
             return temp
@@ -1577,20 +1580,20 @@ class network():
 
 
 def kinetic_network(traj=None,ranges=None,bins=None,traj_out=False,labels=True,verbose=True):
-
+ 
     prov_net=network(directed=True,kinetic=True,verbose=False)
-
+ 
     ranges=pyn_math.standard_ranges(ranges)
     dimensions=ranges.shape[0]
     traj=pyn_math.standard_traj(traj,dimensions)
     num_frames=traj.shape[0]
     num_parts=traj.shape[1]
-
+ 
     opt_labels=0
     if labels:
         opt_labels=1
-
-
+ 
+ 
     if bins!=None:
         if type(bins) in [int]:
             bins=[bins]
@@ -1601,9 +1604,9 @@ def kinetic_network(traj=None,ranges=None,bins=None,traj_out=False,labels=True,v
         traj_net=f_kin_anal.trajbinning2net(opt_labels,traj,ranges,bins,num_frames,num_parts,dimensions)
     else:
         traj_net=f_kin_anal.traj2net(opt_labels,traj,ranges,num_frames,num_parts,dimensions)
-
+ 
     traj_net=pyn_math.standard_traj(traj_net,particles=num_parts,dimensions=1)
-
+ 
     prov_net.Ts=True
     prov_net.T_ind=copy.deepcopy(f_kin_anal.t_ind)
     prov_net.T_wl=copy.deepcopy(f_kin_anal.t_tau)
@@ -1620,15 +1623,15 @@ def kinetic_network(traj=None,ranges=None,bins=None,traj_out=False,labels=True,v
                 label=str(f_kin_anal.labels_daux[ii])
                 prov_net.node[ii].label=label
                 prov_net.labels[label]=ii
-
-
+ 
+ 
     f_kin_anal.free_memory_ts()
     if verbose:
         prov_net.info(update=False,verbose=True)
         pass
     else:
         pass
-
+ 
     if traj_out:
         return prov_net,traj_net
     else:

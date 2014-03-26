@@ -143,7 +143,7 @@ def skinner_parameter(system=None,index_wat_o=None,index_wat_h=None,index_h=None
     f_water.main.nw=system.num_waters
     f_water.main.initialize_coors_memory()
 
-    __coors2fortran(system,frame=0)
+    coors2fortran(system,frame=0)
 
 
     sk=f_water.hbonds.skinner_parameter(index_wat_o,index_wat_h,index_h)
@@ -183,7 +183,7 @@ def mss_water (system=None,output_array=None,definition='Skinner',sk_param=0.008
     # Data in Fortran for the frame:
 
     f_water.main.list_neighbours=0          ## Optimization for hbonds=False in first frame
-    __coors2fortran(system,frame=0)
+    coors2fortran(system,frame=0)
 
     # Analysis:
 
@@ -378,7 +378,7 @@ def coors2fortran(system,frame=None):
 ###        return 
         
 
-class kinetic_network(network):
+class kinetic_water_network(network):
     
     def __init__(self,system=None,file_traj=None,begin=None,end=None,definition='Skinner',sk_param=0.00850,roh_param=2.3000,roo_param=3.5,angooh_param=30.0,verbose=True,optimize=None,memory=1):
         """ optimize=[None,Disk,RAM], memory=x*Gb"""
@@ -433,9 +433,10 @@ class kinetic_network(network):
         ####### INITIALIZE NET#####
 
         ###################################### first frame
-        system.delete_coors()
-        system.load_coors(file_traj)
+        system.delete_traj()
+        system.load_traj(file_traj)
 
+        system.traj[0].reload_frame(begin)
         coors2fortran(system,frame=0)
 
         mss=f_water.microstates.microstates_box(system.num_waters)
@@ -448,13 +449,12 @@ class kinetic_network(network):
             except:
                 nodes_ant[jj]=self.add_node(aa,iout=True)
 
-        system.delete_coors()
         
         ###################################### Remaining frames
 
         for ii in range(begin+1,end+1):
 
-            system.load_coors(file_traj)
+            system.traj[0].reload_frame(ii)
 
             coors2fortran(system,frame=0)
 
@@ -463,7 +463,6 @@ class kinetic_network(network):
             for jj in range(system.num_waters):
                 aa,nodes_ant[jj]=self.add_link(nodes_ant[jj],str(mss[jj]),weight=1,index_origin=True,iout=True)
 
-            system.delete_coors()
             
 
             

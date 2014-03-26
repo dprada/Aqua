@@ -83,9 +83,10 @@ INTEGER,DIMENSION(:),ALLOCATABLE::trad2py_nod,trad2py_at
 
 !!! AUXILIAR
 
-!f2py   intent(hide)::symm,translator
+!f2py   intent(hide)::symm,translator,symm_ats_1sh
 TYPE(p_symm)::symm
 TYPE(p_translation),TARGET::translator
+LOGICAL::symm_ats_1sh
 
 !f2py intent(hide)::precalc2,precalc3,precalc4,permutation
 INTEGER,DIMENSION(2,2)::precalc2
@@ -310,6 +311,7 @@ END SUBROUTINE BUILD_LOOPS_IN
 
 SUBROUTINE load_topol(xx_at2nod,&
      xx_trad2py_at,xx_trad2py_nod,&
+     xx_symm_ats_1sh,&
      xx_symm_ats_start,xx_symm_ats_crits,xx_symm_ats,&
      xx_symm_nods,xx_symm_nods_num,&
      xx_num_ats,xx_num_nods,&
@@ -319,6 +321,7 @@ SUBROUTINE load_topol(xx_at2nod,&
 
   INTEGER,INTENT(IN)::xx_num_ats,xx_num_nods,xx_symm_nods_num
   INTEGER,INTENT(IN)::xx_symm_ats_dim,xx_symm_nods_dim
+  INTEGER,INTENT(IN)::xx_symm_ats_1sh
   INTEGER,DIMENSION(xx_num_ats),INTENT(IN)::xx_at2nod
   INTEGER,DIMENSION(xx_num_ats),INTENT(IN)::xx_trad2py_at
   INTEGER,DIMENSION(xx_num_nods),INTENT(IN)::xx_trad2py_nod
@@ -336,6 +339,11 @@ SUBROUTINE load_topol(xx_at2nod,&
   num_ats     = xx_num_ats
   num_nods    = xx_num_nods
 
+  IF (xx_symm_ats_1sh==1) THEN
+     symm_ats_1sh=.TRUE.
+  ELSE
+     symm_ats_1sh=.FALSE.
+  END IF
 
   IF (ALLOCATED(at2nod))           DEALLOCATE(at2nod)
   IF (ALLOCATED(trad2py_at))       DEALLOCATE(trad2py_at)
@@ -605,7 +613,11 @@ SUBROUTINE BUILD_SHELL2ND (core)
   !! Building the structure
  
   shell1st=list_shells(core)
- 
+
+  IF (symm_ats_1sh.eqv..FALSE.) THEN
+     shell1st%symm%num_crits=0
+  END IF
+
   nnods=shell1st%nnods
   totntot=shell1st%ntot
 

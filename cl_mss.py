@@ -58,6 +58,14 @@ class atom():
             self.hbond       = list(self.hbond)
             self.hbond_node  = list(self.hbond_node)
 
+    def limit_hbonds(self,lim=None,rever=None):
+        if self.num_hbonds>lim:
+            self.sort_hbonds(rever)
+            self.hbond_value=self.hbond_value[:lim]
+            self.hbond=self.hbond[:lim]
+            self.hbond_node=self.hbond_node[:lim]
+            self.num_hbonds=lim
+
     def reset(self):
 
         self.bond=[]
@@ -143,7 +151,7 @@ class node():
 
 class mss():
 
-    def __init__(self,msystem=None,sets='chains',symm_ats=None,symm_nodes=None,symm_sets_nodes=None,verbose=True):
+    def __init__(self,msystem=None,sets='chains',symm_ats=None,symm_ats_1sh=True,symm_nodes=None,symm_sets_nodes=None,verbose=True):
 
         self.__sets__=False
         self.type=sets   #'chains','residues','molecules'
@@ -166,6 +174,7 @@ class mss():
 
         self.hbtype=None
         self.btype=None
+        self.symm_ats_1sh=symm_ats_1sh
         self.symm_ats=symm_ats
         self.symm_nodes=symm_nodes
         self.symm_sets_nodes=symm_sets_nodes
@@ -336,7 +345,7 @@ class mss():
         print '#',self.num_donors,'donors'
         print '#',self.num_nonpolars,'nonpolar'
 
-    def __build_nodes_chains__(self):
+    def __build_nodes_chains__(self,ions=True):
 
         aux_dict={}
 
@@ -354,17 +363,28 @@ class mss():
                 aux_dict[ii]=tmp_node
             aux_dict[ii].add_atom(ii,acceptor=True)
 
-        sel_ions=self.msystem.selection('ion')
-        for ii in sel_ions:
-            jj=self.msystem.atom[ii].resid
-            tmp_node=node(jj.name+'-'+str(jj.pdb_index),jj.type)
-            aux_dict[ii]=tmp_node
-            aux_dict[ii].add_atom(ii,nonpolar=True)
+        if ions:
+            sel_ions=self.msystem.selection('ion')
+            for ii in sel_ions:
+                jj=self.msystem.atom[ii].resid
+                tmp_node=node(jj.name+'-'+str(jj.pdb_index),jj.type)
+                aux_dict[ii]=tmp_node
+                aux_dict[ii].add_atom(ii,nonpolar=True)
 
         return aux_dict
 
 
     def build_nodes(self):
+
+        if self.type=='chains':
+
+            aux_dict=self.__build_nodes_chains__(ions=False)
+            aux_keys=aux_dict.keys()
+            aux_keys.sort()
+            for ii in aux_keys:
+                self.node.append(aux_dict[ii])
+
+            del(aux_dict,aux_keys)
 
         if self.type=='chains+ions':
 
@@ -415,7 +435,7 @@ class mss():
 
             del(aux_dict,aux_keys,con_ASP,con_GLU,con_Term)
 
-    def load_net(self,hbonds=None,bonds=None,hbtype='R(o,o)-Ang(o,o,h)',btype='dists'):
+    def load_net(self,hbonds=None,bonds=None,lim_hbs=False,sort_hbs=False,sort_bs=False,hbtype=None,btype=None):
 
         for node in self.node:
             for ii,atom in node.atom.iteritems():
@@ -424,15 +444,26 @@ class mss():
         self.hbtype=hbtype
         self.btype=btype
 
-        if self.hbtype in ['R(o,o)-Ang(o,o,h)','R(o,h)']:
-            rever_hb=False
-        elif self.hbtype in ['Skinner']:
-            rever_hb=True
+        if lim_hbs:
+            sort_hbs=True
+
+        if sort_hbs:
+            if self.hbtype==None:
+                print 'hbtype needed'
+                return
+            elif self.hbtype in ['R(o,o)-Ang(o,o,h)','R(o,h)']:
+                rever_hb=False
+            elif self.hbtype in ['Skinner']:
+                rever_hb=True
  
-        if self.btype in ['dists']:
-            rever_b=False
-        else:
-            rever_b=True
+        if sort_bs:
+            if self.btype==None:
+                print 'btype needed'
+                return
+            elif self.btype in ['dists']:
+                rever_b=False
+            else:
+                rever_b=True
         
         if hbonds:
  
@@ -444,9 +475,17 @@ class mss():
                 self.node[ndon].atom[atdon].add_hbond(atacc,nacc,hb_val)
                 self.node[nacc].atom[atacc].add_hbond(atdon,ndon,hb_val)
  
-            for node in self.node:
-                for atom in node.atom.values():
-                    atom.sort_hbonds(rever_hb)
+            if lim_hbs:
+                for node in self.node:
+                    for atom in node.atom.values():
+                        if atom.acceptor:
+                            atom.limit_hbonds(2,rever_hb)
+                        elif atom.donor:
+                            atom.limit_hbonds(1,rever_hb)
+            elif sort_hbs:
+                for node in self.node:
+                    for atom in node.atom.values():
+                        atom.sort_hbonds(rever_hb)
  
         if bonds:
  
@@ -457,10 +496,10 @@ class mss():
                 nb=self.atom2node[atb]
                 self.node[na].atom[ata].add_bond(atb,nb,bond_val)
                 self.node[nb].atom[atb].add_bond(ata,na,bond_val)
- 
-            for node in self.node:
-                for atom in node.atom.values():
-                    atom.sort_bonds(rever_b)
+            if sort_bs:
+                for node in self.node:
+                    for atom in node.atom.values():
+                        atom.sort_bonds(rever_b)
 
 
         # Hago red:
@@ -515,6 +554,7 @@ class mss():
         else:
 
             mss_funcs_nosets.load_topol(self.x_atom2node,self.trad2py_atom,self.trad2py_node,
+                                        self.symm_ats_1sh,
                                         self.x_symm_ats_start,self.x_symm_ats_crits,self.x_symm_ats,
                                         self.x_symm_nods,self.x_symm_nods_num,
                                         self.num_atoms,self.num_nodes,
