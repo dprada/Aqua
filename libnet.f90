@@ -5,6 +5,7 @@ INTEGER,DIMENSION(:),ALLOCATABLE::lim_inf_mss,lim_sup_mss
 INTEGER,DIMENSION(:,:,:),ALLOCATABLE::traj_mss
 INTEGER,DIMENSION(:,:),ALLOCATABLE::labels
 
+
 CONTAINS
 
 SUBROUTINE INIT_TRAJ_MSS_2_NET ()
@@ -18,100 +19,100 @@ SUBROUTINE INIT_TRAJ_MSS_2_NET ()
 
 END SUBROUTINE INIT_TRAJ_MSS_2_NET
 
-SUBROUTINE TRAJ_MSS_2_TRAJ_NODES ()
-
-  !! You have to have right to write on the directory
-  
-  INTEGER,DIMENSION(:,:),ALLOCATABLE:: traj_nodes
-  LOGICAL,DIMENSION(:,:),ALLOCATABLE::occup
-  INTEGER,DIMENSION(:,:),ALLOCATABLE::indice
-  INTEGER,DIMENSION(:),ALLOCATABLE::deantes
-  INTEGER:: nnn,i,j,box,counted,a,b
-  CHARACTER*20::f1
-
-  ALLOCATE(traj_nodes(nw,num_frames))
-
-  DO box=1,dim_mss
-
-     IF (box==1) THEN
-        counted=1
-        traj_nodes=1
-     ELSE
-        CALL SYSTEM ('mv prov_trad_aux.aux prov_trad_aux_old.aux')
-     END IF
-     
-     ALLOCATE(occup(counted,lim_inf_mss(box):lim_sup_mss(box)),indice(counted,lim_inf_mss(box):lim_sup_mss(box)))
-     occup=.false.
-   
-     DO i=1,num_frames
-        DO ii=1,num_parts
-           b=traj_nodes(ii,i)
-           a=traj_mss(ii,i,box)
-           occup(b,a)=.true.
-        END DO
-     END DO
-   
-     nnn=0
-     WRITE(f1,*) box   !! Aqui habia un '(I)' donde el asterisco
-     f1="(I,"//TRIM(ADJUSTL(f1))//"I3)"
-
-     OPEN(21,FILE="prov_trad_aux.aux",status="REPLACE",ACTION="WRITE")
-     IF (box==1) THEN
-        DO i=1,counted
-           DO j=lim_inf_mss(box),lim_sup_mss(box)
-              IF (occup(i,j).eqv..true.) THEN
-                 nnn=nnn+1
-                 indice(i,j)=nnn
-                 WRITE(21,f1) nnn,j
-              END IF
-           END DO
-        END DO
-     ELSE
-        OPEN(61,FILE="prov_trad_aux_old.aux",status="OLD",ACTION="READ")
-        ALLOCATE(deantes(box-1))         
-        DO i=1,counted
-           READ(61,*) a,deantes(:)
-           DO j=lim_inf_mss(box),lim_sup_mss(box)
-              IF (occup(i,j).eqv..true.) THEN
-                 nnn=nnn+1
-                 WRITE(21,f1) nnn,deantes(:),j
-                 indice(i,j)=nnn
-              END IF
-           END DO
-        END DO
-        DEALLOCATE(deantes)
-        CLOSE(61)
-     END IF
-     CLOSE(21)
-
-     DO i=1,num_frames
-        DO ii=1,num_parts
-           b=traj_nodes(ii,i)
-           a=traj_mss(ii,i,box)
-           traj_nodes(ii,i)=indice(b,a)
-        END DO
-     END DO
-     DEALLOCATE(indice,occup)
-     counted=nnn
-     
-     IF (box/=1) CALL SYSTEM('rm prov_trad_aux_old.aux')
-     
-  END DO
-
-  DEALLOCATE(traj_mss)
-  ALLOCATE(labels(counted,dim_mss))
-  
-  OPEN(61,FILE="prov_trad_aux.aux",status="OLD",ACTION="READ")
-
-  DO i=1,counted
-     READ(61) a,labels(i,:)
-  END DO
-
-  CLOSE(61)
-  CALL SYSTEM('rm prov_trad_aux_old.aux')
-
-
-END SUBROUTINE TRAJ_MSS_2_TRAJ_NODES
+!SUBROUTINE TRAJ_MSS_2_TRAJ_NODES ()
+! 
+!  !! You have to have right to write on the directory
+!  
+!  INTEGER,DIMENSION(:,:),ALLOCATABLE:: traj_nodes
+!  LOGICAL,DIMENSION(:,:),ALLOCATABLE::occup
+!  INTEGER,DIMENSION(:,:),ALLOCATABLE::indice
+!  INTEGER,DIMENSION(:),ALLOCATABLE::deantes
+!  INTEGER:: nnn,i,j,box,counted,a,b,ii,nw
+!  CHARACTER(20)::f1
+! 
+!  ALLOCATE(traj_nodes(nw,num_frames))
+! 
+!  DO box=1,dim_mss
+! 
+!     IF (box==1) THEN
+!        counted=1
+!        traj_nodes=1
+!     ELSE
+!        CALL SYSTEM ('mv prov_trad_aux.aux prov_trad_aux_old.aux')
+!     END IF
+!     
+!     ALLOCATE(occup(counted,lim_inf_mss(box):lim_sup_mss(box)),indice(counted,lim_inf_mss(box):lim_sup_mss(box)))
+!     occup=.false.
+!   
+!     DO i=1,num_frames
+!        DO ii=1,num_parts
+!           b=traj_nodes(ii,i)
+!           a=traj_mss(ii,i,box)
+!           occup(b,a)=.true.
+!        END DO
+!     END DO
+!   
+!     nnn=0
+!     WRITE(f1,*) box   !! Aqui habia un '(I)' donde el asterisco
+!     f1="(I,"//TRIM(ADJUSTL(f1))//"I3)"
+! 
+!     OPEN(21,FILE="prov_trad_aux.aux",status="REPLACE",ACTION="WRITE")
+!     IF (box==1) THEN
+!        DO i=1,counted
+!           DO j=lim_inf_mss(box),lim_sup_mss(box)
+!              IF (occup(i,j).eqv..true.) THEN
+!                 nnn=nnn+1
+!                 indice(i,j)=nnn
+!                 WRITE(21,f1) nnn,j
+!              END IF
+!           END DO
+!        END DO
+!     ELSE
+!        OPEN(61,FILE="prov_trad_aux_old.aux",status="OLD",ACTION="READ")
+!        ALLOCATE(deantes(box-1))         
+!        DO i=1,counted
+!           READ(61,*) a,deantes(:)
+!           DO j=lim_inf_mss(box),lim_sup_mss(box)
+!              IF (occup(i,j).eqv..true.) THEN
+!                 nnn=nnn+1
+!                 WRITE(21,f1) nnn,deantes(:),j
+!                 indice(i,j)=nnn
+!              END IF
+!           END DO
+!        END DO
+!        DEALLOCATE(deantes)
+!        CLOSE(61)
+!     END IF
+!     CLOSE(21)
+! 
+!     DO i=1,num_frames
+!        DO ii=1,num_parts
+!           b=traj_nodes(ii,i)
+!           a=traj_mss(ii,i,box)
+!           traj_nodes(ii,i)=indice(b,a)
+!        END DO
+!     END DO
+!     DEALLOCATE(indice,occup)
+!     counted=nnn
+!     
+!     IF (box/=1) CALL SYSTEM('rm prov_trad_aux_old.aux')
+!     
+!  END DO
+! 
+!  DEALLOCATE(traj_mss)
+!  ALLOCATE(labels(counted,dim_mss))
+!  
+!  OPEN(61,FILE="prov_trad_aux.aux",status="OLD",ACTION="READ")
+! 
+!  DO i=1,counted
+!     READ(61) a,labels(i,:)
+!  END DO
+! 
+!  CLOSE(61)
+!  CALL SYSTEM('rm prov_trad_aux_old.aux')
+! 
+! 
+!END SUBROUTINE TRAJ_MSS_2_TRAJ_NODES
 
 
 
@@ -128,7 +129,7 @@ SUBROUTINE EVOLUTION_STEP(T_start,T_ind,T_tau,vect_in,N_nodes,Ktot,vect_out)
   DOUBLE PRECISION,DIMENSION(N_nodes),INTENT(OUT)::vect_out
   DOUBLE PRECISION,DIMENSION(N_nodes)::Pe
 
-  INTEGER::i,j,ii,jj
+  INTEGER::i,j,jj
   
   Pe=0
   vect_out=0.0d0
@@ -165,9 +166,10 @@ SUBROUTINE BROWNIAN_RUN (with_loops,T_start,T_ind,T_tau,iseed,node_alpha,length,
   INTEGER::place
   DOUBLE PRECISION::dice,bandera
 
-  INTEGER::i,j
+  INTEGER::i,j,k
 
   hseed=iseed
+  k=1
 
   IF (with_loops==1) THEN
 
@@ -217,7 +219,7 @@ SUBROUTINE BROWNIAN_RUN (with_loops,T_start,T_ind,T_tau,iseed,node_alpha,length,
      
      DO j=2,length+1
         
-        CALL dlarnv(1,hseed,1,dice)
+        CALL dlarnv(k,hseed,k,dice)
         dice=dice*Pe(place)
         
         bandera=0.0d0
@@ -304,8 +306,8 @@ SUBROUTINE DETAILED_BALANCE_DISTANCE(db_dist,p,T_start,T_ind,T_tau,N_nodes,Ktot)
 
 
   INTEGER::i,j,ii,jj
-  DOUBLE PRECISION::overp,aux_val
-  DOUBLE PRECISION::We_total,i_weight,i_trans,j_weight,j_trans
+  DOUBLE PRECISION::overp
+  DOUBLE PRECISION::We_total,i_trans,j_trans
 
   overp=1.0d0/p
   db_dist=0.0d0
@@ -383,13 +385,12 @@ SUBROUTINE WEIGHT_CORE_NEW_K_TOTAL(newKtot,newNnodes,threshold,T_ind,T_tau,T_sta
 
 END SUBROUTINE WEIGHT_CORE_NEW_K_TOTAL
 
-SUBROUTINE EXTRACT_NET_NEW_K_TOTAL(newKtot,list_nodes,T_ind,T_tau,T_start,newNnodes,N_nodes,Ktot)
+SUBROUTINE EXTRACT_NET_NEW_K_TOTAL(newKtot,list_nodes,T_ind,T_start,newNnodes,N_nodes,Ktot)
 
   IMPLICIT NONE
 
   INTEGER,INTENT(IN)::N_nodes,Ktot,newNnodes
   INTEGER,DIMENSION(Ktot),INTENT(IN)::T_ind
-  DOUBLE PRECISION,DIMENSION(Ktot),INTENT(IN)::T_tau
   INTEGER,DIMENSION(N_nodes+1),INTENT(IN)::T_start
   INTEGER,DIMENSION(newNnodes),INTENT(IN)::list_nodes
 
@@ -565,7 +566,7 @@ SUBROUTINE SYMMETRIZE_NET(newKmax,TT_tau,TT_ind,TT_start,Pe,newKtot,T_ind,T_tau,
   INTEGER,INTENT(OUT)::newKmax
 
   LOGICAL::interruptor
-  INTEGER::i,j,l,h,g,gg,destino
+  INTEGER::i,j,h,g,gg,destino
   DOUBLE PRECISION::aux,aux2
   integer,dimension(:),allocatable::salidas,auxx1
   DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::SL,auxx2
@@ -1799,16 +1800,16 @@ SUBROUTINE cfep_pfold (plot,info_1,info_2,A,B,T_ind,T_tau,T_start,length,num_ite
 
      
      !WRITE(154,*) ((Za*1.0d0)/(Z*1.0d0)),-log((Zab*1.0d0)/(Z*1.0d0)),cut
-     plot(g,1)=(Za/Z)
-     plot(g,2)=-log(Zab/Z)
-     plot(g,3)=cut
+     plot(g,1)=REAL((Za/Z))
+     plot(g,2)=REAL(-log(Zab/Z))
+     plot(g,3)=REAL(cut)
 
      DO i=1,N_nodes
         IF (filtro(i).eqv..true.) THEN 
            IF (filtro2(i).eqv..false.) THEN
               filtro2(i)=.true.
-              appear(i,1)=Za/Z
-              appear(i,2)=-log(Zab/Z)
+              appear(i,1)=REAL(Za/Z)
+              appear(i,2)=REAL(-log(Zab/Z))
            END IF
         END IF
      END DO     
@@ -1820,8 +1821,8 @@ SUBROUTINE cfep_pfold (plot,info_1,info_2,A,B,T_ind,T_tau,T_start,length,num_ite
      g=minloc(appear(:,1),DIM=1,MASK=filtro(:))
      !WRITE(155,*) g, appear(g,1), appear(g,2)
      info_1(i)=g
-     info_2(i,1)=appear(g,1)
-     info_2(i,2)=appear(g,2)
+     info_2(i,1)=REAL(appear(g,1))
+     info_2(i,2)=REAL(appear(g,2))
      filtro(g)=.false.
   END DO
 !  PRINT*,COUNT(filtro)
@@ -1844,7 +1845,7 @@ SUBROUTINE cfep_pfold2 (opt_bins,plot,node_index,A,B,T_ind,T_tau,T_start,length,
   DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::Pe
   
   integer::AA,BB
-  integer::i,j,times,jj,g,gg,ii,kk
+  integer::i,j,times,jj,g,gg,kk
 
   double precision,dimension(:),allocatable::Pf,Pf2
 
@@ -2019,7 +2020,7 @@ SUBROUTINE cfep_pfold3 (opt_bins,plot,values,node_index,A,B,T_ind,T_tau,T_start,
   DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::Pe
   
   integer::AA,BB
-  integer::i,j,times,jj,g,gg,ii,kk,hh,tt
+  integer::i,j,times,jj,g,gg,kk
 
   double precision,dimension(:),allocatable::Pf,Pf2
 
@@ -2031,12 +2032,8 @@ SUBROUTINE cfep_pfold3 (opt_bins,plot,values,node_index,A,B,T_ind,T_tau,T_start,
   double precision::Z,Za,Zab,aux,aux_de_pf,aux_a_pf,aux_trans
 
   !Para ordenar
-  integer::dim_buckets,num_occ_buckets
-  logical::interr
-  TYPE(int_pointer),DIMENSION(:),POINTER::buckets
-  INTEGER,DIMENSION(:),ALLOCATABLE::occup_buckets,orden
   !DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::values
-  double precision::lim_top,val_aux
+
 
   AA=A+1
   BB=B+1
@@ -2370,16 +2367,16 @@ SUBROUTINE cfep_mfpt (plot,info_1,info_2,A,T_ind,T_tau,T_start,length,num_iter,N
 
      
      !WRITE(154,*) ((Za*1.0d0)/(Z*1.0d0)),-log((Zab*1.0d0)/(Z*1.0d0)),cut
-     plot(g,1)=(Za/Z)
-     plot(g,2)=-log(Zab/Z)
-     plot(g,3)=cut
+     plot(g,1)=REAL((Za/Z))
+     plot(g,2)=REAL(-log(Zab/Z))
+     plot(g,3)=REAL(cut)
 
      DO i=1,N_nodes
         IF (filtro(i).eqv..true.) THEN 
            IF (filtro2(i).eqv..false.) THEN
               filtro2(i)=.true.
-              appear(i,1)=Za/Z
-              appear(i,2)=-log(Zab/Z)
+              appear(i,1)=REAL(Za/Z)
+              appear(i,2)=REAL(-log(Zab/Z))
            END IF
         END IF
      END DO     
@@ -2391,8 +2388,8 @@ SUBROUTINE cfep_mfpt (plot,info_1,info_2,A,T_ind,T_tau,T_start,length,num_iter,N
      g=minloc(appear(:,1),DIM=1,MASK=filtro(:))
      !WRITE(155,*) g, appear(g,1), appear(g,2)
      info_1(i)=g
-     info_2(i,1)=appear(g,1)
-     info_2(i,2)=appear(g,2)
+     info_2(i,1)=REAL(appear(g,1)) 
+     info_2(i,2)=REAL(appear(g,2)) 
      filtro(g)=.false.
   END DO
 !  PRINT*,COUNT(filtro)
@@ -2401,20 +2398,19 @@ END SUBROUTINE cfep_mfpt
 
 
 
-SUBROUTINE COMPONENTS(num_comp,componente,T_start,T_ind,T_tau,N_nodes,Ktot)
+SUBROUTINE COMPONENTS(num_comp,componente,T_start,T_ind,N_nodes,Ktot)
 
   IMPLICIT NONE
   
   INTEGER,INTENT(IN)::N_nodes,Ktot
   INTEGER,DIMENSION(Ktot),INTENT(IN)::T_ind
-  DOUBLE PRECISION,DIMENSION(Ktot),INTENT(IN)::T_tau
   INTEGER,DIMENSION(N_nodes+1),INTENT(IN)::T_start
   
   
   INTEGER,DIMENSION(N_nodes),INTENT(OUT)::componente
   INTEGER,INTENT(OUT)::num_comp
   
-  INTEGER::i,j,jj,g,gg,h,hh
+  INTEGER::i,j,jj,g,gg,h
   
   componente=0
   num_comp=0
@@ -2474,7 +2470,7 @@ SUBROUTINE DIJKSTRA (distancia,node,dim_out,directed,T_start,T_ind,T_tau,N_nodes
   LOGICAL,DIMENSION(:),ALLOCATABLE::filtro,filtro2
   
   DOUBLE PRECISION::azero
-  INTEGER::i,j,jj,g,gg,h,hh
+  INTEGER::i,j,g,h
   
   ALLOCATE(filtro(N_nodes),vect_aux(N_nodes))
   
@@ -2540,140 +2536,139 @@ SUBROUTINE DIJKSTRA (distancia,node,dim_out,directed,T_start,T_ind,T_tau,N_nodes
 END SUBROUTINE DIJKSTRA
 
 
-
-SUBROUTINE MDS (coordinates,eigenvals,eigenvects,stress,directed,opt,opt_stress,dim,lout,&
-     T_start,T_ind,T_tau,distances,N_nodes,Ktot,dim_distances)
- 
-  IMPLICIT NONE
-  
-  INTEGER,INTENT(IN)::N_nodes,Ktot,lout,dim,opt,opt_stress,directed,dim_distances
-  INTEGER,DIMENSION(Ktot),INTENT(IN)::T_ind
-  DOUBLE PRECISION,DIMENSION(Ktot),INTENT(IN)::T_tau
-  INTEGER,DIMENSION(N_nodes+1),INTENT(IN)::T_start
-  DOUBLE PRECISION,DIMENSION(dim_distances,dim_distances),INTENT(IN)::distances
-
-  DOUBLE PRECISION,DIMENSION(lout),INTENT(OUT)::eigenvals
-  DOUBLE PRECISION,DIMENSION(N_nodes,lout),INTENT(OUT)::eigenvects
-  DOUBLE PRECISION,DIMENSION(N_nodes,dim),INTENT(OUT)::coordinates
-  DOUBLE PRECISION,DIMENSION(lout),INTENT(OUT)::stress
-
-  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::vect_aux,coors_aux
-  DOUBLE PRECISION::dd,norm,salida
-  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::di
-  DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE::CC
-  INTEGER::num_val,info,Lwork
-  INTEGER, DIMENSION(:), ALLOCATABLE::iwork,ifail
-  DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE::work
-
-  INTEGER::h,i,j,g,abajo,ii,jj,gg
-
-  eigenvals=0.0d0
-  eigenvects=0.0d0
-  coordinates=0.0d0
-  stress=0.0d0
-
-  ALLOCATE(CC(N_nodes,N_nodes),di(N_nodes))
-  di=0.0d0
-  dd=0.0d0
-  CC=0.0d0
-
-  IF (dim_distances==N_nodes) THEN
-     CC=distances
-  ELSE
-     !! Dijkstra:
-     IF (opt==1) THEN
-        CALL DIJKSTRA(CC,-1,N_nodes,directed,T_start,T_ind,T_tau,N_nodes,Ktot)
-     ELSE
-        DO h=1,N_nodes
-           DO i=T_start(h)+1,T_start(h+1)
-              j=T_ind(i)
-              CC(j,h)=T_tau(i)
-           END DO
-        END DO
-     END IF
-  END IF
-  print*,'ENTRA 1'
-
-  !! Deberia poner aqui una opcion para hacer un guardado opcional distancias=CC
-  !! y usarlas luego como opcion al calcular el stress.
-
-  DO i=1,N_nodes
-     DO j=1,N_nodes
-        CC(j,i)=CC(j,i)**2    ! Necesario en el metodo
-        di(i)=di(i)+CC(j,i)
-        dd=dd+CC(j,i)
-     END DO
-     di(i)=di(i)/(N_nodes*1.0d0)
-  END DO
-  dd=dd/(N_nodes*N_nodes*1.0d0)
-
-  DO i=1,N_nodes
-     DO j=1,N_nodes
-        CC(j,i)=-0.50d0*(CC(j,i)-di(i)-di(j)+dd)
-     END DO
-  END DO
-
-  Lwork=8*N_nodes
-
-  ALLOCATE (work(Lwork),iwork(5*N_nodes),ifail(N_nodes))
-
-  eigenvals=0.0d0
-  eigenvects=0.0d0
-  work=0.0d0
-  iwork=0
-  ifail=0
-  abajo=N_nodes-lout+1
-
-
-  print*,'ENTRA 2'
-
-  CALL dsyevx ('V','I','U',N_nodes,CC,N_nodes,0,0,abajo,N_nodes,0.0d0,num_val&
-       &,eigenvals,eigenvects,N_nodes,work,Lwork,iwork,ifail,info)
-
-  IF (info/=0) THEN
-     print*,"#Error with the diagonalization -MDS.f90:dsyevx-"
-     print*,"#the array 'work' should has the dimension:",work(1)
-  END IF
-
-  DEALLOCATE (work,iwork,ifail,CC)
-  DEALLOCATE(di)
-
-  coordinates=0.0d0
-
-  DO j=1,dim
-     coordinates(:,j)=sqrt(eigenvals(lout-j+1))*eigenvects(:,lout-j+1)
-  END DO
-
-  IF (opt_stress==1) THEN
-     ALLOCATE(vect_aux(Ktot),coors_aux(N_nodes))
-     vect_aux=0.0d0
-     coors_aux=0.0d0
-     norm=0.0d0
-     DO ii=1,N_nodes
-        DO jj=T_start(ii)+1,T_start(ii+1)
-           norm=norm+T_tau(jj)**2
-        END DO
-     END DO
-     DO j=1,lout
-        if (eigenvals(lout-j+1)>0.0d0) THEN
-           salida=0.0d0
-           dd=sqrt(eigenvals(lout-j+1))
-           coors_aux(:)=dd*eigenvects(:,lout-j+1)
-           DO ii=1,N_nodes
-              DO jj=T_start(ii)+1,T_start(ii+1)
-                 gg=T_ind(jj)
-                 vect_aux(jj)=vect_aux(jj)+(coors_aux(ii)-coors_aux(gg))**2
-                 salida=salida+(sqrt(vect_aux(jj))-T_tau(jj))**2
-              END DO
-           END DO
-           stress(j)=sqrt(salida/norm)
-        END IF
-     END DO
-     DEALLOCATE(vect_aux,coors_aux)
-  END IF
-  
-
-END SUBROUTINE MDS
+!SUBROUTINE MDS (coordinates,eigenvals,eigenvects,stress,directed,opt,opt_stress,dim,lout,&
+!     T_start,T_ind,T_tau,distances,N_nodes,Ktot,dim_distances)
+! 
+!  IMPLICIT NONE
+!  
+!  INTEGER,INTENT(IN)::N_nodes,Ktot,lout,dim,opt,opt_stress,directed,dim_distances
+!  INTEGER,DIMENSION(Ktot),INTENT(IN)::T_ind
+!  DOUBLE PRECISION,DIMENSION(Ktot),INTENT(IN)::T_tau
+!  INTEGER,DIMENSION(N_nodes+1),INTENT(IN)::T_start
+!  DOUBLE PRECISION,DIMENSION(dim_distances,dim_distances),INTENT(IN)::distances
+! 
+!  DOUBLE PRECISION,DIMENSION(lout),INTENT(OUT)::eigenvals
+!  DOUBLE PRECISION,DIMENSION(N_nodes,lout),INTENT(OUT)::eigenvects
+!  DOUBLE PRECISION,DIMENSION(N_nodes,dim),INTENT(OUT)::coordinates
+!  DOUBLE PRECISION,DIMENSION(lout),INTENT(OUT)::stress
+! 
+!  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::vect_aux,coors_aux
+!  DOUBLE PRECISION::dd,norm,salida
+!  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::di
+!  DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE::CC
+!  INTEGER::num_val,info,Lwork
+!  INTEGER, DIMENSION(:), ALLOCATABLE::iwork,ifail
+!  DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE::work
+! 
+!  INTEGER::h,i,j,abajo,ii,jj,gg
+! 
+!  eigenvals=0.0d0
+!  eigenvects=0.0d0
+!  coordinates=0.0d0
+!  stress=0.0d0
+! 
+!  ALLOCATE(CC(N_nodes,N_nodes),di(N_nodes))
+!  di=0.0d0
+!  dd=0.0d0
+!  CC=0.0d0
+! 
+!  IF (dim_distances==N_nodes) THEN
+!     CC=distances
+!  ELSE
+!     !! Dijkstra:
+!     IF (opt==1) THEN
+!        CALL DIJKSTRA(CC,-1,N_nodes,directed,T_start,T_ind,T_tau,N_nodes,Ktot)
+!     ELSE
+!        DO h=1,N_nodes
+!           DO i=T_start(h)+1,T_start(h+1)
+!              j=T_ind(i)
+!              CC(j,h)=T_tau(i)
+!           END DO
+!        END DO
+!     END IF
+!  END IF
+!  print*,'ENTRA 1'
+! 
+!  !! Deberia poner aqui una opcion para hacer un guardado opcional distancias=CC
+!  !! y usarlas luego como opcion al calcular el stress.
+! 
+!  DO i=1,N_nodes
+!     DO j=1,N_nodes
+!        CC(j,i)=CC(j,i)**2    ! Necesario en el metodo
+!        di(i)=di(i)+CC(j,i)
+!        dd=dd+CC(j,i)
+!     END DO
+!     di(i)=di(i)/(N_nodes*1.0d0)
+!  END DO
+!  dd=dd/(N_nodes*N_nodes*1.0d0)
+! 
+!  DO i=1,N_nodes
+!     DO j=1,N_nodes
+!        CC(j,i)=-0.50d0*(CC(j,i)-di(i)-di(j)+dd)
+!     END DO
+!  END DO
+! 
+!  Lwork=8*N_nodes
+! 
+!  ALLOCATE (work(Lwork),iwork(5*N_nodes),ifail(N_nodes))
+! 
+!  eigenvals=0.0d0
+!  eigenvects=0.0d0
+!  work=0.0d0
+!  iwork=0
+!  ifail=0
+!  abajo=N_nodes-lout+1
+! 
+! 
+!  print*,'ENTRA 2'
+! 
+!  CALL dsyevx ('V','I','U',N_nodes,CC,N_nodes,0,0,abajo,N_nodes,0.0d0,num_val,&
+!       eigenvals,eigenvects,N_nodes,work,Lwork,iwork,ifail,info)
+! 
+!  IF (info/=0) THEN
+!     print*,"#Error with the diagonalization -MDS.f90:dsyevx-"
+!     print*,"#the array 'work' should has the dimension:",work(1)
+!  END IF
+! 
+!  DEALLOCATE (work,iwork,ifail,CC)
+!  DEALLOCATE(di)
+! 
+!  coordinates=0.0d0
+! 
+!  DO j=1,dim
+!     coordinates(:,j)=sqrt(eigenvals(lout-j+1))*eigenvects(:,lout-j+1)
+!  END DO
+! 
+!  IF (opt_stress==1) THEN
+!     ALLOCATE(vect_aux(Ktot),coors_aux(N_nodes))
+!     vect_aux=0.0d0
+!     coors_aux=0.0d0
+!     norm=0.0d0
+!     DO ii=1,N_nodes
+!        DO jj=T_start(ii)+1,T_start(ii+1)
+!           norm=norm+T_tau(jj)**2
+!        END DO
+!     END DO
+!     DO j=1,lout
+!        if (eigenvals(lout-j+1)>0.0d0) THEN
+!           salida=0.0d0
+!           dd=sqrt(eigenvals(lout-j+1))
+!           coors_aux(:)=dd*eigenvects(:,lout-j+1)
+!           DO ii=1,N_nodes
+!              DO jj=T_start(ii)+1,T_start(ii+1)
+!                 gg=T_ind(jj)
+!                 vect_aux(jj)=vect_aux(jj)+(coors_aux(ii)-coors_aux(gg))**2
+!                 salida=salida+(sqrt(vect_aux(jj))-T_tau(jj))**2
+!              END DO
+!           END DO
+!           stress(j)=sqrt(salida/norm)
+!        END IF
+!     END DO
+!     DEALLOCATE(vect_aux,coors_aux)
+!  END IF
+!  
+! 
+!END SUBROUTINE MDS
 
 
 SUBROUTINE MCL (N_sets,comunidades,granularity,epsilon,iterations,T_start,T_ind,T_tau,N_nodes,Ktot)
@@ -2690,7 +2685,7 @@ SUBROUTINE MCL (N_sets,comunidades,granularity,epsilon,iterations,T_start,T_ind,
   INTEGER,DIMENSION(N_nodes),INTENT(OUT)::comunidades
 
   DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE:: Pe
-  DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE:: matriz, matriz_seg, matriz2
+  DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE:: matriz, matriz2
 
   INTEGER::i,j,ii,g,h
   DOUBLE PRECISION:: aux
@@ -2800,7 +2795,7 @@ SUBROUTINE DENDO_TIME (num_steps,N_basins,pertenece_a,T_ind,T_tau,T_start,N_node
   LOGICAL,DIMENSION(:),ALLOCATABLE::filtro,filtro2
   INTEGER,DIMENSION(:),ALLOCATABLE::representante,salto,vertical,etiqueta
 
-  INTEGER::N,i,j,g,h,ii,jj,gg,hh,veces,dim2,dim
+  INTEGER::N,i,j,g,h,ii,jj,gg,veces,dim2,dim
   INTEGER::factor,candidato
   DOUBLE PRECISION::aux
   LOGICAL::inter,bandera,bandera2
@@ -3027,67 +3022,67 @@ SUBROUTINE DENDO_TIME (num_steps,N_basins,pertenece_a,T_ind,T_tau,T_start,N_node
 END SUBROUTINE DENDO_TIME
 
 
-SUBROUTINE DENDO_BY_NODES (N_basins,pertenece_a,T_ind,T_tau,T_start,N_nodes,Ktot)
-
-  IMPLICIT NONE
-
-  TYPE int_pointer
-     INTEGER,DIMENSION(:),POINTER::ip
-  END TYPE int_pointer
-  
-  TYPE double_pointer
-     DOUBLE PRECISION,DIMENSION(:),POINTER::dp
-  END TYPE double_pointer
-
-  INTEGER,INTENT(IN)::N_nodes,Ktot,N_basins
-  INTEGER,DIMENSION(Ktot),INTENT(IN)::T_ind
-  DOUBLE PRECISION,DIMENSION(Ktot),INTENT(IN)::T_tau
-  INTEGER,DIMENSION(N_nodes+1),INTENT(IN)::T_start
-  INTEGER,DIMENSION(N_nodes),INTENT(IN)::pertenece_a
-
-  INTEGER::gg,hh,ii,jj,kk,ll
-  INTEGER,DIMENSION(:),ALLOCATABLE::aux_vect_int
-
-  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::Pe,Pe_basin
-  INTEGER,DIMENSION(:),ALLOCATABLE::Popul_basin
-  TYPE(int_pointer),DIMENSION(:),POINTER::basin
-
-  
-
-  ALLOCATE(Pe(N_nodes),Pe_basin(N_basins),Popul_basin(N_basins))
-
-  Pe=0.0d0
-  Pe_basin=0.0d0
-  Popul_basin=0
-
-  DO ii=1,N_nodes
-     DO jj=T_start(ii)+1,T_start(ii+1)
-        Pe(ii)=Pe(ii)+T_tau(jj)
-     END DO
-     kk=pertenece_a(ii)
-     Pe_basin(kk)=Pe_basin(kk)+Pe(ii)
-     Popul_basin(kk)=Popul_basin(kk)+1
-  END DO
-
-  ALLOCATE(basin(N_basins))
-  DO ii=1,N_basins
-     ALLOCATE(basin(ii)%ip(Popul_basin(ii)))
-     basin(ii)%ip(:)=0
-  END DO
-
-  ALLOCATE(aux_vect_int(N_basins))
-  aux_vect_int=0
-  DO ii=1,N_nodes
-     kk=pertenece_a(ii)
-     gg=aux_vect_int(kk)+1
-     basin(kk)%ip(gg)=ii
-     aux_vect_int(kk)=gg
-  END DO
-
-  !! Tiros con el resto de basins
-
-  
-END SUBROUTINE DENDO_BY_NODES
+!SUBROUTINE DENDO_BY_NODES (N_basins,pertenece_a,T_ind,T_tau,T_start,N_nodes,Ktot)
+! 
+!  IMPLICIT NONE
+! 
+!  TYPE int_pointer
+!     INTEGER,DIMENSION(:),POINTER::ip
+!  END TYPE int_pointer
+!  
+!  TYPE double_pointer
+!     DOUBLE PRECISION,DIMENSION(:),POINTER::dp
+!  END TYPE double_pointer
+! 
+!  INTEGER,INTENT(IN)::N_nodes,Ktot,N_basins
+!  INTEGER,DIMENSION(Ktot),INTENT(IN)::T_ind
+!  DOUBLE PRECISION,DIMENSION(Ktot),INTENT(IN)::T_tau
+!  INTEGER,DIMENSION(N_nodes+1),INTENT(IN)::T_start
+!  INTEGER,DIMENSION(N_nodes),INTENT(IN)::pertenece_a
+! 
+!  INTEGER::gg,ii,jj,kk
+!  INTEGER,DIMENSION(:),ALLOCATABLE::aux_vect_int
+! 
+!  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::Pe,Pe_basin
+!  INTEGER,DIMENSION(:),ALLOCATABLE::Popul_basin
+!  TYPE(int_pointer),DIMENSION(:),POINTER::basin
+! 
+!  
+! 
+!  ALLOCATE(Pe(N_nodes),Pe_basin(N_basins),Popul_basin(N_basins))
+! 
+!  Pe=0.0d0
+!  Pe_basin=0.0d0
+!  Popul_basin=0
+! 
+!  DO ii=1,N_nodes
+!     DO jj=T_start(ii)+1,T_start(ii+1)
+!        Pe(ii)=Pe(ii)+T_tau(jj)
+!     END DO
+!     kk=pertenece_a(ii)
+!     Pe_basin(kk)=Pe_basin(kk)+Pe(ii)
+!     Popul_basin(kk)=Popul_basin(kk)+1
+!  END DO
+! 
+!  ALLOCATE(basin(N_basins))
+!  DO ii=1,N_basins
+!     ALLOCATE(basin(ii)%ip(Popul_basin(ii)))
+!     basin(ii)%ip(:)=0
+!  END DO
+! 
+!  ALLOCATE(aux_vect_int(N_basins))
+!  aux_vect_int=0
+!  DO ii=1,N_nodes
+!     kk=pertenece_a(ii)
+!     gg=aux_vect_int(kk)+1
+!     basin(kk)%ip(gg)=ii
+!     aux_vect_int(kk)=gg
+!  END DO
+! 
+!  !! Tiros con el resto de basins
+! 
+!  
+!END SUBROUTINE DENDO_BY_NODES
 
 
 
@@ -3915,7 +3910,7 @@ SUBROUTINE SORT_BY_BUCKETS (order,lim_inf,lim_sup,dim_boxes,max_popul,valores,N_
   DOUBLE PRECISION,DIMENSION(N_vals),INTENT(IN)::valores
   INTEGER,DIMENSION(N_vals),INTENT(OUT)::order
 
-  INTEGER::ii,jj,kk,hh,gg,tt,entra,iii
+  INTEGER::ii,jj,kk,hh,gg,tt,entra
   INTEGER::num_buckets,num_occ_buckets,prox,topprox,num_occ_boxes
   INTEGER,DIMENSION(:),ALLOCATABLE::occ_buckets,reord,occ_boxes
   DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE::lims_buckets,aux_lims,vect_aux

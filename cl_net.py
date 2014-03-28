@@ -1,6 +1,7 @@
 from libnet import glob as f_net
 from libkinanal import glob as f_kin_anal
 from libanaltrajs import glob as f_trajs
+from libmds import glob as f_mds
 import cl_math as pyn_math
 import numpy
 import copy
@@ -438,7 +439,7 @@ class network():
 
         new_N_nodes=nodes.shape[0]
 
-        new_k_total=f_net.extract_net_new_k_total(nodes,self.T_ind,self.T_wl,self.T_start,new_N_nodes,self.num_nodes,self.k_total)
+        new_k_total=f_net.extract_net_new_k_total(nodes,self.T_ind,self.T_start,new_N_nodes,self.num_nodes,self.k_total)
         pfff=f_net.extract_net(new_k_total,nodes,self.T_ind,self.T_wl,self.T_start,self.num_nodes,self.k_total,new_N_nodes)
 
         labels={}
@@ -1235,6 +1236,54 @@ class network():
 
         return pfff
 
+    def mds2(self,tipo=None,dim=3,eigenvs='all',stress=False):
+
+        if self.Ts==False :
+            self.build_Ts()
+
+        f_mds.load_net(self.T_start,self.T_ind,self.T_wl,self.num_nodes,self.k_total)
+        if tipo==1:
+            f_mds.pre_relax_1st_order()
+        elif tipo==2:
+            f_mds.pre_relax_1st_order2()
+        elif tipo==3:
+            f_mds.pre_relax_hamm()
+        elif tipo==4:
+            f_mds.pre_inv_flux()
+        elif tipo==5:
+            f_mds.pre_min_fpt()
+        elif tipo==6:
+            f_mds.pre_ave_fpt()
+
+        f_mds.dijkstra()
+
+        if eigenvs in ['all','All']:
+            eigenvs=self.num_nodes
+        if eigenvs>self.num_nodes:
+            print '# Error: eigenvs>num_nodes'
+            return 
+        if dim>eigenvs:
+            print '# Error: dim>eigenvs'
+            return
+
+        opt_stress=0
+
+        if stress:
+            opt_stress=1
+
+        o_coors,o_eigenvals,o_eigenvects,o_stress=f_mds.mds(opt_stress,dim,eigenvs,self.num_nodes)
+
+        for ii in range(self.num_nodes):
+            self.node[ii].coors=o_coors[ii][:]
+
+        if stress:
+            return o_eigenvals,o_eigenvects,o_stress
+        else:
+            return o_eigenvals,o_eigenvects
+
+
+
+
     def mds(self,dim=3,eigenvs='all',output=False,alt_links=False,distances=None,dijkstra=True,stress=False):
 
         #eigenvs=self.num_nodes
@@ -1410,12 +1459,12 @@ class network():
 
         if alt_links:
             alt_k_total, alt_T_start, alt_T_ind, alt_T_wl=self.build_Ts(alt_links=True)
-            self.num_components,pfff=f_net.components(alt_T_start,alt_T_ind,alt_T_wl,self.num_nodes,alt_k_total)
+            self.num_components,pfff=f_net.components(alt_T_start,alt_T_ind,self.num_nodes,alt_k_total)
             del(alt_k_total, alt_T_start, alt_T_ind, alt_T_wl)
         else:
             if self.Ts==False :
                 self.build_Ts()
-            self.num_components,pfff=f_net.components(self.T_start,self.T_ind,self.T_wl,self.num_nodes,self.k_total)
+            self.num_components,pfff=f_net.components(self.T_start,self.T_ind,self.num_nodes,self.k_total)
 
         Comp={}
 
@@ -1473,7 +1522,7 @@ class network():
 
         if self.Ts==False :
             self.build_Ts()
-        self.num_components,pfff=f_net.components(self.T_start,self.T_ind,self.T_wl,self.num_nodes,self.k_total)
+        self.num_components,pfff=f_net.components(self.T_start,self.T_ind,self.num_nodes,self.k_total)
 
         Comp={}
 
@@ -1520,6 +1569,8 @@ class network():
         return gc_nodes
 
         pass
+
+
 
 
 #### External Functions

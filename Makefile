@@ -178,7 +178,7 @@ io_formats/libtngfile.so: trajng-0.6.1.tar.gz
 	@ if ! grep ': FAILED' INSTALL.log 1>/dev/null ; then echo '> io_formats/libtngfile.so ...   OK';\
 	cd tngfiles/lib; ar -x libtrajng.a; gcc -shared *.o -o $(ltnglib); cd ../../; cp tngfiles/lib/$(ltnglib) io_formats/libtngfile.so; rm -r tngfiles; fi
 
-f90_libraries: libgeneral.so libwater.so libenm.so libnet.so libmath.so libanaltrajs.so \
+f90_libraries: libgeneral.so libwater.so libenm.so libnet.so libmds.so libmath.so libanaltrajs.so \
 	libkinanal.so libmss_sets.so libmss_nosets.so io_formats/libdcdfile.so io_formats/libbinfile.so io_formats/libcell2box.so
 
 libgeneral.so: libgeneral.f90
@@ -202,6 +202,12 @@ libenm.so: libenm.f90
 libnet.so: libnet.f90
 	@ echo '>>>>>> Compiling' $@ >> INSTALL.log
 	@ $(F2PY) --opt=$(FOPTS) --f90flags=$(FFLAGS) --fcompiler=$(FTYPE) -c -m libnet libnet.f90 $(LAPACK_LIBS) $(SOUT)
+	@ if [ ! -e $@ ]; then echo '> Error compiling' $@ ': check the file INSTALL.log'; fi
+	@ if [ -e $@ ]; then echo '>' $@ '...         OK'; fi
+
+libmds.so: libmds.f90
+	@ echo '>>>>>> Compiling' $@ >> INSTALL.log
+	@ $(F2PY) --opt=$(FOPTS) --f90flags=$(FFLAGS) --fcompiler=$(FTYPE) -c -m libmds libmds.f90 $(LAPACK_LIBS) $(SOUT)
 	@ if [ ! -e $@ ]; then echo '> Error compiling' $@ ': check the file INSTALL.log'; fi
 	@ if [ -e $@ ]; then echo '>' $@ '...         OK'; fi
 
