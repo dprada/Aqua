@@ -55,7 +55,7 @@ MODULE GLOB
   INTEGER::hbdefinition
   DOUBLE PRECISION::sk_param,roh2_param,roo2_param
   DOUBLE PRECISION::cos_angooh_param  ! the cosine
-
+  DOUBLE PRECISION::cos_angoho_param
 
   !!Output
   INTEGER,DIMENSION(:),ALLOCATABLE::hbs_s_A,hbs_inds_A,hbs_s_B,hbs_inds_B
@@ -2676,7 +2676,7 @@ SUBROUTINE GET_HBONDS (effic,diff_syst,diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,d
 END SUBROUTINE GET_HBONDS
 
 
-SUBROUTINE GET_HBONDS_ROO_ANG_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,ortho, &
+SUBROUTINE GET_HBONDS_ROO_ANGOOH_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,ortho, &
      acc_B,acc_sH_B,acc_H_B,don_B,don_sH_B,don_H_B,nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, &
      nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H,numat_glob)
 
@@ -2710,7 +2710,7 @@ SUBROUTINE GET_HBONDS_ROO_ANG_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,d
   TYPE(darray_pointer),DIMENSION(:),POINTER::hbs_a_val,hbs_b_val 
   INTEGER,DIMENSION(:),ALLOCATABLE::num_hbs_a,num_hbs_b
 
-  INTEGER::ii,jj,gg,hh
+  INTEGER::ii,jj,gg,hh,ll
   INTEGER::don,don_h,acc
   INTEGER::lim_hbs
 
@@ -2911,10 +2911,10 @@ SUBROUTINE GET_HBONDS_ROO_ANG_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,d
   DEALLOCATE(hbs_b_ind,hbs_b_val)
   DEALLOCATE(num_hbs_a,num_hbs_b)
 
-END SUBROUTINE GET_HBONDS_ROO_ANG_NS_LIST
+END SUBROUTINE GET_HBONDS_ROO_ANGOOH_NS_LIST
 
 
-SUBROUTINE GET_HBONDS_ROO_ANG (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,ortho, &
+SUBROUTINE GET_HBONDS_ROO_ANGOOH (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,ortho, &
      acc_B,acc_sH_B,acc_H_B,don_B,don_sH_B,don_H_B,nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, &
      nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H,numat_glob)
 
@@ -2948,7 +2948,7 @@ SUBROUTINE GET_HBONDS_ROO_ANG (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don
   TYPE(darray_pointer),DIMENSION(:),POINTER::hbs_a_val,hbs_b_val 
   INTEGER,DIMENSION(:),ALLOCATABLE::num_hbs_a,num_hbs_b
 
-  INTEGER::ii,jj,gg,hh
+  INTEGER::ii,jj,gg,hh,ll
   INTEGER::don,don_h,acc
   INTEGER::lim_hbs
 
@@ -3144,7 +3144,953 @@ SUBROUTINE GET_HBONDS_ROO_ANG (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don
   DEALLOCATE(hbs_b_ind,hbs_b_val)
   DEALLOCATE(num_hbs_a,num_hbs_b)
 
-END SUBROUTINE GET_HBONDS_ROO_ANG
+END SUBROUTINE GET_HBONDS_ROO_ANGOOH
+
+SUBROUTINE GET_HBONDS_ROO_ANGOHO_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,ortho, &
+     acc_B,acc_sH_B,acc_H_B,don_B,don_sH_B,don_H_B,nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, &
+     nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H,numat_glob)
+
+  TYPE iarray_pointer
+     INTEGER,DIMENSION(:),POINTER::i1
+  END TYPE iarray_pointer
+  TYPE darray_pointer
+     DOUBLE PRECISION,DIMENSION(:),POINTER::d1
+  END TYPE darray_pointer
+
+  INTEGER,INTENT(IN)::diff_set,pbc_opt,ortho,numat_glob
+  INTEGER,INTENT(IN)::nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H
+  INTEGER,INTENT(IN)::nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H
+  INTEGER,DIMENSION(nA_acc),INTENT(IN)    ::acc_A
+  INTEGER,DIMENSION(nB_acc),INTENT(IN)    ::acc_B
+  INTEGER,DIMENSION(nA_don),INTENT(IN)    ::don_A
+  INTEGER,DIMENSION(nB_don),INTENT(IN)    ::don_B
+  INTEGER,DIMENSION(nA_acc_sH),INTENT(IN) ::acc_sH_A
+  INTEGER,DIMENSION(nB_acc_sH),INTENT(IN) ::acc_sH_B
+  INTEGER,DIMENSION(nA_acc_H),INTENT(IN)  ::acc_H_A
+  INTEGER,DIMENSION(nB_acc_H),INTENT(IN)  ::acc_H_B
+  INTEGER,DIMENSION(nA_don_sH),INTENT(IN) ::don_sH_A
+  INTEGER,DIMENSION(nB_don_sH),INTENT(IN) ::don_sH_B
+  INTEGER,DIMENSION(nA_don_H),INTENT(IN)  ::don_H_A
+  INTEGER,DIMENSION(nB_don_H),INTENT(IN)  ::don_H_B
+  DOUBLE PRECISION,DIMENSION(numat_glob,3),intent(in)::coors
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box
+
+
+  TYPE(iarray_pointer),DIMENSION(:),POINTER::hbs_a_ind,hbs_b_ind 
+  TYPE(darray_pointer),DIMENSION(:),POINTER::hbs_a_val,hbs_b_val 
+  INTEGER,DIMENSION(:),ALLOCATABLE::num_hbs_a,num_hbs_b
+
+  INTEGER::ii,jj,gg,hh,ll
+  INTEGER::don,don_h,acc
+  INTEGER::lim_hbs
+
+  DOUBLE PRECISION,DIMENSION(3)::pos_acc,pos_don,pos_h
+  DOUBLE PRECISION,DIMENSION(3)::vect_don_acc,vect_h_acc,vect_don_h
+  DOUBLE PRECISION,DIMENSION(3)::aux_vect_1,aux_vect_2,aux_vect_3
+  DOUBLE PRECISION::dist_h_acc,dist_don_acc,dist_don_h,aux_cos,sk_val
+  DOUBLE PRECISION::dist2_h_acc,dist2_don_acc,dist2_don_h
+
+  INTEGER::acc_H1,acc_H2
+  DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE::vect_perp
+
+  INTEGER,DIMENSION(:),ALLOCATABLE::aux_box_ind,aux2_box_ind
+  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::aux_box_val,aux2_box_val
+
+  LOGICAL,DIMENSION(:),ALLOCATABLE::filtro
+
+  lim_hbs=3
+
+  ALLOCATE(aux_box_ind(lim_hbs),aux_box_val(lim_hbs),filtro(lim_hbs))
+  filtro=.FALSE.
+
+  ALLOCATE(hbs_a_ind(nA_don_H),hbs_a_val(nA_don_H))
+  ALLOCATE(hbs_b_ind(nB_don_H),hbs_b_val(nB_don_H))
+  ALLOCATE(num_hbs_a(nA_don_H),num_hbs_b(nB_don_H))
+
+  num_hbs_a=0
+  num_hbs_b=0
+
+  !!!!  
+
+
+  CALL EXTRACT_NS_LIST_SETS(diff_set,don_A,acc_B,nA_don,nB_acc,numat_glob)
+
+  DO ii=1,nA_don
+     don=don_A(ii)+1
+     pos_don=coors(don,:)
+     DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)
+        don_h=don_H_A(hh)+1
+        vect_don_h=coors(don_h,:)-pos_don
+        IF (pbc_opt==1) CALL PBC(vect_don_h,box,ortho)
+        dist2_don_h=dot_product(vect_don_h,vect_don_h)
+        gg=0
+        DO jj=1,ver_ic_dim(don)
+           IF (filt_sets_ns_ind(don,jj)) THEN
+              acc=ver_ic_ind(don,jj)
+              vect_h_acc=coors(acc,:)-coors(don_h,:) !!
+              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho) !!
+              dist2_h_acc=dot_product(vect_h_acc,vect_h_acc) !!
+              aux_cos=dot_product(vect_don_h,vect_h_acc)/(sqrt(dist2_h_acc*dist2_don_h)) !!
+              IF (aux_cos>cos_angoho_param) THEN
+                 gg=gg+1
+                 IF (gg>lim_hbs) THEN
+                    ALLOCATE(aux2_box_ind(lim_hbs),aux2_box_val(lim_hbs))
+                    aux2_box_ind=aux_box_ind
+                    aux2_box_val=aux_box_val
+                    DEALLOCATE(aux_box_ind,aux_box_val)
+                    ALLOCATE(aux_box_ind(gg),aux_box_val(gg))
+                    aux_box_ind(1:lim_hbs)=aux2_box_ind
+                    aux_box_val(1:lim_hbs)=aux2_box_val
+                    DEALLOCATE(aux2_box_ind,aux2_box_val)
+                    lim_hbs=gg
+                 END IF
+                 aux_box_ind(gg)=acc-1
+                 aux_box_val(gg)=dist2_h_acc !!
+              END IF
+           END IF
+        END DO
+        IF (gg>0) THEN
+           ALLOCATE(hbs_a_ind(hh)%i1(gg),hbs_a_val(hh)%d1(gg))
+           filtro(1:gg)=.TRUE.
+           DO jj=1,gg
+              ll=MAXLOC(aux_box_val(:),DIM=1,MASK=filtro)
+              filtro(ll)=.FALSE.
+              hbs_a_ind(hh)%i1(jj)=aux_box_ind(ll)
+              hbs_a_val(hh)%d1(jj)=aux_box_val(ll)
+           END DO
+        END IF
+
+        num_hbs_a(hh)=gg
+
+     END DO
+  END DO
+
+  IF (diff_set==1) THEN
+
+     CALL EXTRACT_NS_LIST_SETS(diff_set,don_B,acc_A,nB_don,nA_acc,numat_glob)
+
+     DO ii=1,nB_don
+        don=don_B(ii)+1
+        pos_don=coors(don,:)
+        DO hh=don_sH_B(ii)+1,don_sH_B(ii+1)
+           don_h=don_H_B(hh)+1
+           vect_don_h=coors(don_h,:)-pos_don
+           IF (pbc_opt==1) CALL PBC(vect_don_h,box,ortho)
+           dist2_don_h=dot_product(vect_don_h,vect_don_h)
+           gg=0
+           DO jj=1,ver_ic_dim(don)
+              IF (filt_sets_ns_ind(don,jj)) THEN
+                 acc=ver_ic_ind(don,jj)
+                 vect_h_acc=coors(acc,:)-coors(don_h,:) !!
+                 IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho) !!
+                 dist2_h_acc=dot_product(vect_h_acc,vect_h_acc) !!
+                 aux_cos=dot_product(vect_don_h,vect_h_acc)/(sqrt(dist2_h_acc*dist2_don_h)) !!
+                 IF (aux_cos>cos_angoho_param) THEN
+                    gg=gg+1
+                    IF (gg>lim_hbs) THEN
+                       ALLOCATE(aux2_box_ind(lim_hbs),aux2_box_val(lim_hbs))
+                       aux2_box_ind=aux_box_ind
+                       aux2_box_val=aux_box_val
+                       DEALLOCATE(aux_box_ind,aux_box_val)
+                       ALLOCATE(aux_box_ind(gg),aux_box_val(gg))
+                       aux_box_ind(1:lim_hbs)=aux2_box_ind
+                       aux_box_val(1:lim_hbs)=aux2_box_val
+                       DEALLOCATE(aux2_box_ind,aux2_box_val)
+                       lim_hbs=gg
+                    END IF
+                    aux_box_ind(gg)=acc-1
+                    aux_box_val(gg)=dist2_h_acc !!
+                 END IF
+              END IF
+           END DO
+           IF (gg>0) THEN
+              ALLOCATE(hbs_b_ind(hh)%i1(gg),hbs_b_val(hh)%d1(gg))
+              filtro(1:gg)=.TRUE.
+              DO jj=1,gg
+                 ll=MAXLOC(aux_box_val(:),DIM=1,MASK=filtro)
+                 filtro(ll)=.FALSE.
+                 hbs_b_ind(hh)%i1(jj)=aux_box_ind(ll)
+                 hbs_b_val(hh)%d1(jj)=aux_box_val(ll)
+              END DO
+           END IF
+           
+           num_hbs_b(hh)=gg
+           
+        END DO
+     END DO
+  END IF
+
+  IF (ALLOCATED(hbs_out)) DEALLOCATE(hbs_out)
+  IF (ALLOCATED(hbs_vals_out)) DEALLOCATE(hbs_vals_out)
+
+
+  IF (diff_set==1) THEN
+     ii=SUM(num_hbs_a)+SUM(num_hbs_b)
+     ALLOCATE(hbs_out(ii,3),hbs_vals_out(ii))
+     gg=0
+     DO ii=1,nA_don
+        DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)
+           IF (num_hbs_a(hh)>0) THEN
+              DO jj=1,num_hbs_a(hh)
+                 gg=gg+1
+                 hbs_out(gg,1)=don_A(ii)
+                 hbs_out(gg,2)=don_H_A(hh)
+                 hbs_out(gg,3)=hbs_a_ind(hh)%i1(jj)
+                 hbs_vals_out(gg)=sqrt(hbs_a_val(hh)%d1(jj))
+              END DO
+              DEALLOCATE(hbs_a_ind(hh)%i1,hbs_a_val(hh)%d1)
+           END IF
+        END DO
+     END DO
+     DO ii=1,nB_don
+        DO hh=don_sH_B(ii)+1,don_sH_B(ii+1)
+           IF (num_hbs_b(hh)>0) THEN
+              DO jj=1,num_hbs_b(hh)
+                 gg=gg+1
+                 hbs_out(gg,1)=don_B(ii)
+                 hbs_out(gg,2)=don_H_B(hh)
+                 hbs_out(gg,3)=hbs_b_ind(hh)%i1(jj)
+                 hbs_vals_out(gg)=sqrt(hbs_b_val(hh)%d1(jj))
+              END DO
+              DEALLOCATE(hbs_b_ind(hh)%i1,hbs_b_val(hh)%d1)
+           END IF
+        END DO
+     END DO
+  ELSE
+     ii=SUM(num_hbs_a)
+     ALLOCATE(hbs_out(ii,3),hbs_vals_out(ii))
+     gg=0
+     DO ii=1,nA_don
+        DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)
+           IF (num_hbs_a(hh)>0) THEN
+              DO jj=1,num_hbs_a(hh)
+                 gg=gg+1
+                 hbs_out(gg,1)=don_A(ii)
+                 hbs_out(gg,2)=don_H_A(hh)
+                 hbs_out(gg,3)=hbs_a_ind(hh)%i1(jj)
+                 hbs_vals_out(gg)=sqrt(hbs_a_val(hh)%d1(jj))
+              END DO
+              DEALLOCATE(hbs_a_ind(hh)%i1,hbs_a_val(hh)%d1)
+           END IF
+        END DO
+     END DO
+  END IF
+
+  DEALLOCATE(aux_box_ind,aux_box_val,filtro)
+  DEALLOCATE(hbs_a_ind,hbs_a_val)
+  DEALLOCATE(hbs_b_ind,hbs_b_val)
+  DEALLOCATE(num_hbs_a,num_hbs_b)
+
+END SUBROUTINE GET_HBONDS_ROO_ANGOHO_NS_LIST
+
+
+SUBROUTINE GET_HBONDS_ROO_ANGOHO (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,ortho, &
+     acc_B,acc_sH_B,acc_H_B,don_B,don_sH_B,don_H_B,nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, &
+     nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H,numat_glob)
+
+  TYPE iarray_pointer
+     INTEGER,DIMENSION(:),POINTER::i1
+  END TYPE iarray_pointer
+  TYPE darray_pointer
+     DOUBLE PRECISION,DIMENSION(:),POINTER::d1
+  END TYPE darray_pointer
+
+  INTEGER,INTENT(IN)::diff_set,pbc_opt,ortho,numat_glob
+  INTEGER,INTENT(IN)::nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H
+  INTEGER,INTENT(IN)::nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H
+  INTEGER,DIMENSION(nA_acc),INTENT(IN)    ::acc_A
+  INTEGER,DIMENSION(nB_acc),INTENT(IN)    ::acc_B
+  INTEGER,DIMENSION(nA_don),INTENT(IN)    ::don_A
+  INTEGER,DIMENSION(nB_don),INTENT(IN)    ::don_B
+  INTEGER,DIMENSION(nA_acc_sH),INTENT(IN) ::acc_sH_A
+  INTEGER,DIMENSION(nB_acc_sH),INTENT(IN) ::acc_sH_B
+  INTEGER,DIMENSION(nA_acc_H),INTENT(IN)  ::acc_H_A
+  INTEGER,DIMENSION(nB_acc_H),INTENT(IN)  ::acc_H_B
+  INTEGER,DIMENSION(nA_don_sH),INTENT(IN) ::don_sH_A
+  INTEGER,DIMENSION(nB_don_sH),INTENT(IN) ::don_sH_B
+  INTEGER,DIMENSION(nA_don_H),INTENT(IN)  ::don_H_A
+  INTEGER,DIMENSION(nB_don_H),INTENT(IN)  ::don_H_B
+  DOUBLE PRECISION,DIMENSION(numat_glob,3),intent(in)::coors
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box
+
+
+  TYPE(iarray_pointer),DIMENSION(:),POINTER::hbs_a_ind,hbs_b_ind 
+  TYPE(darray_pointer),DIMENSION(:),POINTER::hbs_a_val,hbs_b_val 
+  INTEGER,DIMENSION(:),ALLOCATABLE::num_hbs_a,num_hbs_b
+
+  INTEGER::ii,jj,gg,hh,ll
+  INTEGER::don,don_h,acc
+  INTEGER::lim_hbs
+
+  DOUBLE PRECISION,DIMENSION(3)::pos_acc,pos_don,pos_h
+  DOUBLE PRECISION,DIMENSION(3)::vect_don_acc,vect_h_acc,vect_don_h
+  DOUBLE PRECISION,DIMENSION(3)::aux_vect_1,aux_vect_2,aux_vect_3
+  DOUBLE PRECISION::dist_h_acc,dist_don_acc,dist_don_h,aux_cos,sk_val
+  DOUBLE PRECISION::dist2_h_acc,dist2_don_acc,dist2_don_h
+
+  INTEGER::acc_H1,acc_H2
+  DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE::vect_perp
+
+  INTEGER,DIMENSION(:),ALLOCATABLE::aux_box_ind,aux2_box_ind
+  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::aux_box_val,aux2_box_val
+
+  LOGICAL,DIMENSION(:),ALLOCATABLE::filtro
+
+  lim_hbs=3
+
+  ALLOCATE(aux_box_ind(lim_hbs),aux_box_val(lim_hbs),filtro(lim_hbs))
+  filtro=.FALSE.
+
+  ALLOCATE(hbs_a_ind(nA_don_H),hbs_a_val(nA_don_H))
+  ALLOCATE(hbs_b_ind(nB_don_H),hbs_b_val(nB_don_H))
+  ALLOCATE(num_hbs_a(nA_don_H),num_hbs_b(nB_don_H))
+
+  num_hbs_a=0
+  num_hbs_b=0
+
+  !!!!
+
+  DO ii=1,nA_don
+     don=don_A(ii)+1
+     pos_don=coors(don,:)
+     DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)
+        don_h=don_H_A(hh)+1
+        vect_don_h=coors(don_h,:)-pos_don
+        IF (pbc_opt==1) CALL PBC(vect_don_h,box,ortho)
+        dist2_don_h=dot_product(vect_don_h,vect_don_h)
+        gg=0
+        DO jj=1,nB_acc
+           acc=acc_B(jj)+1
+           IF (acc/=don) THEN
+              vect_h_acc=coors(acc,:)-coors(don_h,:) !!
+              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho) !!
+              dist2_h_acc=dot_product(vect_h_acc,vect_h_acc) !!
+              vect_don_acc=coors(acc,:)-pos_don(:) !!
+              IF (pbc_opt==1) CALL PBC(vect_don_acc,box,ortho) !!
+              dist2_don_acc=dot_product(vect_don_acc,vect_don_acc) !!
+              IF (dist2_don_acc<roo2_param) THEN !!
+                 aux_cos=dot_product(vect_don_h,vect_h_acc)/(sqrt(dist2_h_acc*dist2_don_h)) !!
+                 IF (aux_cos>cos_angoho_param) THEN
+                    gg=gg+1
+                    IF (gg>lim_hbs) THEN
+                       ALLOCATE(aux2_box_ind(lim_hbs),aux2_box_val(lim_hbs))
+                       aux2_box_ind=aux_box_ind
+                       aux2_box_val=aux_box_val
+                       DEALLOCATE(aux_box_ind,aux_box_val)
+                       ALLOCATE(aux_box_ind(gg),aux_box_val(gg))
+                       aux_box_ind(1:lim_hbs)=aux2_box_ind
+                       aux_box_val(1:lim_hbs)=aux2_box_val
+                       DEALLOCATE(aux2_box_ind,aux2_box_val)
+                       lim_hbs=gg
+                    END IF
+                    aux_box_ind(gg)=acc-1
+                    aux_box_val(gg)=dist2_don_acc !!
+                 END IF
+              END IF
+           END IF
+        END DO
+        IF (gg>0) THEN
+           ALLOCATE(hbs_a_ind(hh)%i1(gg),hbs_a_val(hh)%d1(gg))
+           filtro(1:gg)=.TRUE.
+           DO jj=1,gg
+              ll=MAXLOC(aux_box_val(:),DIM=1,MASK=filtro)
+              filtro(ll)=.FALSE.
+              hbs_a_ind(hh)%i1(jj)=aux_box_ind(ll)
+              hbs_a_val(hh)%d1(jj)=aux_box_val(ll)
+           END DO
+        END IF
+
+        num_hbs_a(hh)=gg
+
+     END DO
+  END DO
+
+  IF (diff_set==1) THEN
+     DO ii=1,nB_don
+        don=don_B(ii)+1
+        pos_don=coors(don,:)
+        DO hh=don_sH_B(ii)+1,don_sH_B(ii+1)
+           don_h=don_H_B(hh)+1
+           vect_don_h=coors(don_h,:)-pos_don
+           IF (pbc_opt==1) CALL PBC(vect_don_h,box,ortho)
+           dist2_don_h=dot_product(vect_don_h,vect_don_h)
+           gg=0
+           DO jj=1,nA_acc
+              acc=acc_A(jj)+1
+              vect_h_acc=coors(acc,:)-coors(don_h,:) !!
+              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho) !!
+              dist2_h_acc=dot_product(vect_h_acc,vect_h_acc) !!
+              vect_don_acc=coors(acc,:)-pos_don(:) !!
+              IF (pbc_opt==1) CALL PBC(vect_don_acc,box,ortho) !!
+              dist2_don_acc=dot_product(vect_don_acc,vect_don_acc) !!
+              IF (dist2_don_acc<roo2_param) THEN !!
+                 aux_cos=dot_product(vect_don_h,vect_h_acc)/(sqrt(dist2_h_acc*dist2_don_h)) !!
+                 IF (aux_cos>cos_angoho_param) THEN
+                    gg=gg+1
+                    IF (gg>lim_hbs) THEN
+                       ALLOCATE(aux2_box_ind(lim_hbs),aux2_box_val(lim_hbs))
+                       aux2_box_ind=aux_box_ind
+                       aux2_box_val=aux_box_val
+                       DEALLOCATE(aux_box_ind,aux_box_val)
+                       ALLOCATE(aux_box_ind(gg),aux_box_val(gg))
+                       aux_box_ind(1:lim_hbs)=aux2_box_ind
+                       aux_box_val(1:lim_hbs)=aux2_box_val
+                       DEALLOCATE(aux2_box_ind,aux2_box_val)
+                       lim_hbs=gg
+                    END IF
+                    aux_box_ind(gg)=acc-1
+                    aux_box_val(gg)=dist2_don_acc !!
+                 END IF
+              END IF
+           END DO
+           IF (gg>0) THEN
+              ALLOCATE(hbs_b_ind(hh)%i1(gg),hbs_b_val(hh)%d1(gg))
+              filtro(1:gg)=.TRUE.
+              DO jj=1,gg
+                 ll=MAXLOC(aux_box_val(:),DIM=1,MASK=filtro)
+                 filtro(ll)=.FALSE.
+                 hbs_b_ind(hh)%i1(jj)=aux_box_ind(ll)
+                 hbs_b_val(hh)%d1(jj)=aux_box_val(ll)
+              END DO
+           END IF
+           
+           num_hbs_b(hh)=gg
+           
+        END DO
+     END DO
+  END IF
+
+  IF (ALLOCATED(hbs_out)) DEALLOCATE(hbs_out)
+  IF (ALLOCATED(hbs_vals_out)) DEALLOCATE(hbs_vals_out)
+
+  IF (diff_set==1) THEN
+     ii=SUM(num_hbs_a)+SUM(num_hbs_b)
+     ALLOCATE(hbs_out(ii,3),hbs_vals_out(ii))
+     gg=0
+     DO ii=1,nA_don
+        DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)
+           IF (num_hbs_a(hh)>0) THEN
+              DO jj=1,num_hbs_a(hh)
+                 gg=gg+1
+                 hbs_out(gg,1)=don_A(ii)
+                 hbs_out(gg,2)=don_H_A(hh)
+                 hbs_out(gg,3)=hbs_a_ind(hh)%i1(jj)
+                 hbs_vals_out(gg)=sqrt(hbs_a_val(hh)%d1(jj))
+              END DO
+              DEALLOCATE(hbs_a_ind(hh)%i1,hbs_a_val(hh)%d1)
+           END IF
+        END DO
+     END DO
+     DO ii=1,nB_don
+        DO hh=don_sH_B(ii)+1,don_sH_B(ii+1)
+           IF (num_hbs_b(hh)>0) THEN
+              DO jj=1,num_hbs_b(hh)
+                 gg=gg+1
+                 hbs_out(gg,1)=don_B(ii)
+                 hbs_out(gg,2)=don_H_B(hh)
+                 hbs_out(gg,3)=hbs_b_ind(hh)%i1(jj)
+                 hbs_vals_out(gg)=sqrt(hbs_b_val(hh)%d1(jj))
+              END DO
+              DEALLOCATE(hbs_b_ind(hh)%i1,hbs_b_val(hh)%d1)
+           END IF
+        END DO
+     END DO
+  ELSE
+     ii=SUM(num_hbs_a)
+     ALLOCATE(hbs_out(ii,3),hbs_vals_out(ii))
+     gg=0
+     DO ii=1,nA_don
+        DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)
+           IF (num_hbs_a(hh)>0) THEN
+              DO jj=1,num_hbs_a(hh)
+                 gg=gg+1
+                 hbs_out(gg,1)=don_A(ii)
+                 hbs_out(gg,2)=don_H_A(hh)
+                 hbs_out(gg,3)=hbs_a_ind(hh)%i1(jj)
+                 hbs_vals_out(gg)=sqrt(hbs_a_val(hh)%d1(jj))
+              END DO
+              DEALLOCATE(hbs_a_ind(hh)%i1,hbs_a_val(hh)%d1)
+           END IF
+        END DO
+     END DO
+  END IF
+
+  DEALLOCATE(aux_box_ind,aux_box_val,filtro)
+  DEALLOCATE(hbs_a_ind,hbs_a_val)
+  DEALLOCATE(hbs_b_ind,hbs_b_val)
+  DEALLOCATE(num_hbs_a,num_hbs_b)
+
+END SUBROUTINE GET_HBONDS_ROO_ANGOHO
+
+SUBROUTINE GET_HBONDS_ROH_ANGOHO_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,ortho, &
+     acc_B,acc_sH_B,acc_H_B,don_B,don_sH_B,don_H_B,nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, &
+     nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H,numat_glob)
+
+  TYPE iarray_pointer
+     INTEGER,DIMENSION(:),POINTER::i1
+  END TYPE iarray_pointer
+  TYPE darray_pointer
+     DOUBLE PRECISION,DIMENSION(:),POINTER::d1
+  END TYPE darray_pointer
+
+  INTEGER,INTENT(IN)::diff_set,pbc_opt,ortho,numat_glob
+  INTEGER,INTENT(IN)::nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H
+  INTEGER,INTENT(IN)::nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H
+  INTEGER,DIMENSION(nA_acc),INTENT(IN)    ::acc_A
+  INTEGER,DIMENSION(nB_acc),INTENT(IN)    ::acc_B
+  INTEGER,DIMENSION(nA_don),INTENT(IN)    ::don_A
+  INTEGER,DIMENSION(nB_don),INTENT(IN)    ::don_B
+  INTEGER,DIMENSION(nA_acc_sH),INTENT(IN) ::acc_sH_A
+  INTEGER,DIMENSION(nB_acc_sH),INTENT(IN) ::acc_sH_B
+  INTEGER,DIMENSION(nA_acc_H),INTENT(IN)  ::acc_H_A
+  INTEGER,DIMENSION(nB_acc_H),INTENT(IN)  ::acc_H_B
+  INTEGER,DIMENSION(nA_don_sH),INTENT(IN) ::don_sH_A
+  INTEGER,DIMENSION(nB_don_sH),INTENT(IN) ::don_sH_B
+  INTEGER,DIMENSION(nA_don_H),INTENT(IN)  ::don_H_A
+  INTEGER,DIMENSION(nB_don_H),INTENT(IN)  ::don_H_B
+  DOUBLE PRECISION,DIMENSION(numat_glob,3),intent(in)::coors
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box
+
+
+  TYPE(iarray_pointer),DIMENSION(:),POINTER::hbs_a_ind,hbs_b_ind 
+  TYPE(darray_pointer),DIMENSION(:),POINTER::hbs_a_val,hbs_b_val 
+  INTEGER,DIMENSION(:),ALLOCATABLE::num_hbs_a,num_hbs_b
+
+  INTEGER::ii,jj,gg,hh,ll
+  INTEGER::don,don_h,acc
+  INTEGER::lim_hbs
+
+  DOUBLE PRECISION,DIMENSION(3)::pos_acc,pos_don,pos_h
+  DOUBLE PRECISION,DIMENSION(3)::vect_don_acc,vect_h_acc,vect_don_h
+  DOUBLE PRECISION,DIMENSION(3)::aux_vect_1,aux_vect_2,aux_vect_3
+  DOUBLE PRECISION::dist_h_acc,dist_don_acc,dist_don_h,aux_cos,sk_val
+  DOUBLE PRECISION::dist2_h_acc,dist2_don_acc,dist2_don_h
+
+  INTEGER::acc_H1,acc_H2
+  DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE::vect_perp
+
+  INTEGER,DIMENSION(:),ALLOCATABLE::aux_box_ind,aux2_box_ind
+  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::aux_box_val,aux2_box_val
+
+  LOGICAL,DIMENSION(:),ALLOCATABLE::filtro
+
+  lim_hbs=3
+
+  ALLOCATE(aux_box_ind(lim_hbs),aux_box_val(lim_hbs),filtro(lim_hbs))
+  filtro=.FALSE.
+
+  ALLOCATE(hbs_a_ind(nA_don_H),hbs_a_val(nA_don_H))
+  ALLOCATE(hbs_b_ind(nB_don_H),hbs_b_val(nB_don_H))
+  ALLOCATE(num_hbs_a(nA_don_H),num_hbs_b(nB_don_H))
+
+  num_hbs_a=0
+  num_hbs_b=0
+
+  !!!!  
+
+
+  CALL EXTRACT_NS_LIST_SETS(diff_set,don_A,acc_B,nA_don,nB_acc,numat_glob)
+
+  DO ii=1,nA_don
+     don=don_A(ii)+1
+     pos_don=coors(don,:)
+     DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)
+        don_h=don_H_A(hh)+1
+        vect_don_h=coors(don_h,:)-pos_don
+        IF (pbc_opt==1) CALL PBC(vect_don_h,box,ortho)
+        dist2_don_h=dot_product(vect_don_h,vect_don_h)
+        gg=0
+        DO jj=1,ver_ic_dim(don)
+           IF (filt_sets_ns_ind(don,jj)) THEN
+              acc=ver_ic_ind(don,jj)
+              vect_h_acc=coors(acc,:)-coors(don_h,:) !!
+              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho) !!
+              dist2_h_acc=dot_product(vect_h_acc,vect_h_acc) !!
+              aux_cos=dot_product(vect_don_h,vect_h_acc)/(sqrt(dist2_h_acc*dist2_don_h)) !!
+              IF (aux_cos>cos_angoho_param) THEN
+                 gg=gg+1
+                 IF (gg>lim_hbs) THEN
+                    ALLOCATE(aux2_box_ind(lim_hbs),aux2_box_val(lim_hbs))
+                    aux2_box_ind=aux_box_ind
+                    aux2_box_val=aux_box_val
+                    DEALLOCATE(aux_box_ind,aux_box_val)
+                    ALLOCATE(aux_box_ind(gg),aux_box_val(gg))
+                    aux_box_ind(1:lim_hbs)=aux2_box_ind
+                    aux_box_val(1:lim_hbs)=aux2_box_val
+                    DEALLOCATE(aux2_box_ind,aux2_box_val)
+                    lim_hbs=gg
+                 END IF
+                 aux_box_ind(gg)=acc-1
+                 aux_box_val(gg)=dist2_h_acc !!
+              END IF
+           END IF
+        END DO
+        IF (gg>0) THEN
+           ALLOCATE(hbs_a_ind(hh)%i1(gg),hbs_a_val(hh)%d1(gg))
+           filtro(1:gg)=.TRUE.
+           DO jj=1,gg
+              ll=MAXLOC(aux_box_val(:),DIM=1,MASK=filtro)
+              filtro(ll)=.FALSE.
+              hbs_a_ind(hh)%i1(jj)=aux_box_ind(ll)
+              hbs_a_val(hh)%d1(jj)=aux_box_val(ll)
+           END DO
+        END IF
+
+        num_hbs_a(hh)=gg
+
+     END DO
+  END DO
+
+  IF (diff_set==1) THEN
+
+     CALL EXTRACT_NS_LIST_SETS(diff_set,don_B,acc_A,nB_don,nA_acc,numat_glob)
+
+     DO ii=1,nB_don
+        don=don_B(ii)+1
+        pos_don=coors(don,:)
+        DO hh=don_sH_B(ii)+1,don_sH_B(ii+1)
+           don_h=don_H_B(hh)+1
+           vect_don_h=coors(don_h,:)-pos_don
+           IF (pbc_opt==1) CALL PBC(vect_don_h,box,ortho)
+           dist2_don_h=dot_product(vect_don_h,vect_don_h)
+           gg=0
+           DO jj=1,ver_ic_dim(don)
+              IF (filt_sets_ns_ind(don,jj)) THEN
+                 acc=ver_ic_ind(don,jj)
+                 vect_h_acc=coors(acc,:)-coors(don_h,:) !!
+                 IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho) !!
+                 dist2_h_acc=dot_product(vect_h_acc,vect_h_acc) !!
+                 aux_cos=dot_product(vect_don_h,vect_h_acc)/(sqrt(dist2_h_acc*dist2_don_h)) !!
+                 IF (aux_cos>cos_angoho_param) THEN
+                    gg=gg+1
+                    IF (gg>lim_hbs) THEN
+                       ALLOCATE(aux2_box_ind(lim_hbs),aux2_box_val(lim_hbs))
+                       aux2_box_ind=aux_box_ind
+                       aux2_box_val=aux_box_val
+                       DEALLOCATE(aux_box_ind,aux_box_val)
+                       ALLOCATE(aux_box_ind(gg),aux_box_val(gg))
+                       aux_box_ind(1:lim_hbs)=aux2_box_ind
+                       aux_box_val(1:lim_hbs)=aux2_box_val
+                       DEALLOCATE(aux2_box_ind,aux2_box_val)
+                       lim_hbs=gg
+                    END IF
+                    aux_box_ind(gg)=acc-1
+                    aux_box_val(gg)=dist2_h_acc !!
+                 END IF
+              END IF
+           END DO
+           IF (gg>0) THEN
+              ALLOCATE(hbs_b_ind(hh)%i1(gg),hbs_b_val(hh)%d1(gg))
+              filtro(1:gg)=.TRUE.
+              DO jj=1,gg
+                 ll=MAXLOC(aux_box_val(:),DIM=1,MASK=filtro)
+                 filtro(ll)=.FALSE.
+                 hbs_b_ind(hh)%i1(jj)=aux_box_ind(ll)
+                 hbs_b_val(hh)%d1(jj)=aux_box_val(ll)
+              END DO
+           END IF
+           
+           num_hbs_b(hh)=gg
+           
+        END DO
+     END DO
+  END IF
+
+  IF (ALLOCATED(hbs_out)) DEALLOCATE(hbs_out)
+  IF (ALLOCATED(hbs_vals_out)) DEALLOCATE(hbs_vals_out)
+
+
+  IF (diff_set==1) THEN
+     ii=SUM(num_hbs_a)+SUM(num_hbs_b)
+     ALLOCATE(hbs_out(ii,3),hbs_vals_out(ii))
+     gg=0
+     DO ii=1,nA_don
+        DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)
+           IF (num_hbs_a(hh)>0) THEN
+              DO jj=1,num_hbs_a(hh)
+                 gg=gg+1
+                 hbs_out(gg,1)=don_A(ii)
+                 hbs_out(gg,2)=don_H_A(hh)
+                 hbs_out(gg,3)=hbs_a_ind(hh)%i1(jj)
+                 hbs_vals_out(gg)=sqrt(hbs_a_val(hh)%d1(jj))
+              END DO
+              DEALLOCATE(hbs_a_ind(hh)%i1,hbs_a_val(hh)%d1)
+           END IF
+        END DO
+     END DO
+     DO ii=1,nB_don
+        DO hh=don_sH_B(ii)+1,don_sH_B(ii+1)
+           IF (num_hbs_b(hh)>0) THEN
+              DO jj=1,num_hbs_b(hh)
+                 gg=gg+1
+                 hbs_out(gg,1)=don_B(ii)
+                 hbs_out(gg,2)=don_H_B(hh)
+                 hbs_out(gg,3)=hbs_b_ind(hh)%i1(jj)
+                 hbs_vals_out(gg)=sqrt(hbs_b_val(hh)%d1(jj))
+              END DO
+              DEALLOCATE(hbs_b_ind(hh)%i1,hbs_b_val(hh)%d1)
+           END IF
+        END DO
+     END DO
+  ELSE
+     ii=SUM(num_hbs_a)
+     ALLOCATE(hbs_out(ii,3),hbs_vals_out(ii))
+     gg=0
+     DO ii=1,nA_don
+        DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)
+           IF (num_hbs_a(hh)>0) THEN
+              DO jj=1,num_hbs_a(hh)
+                 gg=gg+1
+                 hbs_out(gg,1)=don_A(ii)
+                 hbs_out(gg,2)=don_H_A(hh)
+                 hbs_out(gg,3)=hbs_a_ind(hh)%i1(jj)
+                 hbs_vals_out(gg)=sqrt(hbs_a_val(hh)%d1(jj))
+              END DO
+              DEALLOCATE(hbs_a_ind(hh)%i1,hbs_a_val(hh)%d1)
+           END IF
+        END DO
+     END DO
+  END IF
+
+  DEALLOCATE(aux_box_ind,aux_box_val,filtro)
+  DEALLOCATE(hbs_a_ind,hbs_a_val)
+  DEALLOCATE(hbs_b_ind,hbs_b_val)
+  DEALLOCATE(num_hbs_a,num_hbs_b)
+
+END SUBROUTINE GET_HBONDS_ROH_ANGOHO_NS_LIST
+
+
+SUBROUTINE GET_HBONDS_ROH_ANGOHO (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,ortho, &
+     acc_B,acc_sH_B,acc_H_B,don_B,don_sH_B,don_H_B,nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, &
+     nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H,numat_glob)
+
+  TYPE iarray_pointer
+     INTEGER,DIMENSION(:),POINTER::i1
+  END TYPE iarray_pointer
+  TYPE darray_pointer
+     DOUBLE PRECISION,DIMENSION(:),POINTER::d1
+  END TYPE darray_pointer
+
+  INTEGER,INTENT(IN)::diff_set,pbc_opt,ortho,numat_glob
+  INTEGER,INTENT(IN)::nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H
+  INTEGER,INTENT(IN)::nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H
+  INTEGER,DIMENSION(nA_acc),INTENT(IN)    ::acc_A
+  INTEGER,DIMENSION(nB_acc),INTENT(IN)    ::acc_B
+  INTEGER,DIMENSION(nA_don),INTENT(IN)    ::don_A
+  INTEGER,DIMENSION(nB_don),INTENT(IN)    ::don_B
+  INTEGER,DIMENSION(nA_acc_sH),INTENT(IN) ::acc_sH_A
+  INTEGER,DIMENSION(nB_acc_sH),INTENT(IN) ::acc_sH_B
+  INTEGER,DIMENSION(nA_acc_H),INTENT(IN)  ::acc_H_A
+  INTEGER,DIMENSION(nB_acc_H),INTENT(IN)  ::acc_H_B
+  INTEGER,DIMENSION(nA_don_sH),INTENT(IN) ::don_sH_A
+  INTEGER,DIMENSION(nB_don_sH),INTENT(IN) ::don_sH_B
+  INTEGER,DIMENSION(nA_don_H),INTENT(IN)  ::don_H_A
+  INTEGER,DIMENSION(nB_don_H),INTENT(IN)  ::don_H_B
+  DOUBLE PRECISION,DIMENSION(numat_glob,3),intent(in)::coors
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box
+
+
+  TYPE(iarray_pointer),DIMENSION(:),POINTER::hbs_a_ind,hbs_b_ind 
+  TYPE(darray_pointer),DIMENSION(:),POINTER::hbs_a_val,hbs_b_val 
+  INTEGER,DIMENSION(:),ALLOCATABLE::num_hbs_a,num_hbs_b
+
+  INTEGER::ii,jj,gg,hh,ll
+  INTEGER::don,don_h,acc
+  INTEGER::lim_hbs
+
+  DOUBLE PRECISION,DIMENSION(3)::pos_acc,pos_don,pos_h
+  DOUBLE PRECISION,DIMENSION(3)::vect_don_acc,vect_h_acc,vect_don_h
+  DOUBLE PRECISION,DIMENSION(3)::aux_vect_1,aux_vect_2,aux_vect_3
+  DOUBLE PRECISION::dist_h_acc,dist_don_acc,dist_don_h,aux_cos,sk_val
+  DOUBLE PRECISION::dist2_h_acc,dist2_don_acc,dist2_don_h
+
+  INTEGER::acc_H1,acc_H2
+  DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE::vect_perp
+
+  INTEGER,DIMENSION(:),ALLOCATABLE::aux_box_ind,aux2_box_ind
+  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::aux_box_val,aux2_box_val
+
+  LOGICAL,DIMENSION(:),ALLOCATABLE::filtro
+
+  lim_hbs=3
+
+  ALLOCATE(aux_box_ind(lim_hbs),aux_box_val(lim_hbs),filtro(lim_hbs))
+  filtro=.FALSE.
+
+  ALLOCATE(hbs_a_ind(nA_don_H),hbs_a_val(nA_don_H))
+  ALLOCATE(hbs_b_ind(nB_don_H),hbs_b_val(nB_don_H))
+  ALLOCATE(num_hbs_a(nA_don_H),num_hbs_b(nB_don_H))
+
+  num_hbs_a=0
+  num_hbs_b=0
+
+  !!!!
+
+  DO ii=1,nA_don
+     don=don_A(ii)+1
+     pos_don=coors(don,:)
+     DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)
+        don_h=don_H_A(hh)+1
+        vect_don_h=coors(don_h,:)-pos_don
+        IF (pbc_opt==1) CALL PBC(vect_don_h,box,ortho)
+        dist2_don_h=dot_product(vect_don_h,vect_don_h)
+        gg=0
+        DO jj=1,nB_acc
+           acc=acc_B(jj)+1
+           IF (acc/=don) THEN
+              vect_h_acc=coors(acc,:)-coors(don_h,:) !!
+              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho) !!
+              dist2_h_acc=dot_product(vect_h_acc,vect_h_acc) !!
+              IF (dist2_h_acc<roh2_param) THEN !!
+                 aux_cos=dot_product(vect_don_h,vect_h_acc)/(sqrt(dist2_h_acc*dist2_don_h)) !!
+                 IF (aux_cos>cos_angoho_param) THEN
+                    gg=gg+1
+                    IF (gg>lim_hbs) THEN
+                       ALLOCATE(aux2_box_ind(lim_hbs),aux2_box_val(lim_hbs))
+                       aux2_box_ind=aux_box_ind
+                       aux2_box_val=aux_box_val
+                       DEALLOCATE(aux_box_ind,aux_box_val)
+                       ALLOCATE(aux_box_ind(gg),aux_box_val(gg))
+                       aux_box_ind(1:lim_hbs)=aux2_box_ind
+                       aux_box_val(1:lim_hbs)=aux2_box_val
+                       DEALLOCATE(aux2_box_ind,aux2_box_val)
+                       lim_hbs=gg
+                    END IF
+                    aux_box_ind(gg)=acc-1
+                    aux_box_val(gg)=dist2_h_acc !!
+                 END IF
+              END IF
+           END IF
+        END DO
+        IF (gg>0) THEN
+           ALLOCATE(hbs_a_ind(hh)%i1(gg),hbs_a_val(hh)%d1(gg))
+           filtro(1:gg)=.TRUE.
+           DO jj=1,gg
+              ll=MAXLOC(aux_box_val(:),DIM=1,MASK=filtro)
+              filtro(ll)=.FALSE.
+              hbs_a_ind(hh)%i1(jj)=aux_box_ind(ll)
+              hbs_a_val(hh)%d1(jj)=aux_box_val(ll)
+           END DO
+        END IF
+
+        num_hbs_a(hh)=gg
+
+     END DO
+  END DO
+
+  IF (diff_set==1) THEN
+     DO ii=1,nB_don
+        don=don_B(ii)+1
+        pos_don=coors(don,:)
+        DO hh=don_sH_B(ii)+1,don_sH_B(ii+1)
+           don_h=don_H_B(hh)+1
+           vect_don_h=coors(don_h,:)-pos_don
+           IF (pbc_opt==1) CALL PBC(vect_don_h,box,ortho)
+           dist2_don_h=dot_product(vect_don_h,vect_don_h)
+           gg=0
+           DO jj=1,nA_acc
+              acc=acc_A(jj)+1
+              vect_h_acc=coors(acc,:)-coors(don_h,:) !!
+              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho) !!
+              dist2_h_acc=dot_product(vect_h_acc,vect_h_acc) !!
+              IF (dist2_h_acc<roh2_param) THEN !!
+                 aux_cos=dot_product(vect_don_h,vect_h_acc)/(sqrt(dist2_h_acc*dist2_don_h)) !!
+                 IF (aux_cos>cos_angoho_param) THEN
+                    gg=gg+1
+                    IF (gg>lim_hbs) THEN
+                       ALLOCATE(aux2_box_ind(lim_hbs),aux2_box_val(lim_hbs))
+                       aux2_box_ind=aux_box_ind
+                       aux2_box_val=aux_box_val
+                       DEALLOCATE(aux_box_ind,aux_box_val)
+                       ALLOCATE(aux_box_ind(gg),aux_box_val(gg))
+                       aux_box_ind(1:lim_hbs)=aux2_box_ind
+                       aux_box_val(1:lim_hbs)=aux2_box_val
+                       DEALLOCATE(aux2_box_ind,aux2_box_val)
+                       lim_hbs=gg
+                    END IF
+                    aux_box_ind(gg)=acc-1
+                    aux_box_val(gg)=dist2_h_acc !!
+                 END IF
+              END IF
+           END DO
+           IF (gg>0) THEN
+              ALLOCATE(hbs_b_ind(hh)%i1(gg),hbs_b_val(hh)%d1(gg))
+              filtro(1:gg)=.TRUE.
+              DO jj=1,gg
+                 ll=MAXLOC(aux_box_val(:),DIM=1,MASK=filtro)
+                 filtro(ll)=.FALSE.
+                 hbs_b_ind(hh)%i1(jj)=aux_box_ind(ll)
+                 hbs_b_val(hh)%d1(jj)=aux_box_val(ll)
+              END DO
+           END IF
+           
+           num_hbs_b(hh)=gg
+           
+        END DO
+     END DO
+  END IF
+
+  IF (ALLOCATED(hbs_out)) DEALLOCATE(hbs_out)
+  IF (ALLOCATED(hbs_vals_out)) DEALLOCATE(hbs_vals_out)
+
+  IF (diff_set==1) THEN
+     ii=SUM(num_hbs_a)+SUM(num_hbs_b)
+     ALLOCATE(hbs_out(ii,3),hbs_vals_out(ii))
+     gg=0
+     DO ii=1,nA_don
+        DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)
+           IF (num_hbs_a(hh)>0) THEN
+              DO jj=1,num_hbs_a(hh)
+                 gg=gg+1
+                 hbs_out(gg,1)=don_A(ii)
+                 hbs_out(gg,2)=don_H_A(hh)
+                 hbs_out(gg,3)=hbs_a_ind(hh)%i1(jj)
+                 hbs_vals_out(gg)=sqrt(hbs_a_val(hh)%d1(jj))
+              END DO
+              DEALLOCATE(hbs_a_ind(hh)%i1,hbs_a_val(hh)%d1)
+           END IF
+        END DO
+     END DO
+     DO ii=1,nB_don
+        DO hh=don_sH_B(ii)+1,don_sH_B(ii+1)
+           IF (num_hbs_b(hh)>0) THEN
+              DO jj=1,num_hbs_b(hh)
+                 gg=gg+1
+                 hbs_out(gg,1)=don_B(ii)
+                 hbs_out(gg,2)=don_H_B(hh)
+                 hbs_out(gg,3)=hbs_b_ind(hh)%i1(jj)
+                 hbs_vals_out(gg)=sqrt(hbs_b_val(hh)%d1(jj))
+              END DO
+              DEALLOCATE(hbs_b_ind(hh)%i1,hbs_b_val(hh)%d1)
+           END IF
+        END DO
+     END DO
+  ELSE
+     ii=SUM(num_hbs_a)
+     ALLOCATE(hbs_out(ii,3),hbs_vals_out(ii))
+     gg=0
+     DO ii=1,nA_don
+        DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)
+           IF (num_hbs_a(hh)>0) THEN
+              DO jj=1,num_hbs_a(hh)
+                 gg=gg+1
+                 hbs_out(gg,1)=don_A(ii)
+                 hbs_out(gg,2)=don_H_A(hh)
+                 hbs_out(gg,3)=hbs_a_ind(hh)%i1(jj)
+                 hbs_vals_out(gg)=sqrt(hbs_a_val(hh)%d1(jj))
+              END DO
+              DEALLOCATE(hbs_a_ind(hh)%i1,hbs_a_val(hh)%d1)
+           END IF
+        END DO
+     END DO
+  END IF
+
+  DEALLOCATE(aux_box_ind,aux_box_val,filtro)
+  DEALLOCATE(hbs_a_ind,hbs_a_val)
+  DEALLOCATE(hbs_b_ind,hbs_b_val)
+  DEALLOCATE(num_hbs_a,num_hbs_b)
+
+END SUBROUTINE GET_HBONDS_ROH_ANGOHO
 
 
 
@@ -3182,7 +4128,7 @@ SUBROUTINE GET_HBONDS_SKINNER (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don
   TYPE(darray_pointer),DIMENSION(:),POINTER::hbs_a_val,hbs_b_val 
   INTEGER,DIMENSION(:),ALLOCATABLE::num_hbs_a,num_hbs_b
 
-  INTEGER::ii,jj,gg,hh
+  INTEGER::ii,jj,gg,hh,ll
   INTEGER::don,don_h,acc
   INTEGER::lim_hbs
 
@@ -3473,7 +4419,7 @@ SUBROUTINE GET_HBONDS_SKINNER_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,d
   TYPE(darray_pointer),DIMENSION(:),POINTER::hbs_a_val,hbs_b_val 
   INTEGER,DIMENSION(:),ALLOCATABLE::num_hbs_a,num_hbs_b
 
-  INTEGER::ii,jj,gg,hh
+  INTEGER::ii,jj,gg,hh,ll
   INTEGER::don,don_h,acc
   INTEGER::lim_hbs
 
@@ -3778,7 +4724,7 @@ SUBROUTINE GET_HBONDS_ROH_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A
   TYPE(darray_pointer),DIMENSION(:),POINTER::hbs_a_val,hbs_b_val 
   INTEGER,DIMENSION(:),ALLOCATABLE::num_hbs_a,num_hbs_b
 
-  INTEGER::ii,jj,gg,hh
+  INTEGER::ii,jj,gg,hh,ll
   INTEGER::don,don_h,acc
   INTEGER::lim_hbs
 
@@ -4010,7 +4956,7 @@ SUBROUTINE GET_HBONDS_ROH (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_
   TYPE(darray_pointer),DIMENSION(:),POINTER::hbs_a_val,hbs_b_val 
   INTEGER,DIMENSION(:),ALLOCATABLE::num_hbs_a,num_hbs_b
 
-  INTEGER::ii,jj,gg,hh
+  INTEGER::ii,jj,gg,hh,ll
   INTEGER::don,don_h,acc
   INTEGER::lim_hbs
 
@@ -4231,7 +5177,7 @@ SUBROUTINE GET_HBONDS_DON_ACC_NUM (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A
   DOUBLE PRECISION,DIMENSION(:),POINTER::hbs_a_val,hbs_b_val 
   INTEGER,DIMENSION(:),ALLOCATABLE::num_hbs_a,num_hbs_b
 
-  INTEGER::ii,jj,gg,hh
+  INTEGER::ii,jj,gg,hh,ll
   INTEGER::don,don_h,acc
   INTEGER::lim_hbs
 
@@ -4248,7 +5194,7 @@ SUBROUTINE GET_HBONDS_DON_ACC_NUM (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A
   INTEGER,DIMENSION(:,:),ALLOCATABLE::aux_box_ind
   DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE::aux_box_val
 
-  DOUBLE PRECISION::Lbox
+  DOUBLE PRECISION::Lbox,dist_max
   LOGICAL,DIMENSION(:),ALLOCATABLE::filtro
 
   lim_hbs=2
@@ -4308,7 +5254,7 @@ SUBROUTINE GET_HBONDS_DON_ACC_NUM (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A
         IF (hbs_a_val(ii)<aux_box_val(jj,gg)) THEN
            num_hbs_a(aux_box_ind(jj,gg))=0
            aux_box_ind(jj,gg)=ii
-           aux_box_ind(jj,gg)=hbs_a_val(ii)
+           aux_box_val(jj,gg)=hbs_a_val(ii)
         ELSE
            num_hbs_a(ii)=0
         END IF
@@ -4354,7 +5300,7 @@ SUBROUTINE GET_HBONDS_DON_ACC_NUM (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A
            IF (hbs_b_val(ii)<aux_box_val(jj,gg)) THEN
               num_hbs_b(aux_box_ind(jj,gg))=0
               aux_box_ind(jj,gg)=ii
-              aux_box_ind(jj,gg)=hbs_b_val(ii)
+              aux_box_val(jj,gg)=hbs_b_val(ii)
            ELSE
               num_hbs_b(ii)=0
            END IF
@@ -4467,7 +5413,7 @@ SUBROUTINE GET_HBONDS_DON_ACC_NUM_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,
   INTEGER,DIMENSION(:),ALLOCATABLE::aux_box_num
   INTEGER,DIMENSION(:,:),ALLOCATABLE::aux_box_ind
   DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE::aux_box_val
-  DOUBLE PRECISION:: Lbox
+  DOUBLE PRECISION:: Lbox,dist_max
 
   LOGICAL,DIMENSION(:),ALLOCATABLE::filtro
 
@@ -4532,7 +5478,7 @@ SUBROUTINE GET_HBONDS_DON_ACC_NUM_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,
         IF (hbs_a_val(ii)<aux_box_val(jj,gg)) THEN
            num_hbs_a(aux_box_ind(jj,gg))=0
            aux_box_ind(jj,gg)=ii
-           aux_box_ind(jj,gg)=hbs_a_val(ii)
+           aux_box_val(jj,gg)=hbs_a_val(ii)
         ELSE
            num_hbs_a(ii)=0
         END IF
@@ -4579,7 +5525,7 @@ SUBROUTINE GET_HBONDS_DON_ACC_NUM_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,
            IF (hbs_b_val(ii)<aux_box_val(jj,gg)) THEN
               num_hbs_b(aux_box_ind(jj,gg))=0
               aux_box_ind(jj,gg)=ii
-              aux_box_ind(jj,gg)=hbs_b_val(ii)
+              aux_box_val(jj,gg)=hbs_b_val(ii)
            ELSE
               num_hbs_b(ii)=0
            END IF

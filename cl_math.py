@@ -122,6 +122,7 @@ def parameters_bins(traj=None,bins=None,segment=None,delta=None):
 
     if delta!=None:
         opt_delta=1
+        bins=1
     else:
         delta=1.0
         opt_delta=2
@@ -130,8 +131,8 @@ def parameters_bins(traj=None,bins=None,segment=None,delta=None):
 
     return bins,mmx,mmn,delta
 
-def histogram(traj,bins=20,segment=None,delta=None,select_dim=0,norm=False,cumul=False,in_file=False,by_frame=False):
-    
+def histogram(traj,bins=None,segment=None,delta=None,select_dim=0,norm=False,cumul=False,in_file=False,by_frame=False):
+
     infile=in_file
     opt_norm=0
     if norm:

@@ -1489,7 +1489,7 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
         return carvars
 
 
-    def hbonds (self,definition=None,set_A=None,set_B=None,acc_don_A=None,acc_don_B=None,traj=0,frame=0,sk_param=0.00850,roh_param=2.3000,roo_param=3.50,angooh_param=30.0,optimize=False,pbc=True,infile=False,verbose=False):
+    def hbonds (self,definition=None,set_A=None,set_B=None,acc_don_A=None,acc_don_B=None,traj=0,frame=0,sk_param=0.00850,roh_param=2.3000,roo_param=3.50,ang_param=30.0,optimize=False,pbc=True,infile=False,verbose=False):
 
         opt_effic=0
         opt_diff_syst=0
@@ -1687,7 +1687,7 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                 
         # R(o,o)-Ang(o,o,h)
         elif faux.hbdefinition == 3 :
-            faux.roo2_param, faux.cos_angooh_param= roo_param**2, numpy.cos(numpy.radians(angooh_param))
+            faux.roo2_param, faux.cos_angooh_param= roo_param**2, numpy.cos(numpy.radians(ang_param))
 
             if infile:
 
@@ -1709,7 +1709,7 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                         else:
                             self.verlet_list_grid_ns(r1=roo_param,r2=roo_param,rcell=roo_param,iframe=iframe,update=True)
 
-                        faux.get_hbonds_roo_ang_ns_list( opt_diff_set, opt_pbc, \
+                        faux.get_hbonds_roo_angooh_ns_list( opt_diff_set, opt_pbc, \
                                            acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
                                            iframe.coors,iframe.box,iframe.orthogonal, \
                                            acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
@@ -1725,7 +1725,7 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                     for aa in frame:
                         self.traj[0].reload_frame(frame=aa)
                         iframe=self.traj[0].frame[0]
-                        faux.get_hbonds_roo_ang( opt_diff_set, opt_pbc, \
+                        faux.get_hbonds_roo_angooh( opt_diff_set, opt_pbc, \
                                                         acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
                                                         iframe.coors,iframe.box,iframe.orthogonal, \
                                                         acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
@@ -1746,7 +1746,7 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                         else:
                             self.verlet_list_grid_ns(r1=roo_param,r2=roo_param,rcell=roo_param,iframe=iframe,update=True)
 
-                        faux.get_hbonds_roo_ang_ns_list( opt_diff_set, opt_pbc, \
+                        faux.get_hbonds_roo_angooh_ns_list( opt_diff_set, opt_pbc, \
                                            acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
                                            iframe.coors,iframe.box,iframe.orthogonal, \
                                            acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
@@ -1760,7 +1760,7 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                     hbout=[]
                     gg=0
                     for iframe in __read_frame_opt__(self,traj,frame):
-                        faux.get_hbonds_roo_ang( opt_diff_set, opt_pbc, \
+                        faux.get_hbonds_roo_angooh( opt_diff_set, opt_pbc, \
                                                         acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
                                                         iframe.coors,iframe.box,iframe.orthogonal, \
                                                         acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
@@ -1774,6 +1774,188 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                 return hbout[0]
             else:
                 return hbout
+
+        # R(o,o)-Ang(o,h,o)
+        elif faux.hbdefinition == 8 :
+            faux.roo2_param, faux.cos_angoho_param= roo_param**2, numpy.cos(numpy.radians(ang_param))
+
+            if infile:
+
+                if type(frame) in [int]:
+                    frame=[frame]
+
+                if type(frame) not in [list,tuple]:
+                    print '# "frame" must be a list'
+                    return
+
+                if optimize:
+                    gg=0
+                    hbout=[]
+                    for aa in frame:
+                        self.traj[0].reload_frame(frame=aa)
+                        iframe=self.traj[0].frame[0]
+                        if (gg==0): 
+                            self.verlet_list_grid_ns(r1=roo_param,r2=roo_param,rcell=roo_param,iframe=iframe)
+                        else:
+                            self.verlet_list_grid_ns(r1=roo_param,r2=roo_param,rcell=roo_param,iframe=iframe,update=True)
+
+                        faux.get_hbonds_roo_angoho_ns_list( opt_diff_set, opt_pbc, \
+                                           acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
+                                           iframe.coors,iframe.box,iframe.orthogonal, \
+                                           acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
+                                           nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
+                                           nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
+                                           self.num_atoms)
+
+                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        gg+=1
+                else:
+                    hbout=[]
+                    gg=0
+                    for aa in frame:
+                        self.traj[0].reload_frame(frame=aa)
+                        iframe=self.traj[0].frame[0]
+                        faux.get_hbonds_roo_angoho( opt_diff_set, opt_pbc, \
+                                                        acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
+                                                        iframe.coors,iframe.box,iframe.orthogonal, \
+                                                        acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
+                                                        nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
+                                                        nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
+                                                        self.num_atoms)
+                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        gg+=1
+
+            else:
+
+                if optimize:
+                    gg=0
+                    hbout=[]
+                    for iframe in __read_frame_opt__(self,traj,frame):
+                        if (gg==0): 
+                            self.verlet_list_grid_ns(r1=roo_param,r2=roo_param,rcell=roo_param,iframe=iframe)
+                        else:
+                            self.verlet_list_grid_ns(r1=roo_param,r2=roo_param,rcell=roo_param,iframe=iframe,update=True)
+
+                        faux.get_hbonds_roo_angoho_ns_list( opt_diff_set, opt_pbc, \
+                                           acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
+                                           iframe.coors,iframe.box,iframe.orthogonal, \
+                                           acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
+                                           nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
+                                           nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
+                                           self.num_atoms)
+
+                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        gg+=1
+                else:
+                    hbout=[]
+                    gg=0
+                    for iframe in __read_frame_opt__(self,traj,frame):
+                        faux.get_hbonds_roo_angoho( opt_diff_set, opt_pbc, \
+                                                        acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
+                                                        iframe.coors,iframe.box,iframe.orthogonal, \
+                                                        acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
+                                                        nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
+                                                        nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
+                                                        self.num_atoms)
+                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        gg+=1
+
+            if gg==1:
+                return hbout[0]
+            else:
+                return hbout
+
+
+        # R(o,h)-Ang(o,h,o)
+        elif faux.hbdefinition == 9 :
+            faux.roh2_param, faux.cos_angoho_param= roh_param**2, numpy.cos(numpy.radians(ang_param))
+
+            if infile:
+
+                if type(frame) in [int]:
+                    frame=[frame]
+
+                if type(frame) not in [list,tuple]:
+                    print '# "frame" must be a list'
+                    return
+
+                if optimize:
+                    gg=0
+                    hbout=[]
+                    for aa in frame:
+                        self.traj[0].reload_frame(frame=aa)
+                        iframe=self.traj[0].frame[0]
+                        if (gg==0): 
+                            self.verlet_list_grid_ns(r1=roh_param,r2=roh_param,rcell=roh_param,iframe=iframe)
+                        else:
+                            self.verlet_list_grid_ns(r1=roh_param,r2=roh_param,rcell=roh_param,iframe=iframe,update=True)
+
+                        faux.get_hbonds_roh_angoho_ns_list( opt_diff_set, opt_pbc, \
+                                           acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
+                                           iframe.coors,iframe.box,iframe.orthogonal, \
+                                           acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
+                                           nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
+                                           nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
+                                           self.num_atoms)
+
+                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        gg+=1
+                else:
+                    hbout=[]
+                    gg=0
+                    for aa in frame:
+                        self.traj[0].reload_frame(frame=aa)
+                        iframe=self.traj[0].frame[0]
+                        faux.get_hbonds_roh_angoho( opt_diff_set, opt_pbc, \
+                                                        acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
+                                                        iframe.coors,iframe.box,iframe.orthogonal, \
+                                                        acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
+                                                        nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
+                                                        nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
+                                                        self.num_atoms)
+                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        gg+=1
+
+            else:
+
+                if optimize:
+                    gg=0
+                    hbout=[]
+                    for iframe in __read_frame_opt__(self,traj,frame):
+                        if (gg==0): 
+                            self.verlet_list_grid_ns(r1=roh_param,r2=roh_param,rcell=roh_param,iframe=iframe)
+                        else:
+                            self.verlet_list_grid_ns(r1=roh_param,r2=roh_param,rcell=roh_param,iframe=iframe,update=True)
+
+                        faux.get_hbonds_roh_angoho_ns_list( opt_diff_set, opt_pbc, \
+                                           acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
+                                           iframe.coors,iframe.box,iframe.orthogonal, \
+                                           acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
+                                           nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
+                                           nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
+                                           self.num_atoms)
+
+                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        gg+=1
+                else:
+                    hbout=[]
+                    gg=0
+                    for iframe in __read_frame_opt__(self,traj,frame):
+                        faux.get_hbonds_roh_angoho( opt_diff_set, opt_pbc, \
+                                                        acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
+                                                        iframe.coors,iframe.box,iframe.orthogonal, \
+                                                        acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
+                                                        nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
+                                                        nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
+                                                        self.num_atoms)
+                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        gg+=1
+
+            if gg==1:
+                return hbout[0]
+            else:
+                return hbout
+
 
         # Donor-Acceptor-Number
         elif faux.hbdefinition == 4 : 
@@ -1879,7 +2061,7 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
 
         # Donor-Number-Ang(o,o,h)
         elif faux.hbdefinition == 6 : 
-            faux.cos_angooh_param= numpy.cos(numpy.radians(angooh_param))
+            faux.cos_angooh_param= numpy.cos(numpy.radians(ang_param))
             if not (allwat_A and allwat_B):
                 print '# This type of hbond only works for water molecules.'
             print 'Not implemented yet'
@@ -2202,73 +2384,73 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
 #        pass
 
 
-    def hbonds2 (self,definition=None,set_A=None,set_B=None,acc_don_A=None,acc_don_B=None,traj=0,frame=0,sk_param=0.00850,roh_param=2.3000,roo_param=3.5,angooh_param=30.0,optimize=False,pbc=True,verbose=False):
-
-        opt_effic=0
-        opt_diff_syst=0
-        opt_diff_set=1
-        opt_pbc=0
-        if pbc:
-            opt_pbc=1
-
-        if acc_don_A==None and acc_don_B==None:
-            if set_A==None:
-                print 'set_A and/or set_B needed'
-                return
-            else:
-                acc_don_A=self.selection_hbonds(setA=set_A,verbose=False)
-                if set_B==None:
-                    acc_don_B=acc_don_A
-                    opt_diff_set=0
-                else:
-                    acc_don_B=self.selection_hbonds(setA=set_B,verbose=False)
-        else:
-            if acc_don_B==None:
-                acc_don_B=acc_don_A
-                opt_diff_set=0
-
-
-        nA_acc       = acc_don_A[0].shape[0]
-        nA_acc_sH    = acc_don_A[1].shape[0] # Just for water and skinner, topological, etc...
-        nA_acc_H     = acc_don_A[2].shape[0] # Just for water and skinner, topological, etc...
-        nA_don       = acc_don_A[3].shape[0]
-        nA_don_sH    = acc_don_A[4].shape[0]
-        nA_don_H     = acc_don_A[5].shape[0]
-        allwat_A     = acc_don_A[6]
-        nB_acc       = acc_don_B[0].shape[0]
-        nB_acc_sH    = acc_don_B[1].shape[0] # Just for water and skinner, topological, etc...
-        nB_acc_H     = acc_don_B[2].shape[0] # Just for water and skinner, topological, etc...
-        nB_don       = acc_don_B[3].shape[0]
-        nB_don_sH    = acc_don_B[4].shape[0]
-        nB_don_H     = acc_don_B[5].shape[0]
-        allwat_B     = acc_don_B[6]
-
-        natomA=self.num_atoms
-        natomB=self.num_atoms
-        num_frames=__length_frame_opt__(self,traj,frame)
-
-        faux.hbdefinition=hbonds_type(definition,verbose=False)
-
-        if faux.hbdefinition == 3 : # ROO_ANG
-            faux.roo2_param, faux.cos_angooh_param= roo_param**2, numpy.cos(numpy.radians(angooh_param))
-            
-            gg=0
-            for iframe in __read_frame_opt__(self,traj,frame):
-                if (gg==0): 
-                    self.verlet_list_grid_ns(r1=3.5,r2=3.5,rcell=3.5,iframe=iframe)
-                else:
-                    self.verlet_list_grid_ns(r1=3.5,r2=3.5,rcell=3.5,iframe=iframe,update=True)
-                    faux.get_hbonds_roo_ang_ns_list(opt_effic, opt_diff_syst, opt_diff_set, opt_pbc, \
-                                                       acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
-                                                       iframe.coors,iframe.box,iframe.orthogonal, \
-                                                       acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
-                                                       iframe.coors,nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
-                                                       nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
-                                                       natomA,natomB)
-                gg+=1
-
-
-        pass
+#    def hbonds2 (self,definition=None,set_A=None,set_B=None,acc_don_A=None,acc_don_B=None,traj=0,frame=0,sk_param=0.00850,roh_param=2.3000,roo_param=3.5,angooh_param=30.0,optimize=False,pbc=True,verbose=False):
+# 
+#        opt_effic=0
+#        opt_diff_syst=0
+#        opt_diff_set=1
+#        opt_pbc=0
+#        if pbc:
+#            opt_pbc=1
+# 
+#        if acc_don_A==None and acc_don_B==None:
+#            if set_A==None:
+#                print 'set_A and/or set_B needed'
+#                return
+#            else:
+#                acc_don_A=self.selection_hbonds(setA=set_A,verbose=False)
+#                if set_B==None:
+#                    acc_don_B=acc_don_A
+#                    opt_diff_set=0
+#                else:
+#                    acc_don_B=self.selection_hbonds(setA=set_B,verbose=False)
+#        else:
+#            if acc_don_B==None:
+#                acc_don_B=acc_don_A
+#                opt_diff_set=0
+# 
+# 
+#        nA_acc       = acc_don_A[0].shape[0]
+#        nA_acc_sH    = acc_don_A[1].shape[0] # Just for water and skinner, topological, etc...
+#        nA_acc_H     = acc_don_A[2].shape[0] # Just for water and skinner, topological, etc...
+#        nA_don       = acc_don_A[3].shape[0]
+#        nA_don_sH    = acc_don_A[4].shape[0]
+#        nA_don_H     = acc_don_A[5].shape[0]
+#        allwat_A     = acc_don_A[6]
+#        nB_acc       = acc_don_B[0].shape[0]
+#        nB_acc_sH    = acc_don_B[1].shape[0] # Just for water and skinner, topological, etc...
+#        nB_acc_H     = acc_don_B[2].shape[0] # Just for water and skinner, topological, etc...
+#        nB_don       = acc_don_B[3].shape[0]
+#        nB_don_sH    = acc_don_B[4].shape[0]
+#        nB_don_H     = acc_don_B[5].shape[0]
+#        allwat_B     = acc_don_B[6]
+# 
+#        natomA=self.num_atoms
+#        natomB=self.num_atoms
+#        num_frames=__length_frame_opt__(self,traj,frame)
+# 
+#        faux.hbdefinition=hbonds_type(definition,verbose=False)
+# 
+#        if faux.hbdefinition == 3 : # ROO_ANG
+#            faux.roo2_param, faux.cos_angooh_param= roo_param**2, numpy.cos(numpy.radians(angooh_param))
+#            
+#            gg=0
+#            for iframe in __read_frame_opt__(self,traj,frame):
+#                if (gg==0): 
+#                    self.verlet_list_grid_ns(r1=3.5,r2=3.5,rcell=3.5,iframe=iframe)
+#                else:
+#                    self.verlet_list_grid_ns(r1=3.5,r2=3.5,rcell=3.5,iframe=iframe,update=True)
+#                    faux.get_hbonds_roo_ang_ns_list(opt_effic, opt_diff_syst, opt_diff_set, opt_pbc, \
+#                                                       acc_don_A[0],acc_don_A[1],acc_don_A[2],acc_don_A[3],acc_don_A[4],acc_don_A[5], \
+#                                                       iframe.coors,iframe.box,iframe.orthogonal, \
+#                                                       acc_don_B[0],acc_don_B[1],acc_don_B[2],acc_don_B[3],acc_don_B[4],acc_don_B[5], \
+#                                                       iframe.coors,nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
+#                                                       nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
+#                                                       natomA,natomB)
+#                gg+=1
+# 
+# 
+#        pass
 
 
     def water_bisector (self,water='ALL',traj=0,frame=0,pbc=True):
@@ -2548,10 +2730,13 @@ def hbonds_type(option=None,verbose=True):
     hbs_type['Skinner']=1; hbs_info['Skinner']='R.Kumar, J.R. Schmidt and J.L. Skinner. J. Chem. Phys. 126, 204107 (2007)' 
     hbs_type['R(o,h)']=2;  hbs_info['R(o,h)']='V. J. Buch. J. Chem. Phys. 96, 3814-3823 (1992)'
     hbs_type['R(o,o)-Ang(o,o,h)']=3; hbs_info['R(o,o)-Ang(o,o,h)']='A. Luzar, D. Chandler. Phys. Rev. Lett. 76, 928-931 (1996)'
+    hbs_type['R(o,o)-Ang(o,h,o)']=8; hbs_info['R(o,o)-Ang(o,h,o)']=' '
+    hbs_type['R(o,h)-Ang(o,h,o)']=9; hbs_info['R(o,h)-Ang(o,h,o)']=' '
     hbs_type['Donor-Acceptor-Number']=4; hbs_info['Donor-Acceptor-Number']='A. D. Hammerich, V. J. Buch. J. Chem. Phys. 128, 111101 (2008)'
     hbs_type['Topological']=5; hbs_info['Topological']='R. H. Henchman and S. J. Irudayam. J. Phys. Chem. B. 114, 16792-16810 (2010)'
     hbs_type['Donor-Number-Ang(o,o,h)']=6; hbs_info['Donor-Number-Ang(o,o,h)']='J. D. Smith, C. D. Cappa, et al. Proc. Natl. Acad. Sci. U.S.A. 102, 14171 (2005).'
     hbs_type['Nearest-Neighbour']=7; hbs_info['Nearest-Neighbour']='This is not a hydrogen bond definition but just a topological characterization.'
+
 
 
     if verbose:

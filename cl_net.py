@@ -802,24 +802,31 @@ class network():
 
         return xx, yy
 
-    def weight_distribution (self, option='all', bins=20, segment=None, delta_x=None,norm=None):
+    def weight_distribution (self, objects='nodes', option='all', bins=None, segment=None, delta_x=None,norm=False,cumul=False):
 
-        """option=['all','self_links','all-self_links','links']  (I have to do the same for the links of a node)"""
+        if objects in ['nodes','Nodes']:
+            """option=['all','self_links','all-self_links','links']  (I have to do the same for the links of a node)"""
+            scratch=numpy.zeros(self.num_nodes,dtype=float)
 
-        scratch=[]
-        if option=='all':
-            for ii in self.node:
-                scratch.append(ii.weight)
-                
-        if option=='self_links':
-            for ii in range(self.num_nodes):
-                scratch.append(self.node[ii].link[ii])
+            if option=='all':
+                for ii in xrange(self.num_nodes):
+                    scratch[ii]=self.node[ii].weight
 
-        if option=='all-self_links':
-            for ii in range(self.num_nodes):
-                scratch.append(self.node[ii].weight-self.node[ii].link[ii])
+            if option=='self_links':
+                for ii in range(self.num_nodes):
+                    try:
+                        scratch[ii]=self.node[ii].link[ii]
+                    except:
+                        scratch[ii]=0.0
 
-        xx,yy=pyn_math.histogram(scratch,bins,segment,delta_x,None,norm)
+            if option=='all-self_links':
+                for ii in range(self.num_nodes):
+                    try:
+                        scratch[ii]=(self.node[ii].weight-self.node[ii].link[ii])
+                    except:
+                        scratch[ii]=self.node[ii].weight
+
+        xx,yy=pyn_math.histogram(scratch,bins,segment,delta_x,0,norm,cumul)
         
         return xx, yy
 
