@@ -2739,14 +2739,26 @@ def hbonds_type(option=None,verbose=True):
 
 
 
+    #if verbose:
+    #    if option not in hbs_type.keys():
+    #        for ii in hbs_type.keys():
+    #            if len(ii)<=12: tab='\t\t\t'
+    #            if 12<len(ii)<=18: tab='\t\t'
+    #            if 18<len(ii): tab='\t'
+    #            print '  ',ii,tab+'[',hbs_info[ii],']'
+    #    return
+
     if verbose:
         if option not in hbs_type.keys():
-            for ii in hbs_type.keys():
+            for ii in ['R(o,h)','R(o,o)-Ang(o,o,h)','R(o,o)-Ang(o,h,o)','R(o,h)-Ang(o,h,o)',
+                       'Skinner','Donor-Acceptor-Number','Donor-Number-Ang(o,o,h)','Topological',
+                       'Nearest-Neighbour']:
                 if len(ii)<=12: tab='\t\t\t'
                 if 12<len(ii)<=18: tab='\t\t'
                 if 18<len(ii): tab='\t'
                 print '  ',ii,tab+'[',hbs_info[ii],']'
         return
+
 
     if option != None :
         if option not in hbs_type.keys():
