@@ -430,6 +430,42 @@ class network():
 
         pass
 
+    def extract_net_clusters(self,verbose=True):
+
+        self.clusters_links(verbose=False)
+
+        temp = network(verbose=False)
+
+        temp.num_nodes= self.num_clusters
+        for ii in xrange(temp.num_nodes):
+            node=cl_node()
+            cluster=self.cluster[ii]
+            node.weight = cluster.weight
+            node.label  = cluster.label
+            node.link   = cluster.link.copy() 
+            temp.labels[cluster.label]= ii
+            temp.node.append(node)
+
+        temp.weight=self.weight
+        temp.Ts=False
+        temp.build_Ts()
+
+        if self.__symmetric__:
+            temp.__symmetric=True
+
+        if self.kinetic:
+            temp.kinetic=True
+
+        if self.directed:
+            temp.directed=True
+
+        temp.info(update=True,verbose=verbose)
+
+        del(node)
+
+        return temp
+
+
     def extract_net(self,nodes=None,verbose=True):
         
         nodes=numpy.array(nodes,dtype=int)
@@ -1135,6 +1171,9 @@ class network():
 
             print '#Error: Number of clusters lower than 2'
             return
+
+        for ii in xrange(self.num_clusters):
+            self.cluster[ii].link={}
 
         for ii in self.node:
             c_a=ii.cluster
