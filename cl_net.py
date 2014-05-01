@@ -1331,7 +1331,24 @@ class network():
 
                     f_mds.load_net(self.T_start,self.T_ind,self.T_wl,self.num_nodes,self.k_total)
 
+                    f_mds.choose_random_pivots_1(num_pivots)
+                    f_mds.dijkstra_pivots()
 
+                    if eigenvs in ['all','All']:
+                        eigenvs=self.num_nodes
+                    if eigenvs>self.num_nodes:
+                        print '# Error: eigenvs>num_nodes'
+                        return 
+                    if dim>eigenvs:
+                        print '# Error: dim>eigenvs'
+                        return
+
+                    opt_stress=0
+
+                    if stress:
+                        opt_stress=1
+
+                    o_coors,o_eigenvals,o_eigenvects,o_stress=f_mds.mds_pivots(opt_stress,dim,eigenvs,self.num_nodes)
 
                 else:
                     print '# Error: num_pivots required'

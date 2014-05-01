@@ -17,6 +17,9 @@ LOGICAL::net_up=.FALSE.
 LOGICAL::pre_dijkstra_up=.FALSE.
 INTEGER,DIMENSION(4)::iseed
 
+!f2py   intent(hide)::num_pivots,ind_pivots
+INTEGER::num_pivots
+INTEGER,DIMENSION(:),ALLOCATABLE::ind_pivots
 
 CONTAINS
 
@@ -419,6 +422,56 @@ SUBROUTINE DIJKSTRA ()
 END SUBROUTINE DIJKSTRA
 
 
+SUBROUTINE DIJKSTRA_PIVOTS ()
+ 
+  IMPLICIT NONE
+
+  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::vect_aux
+  LOGICAL,DIMENSION(:),ALLOCATABLE::filtro,filtro2
+  
+  DOUBLE PRECISION::azero
+  INTEGER::ii,jj,gg,kk,hh
+
+  IF (dists_up.eqv..TRUE.) THEN
+     DEALLOCATE(dists)
+  END IF
+
+  ALLOCATE(filtro(Nnods),vect_aux(Nnods))
+  azero=0.0d0
+
+  ALLOCATE(dists(Nnods,num_pivots))
+  dists=0.0d0
+  dists_up=.TRUE.
+
+  ALLOCATE(filtro2(Nnods))
+  DO hh=1,num_pivots
+     ii=ind_pivots(hh)
+     vect_aux=1.0d0/azero
+     filtro=.true.
+     filtro2=.true.
+     vect_aux(ii)=0.0d0
+     DO WHILE (COUNT(filtro)>0)
+        jj=MINLOC(vect_aux(:),DIM=1,MASK=filtro)
+        DO kk=T_start(jj)+1,T_start(jj+1)
+           gg=T_ind(kk)
+           IF (filtro2(gg).eqv..true.) THEN
+              IF (vect_aux(gg)>(vect_aux(jj)+pre_dijkstra(kk))) THEN
+                 vect_aux(gg)=vect_aux(jj)+pre_dijkstra(kk)
+              END IF
+           END IF
+        END DO
+        
+        filtro(jj)=.false.
+        filtro2(jj)=.false.
+     END DO
+     dists(:,hh)=vect_aux(:)
+  END DO
+  DEALLOCATE(filtro2,filtro,vect_aux)
+ 
+END SUBROUTINE DIJKSTRA_PIVOTS
+
+
+
 SUBROUTINE MDS (coordinates,eigenvals,eigenvects,stress,opt_stress,dim,lout,xNnods)
  
   IMPLICIT NONE
@@ -539,5 +592,184 @@ SUBROUTINE MDS (coordinates,eigenvals,eigenvects,stress,opt_stress,dim,lout,xNno
  
 END SUBROUTINE MDS
 
+
+SUBROUTINE MDS_PIVOTS (coordinates,eigenvals,eigenvects,stress,opt_stress,dim,lout,xNnods)
+ 
+  IMPLICIT NONE
+  
+  INTEGER,INTENT(IN)::lout,dim,opt_stress,xNnods
+ 
+  DOUBLE PRECISION,DIMENSION(lout),INTENT(OUT)::eigenvals
+  DOUBLE PRECISION,DIMENSION(xNnods,lout),INTENT(OUT)::eigenvects
+  DOUBLE PRECISION,DIMENSION(xNnods,dim),INTENT(OUT)::coordinates
+  DOUBLE PRECISION,DIMENSION(lout),INTENT(OUT)::stress
+ 
+  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::vect_aux,coors_aux
+  DOUBLE PRECISION::dd,norm,salida
+  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::di,dp
+  DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE::CC
+  INTEGER::num_val,info,Lwork
+  INTEGER, DIMENSION(:), ALLOCATABLE::iwork,ifail
+  DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE::work
+ 
+  INTEGER::h,i,j,abajo,ii,jj,gg
+  DOUBLE PRECISION::maxL
+
+  eigenvals=0.0d0
+  eigenvects=0.0d0
+  coordinates=0.0d0
+  stress=0.0d0
+ 
+  ALLOCATE(CC(Nnods,num_pivots),di(Nnods),dp(num_pivots))
+  di=0.0d0
+  dd=0.0d0
+  dp=0.0d0
+  CC=0.0d0
+
+  CC(:,:)=dists(:,:)
+ 
+  !! Deberia poner aqui una opcion para hacer un guardado opcional distancias=CC
+  !! y usarlas luego como opcion al calcular el stress.
+  print*,'calcula matriz'
+
+  DO i=1,num_pivots
+     DO j=1,Nnods
+        CC(j,i)=CC(j,i)**2    ! Necesario en el metodo
+        di(j)=di(j)+CC(j,i)
+        dp(i)=dp(i)+CC(j,i)
+        dd=dd+CC(j,i)
+     END DO
+  END DO
+  dd=dd/(Nnods*num_pivots*1.0d0)
+  di=di/(num_pivots*1.0d0)
+  dp=dp/(Nnods*1.0d0)
+ 
+  DO i=1,num_pivots
+     DO j=1,Nnods
+        CC(j,i)=-0.50d0*(CC(j,i)-di(j)-dp(i)+dd)
+     END DO
+  END DO
+ 
+  Lwork=8*Nnods
+ 
+  ALLOCATE (work(Lwork),iwork(5*Nnods),ifail(Nnods))
+ 
+  eigenvals=0.0d0
+  eigenvects=0.0d0
+  work=0.0d0
+  iwork=0
+  ifail=0
+  abajo=Nnods-lout+1
+ 
+ 
+  print*,'va a diagonalizar'
+ 
+  CALL dsyevx ('V','I','U',Nnods,CC,Nnods,0,0,abajo,Nnods,0.0d0,num_val,&
+       eigenvals,eigenvects,Nnods,work,Lwork,iwork,ifail,info)
+ 
+  IF (info/=0) THEN
+     print*,"#Error with the diagonalization -MDS.f90:dsyevx-"
+     print*,"#the array 'work' should has the dimension:",work(1)
+  END IF
+ 
+  DEALLOCATE (work,iwork,ifail,CC)
+  DEALLOCATE(di)
+ 
+  coordinates=0.0d0
+ 
+  DO j=1,dim
+     coordinates(:,j)=sqrt(eigenvals(lout-j+1))*eigenvects(:,lout-j+1)
+  END DO
+ 
+  IF (opt_stress==1) THEN
+     !ALLOCATE(vect_aux(Ktot),coors_aux(Nnods))
+     !vect_aux=0.0d0
+     !coors_aux=0.0d0
+     !norm=0.0d0
+     !DO ii=1,Nnods
+     !   DO jj=T_start(ii)+1,T_start(ii+1)
+     !      norm=norm+T_tau(jj)**2
+     !   END DO
+     !END DO
+     !DO j=1,lout
+     !   if (eigenvals(lout-j+1)>0.0d0) THEN
+     !      salida=0.0d0
+     !      dd=sqrt(eigenvals(lout-j+1))
+     !      coors_aux(:)=dd*eigenvects(:,lout-j+1)
+     !      DO ii=1,Nnods
+     !         DO jj=T_start(ii)+1,T_start(ii+1)
+     !            gg=T_ind(jj)
+     !            vect_aux(jj)=vect_aux(jj)+(coors_aux(ii)-coors_aux(gg))**2
+     !            salida=salida+(sqrt(vect_aux(jj))-T_tau(jj))**2
+     !         END DO
+     !      END DO
+     !      stress(j)=sqrt(salida/norm)
+     !   END IF
+     !END DO
+     !DEALLOCATE(vect_aux,coors_aux)
+  END IF
+  
+  maxL=MAXVAL(coordinates)
+  maxL=maxL/50.0d0
+  coordinates(:,:)=coordinates(:,:)/maxL
+
+ 
+END SUBROUTINE MDS_PIVOTS
+
+
+SUBROUTINE CHOOSE_RANDOM_PIVOTS_1(xnum_pivots)
+
+  INTEGER,INTENT(IN)::xnum_pivots
+
+  INTEGER::ii,jj
+  INTEGER,DIMENSION(4)::hseed
+  DOUBLE PRECISION::dice,bandera
+  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::acumulado
+  LOGICAL,DIMENSION(:),ALLOCATABLE::filtro
+  LOGICAL::salida
+
+  num_pivots=xnum_pivots
+  IF (ALLOCATED(ind_pivots)) DEALLOCATE(ind_pivots)
+  ALLOCATE(ind_pivots(num_pivots))
+
+  ALLOCATE(acumulado(Nnods),filtro(Nnods))
+  acumulado=0.0d0
+  acumulado(1)=Pe(1)
+  DO ii=2,Nnods
+     acumulado(ii)=acumulado(ii-1)+Pe(ii)
+  END DO
+  filtro=.FALSE.
+
+  hseed=iseed
+
+  ii=1
+  DO WHILE (ii<=num_pivots)
+     CALL dlarnv(1,hseed,1,dice)
+     salida=.FALSE.
+     DO jj=1,Nnods
+        IF (dice<acumulado(jj)) THEN
+           salida=.TRUE.
+           IF (filtro(jj).eqv..FALSE.) THEN
+              ind_pivots(ii)=jj
+              filtro(jj)=.TRUE.
+              ii=ii+1
+           END IF
+           EXIT
+        END IF
+     END DO
+     IF (salida.eqv..FALSE.) THEN
+        IF (filtro(Nnods).eqv..FALSE.) THEN
+           ind_pivots(ii)=Nnods
+           filtro(Nnods)=.TRUE.
+           ii=ii+1
+        END IF
+     END IF
+  END DO
+
+  iseed=hseed
+
+  DEALLOCATE(filtro,acumulado)
+
+END SUBROUTINE CHOOSE_RANDOM_PIVOTS_1
 
 END MODULE GLOB
