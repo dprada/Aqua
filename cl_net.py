@@ -1282,42 +1282,60 @@ class network():
 
         return pfff
 
-    def mds2(self,tipo=None,dim=3,eigenvs='all',stress=False):
+    def mds2(self,tipo=None,dim=3,eigenvs='all',stress=False,pivots=False,num_pivots=None):
 
-        if self.Ts==False :
-            self.build_Ts()
+        if pivots==False:
 
-        f_mds.load_net(self.T_start,self.T_ind,self.T_wl,self.num_nodes,self.k_total)
-        if tipo==1:
-            f_mds.pre_relax_1st_order()
-        elif tipo==2:
-            f_mds.pre_relax_1st_order2()
-        elif tipo==3:
-            f_mds.pre_relax_hamm()
-        elif tipo==4:
-            f_mds.pre_inv_flux()
-        elif tipo==5:
-            f_mds.pre_min_fpt()
-        elif tipo==6:
-            f_mds.pre_ave_fpt()
+            if self.Ts==False :
+                self.build_Ts()
 
-        f_mds.dijkstra()
+            f_mds.load_net(self.T_start,self.T_ind,self.T_wl,self.num_nodes,self.k_total)
+            if tipo==1:
+                f_mds.pre_relax_1st_order()
+            elif tipo==2:
+                f_mds.pre_relax_1st_order2()
+            elif tipo==3:
+                f_mds.pre_relax_hamm()
+            elif tipo==4:
+                f_mds.pre_inv_flux()
+            elif tipo==5:
+                f_mds.pre_min_fpt()
+            elif tipo==6:
+                f_mds.pre_ave_fpt()
 
-        if eigenvs in ['all','All']:
-            eigenvs=self.num_nodes
-        if eigenvs>self.num_nodes:
-            print '# Error: eigenvs>num_nodes'
-            return 
-        if dim>eigenvs:
-            print '# Error: dim>eigenvs'
-            return
+            f_mds.dijkstra()
 
-        opt_stress=0
+            if eigenvs in ['all','All']:
+                eigenvs=self.num_nodes
+            if eigenvs>self.num_nodes:
+                print '# Error: eigenvs>num_nodes'
+                return 
+            if dim>eigenvs:
+                print '# Error: dim>eigenvs'
+                return
 
-        if stress:
-            opt_stress=1
+            opt_stress=0
 
-        o_coors,o_eigenvals,o_eigenvects,o_stress=f_mds.mds(opt_stress,dim,eigenvs,self.num_nodes)
+            if stress:
+                opt_stress=1
+
+            o_coors,o_eigenvals,o_eigenvects,o_stress=f_mds.mds(opt_stress,dim,eigenvs,self.num_nodes)
+
+        else:
+
+            if pivots in ['random','Random','RANDOM']:
+                if type(num_pivots)==int:
+
+                    if self.Ts==False :
+                        self.build_Ts()
+
+                    f_mds.load_net(self.T_start,self.T_ind,self.T_wl,self.num_nodes,self.k_total)
+
+
+
+                else:
+                    print '# Error: num_pivots required'
+                    return
 
         for ii in range(self.num_nodes):
             self.node[ii].coors=o_coors[ii][:]

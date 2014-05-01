@@ -419,7 +419,6 @@ SUBROUTINE DIJKSTRA ()
 END SUBROUTINE DIJKSTRA
 
 
-
 SUBROUTINE MDS (coordinates,eigenvals,eigenvects,stress,opt_stress,dim,lout,xNnods)
  
   IMPLICIT NONE
