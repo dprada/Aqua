@@ -1331,8 +1331,23 @@ class network():
 
                     f_mds.load_net(self.T_start,self.T_ind,self.T_wl,self.num_nodes,self.k_total)
 
-                    f_mds.choose_random_pivots_1(num_pivots)
-                    f_mds.dijkstra_pivots()
+                    if tipo==1:
+                        f_mds.pre_relax_1st_order()
+                    elif tipo==2:
+                        f_mds.pre_relax_1st_order2()
+                    elif tipo==3:
+                        f_mds.pre_relax_hamm()
+                    elif tipo==4:
+                        f_mds.pre_inv_flux()
+
+                    print 'elije'
+                    if pivots in ['random','Random','RANDOM']:
+                        f_mds.choose_random_pivots_1(num_pivots)
+                        print 'dijkstra_pivots'
+                        f_mds.dijkstra_pivots()
+                    if pivots in ['random2','Random2','RANDOM2']:
+                        f_mds.choose_random_pivots_2_w_dijkstra(num_pivots)
+
 
                     if eigenvs in ['all','All']:
                         eigenvs=self.num_nodes
@@ -1347,8 +1362,8 @@ class network():
 
                     if stress:
                         opt_stress=1
-
-                    o_coors,o_eigenvals,o_eigenvects,o_stress=f_mds.mds_pivots(opt_stress,dim,eigenvs,self.num_nodes)
+                    print 'ahi va'
+                    o_coors=f_mds.mds_pivots(dim,self.num_nodes)
 
                 else:
                     print '# Error: num_pivots required'
@@ -1357,11 +1372,13 @@ class network():
         for ii in range(self.num_nodes):
             self.node[ii].coors=o_coors[ii][:]
 
-        if stress:
-            return o_eigenvals,o_eigenvects,o_stress
+        if pivots==False:
+            if stress:
+                return o_eigenvals,o_eigenvects,o_stress
+            else:
+                return o_eigenvals,o_eigenvects
         else:
-            return o_eigenvals,o_eigenvects
-
+            pass
 
 
 
