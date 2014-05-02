@@ -39,6 +39,7 @@ class cl_io():
         self.v['with_cluster']=False
         self.v['with_color']=False
         self.v['with_size']=False
+        self.v['with_atts']=False
 
         self.v['node1']=0
         self.v['node2']=0
@@ -49,6 +50,7 @@ class cl_io():
         self.v['coorz']=0.00
         self.v['color']=''
         self.v['size']=0.00
+        self.v['att1']=0
 
 
     def read_H1(self,line):
@@ -92,6 +94,7 @@ class cl_io():
                 if line[ind] in ['color']: self.v['with_color']=True
                 if line[ind] in ['size']: self.v['with_size']=True
                 if line[ind] in ['weight']: self.v['with_weight']=True
+                if line[ind] in ['att1']: self.v['with_atts']=True
 
     def read_line(self,line):
         
@@ -111,6 +114,7 @@ class cl_io():
                 self.v['coorx']=float(self.v['coorx'])
                 self.v['coory']=float(self.v['coory'])
                 self.v['coorz']=float(self.v['coorz'])
+            if self.v['with_atts']: self.v['att1']=str(self.v['att1'])
         else:
             control=False
 
@@ -559,6 +563,7 @@ class network():
                             if io.v['with_cluster']: self.node[io.v['node1']].cluster=io.v['cluster']
                             if io.v['with_color']: self.node[io.v['node1']].color=io.v['color']
                             if io.v['with_size']: self.node[io.v['node1']].size=io.v['size']
+                            if io.v['with_atts']: self.node[io.v['node1']].att1=io.v['att1']
 
             self.directed=False
             if io.v['directed']:
@@ -708,7 +713,7 @@ class network():
         fff.close()
         
 
-    def write_net (self,name_file=None,format='text',pymol=False,with_index=True,with_cluster=False):
+    def write_net (self,name_file=None,format='text',pymol=False,with_index=True,with_clusters=False, with_atts=False):
 
         if name_file==None:
             print '# Error: name_file required'
@@ -762,13 +767,16 @@ class network():
 
             io.v['with_weight']=True
             io.v['with_coors']=False
-            io.v['with_cluster']=with_cluster
+            io.v['with_cluster']=with_clusters
             io.v['with_color']=False
             io.v['with_size']=False
+            io.v['with_atts']=False
 
             if pymol:
                 io.v['with_coors']=True
-            
+                io.v['with_cluster']=True
+                io.v['with_atts']=True
+
             line=[]
             line.append('node')
             if io.v['with_weight']: line.append('weight')
@@ -776,6 +784,7 @@ class network():
             if io.v['with_size']: line.append('size')
             if io.v['with_color']: line.append('color')
             if io.v['with_coors']: line.append('coorx'); line.append('coory'); line.append('coorz')
+            if io.v['with_atts']: line.append('att1')
             print >> fff,'# ',' '.join(line)
 
             for ii in range(self.num_nodes):
@@ -795,6 +804,7 @@ class network():
                     for jj in range(len(node.coors)):
                         aux[jj]=node.coors[jj]
                     for jj in aux: line.append(str(jj))
+                if io.v['with_atts']: line.append(str(node.att1))
                 print >> fff,' '.join(line)
             
             print >> fff,' '
@@ -1323,7 +1333,7 @@ class network():
 
         else:
 
-            if pivots in ['random','Random','RANDOM']:
+            if pivots in ['random','Random','RANDOM','random2','Random2']:
                 if type(num_pivots)==int:
 
                     if self.Ts==False :
@@ -1342,12 +1352,11 @@ class network():
 
                     print 'elije'
                     if pivots in ['random','Random','RANDOM']:
-                        f_mds.choose_random_pivots_1(num_pivots)
+                        list_pivots=f_mds.choose_random_pivots_1(num_pivots)
                         print 'dijkstra_pivots'
                         f_mds.dijkstra_pivots()
                     if pivots in ['random2','Random2','RANDOM2']:
-                        f_mds.choose_random_pivots_2_w_dijkstra(num_pivots)
-
+                        list_pivots=f_mds.choose_random_pivots_2_w_dijkstra(num_pivots)
 
                     if eigenvs in ['all','All']:
                         eigenvs=self.num_nodes
@@ -1378,6 +1387,7 @@ class network():
             else:
                 return o_eigenvals,o_eigenvects
         else:
+            return list_pivots
             pass
 
 
