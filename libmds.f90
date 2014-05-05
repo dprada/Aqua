@@ -841,12 +841,13 @@ SUBROUTINE CHOOSE_RANDOM_PIVOTS_1(xnum_pivots,list_pivots)
 END SUBROUTINE CHOOSE_RANDOM_PIVOTS_1
 
 
-SUBROUTINE CHOOSE_RANDOM_PIVOTS_2_W_DIJKSTRA(xnum_pivots,list_pivots)
+SUBROUTINE CHOOSE_RANDOM_PIVOTS_2_W_DIJKSTRA(xnum_pivots,list_extra_pivots,xextra_pivots,list_pivots)
 
-  INTEGER,INTENT(IN)::xnum_pivots
-  INTEGER,DIMENSION(xnum_pivots),INTENT(OUT)::list_pivots
+  INTEGER,INTENT(IN)::xnum_pivots,xextra_pivots
+  INTEGER,DIMENSION(xextra_pivots),INTENT(IN)::list_extra_pivots
+  INTEGER,DIMENSION(xnum_pivots+xextra_pivots),INTENT(OUT)::list_pivots
 
-  INTEGER::ii,jj,gg,num_candidatos
+  INTEGER::ii,jj,gg,kk,num_candidatos,hh
   INTEGER,DIMENSION(4)::hseed
   DOUBLE PRECISION::dice
   DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::acumulado
@@ -855,7 +856,7 @@ SUBROUTINE CHOOSE_RANDOM_PIVOTS_2_W_DIJKSTRA(xnum_pivots,list_pivots)
   LOGICAL,DIMENSION(:),ALLOCATABLE::filtro
   LOGICAL::salida
 
-  num_pivots=xnum_pivots
+  num_pivots=xnum_pivots+xextra_pivots
   IF (ALLOCATED(ind_pivots)) DEALLOCATE(ind_pivots)
   ALLOCATE(ind_pivots(num_pivots))
   ALLOCATE(aux_dists(Nnods))
@@ -870,25 +871,66 @@ SUBROUTINE CHOOSE_RANDOM_PIVOTS_2_W_DIJKSTRA(xnum_pivots,list_pivots)
 
   ALLOCATE(filtro(Nnods))
 
-  num_candidatos=Nnods
-  filtro=.TRUE.
-  ALLOCATE(acumulado(num_candidatos),ind_candidatos(num_candidatos))
-  aux_cut=0.0d0
-  jj=0
-  DO ii=1,Nnods
-     IF (filtro(ii).eqv..TRUE.) THEN
+  IF (xextra_pivots>0) THEN
+     DO ii=1,xextra_pivots
+        ind_pivots(ii)=list_extra_pivots(ii)+1
+        CALL DIJKSTRA_A_TARGET(ind_pivots(ii),Nnods,aux_dists)
+        dists(:,ii)=aux_dists(:)
+     END DO
+     
+     aux_dists(:)=0.0d0
+     DO jj=1,Nnods
+        aux_dists(jj)=MINVAL(dists(jj,1:xextra_pivots))
+     END DO
+     aux_cut=0.30d0*MAXVAL(aux_dists(:))
+     filtro=.FALSE.
+     num_candidatos=0
+     DO jj=1,Nnods
+        IF (aux_dists(jj)>aux_cut) THEN
+           filtro(jj)=.TRUE.
+           num_candidatos=num_candidatos+1
+        END IF
+     END DO
+     ALLOCATE(acumulado(num_candidatos),ind_candidatos(num_candidatos))
+     aux_cut=0.0d0
+     jj=0
+     DO gg=1,Nnods
+        IF (filtro(gg).eqv..TRUE.) THEN
+           aux_cut=aux_cut+Pe(gg)
+           jj=jj+1
+           acumulado(jj)=aux_cut
+           ind_candidatos(jj)=gg
+        END IF
+     END DO
+     acumulado=acumulado/aux_cut
+
+     kk=xextra_pivots+1
+
+  ELSE
+
+     num_candidatos=Nnods
+     filtro=.TRUE.
+     ALLOCATE(acumulado(num_candidatos),ind_candidatos(num_candidatos))
+     aux_cut=0.0d0
+     jj=0
+     DO ii=1,Nnods
         aux_cut=aux_cut+Pe(ii)
         jj=jj+1
         acumulado(jj)=aux_cut
         ind_candidatos(jj)=ii
-     END IF
-  END DO
-  acumulado=acumulado/aux_cut
+     END DO
+     acumulado=acumulado/aux_cut
+     
+     kk=1
+
+  END IF
 
   hseed=iseed
-
-  DO ii=1,num_pivots
+  hh=-1
+  DO ii=kk,num_pivots
      
+!     print*,ii
+
      CALL dlarnv(1,hseed,1,dice)
      salida=.FALSE.
      DO jj=1,num_candidatos
@@ -909,7 +951,12 @@ SUBROUTINE CHOOSE_RANDOM_PIVOTS_2_W_DIJKSTRA(xnum_pivots,list_pivots)
      DO jj=1,Nnods
         aux_dists(jj)=MINVAL(dists(jj,1:ii))
      END DO
-     aux_cut=0.30d0*MAXVAL(aux_dists(:))
+     hh=-hh
+     IF (hh>0) THEN
+        aux_cut=0.10d0*MAXVAL(aux_dists(:))
+     ELSE
+        aux_cut=0.0d0
+     END IF
      filtro=.FALSE.
      num_candidatos=0
      DO jj=1,Nnods
@@ -918,6 +965,7 @@ SUBROUTINE CHOOSE_RANDOM_PIVOTS_2_W_DIJKSTRA(xnum_pivots,list_pivots)
            num_candidatos=num_candidatos+1
         END IF
      END DO
+     print*,ii,num_candidatos
      DEALLOCATE(acumulado,ind_candidatos)
      ALLOCATE(acumulado(num_candidatos),ind_candidatos(num_candidatos))
      aux_cut=0.0d0

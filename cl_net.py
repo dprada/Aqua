@@ -1292,7 +1292,7 @@ class network():
 
         return pfff
 
-    def mds2(self,tipo=None,dim=3,eigenvs='all',stress=False,pivots=False,num_pivots=None):
+    def mds2(self,tipo=None,dim=3,eigenvs='all',stress=False,pivots=False,num_pivots=None,extra_pivots=None):
 
         if pivots==False:
 
@@ -1356,7 +1356,13 @@ class network():
                         print 'dijkstra_pivots'
                         f_mds.dijkstra_pivots()
                     if pivots in ['random2','Random2','RANDOM2']:
-                        list_pivots=f_mds.choose_random_pivots_2_w_dijkstra(num_pivots)
+                        if extra_pivots==None:
+                            num_extra_pivs=0
+                            extra_pivs=[]
+                        else:
+                            num_extra_pivs=len(extra_pivots)
+                            extra_pivs=numpy.array(extra_pivots,dtype=int)
+                        list_pivots=f_mds.choose_random_pivots_2_w_dijkstra(num_pivots,extra_pivs,num_extra_pivs)
 
                     if eigenvs in ['all','All']:
                         eigenvs=self.num_nodes
@@ -1371,7 +1377,7 @@ class network():
 
                     if stress:
                         opt_stress=1
-                    print 'ahi va'
+
                     o_coors=f_mds.mds_pivots(dim,self.num_nodes)
 
                 else:
