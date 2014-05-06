@@ -953,7 +953,7 @@ SUBROUTINE CHOOSE_RANDOM_PIVOTS_2_W_DIJKSTRA(xnum_pivots,list_extra_pivots,xextr
      END DO
      hh=-hh
      IF (hh>0) THEN
-        aux_cut=0.10d0*MAXVAL(aux_dists(:))
+        aux_cut=0.30d0*MAXVAL(aux_dists(:))
      ELSE
         aux_cut=0.0d0
      END IF

@@ -148,9 +148,9 @@ class cl_node():
         self.coors=[]
         self.color=''
         self.size=''
-        self.att1=None
-        self.att2=None
-        self.att3=None
+        self.att1=0
+        self.att2=0
+        self.att3=0
 
     def most_weighted_links(self,length=1):
         """ Indexes **of** the ranked N most weighted links.
