@@ -922,6 +922,10 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
         return [numpy.array(acc,order='F'),numpy.array(acc_start_H,order='F'),numpy.array(acc_H,order='F'), \
                 numpy.array(don,order='F'),numpy.array(don_start_H,order='F'),numpy.array(don_H,order='F'),all_wat]
 
+#    def extract_subsystem(self,select=None,verbose=True):
+
+        
+
 ###############################################################
 ###############################################################
     # To handle the set

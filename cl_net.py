@@ -1300,6 +1300,7 @@ class network():
                 self.build_Ts()
 
             f_mds.load_net(self.T_start,self.T_ind,self.T_wl,self.num_nodes,self.k_total)
+
             if tipo==1:
                 f_mds.pre_relax_1st_order()
             elif tipo==2:
@@ -1314,7 +1315,7 @@ class network():
                 f_mds.pre_ave_fpt()
 
             f_mds.dijkstra()
-
+            dxd=copy.deepcopy(f_mds.dists)
             if eigenvs in ['all','All']:
                 eigenvs=self.num_nodes
             if eigenvs>self.num_nodes:
@@ -1330,6 +1331,8 @@ class network():
                 opt_stress=1
 
             o_coors,o_eigenvals,o_eigenvects,o_stress=f_mds.mds(opt_stress,dim,eigenvs,self.num_nodes)
+
+            
 
         else:
 
@@ -1355,6 +1358,7 @@ class network():
                         list_pivots=f_mds.choose_random_pivots_1(num_pivots)
                         print 'dijkstra_pivots'
                         f_mds.dijkstra_pivots()
+                        dxd=copy.deepcopy(f_mds.dists)
                     if pivots in ['random2','Random2','RANDOM2']:
                         if extra_pivots==None:
                             num_extra_pivs=0
@@ -1391,9 +1395,9 @@ class network():
             if stress:
                 return o_eigenvals,o_eigenvects,o_stress
             else:
-                return o_eigenvals,o_eigenvects
+                return o_eigenvals,o_eigenvects, dxd
         else:
-            return list_pivots
+            return list_pivots, dxd
             pass
 
 

@@ -22,6 +22,7 @@ sys.path.append(workdir+'/io_formats/')
 # Base:
 from cl_set import *
 from cl_coors import *
+from frame import *
 import libgeneral as f
 from cl_anal_trajs import *
 from cl_kin_anal import *

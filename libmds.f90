@@ -1,6 +1,6 @@
 MODULE GLOB
 
-!f2py   intent(hide)::dists
+! nada f2py   intent(hide)::dists
 !f2py   intent(hide)::Nnods,Ktot
 !f2py   intent(hide)::T_start,T_ind
 !f2py   intent(hide)::T_tau
@@ -415,7 +415,7 @@ SUBROUTINE DIJKSTRA ()
      dists(:,ii)=vect_aux(:)
   END DO
   DEALLOCATE(filtro2,filtro,vect_aux)
- 
+
 END SUBROUTINE DIJKSTRA
 
 
@@ -622,9 +622,9 @@ SUBROUTINE MDS (coordinates,eigenvals,eigenvects,stress,opt_stress,dim,lout,xNno
      DEALLOCATE(vect_aux,coors_aux)
   END IF
   
-  maxL=MAXVAL(coordinates)
-  maxL=maxL/50.0d0
-  coordinates(:,:)=coordinates(:,:)/maxL
+  !maxL=MAXVAL(coordinates)
+  !maxL=maxL/50.0d0
+  !coordinates(:,:)=coordinates(:,:)/maxL
 
  
 END SUBROUTINE MDS
@@ -736,9 +736,9 @@ SUBROUTINE MDS_PIVOTS (coordinates,dim,xNnods)
      END DO
   END DO
 
-  maxL=MAXVAL(coordinates)
-  maxL=maxL/50.0d0
-  coordinates(:,:)=coordinates(:,:)/maxL
+  !maxL=MAXVAL(coordinates)
+  !maxL=maxL/50.0d0
+  !coordinates(:,:)=coordinates(:,:)/maxL
 
 
 !  coordinates=0.0d0
