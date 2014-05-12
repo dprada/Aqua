@@ -924,7 +924,45 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
 
 #    def extract_subsystem(self,select=None,verbose=True):
 
-        
+    def rebuild_chains(self, list_atoms=None, names=None, pdb_names=None, types=None, verbose=False):
+
+        self.num_chains=0
+        self.chain=[]
+        self.chains=[]
+        for ii in self.atom:
+            ii.chain=labels_unit()
+        aa=0
+        for ii in xrange(len(list_atoms)):
+            temp_chain=labels_set()
+            if names==None:
+                bb=str(aa)
+            else:
+                bb=str(names[ii])
+            temp_chain.index=aa
+            temp_chain.name=bb
+            temp_chain.list_atoms=list_atoms[ii]
+            temp_chain.num_atoms=len(list_atoms[ii])
+            list_resids={}
+            for jj in temp_chain.list_atoms:
+                self.atom[jj].chain.index=aa
+                self.atom[jj].chain.name=bb
+                list_resids[self.atom[jj].resid.index]=0
+                cc=self.atom[jj].resid.type
+            temp_chain.type=cc
+            for jj in list_resids.keys():
+                self.resid[jj].type=cc
+                self.resid[jj].chain=temp_chain
+            self.chain.append(temp_chain)
+            aa+=1
+
+        self.protein=[]
+        for ii in self.chain:
+            if ii.type=='Protein':
+                self.protein.append(ii.list_atoms)
+
+        if verbose:
+            self.info()
+                
 
 ###############################################################
 ###############################################################
