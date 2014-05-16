@@ -2219,7 +2219,6 @@ subroutine fcpt_dist (opt_norm,opt_noreturn,opt_states,opt_segments, &
         DO ii=num_frames,1,-1
 
            pos=traj(ii,kkk,lll)
-
            inside_to=.false.
            listo=.false.
            IF (opt_segments==1) THEN

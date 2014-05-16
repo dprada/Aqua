@@ -523,7 +523,7 @@ SUBROUTINE MDS (coordinates,eigenvals,eigenvects,stress,opt_stress,dim,lout,xNno
   DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::vect_aux,coors_aux
   DOUBLE PRECISION::dd,norm,salida
   DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::di
-  DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE::CC
+  DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE::CC,CXX
   INTEGER::num_val,info,Lwork
   INTEGER, DIMENSION(:), ALLOCATABLE::iwork,ifail
   DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE::work
@@ -536,7 +536,7 @@ SUBROUTINE MDS (coordinates,eigenvals,eigenvects,stress,opt_stress,dim,lout,xNno
   coordinates=0.0d0
   stress=0.0d0
  
-  ALLOCATE(CC(Nnods,Nnods),di(Nnods))
+  ALLOCATE(CC(Nnods,Nnods),di(Nnods),CXX(Nnods,Nnods))
   di=0.0d0
   dd=0.0d0
   CC=0.0d0
@@ -574,9 +574,19 @@ SUBROUTINE MDS (coordinates,eigenvals,eigenvects,stress,opt_stress,dim,lout,xNno
   ifail=0
   abajo=Nnods-lout+1
  
- 
+
   print*,'va a diagonalizar'
- 
+  !CXX=0.0
+  !DO i=1,Nnods
+  !   DO j=1,Nnods
+  !      DO gg=1,Nnods
+  !         CXX(i,j)=CXX(i,j)+CC(i,gg)*CC(gg,j)
+  !      END DO
+  !   END DO
+  !END DO
+  !WRITE(666,*) CXX
+
+
   CALL dsyevx ('V','I','U',Nnods,CC,Nnods,0,0,abajo,Nnods,0.0d0,num_val,&
        eigenvals,eigenvects,Nnods,work,Lwork,iwork,ifail,info)
  
@@ -586,15 +596,37 @@ SUBROUTINE MDS (coordinates,eigenvals,eigenvects,stress,opt_stress,dim,lout,xNno
   END IF
  
   DEALLOCATE (work,iwork,ifail,CC)
+
+  di=0.0d0
+  !print*,eigenvects(:,Nnods)
+  !print*,eigenvals(Nnods)
+  !print*,'--'
+  DO i=1,Nnods
+     WRITE(555,*) eigenvals(Nnods-i+1)
+  END DO
+  !DO i=1,Nnods
+  !   DO j=1,Nnods
+  !      di(i)=di(i)+CXX(i,j)*eigenvects(j,5)
+  !   END DO
+  !END DO
+  !print*,di
+
+  !di=0.0d0
+  !print*,eigenvects(5,:)
+  !print*,eigenvals(5)
+
   DEALLOCATE(di)
- 
+
   coordinates=0.0d0
  
+
+
   DO j=1,dim
      coordinates(:,j)=sqrt(eigenvals(lout-j+1))*eigenvects(:,lout-j+1)
   END DO
  
   IF (opt_stress==1) THEN
+     print*,'ENTRAAAA'
      ALLOCATE(vect_aux(Ktot),coors_aux(Nnods))
      vect_aux=0.0d0
      coors_aux=0.0d0
@@ -649,7 +681,7 @@ SUBROUTINE MDS_PIVOTS (coordinates,dim,xNnods)
   INTEGER, DIMENSION(:), ALLOCATABLE::iwork,ifail
   DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE::work
  
-  INTEGER::abajo,ii,jj,gg,hh
+  INTEGER::abajo,ii,jj,gg,hh,kk
   DOUBLE PRECISION::maxL,auxval
 
   coordinates=0.0d0
@@ -700,6 +732,9 @@ SUBROUTINE MDS_PIVOTS (coordinates,dim,xNnods)
      END DO
   END DO
 
+  !WRITE(777,*) CCC
+
+
   print*,'diagonaliza'
 
   Lwork=8*num_pivots
@@ -726,13 +761,59 @@ SUBROUTINE MDS_PIVOTS (coordinates,dim,xNnods)
  
   DEALLOCATE (work,iwork,ifail,CCC)
 
+  ALLOCATE(di(Nnods))
+  di=0.0d0
+  !print*,eigenvects_p(:,num_pivots)
+  !print*,eigenvals_p(num_pivots)
+  !DO ii=1,Nnods
+  !   DO jj=1,num_pivots
+  !      di(ii)=di(ii)+CC(ii,jj)*eigenvects_p(jj,5)
+  !   END DO
+  !END DO
+  !print*,di
+  !DEALLOCATE(di)
+
+  !!! ANTES:
+  !!!coordinates=0.0d0
+  !!! 
+  !!!DO ii=1,dim
+  !!!   DO jj=1,num_pivots
+  !!!      DO gg=1,Nnods
+  !!!         coordinates(gg,ii)=coordinates(gg,ii)+CC(gg,jj)*eigenvects_p(jj,num_pivots-ii+1)
+  !!!      END DO
+  !!!   END DO
+  !!!END DO
+
+  !!! Ahora
+
   coordinates=0.0d0
- 
+
   DO ii=1,dim
      DO jj=1,num_pivots
         DO gg=1,Nnods
            coordinates(gg,ii)=coordinates(gg,ii)+CC(gg,jj)*eigenvects_p(jj,num_pivots-ii+1)
         END DO
+     END DO
+  END DO
+
+  DO kk=1,dim
+     maxL=0.0d0
+     DO ii=1,Nnods
+        maxL=maxL+coordinates(ii,kk)**2
+     END DO
+     maxL=sqrt(maxL)
+
+     di=0.0
+     DO ii=1,Nnods
+        DO jj=1,Nnods
+           DO gg=1,num_pivots
+              di(jj)=di(jj)+CC(jj,gg)*CC(ii,gg)*coordinates(ii,kk)/maxL
+           END DO
+        END DO
+     END DO
+     
+     DO ii=1,Nnods
+        coordinates(ii,kk)=sqrt(sqrt(di(ii)/(coordinates(ii,kk)/maxL)))*coordinates(ii,kk)/maxL
      END DO
   END DO
 
@@ -832,7 +913,8 @@ SUBROUTINE CHOOSE_RANDOM_PIVOTS_1(xnum_pivots,list_pivots)
 
   iseed=hseed
 
-  print*,'listo',COUNT(filtro)
+  !print*,'listo',COUNT(filtro)
+
 
   DEALLOCATE(filtro,acumulado)
 

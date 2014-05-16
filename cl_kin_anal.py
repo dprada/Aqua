@@ -560,6 +560,7 @@ class kinetic_analysis():
             num_commits=len(commitment)
 
         commitment_in=[int(ii) for ii in commitment]
+        print aux_dims
         fcpt_mean=f_kin_anal.fcpt_dist(opt_norm,opt_noreturn,opt_states,opt_segments, states,segments,commitment_in,\
                                                         traj_inp,traj_inp.shape[0],traj_inp.shape[1],traj_inp.shape[2],\
                                                         num_states,num_segments,num_commits)

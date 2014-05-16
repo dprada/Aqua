@@ -17,10 +17,25 @@ def __init__(self):
                       label='Add Network',
                      command = lambda : load_net())
 
+   self.menuBar.addcascademenu('Network', 'Edges')
+
+   self.menuBar.addmenuitem('Edges', 'command',
+                      'Show Edges',
+                      label='Show Edges',
+                     command = lambda : show_edges_net())
+
+   self.menuBar.addmenuitem('Edges', 'command',
+                      'Hide Edges',
+                      label='Hide Edges',
+                     command = lambda : hide_edges_net())
+
+
    self.menuBar.addmenuitem('Network', 'command',
                       'Help',
                       label='Help',
                      command = lambda : help_net())
+
+
 
    #self.menuBar.addmenuitem('Network', 'command',
    #                  'Add Links',
@@ -73,10 +88,12 @@ def load_net():
       cmd.alter(selec,'b='+str(net.node[ii].weight))
       cmd.alter(selec,'q='+str(net.node[ii].att1))
       cmd.alter(selec,'ID='+str(ii))
-   for ii in range(net.num_nodes):
-      for jj in net.node[ii].link.keys():
-         cmd.bond(name_net+' & id '+str(ii),name_net+' & id '+str(jj))
+   #for ii in range(net.num_nodes):
+   #   for jj in net.node[ii].link.keys():
+   #      cmd.bond(name_net+' & id '+str(ii),name_net+' & id '+str(jj))
 
+#def show_edges_net():
+   
 
 #def load_net():
 #   name_net= tkSimpleDialog.askstring('Loading Network',

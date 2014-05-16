@@ -242,6 +242,81 @@ SUBROUTINE BROWNIAN_RUN (with_loops,T_start,T_ind,T_tau,iseed,node_alpha,length,
 
 END SUBROUTINE BROWNIAN_RUN
 
+SUBROUTINE MATRIX_FPT (T_start,T_ind,T_tau,N_nodes,Ktot,mat_out)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::N_nodes,Ktot
+  INTEGER,DIMENSION(Ktot),INTENT(IN)::T_ind
+  DOUBLE PRECISION,DIMENSION(Ktot),INTENT(IN)::T_tau
+  INTEGER,DIMENSION(N_nodes+1),INTENT(IN)::T_start
+  DOUBLE PRECISION,DIMENSION(N_nodes,N_nodes),INTENT(OUT)::mat_out
+
+  DOUBLE PRECISION,DIMENSION(N_nodes)::Pe
+  INTEGER::ii,jj,gg,times,A
+
+  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::Pf,Pf2,antes
+  LOGICAL::interr
+
+  mat_out  = 0.0d0
+
+  Pe=0
+  DO ii=1,N_nodes
+     DO jj=T_start(ii)+1,T_start(ii+1)
+        Pe(ii)=Pe(ii)+T_tau(jj)
+     END DO
+  END DO
+
+  ALLOCATE(Pf(N_nodes),Pf2(N_nodes),antes(N_nodes))
+
+  DO A=1,N_nodes
+
+     print*,A
+
+     Pf=0.0d0
+
+     Pf2=100000.0d0
+     Pf2(A)=0.0d0
+
+     DO times=1,1000000
+        
+        Pf2(A)=0.0d0
+        Pf=Pf2
+        antes=Pf2
+        Pf2=0.0d0
+        
+        DO ii=1,N_nodes
+           DO jj=T_start(ii)+1,T_start(ii+1)
+              gg=T_ind(jj)
+              Pf2(ii)=Pf2(ii)+(T_tau(jj)*Pf(gg))/Pe(ii)
+           END DO
+        END DO
+        
+        antes=antes-Pf2
+        interr=.false.
+        DO ii=1,N_nodes
+           IF (abs(antes(ii))>0.0010d0) THEN
+              interr=.true.
+              exit
+           END IF
+        END DO
+        
+        IF (interr.eqv..false.) exit
+        
+        Pf2=Pf2+1.0d0
+     END DO
+
+     Pf2(A)=0.0d0
+
+     Pf=Pf2
+     
+     mat_out(:,A)=Pf(:)
+
+  END DO
+
+END SUBROUTINE MATRIX_FPT
+
+
 SUBROUTINE BROWNIAN_RUN_FPT (T_start,T_ind,T_tau,iseed,node_alpha,node_omega,N_nodes,Ktot,steps)
 
   IMPLICIT NONE

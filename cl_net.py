@@ -923,6 +923,12 @@ class network():
 
         return scratch
 
+    def matrix_fpt (self):
+
+        mat_fpt=f_net.matrix_fpt(self.T_start,self.T_ind,self.T_wl,self.num_nodes,self.k_total)
+
+        return mat_fpt
+
     def min_distance (self):
 
         pass
