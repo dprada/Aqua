@@ -5,8 +5,8 @@ MODULE GLOB
 !f2py   intent(hide)::T_start,T_ind
 !f2py   intent(hide)::T_tau
 !f2py   intent(hide)::dists_up,net_up
-!f2py   intent(hide)::iseed
-DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE::dists
+!f2py   intent(hide)::iseed,pesotes
+DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE::dists,pesotes
 INTEGER::Nnods,Ktot
 INTEGER,DIMENSION(:),ALLOCATABLE::T_start,T_ind
 DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::T_tau,Pe
@@ -365,6 +365,300 @@ SUBROUTINE PRE_AVE_FPT()
 
 END SUBROUTINE PRE_AVE_FPT
 
+SUBROUTINE CARGO_DISTANCIAS (xnods,distancias)
+
+  IMPLICIT NONE
+  INTEGER,INTENT(IN)::xnods
+  DOUBLE PRECISION,DIMENSION(xnods,xnods),INTENT(IN)::distancias
+
+  Nnods=xnods
+  IF (dists_up.eqv..TRUE.) THEN
+     DEALLOCATE(dists)
+  END IF
+
+  ALLOCATE(dists(Nnods,Nnods))
+  dists=distancias
+  dists_up=.TRUE.
+
+END SUBROUTINE CARGO_DISTANCIAS
+
+SUBROUTINE DIFFUSION_DISTANCE (nn,xnods,distancias)
+
+  IMPLICIT NONE
+  
+  INTEGER,INTENT(IN)::nn,xnods
+  DOUBLE PRECISION,DIMENSION(xnods,xnods),INTENT(OUT)::distancias
+  
+  DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE::transits,transits2
+
+  INTEGER::ii,jj,kk,gg,ll,mm
+  DOUBLE PRECISION::aux
+
+  ALLOCATE(transits(xnods,xnods),transits2(xnods,xnods))
+
+  distancias=0.0d0
+  transits=0.0d0
+  transits2=0.0d0
+
+  DO ii=1,Nnods
+     DO jj=T_start(ii)+1,T_start(ii+1)
+        transits(T_ind(jj),ii)=T_tau(jj)
+     END DO
+  END DO
+
+  distancias=transits
+  DO kk=1,nn-1
+     print*,kk+1
+     transits2=0.0d0
+     DO ii=1,Nnods
+        DO jj=1,Nnods
+           DO mm=T_start(jj)+1,T_start(jj+1)
+              ll=T_ind(mm)
+              transits2(ll,ii)=transits2(ll,ii)+T_tau(mm)*distancias(jj,ii)
+           END DO
+        END DO
+     END DO
+     distancias=transits2
+     print*,SUM(distancias(:,346))
+  END DO
+  transits=distancias
+  distancias=0.0d0
+
+!  ALLOCATE(pesotes(Nnods,Nnods))
+!  pesotes=transits
+
+
+  !distancias=transits
+  !DO kk=1,nn-1
+  !   print*,kk+1
+  !   transits2=0.0d0
+  !   DO ii=1,Nnods
+  !      DO jj=1,Nnods
+  !         aux=0.0d0
+  !         DO gg=1,Nnods
+  !            aux=aux+transits(ii,gg)*distancias(gg,jj)
+  !         END DO
+  !         transits2(ii,jj)=aux
+  !      END DO
+  !   END DO
+  !   distancias=transits2
+  !   print*,SUM(distancias(:,346))
+  !END DO
+  !transits=distancias
+  !distancias=0.0d0
+
+
+  DO ii=1,Nnods
+     DO jj=1,Nnods
+        aux=0.0d0
+        DO kk=1,Nnods
+           aux=aux+((transits(kk,ii)-transits(kk,jj))**2)/Pe(kk)
+        END DO
+        distancias(jj,ii)=aux
+     END DO
+  END DO
+
+
+END SUBROUTINE DIFFUSION_DISTANCE
+
+SUBROUTINE DIFFUSION_DISTANCE_uno (nn,xnods,distancias)
+
+  IMPLICIT NONE
+  
+  INTEGER,INTENT(IN)::nn,xnods
+  DOUBLE PRECISION,DIMENSION(xnods,xnods),INTENT(OUT)::distancias
+  
+  DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE::transits
+
+  INTEGER::ii,jj,kk,gg,ll,mm
+  DOUBLE PRECISION::aux
+
+  ALLOCATE(transits(xnods,xnods))
+
+  distancias=0.0d0
+  transits=0.0d0
+
+
+  DO ii=1,Nnods
+     DO jj=T_start(ii)+1,T_start(ii+1)
+        transits(T_ind(jj),ii)=T_tau(jj)
+     END DO
+  END DO
+
+!  ALLOCATE(pesotes(Nnods,Nnods))
+!  pesotes=transits
+
+
+  !distancias=transits
+  !DO kk=1,nn-1
+  !   print*,kk+1
+  !   transits2=0.0d0
+  !   DO ii=1,Nnods
+  !      DO jj=1,Nnods
+  !         aux=0.0d0
+  !         DO gg=1,Nnods
+  !            aux=aux+transits(ii,gg)*distancias(gg,jj)
+  !         END DO
+  !         transits2(ii,jj)=aux
+  !      END DO
+  !   END DO
+  !   distancias=transits2
+  !   print*,SUM(distancias(:,346))
+  !END DO
+  !transits=distancias
+  !distancias=0.0d0
+
+  
+
+
+  DO ii=1,Nnods
+     DO jj=1,Nnods
+        aux=0.0d0
+        DO kk=1,Nnods
+           aux=aux+((transits(kk,ii)-transits(kk,jj))**2)/Pe(kk)
+        END DO
+        distancias(jj,ii)=aux
+     END DO
+  END DO
+
+
+END SUBROUTINE DIFFUSION_DISTANCE_uno
+
+
+SUBROUTINE MAJORIZATION (tipo_pesos,coorsin,xnods,fcoors)
+
+  INTEGER,INTENT(IN)::tipo_pesos,xnods
+  DOUBLE PRECISION,DIMENSION(3,xnods),INTENT(IN)::coorsin
+  DOUBLE PRECISION,DIMENSION(3,xnods),INTENT(OUT)::fcoors
+
+  INTEGER::ii,jj,kk
+  DOUBLE PRECISION::nq,estres0,estresf,wij,denom,aa
+  DOUBLE PRECISION,DIMENSION(3)::q,newq
+  DOUBLE PRECISION,DIMENSION(3,xnods)::coors0
+  DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE::pesos
+
+  ALLOCATE(pesos(xnods,xnods))
+
+  pesos=0.0d0
+  
+  IF (tipo_pesos==1) THEN
+     DO ii=1,xnods
+        DO jj=1,xnods
+           pesos(ii,jj)=1.0d0
+           !pesos(ii,jj)=Pe(ii)*Pe(jj)
+           !pesos(ii,jj)=dists(ii,jj)**(-2)
+           !pesos(ii,jj)=PijPi
+        END DO
+     END DO
+  ELSE IF (tipo_pesos==2) THEN
+     DO ii=1,xnods
+        DO jj=1,xnods
+           pesos(ii,jj)=Pe(ii)*Pe(jj)
+        END DO
+     END DO
+  ELSE IF (tipo_pesos==3) THEN
+     DO ii=1,xnods
+        DO jj=1,xnods
+           pesos(ii,jj)=dists(ii,jj)**(-2)
+        END DO
+     END DO
+  ELSE IF (tipo_pesos==4) THEN
+     DO ii=1,xnods
+        DO jj=1,xnods
+           pesos(ii,jj)=Pe(ii)*Pe(jj)*dists(ii,jj)**(-2)
+        END DO
+     END DO
+  ELSE IF (tipo_pesos==5) THEN
+     DO ii=1,xnods
+        DO jj=T_start(ii)+1,T_start(ii+1)
+           pesos(T_ind(jj),ii)=1.0
+        END DO
+     END DO
+  ELSE IF (tipo_pesos==6) THEN
+     DO ii=1,xnods
+        DO jj=T_start(ii)+1,T_start(ii+1)
+           pesos(T_ind(jj),ii)=Pe(ii)*T_tau(jj)
+        END DO
+     END DO
+  END IF
+
+
+  !DO ii=1,Nnods
+  !   DO jj=T_start(ii)+1,T_start(ii+1)
+  !      pesos(T_ind(jj),ii)=T_tau(jj)
+  !   END DO
+  !END DO
+  !DO ii=1,xnods
+  !   DO jj=1,xnods
+  !      pesos(ii,jj)=pesotes(jj,ii)
+  !   END DO
+  !END DO
+
+  aa=1.0d0
+  DO ii=1,xnods
+     DO jj=1,xnods
+        IF (ii/=jj) THEN
+           aa=aa+pesos(ii,jj)*dists(ii,jj)**2
+        END IF
+     END DO
+  END DO
+  pesos(:,:)=pesos(:,:)/aa
+
+
+  coors0=coorsin
+
+  estres0=0.0d0
+  DO ii=1,xnods
+     DO jj=ii+1,xnods
+        q(:)=coors0(:,ii)-coors0(:,jj)
+        nq=sqrt(q(1)*q(1)+q(2)*q(2)+q(3)*q(3))
+        nq=(nq-dists(ii,jj))**2
+        estres0=estres0+pesos(ii,jj)*nq
+     END DO
+  END DO
+
+  DO kk=1,2000
+
+     DO ii=1,xnods
+        denom=0.0d0
+        newq=0.0d0
+        DO jj=1,xnods
+           IF (ii/=jj) THEN
+              denom=denom+pesos(ii,jj)
+              q(:)=coors0(:,ii)-coors0(:,jj)
+              nq=sqrt(q(1)*q(1)+q(2)*q(2)+q(3)*q(3))
+              if (nq>0.0d0) THEN
+                 sij=dists(ii,jj)/nq
+              else
+                 sij=0.0d0
+              end if
+              q(:)=sij*q(:)+coors0(:,jj)
+              newq(:)=newq(:)+pesos(ii,jj)*q(:)
+           END IF
+        END DO
+        newq(:)=newq(:)/denom
+        fcoors(:,ii)=newq(:)
+     END DO
+ 
+     estresf=0.0d0
+     DO ii=1,xnods
+        DO jj=ii+1,xnods
+           q(:)=fcoors(:,ii)-fcoors(:,jj)
+           nq=sqrt(q(1)*q(1)+q(2)*q(2)+q(3)*q(3))
+           nq=(nq-dists(ii,jj))**2
+           estresf=estresf+pesos(ii,jj)*nq
+        END DO
+     END DO
+
+     print*,kk,(estres0-estresf)/estres0
+     estres0=estresf
+     coors0(:,:)=fcoors(:,:)
+
+  END DO
+
+  DEALLOCATE(pesos)
+
+END SUBROUTINE MAJORIZATION
 
 
 SUBROUTINE DIJKSTRA ()
@@ -601,9 +895,9 @@ SUBROUTINE MDS (coordinates,eigenvals,eigenvects,stress,opt_stress,dim,lout,xNno
   !print*,eigenvects(:,Nnods)
   !print*,eigenvals(Nnods)
   !print*,'--'
-  DO i=1,Nnods
-     WRITE(555,*) eigenvals(Nnods-i+1)
-  END DO
+  !DO i=1,Nnods
+  !   WRITE(555,*) eigenvals(Nnods-i+1)
+  !END DO
   !DO i=1,Nnods
   !   DO j=1,Nnods
   !      di(i)=di(i)+CXX(i,j)*eigenvects(j,5)

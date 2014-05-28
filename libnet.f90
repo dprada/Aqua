@@ -242,6 +242,152 @@ SUBROUTINE BROWNIAN_RUN (with_loops,T_start,T_ind,T_tau,iseed,node_alpha,length,
 
 END SUBROUTINE BROWNIAN_RUN
 
+
+SUBROUTINE PRUEBA_FPT (T_start,T_ind,T_tau,iseed,length,N_nodes,Ktot,mat_out)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::N_nodes,Ktot,length
+  INTEGER,DIMENSION(Ktot),INTENT(IN)::T_ind
+  DOUBLE PRECISION,DIMENSION(Ktot),INTENT(IN)::T_tau
+  INTEGER,DIMENSION(N_nodes+1),INTENT(IN)::T_start
+  INTEGER,DIMENSION(4),INTENT(IN)::iseed
+  DOUBLE PRECISION,DIMENSION(N_nodes,N_nodes),INTENT(OUT)::mat_out
+
+  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::Pe
+  INTEGER,DIMENSION(4)::hseed
+  INTEGER::place,nodmax,popmax
+  DOUBLE PRECISION::dice,bandera
+  INTEGER,DIMENSION(:),ALLOCATABLE::bwtraj
+
+  INTEGER,DIMENSION(:),ALLOCATABLE::contador,entro
+  INTEGER,DIMENSION(:,:),ALLOCATABLE::veces
+
+  INTEGER::i,j,k,ii,jj,pos
+
+  print*,'CREANDO TRAJ'
+
+  ALLOCATE(Pe(N_nodes))
+  ALLOCATE(bwtraj(length))
+
+  hseed=iseed
+  k=1
+
+  Pe=0
+  popmax=0
+  nodmax=0
+  DO i=1,N_nodes
+     DO j=T_start(i)+1,T_start(i+1)
+        Pe(i)=Pe(i)+T_tau(j)
+     END DO
+     IF (popmax<Pe(i)) THEN
+        popmax=Pe(i)
+        nodmax=i
+     END IF
+  END DO
+     
+  place=nodmax
+  bwtraj(1)=place
+     
+  DO j=2,length
+     
+     CALL dlarnv(1,hseed,1,dice)
+     dice=dice*Pe(place)
+     
+     bandera=0.0d0
+     DO i=T_start(place)+1,T_start(place+1)
+        bandera=bandera+T_tau(i)
+        IF (dice<=bandera) THEN
+           place=T_ind(i)
+           exit
+        END IF
+     END DO
+        
+     bwtraj(j)=place
+        
+  END DO
+
+  DEALLOCATE(Pe)
+
+  print*,'CONTANDO'
+
+  ALLOCATE(contador(N_nodes))
+  ALLOCATE(entro(N_nodes))
+  ALLOCATE(veces(N_nodes,N_nodes))
+
+  entro=0
+  contador=0
+  veces=0
+
+  DO ii=length,1,-1
+
+     pos=bwtraj(ii)
+
+     entro(pos)=1
+     contador=contador+1
+     contador(pos)=0
+     
+     DO jj=1,N_nodes
+        veces(jj,pos)=veces(jj,pos)+entro(jj)
+        mat_out(jj,pos)=mat_out(jj,pos)+contador(jj)*entro(jj)
+     END DO
+
+  END DO
+
+  DEALLOCATE(contador,entro,bwtraj)
+
+  print*,'PROMEDIANDO'
+
+  DO ii=1,N_nodes
+     DO jj=1,N_nodes
+        IF (veces(jj,ii)>0) THEN
+           mat_out(jj,ii)=mat_out(jj,ii)/(1.0d0*veces(jj,ii))
+        END IF
+     END DO
+  END DO
+
+
+END SUBROUTINE PRUEBA_FPT
+
+SUBROUTINE CRITERIO_DISTANCIA(mat_in,N_nodes,mat_out)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::N_nodes
+  DOUBLE PRECISION,DIMENSION(N_nodes,N_nodes),INTENT(IN)::mat_in
+  DOUBLE PRECISION,DIMENSION(N_nodes,N_nodes),INTENT(OUT)::mat_out
+
+  DOUBLE PRECISION::aa,azero
+  INTEGER::ii,jj,kk,ll
+  LOGICAL,DIMENSION(:),ALLOCATABLE::filtro
+  DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::vect_aux
+
+  ALLOCATE(filtro(N_nodes))
+  ALLOCATE(vect_aux(N_nodes))
+  azero=0.0d0
+
+  DO ii=1,N_nodes
+     vect_aux(:)=1.0d0/azero
+     filtro=.true.
+     vect_aux(ii)=0.0d0
+  
+     DO WHILE (COUNT(filtro)>0)
+        ll=MINLOC(vect_aux(:),DIM=1,MASK=filtro)
+        DO jj=1,N_nodes
+           IF (filtro(jj).eqv..true.) THEN
+              IF (vect_aux(jj)>(vect_aux(ll)+mat_in(jj,ll))) THEN
+                 vect_aux(jj)=vect_aux(ll)+mat_in(jj,ll)
+              END IF
+           END IF
+        END DO
+        filtro(ll)=.false.
+     END DO
+     mat_out(:,ii)=vect_aux(:)
+  END DO
+
+
+END SUBROUTINE CRITERIO_DISTANCIA
+
 SUBROUTINE MATRIX_FPT (T_start,T_ind,T_tau,N_nodes,Ktot,mat_out)
 
   IMPLICIT NONE
@@ -312,9 +458,15 @@ SUBROUTINE MATRIX_FPT (T_start,T_ind,T_tau,N_nodes,Ktot,mat_out)
      
      mat_out(:,A)=Pf(:)
 
+     DO ii=1,N_nodes
+        write(789,*) A, ii, Pf(ii)
+     END DO
+
   END DO
 
 END SUBROUTINE MATRIX_FPT
+
+
 
 
 SUBROUTINE BROWNIAN_RUN_FPT (T_start,T_ind,T_tau,iseed,node_alpha,node_omega,N_nodes,Ktot,steps)

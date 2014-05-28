@@ -84,9 +84,11 @@ def load_net():
    for ii in xrange(net.num_nodes):
       selec=name_net+' & id '+str(ii+1)
       #cmd.alter(selec,'name='+net.node[ii].label)
+      cmd.alter(selec,'name='+str(ii))
       cmd.alter(selec,'resi='+str(net.node[ii].cluster))
+      cmd.alter(selec,'q='+str(net.node[ii].cluster))
       cmd.alter(selec,'b='+str(net.node[ii].weight))
-      cmd.alter(selec,'q='+str(net.node[ii].att1))
+      #cmd.alter(selec,'q='+str(net.node[ii].att1))
       cmd.alter(selec,'ID='+str(ii))
    #for ii in range(net.num_nodes):
    #   for jj in net.node[ii].link.keys():

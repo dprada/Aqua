@@ -904,6 +904,29 @@ class network():
 
         pass
 
+    def prueba_fpt (self,length=None):
+
+        if length==None:
+            print '# length needed.'
+            pass
+
+        if self.Ts==False :
+            self.build_Ts()
+
+        iseed=numpy.random.random_integers(0,4094,4)
+        iseed[3]=(iseed[3]/2)*2+1
+
+        scratch=f_net.prueba_fpt(self.T_start,self.T_ind,self.T_wl,iseed,length,self.num_nodes,self.k_total)
+
+        return scratch
+
+    def criterio_distancia (self,mat_in=None):
+
+        scratch=f_net.criterio_distancia(mat_in,self.num_nodes)
+
+        return scratch
+
+
     def brownian_walker (self,origin=0,length=None,self_links=True):
 
         if length==None:
@@ -1297,6 +1320,43 @@ class network():
         pfff=f_net.dijkstra(node,dim_out,opt_directed,self.T_start,self.T_ind,self.T_wl,self.num_nodes,self.k_total)
 
         return pfff
+
+    def mds_con_distancias(self,distancias=None):
+
+        eigenvs=self.num_nodes
+        dim=3
+
+        f_mds.cargo_distancias(distancias,self.num_nodes)
+        o_coors,o_eigenvals,o_eigenvects,o_stress=f_mds.mds(0,dim,eigenvs,self.num_nodes)
+
+        for ii in range(self.num_nodes):
+            self.node[ii].coors=o_coors[ii][:]
+
+        return o_eigenvals,o_eigenvects
+
+    def diffusion_distance(self,tt=1):
+
+        f_mds.load_net(self.T_start,self.T_ind,self.T_wl,self.num_nodes,self.k_total)
+        newdists=f_mds.diffusion_distance(tt,self.num_nodes)
+
+        return newdists
+
+    def distancias_majorization(self,tipo=1,distancias=None):
+
+        oldcoors=numpy.zeros((3,self.num_nodes),dtype=float,order='F')
+        for ii in xrange(self.num_nodes):
+            oldcoors[:,ii]=self.node[ii].coors[:]
+
+        print '1'
+        f_mds.load_net(self.T_start,self.T_ind,self.T_wl,self.num_nodes,self.k_total)
+        print '2'
+        f_mds.cargo_distancias(distancias,self.num_nodes)
+
+        print '3'
+        newcoors=f_mds.majorization(tipo,oldcoors,self.num_nodes)
+
+        for ii in xrange(self.num_nodes):
+            self.node[ii].coors[:]=newcoors[:,ii]
 
     def mds2(self,tipo=None,dim=3,eigenvs='all',stress=False,pivots=False,num_pivots=None,extra_pivots=None):
 

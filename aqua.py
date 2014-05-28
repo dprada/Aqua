@@ -26,6 +26,7 @@ from frame import *
 import libgeneral as f
 from cl_anal_trajs import *
 from cl_kin_anal import *
+import cl_optim as popt
 
 # Microstates:
 from cl_mss import *
