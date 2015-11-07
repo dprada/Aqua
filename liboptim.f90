@@ -1141,23 +1141,23 @@ END SUBROUTINE MAJORIZATION
 
 SUBROUTINE LOAD_PES_250()
 
-  OPEN(UNIT=250,NAME='fort.250',STATUS='OLD',ACTION='READ')
-
-  IF (pmat_up.eqv..FALSE.) THEN
-     pmat_up=.TRUE.
-     ALLOCATE(pmat(Nnods,Nnods))
-  ELSE
-     DEALLOCATE(pmat)
-     ALLOCATE(pmat(Nnods,Nnods))
-  END IF
-
-  DO ii=1,Nnods
-     DO jj=1,Nnods
-        READ(250,*) pmat(jj,ii)
-     END DO
-  END DO
-
-  CLOSE(250)
+!  OPEN(UNIT=250,NAME='fort.250',STATUS='OLD',ACTION='READ')
+!
+!  IF (pmat_up.eqv..FALSE.) THEN
+!     pmat_up=.TRUE.
+!     ALLOCATE(pmat(Nnods,Nnods))
+!  ELSE
+!     DEALLOCATE(pmat)
+!     ALLOCATE(pmat(Nnods,Nnods))
+!  END IF
+!
+!  DO ii=1,Nnods
+!     DO jj=1,Nnods
+!        READ(250,*) pmat(jj,ii)
+!     END DO
+!  END DO
+!
+!  CLOSE(250)
 
 END SUBROUTINE LOAD_PES_250
 
