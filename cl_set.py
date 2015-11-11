@@ -22,12 +22,15 @@ import datetime as datetime
 
 ### pyno libraries:
 from cl_coors import *
-import top_par as tp
+import top_par as tp_aa
+import top_par_cg as tp_cg
 from libgeneral import glob as faux
 #from libmss import glob as mss_funcs
 import libmath as libmath
 
-### topologies added by user
+### topologies all atom by default
+### and top added by user
+tp=tp_aa
 for ii in tp.user_topol:
     tp.add_topol(tp,ii)
 
@@ -187,8 +190,15 @@ class cl_water(labels_set):             # Attributes of a water molecule
 class msystem(labels_set):               # The supra-estructure: System (waters+cofactors+proteins...)
 
     
-    def __init__(self,input_file=None,download=None,coors=False,with_bonds=True,missing_atoms=True,wrap=True,verbose=False):
+    def __init__(self,input_file=None,download=None,coors=False,with_bonds=True,missing_atoms=True,wrap=True,cg=False,verbose=False):
 
+        # Load topology coarse-grained if this is the case
+        if cg:
+            tp=tp_cg
+            self.ff='cg'
+        else:
+            tp=tp_aa
+            self.ff='aa'
 
         # If download:
 
@@ -218,7 +228,8 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
         self.file_hbonds=''             # still not useful -do not remove-
         self.file_mss=''                # still not useful -do not remove-
         self.file_shell=''              # still not useful -do not remove-
-        #self.selection=False            # is the set a selection (a mirror -pointer- of a parent set)
+        self.file_ff=''                 # all-atom (aa) or coarse-grained (cg)
+        #self.selection=False           # is the set a selection (a mirror -pointer- of a parent set)
         
         # > Topological properties
         self.atom=[]                    # list of atoms    (objects: cl_unit)
@@ -390,6 +401,7 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
             del(num_wat)
             ### Setting up the local attributes
             if self.file_topol_type not in ['psf']:
+
                 # Topology and Covalent bonds
 
                  if with_bonds:
@@ -420,13 +432,13 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                              except:
                                  pass
                   
-                         # Peptide bond [C(i)->N(i+1)]
+                         # all atom Peptide bond [C(i)->N(i+1)] or Coarse Grained peptide bond [BB(i)->BB(i+1)]
                          try:
                              next_residue=self.resid[residue.index+1]
                              if residue.type=='Protein' and next_residue.type=='Protein':
                                  if residue.chain.name==next_residue.chain.name :
-                                     aa=residue.__int_dict_atoms__['atC']
-                                     bb=next_residue.__int_dict_atoms__['atN']
+                                     aa=residue.__int_dict_atoms__[tp.peptidic_bond[0]]
+                                     bb=next_residue.__int_dict_atoms__[tp.peptidic_bond[1]]
                                      self.atom[aa].covalent_bonds.append(bb)
                                      self.atom[bb].covalent_bonds.append(aa)
                          except:
@@ -957,6 +969,7 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
 
         self.protein=[]
         for ii in self.chain:
+            self.chains.append(ii.name)
             if ii.type=='Protein':
                 self.protein.append(ii.list_atoms)
 

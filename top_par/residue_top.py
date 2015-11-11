@@ -1,3 +1,6 @@
+### Peptidic Bond
+peptidic_bond=['atC','atN']
+
 ### Alias for residues
 
 residue={
