@@ -238,6 +238,8 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
         self.chains=[]                  # list of chain names (strings)
         self.protein=[]
         self.lipid=[]
+        self.ligand=[]
+        self.molecule=[]
         self.ion=[]                     # list of ions (objects: molecule)
         self.water=[]                   # list of waters   (objects: cl_water)
         self.water_model=None           # water model
@@ -479,6 +481,11 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                          self.lipid.append(cov_chain)
                      elif self.atom[cov_chain[0]].resid.type=='Protein':
                          self.protein.append(cov_chain)
+                     elif self.atom[cov_chain[0]].resid.type=='Ligand':
+                         self.ligand.append(cov_chain)
+                     elif self.atom[cov_chain[0]].resid.type=='Molecule':
+                         self.molecule.append(cov_chain)
+                         
                  del(cov_chains)
 
                  # Charge
@@ -545,6 +552,8 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
             self.num_ions=len(self.ion)
             self.num_proteins=len(self.protein)
             self.num_lipids=len(self.lipid)
+            self.num_molecules=len(self.molecule)
+            self.num_ligands=len(self.ligand)
             self.list_atoms=[ii for ii in range(self.num_atoms)]
 
 
@@ -580,14 +589,18 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
         self.num_ions=len(self.ion)
         self.num_proteins=len(self.protein)
         self.num_lipids=len(self.lipid)
+        self.num_ligands=len(self.ligand)
+        self.num_molecules=len(self.molecule)
         print '#','System created from the file',self.file_topol,':'
         print '#',self.num_atoms,' atoms'
         print '#',self.num_residues,' residues'
         print '#',self.num_chains,' chains'
-        print '#',self.num_waters,' waters'
-        print '#',self.num_ions,' ions'
-        print '#',self.num_lipids,' lipids'
-        print '#',self.num_proteins,' proteins'
+        if self.num_waters:    print '#',self.num_waters,' waters'
+        if self.num_ions:      print '#',self.num_ions,' ions'
+        if self.num_lipids:    print '#',self.num_lipids,' lipids'
+        if self.num_proteins:  print '#',self.num_proteins,' proteins'
+        if self.num_ligands:   print '#',self.num_ligands,' ligands'
+        if self.num_molecules: print '#',self.num_molecules,' other molecules'
 
     # To handle files
 

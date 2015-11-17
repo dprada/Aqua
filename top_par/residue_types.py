@@ -176,6 +176,8 @@ residue_type={
 'RCN'  :   'RNA',  
 'RGN'  :   'RNA',  
 'AOT'  :   'Lipid',
+'POPC' :   'Lipid',
+'CHL1' :   'Lipid',
 'SOL'  :   'Water', 
 'WAT'  :   'Water', 
 'wat'  :   'Water', 

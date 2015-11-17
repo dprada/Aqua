@@ -4,7 +4,7 @@ atom={
 'H1'   : 'atH1'   ,
 'H2'   : 'atH2'   ,
 '2HH'  : 'atH2'   ,    # pymol.pdb
-'H3'   : 'atH3'   ,    # lipid AOT 
+'H3'   : 'atH3'   ,    # lipid AOT, CHL1
 'H4'   : 'atH4'   ,    # lipid AOT 
 'H5'   : 'atH5'   ,    # lipid AOT 
 'H6'   : 'atH6'   ,    # lipid AOT 
@@ -39,6 +39,119 @@ atom={
 'H35'  : 'atH35'  ,    # lipid AOT 
 'H36'  : 'atH36'  ,    # lipid AOT 
 'H37'  : 'atH37'  ,    # lipid AOT 
+'H91'  : 'atH91'  ,    # lipid POPC
+'H101' : 'atH101' ,    # lipid POPC
+'H1A'  : 'atH1A'  ,    # lipid CHL1 
+'H1B'  : 'atH1B'  ,    # lipid CHL1
+'H2A'  : 'atH2A'  ,    # lipid CHL1 
+'H2B'  : 'atH2B'  ,    # lipid CHL1
+'H2R'  : 'atH2R'  ,    # lipid POPC 
+'H2S'  : 'atH2S'  ,    # lipid POPC 
+'H2X'  : 'atH2X'  ,    # lipid POPC 
+'H2Y'  : 'atH2Y'  ,    # lipid POPC
+"H3'"  : "atH3'"  ,    # lipid CHL1
+'H3R'  : 'atH3R'  ,    # lipid POPC 
+'H3X'  : 'atH3X'  ,    # lipid POPC 
+'H3Y'  : 'atH3Y'  ,    # lipid POPC
+'H3S'  : 'atH3S'  ,    # lipid POPC
+'H4A'  : 'atH4A'  ,    # lipid CHL1 
+'H4B'  : 'atH4B'  ,    # lipid CHL1
+'H4R'  : 'atH4R'  ,    # lipid POPC 
+'H4S'  : 'atH4S'  ,    # lipid POPC
+'H4X'  : 'atH4X'  ,    # lipid POPC 
+'H4Y'  : 'atH4Y'  ,    # lipid POPC
+'H5R'  : 'atH5R'  ,    # lipid POPC 
+'H5S'  : 'atH5S'  ,    # lipid POPC
+'H5X'  : 'atH5X'  ,    # lipid POPC 
+'H5Y'  : 'atH5Y'  ,    # lipid POPC
+'H6R'  : 'atH6R'  ,    # lipid POPC 
+'H6S'  : 'atH6S'  ,    # lipid POPC
+'H6X'  : 'atH6X'  ,    # lipid POPC 
+'H6Y'  : 'atH6Y'  ,    # lipid POPC
+'H7A'  : 'atH7A'  ,    # lipid CHL1 
+'H7B'  : 'atH7B'  ,    # lipid CHL1
+'H7R'  : 'atH7R'  ,    # lipid POPC 
+'H7S'  : 'atH7S'  ,    # lipid POPC
+'H7X'  : 'atH7X'  ,    # lipid POPC 
+'H7Y'  : 'atH7Y'  ,    # lipid POPC
+'H8R'  : 'atH8R'  ,    # lipid POPC 
+'H8S'  : 'atH8S'  ,    # lipid POPC
+'H8X'  : 'atH8X'  ,    # lipid POPC 
+'H8Y'  : 'atH8Y'  ,    # lipid POPC 
+'H9X'  : 'atH9X'  ,    # lipid POPC 
+'H9Y'  : 'atH9Y'  ,    # lipid POPC 
+'H10X' : 'atH10X' ,    # lipid POPC 
+'H10Y' : 'atH10Y' ,    # lipid POPC 
+'H11A' : 'atH11A' ,    # lipid POPC
+'H11B' : 'atH11B' ,    # lipid POPC
+'H11R' : 'atH11R' ,    # lipid POPC 
+'H11X' : 'atH11X' ,    # lipid POPC 
+'H11Y' : 'atH11Y' ,    # lipid POPC 
+'H11S' : 'atH11S' ,    # lipid POPC 
+'H12A' : 'atH12A' ,    # lipid POPC
+'H12B' : 'atH12B' ,    # lipid POPC
+'H12R' : 'atH12R' ,    # lipid POPC 
+'H12S' : 'atH12S' ,    # lipid POPC 
+'H12X' : 'atH12X' ,    # lipid POPC 
+'H12Y' : 'atH12Y' ,    # lipid POPC 
+'H13A' : 'atH13A' ,    # lipid POPC
+'H13B' : 'atH13B' ,    # lipid POPC
+'H13C' : 'atH13C' ,    # lipid POPC
+'H13R' : 'atH13R' ,    # lipid POPC 
+'H13S' : 'atH13S' ,    # lipid POPC 
+'H13X' : 'atH13X' ,    # lipid POPC 
+'H13Y' : 'atH13Y' ,    # lipid POPC 
+'H14A' : 'atH14A' ,    # lipid POPC
+'H14B' : 'atH14B' ,    # lipid POPC
+'H14C' : 'atH14C' ,    # lipid POPC
+'H14R' : 'atH14R' ,    # lipid POPC 
+'H14S' : 'atH14S' ,    # lipid POPC 
+'H14X' : 'atH14X' ,    # lipid POPC 
+'H14Y' : 'atH14Y' ,    # lipid POPC 
+'H15A' : 'atH15A' ,    # lipid POPC
+'H15B' : 'atH15B' ,    # lipid POPC
+'H15X' : 'atH15X' ,    # lipid POPC 
+'H15Y' : 'atH15Y' ,    # lipid POPC 
+'H15C' : 'atH15C' ,    # lipid POPC
+'H15R' : 'atH15R' ,    # lipid POPC 
+'H15S' : 'atH15S' ,    # lipid POPC 
+'H16A' : 'atH16A' ,    # lipid CHL1 
+'H16B' : 'atH16B' ,    # lipid CHL1
+'H16X' : 'atH16X' ,    # lipid POPC 
+'H16Y' : 'atH16Y' ,    # lipid POPC 
+'H16R' : 'atH16R' ,    # lipid POPC 
+'H16S' : 'atH16S' ,    # lipid POPC 
+'H16A' : 'atH16A' ,    # lipid CHL1 
+'H16B' : 'atH16B' ,    # lipid CHL1
+'H16X' : 'atH16X' ,    # lipid POPC 
+'H16Y' : 'atH16Y' ,    # lipid POPC 
+'H16Z' : 'atH16Z' ,    # lipid POPC 
+'H17R' : 'atH17R' ,    # lipid POPC 
+'H17S' : 'atH17S' ,    # lipid POPC 
+'H18A' : 'atH18A'  ,   # lipid CHL1 
+'H18B' : 'atH18B'  ,   # lipid CHL1
+'H18C' : 'atH18C'  ,   # lipid CHL1 
+'H18R' : 'atH18R' ,    # lipid POPC 
+'H18S' : 'atH18S' ,    # lipid POPC 
+'H18T' : 'atH18T' ,    # lipid POPC
+'H19A' : 'atH19A'  ,   # lipid CHL1 
+'H19B' : 'atH19B'  ,   # lipid CHL1
+'H19C' : 'atH19C'  ,   # lipid CHL1 
+'H21A' : 'atH21A'  ,   # lipid CHL1 
+'H21B' : 'atH21B'  ,   # lipid CHL1
+'H21C' : 'atH21C'  ,   # lipid CHL1
+'H22A' : 'atH22A'  ,   # lipid CHL1 
+'H22B' : 'atH22B'  ,   # lipid CHL1
+'H23A' : 'atH23A'  ,   # lipid CHL1 
+'H23B' : 'atH23B'  ,   # lipid CHL1
+'H24A' : 'atH24A'  ,   # lipid CHL1 
+'H24B' : 'atH24B'  ,   # lipid CHL1
+'H26A' : 'atH26A'  ,   # lipid CHL1 
+'H26B' : 'atH26B'  ,   # lipid CHL1
+'H26C' : 'atH26C'  ,   # lipid CHL1
+'H27A' : 'atH27A'  ,   # lipid CHL1 
+'H27B' : 'atH27B'  ,   # lipid CHL1
+'H27C' : 'atH27C'  ,   # lipid CHL1
 'HA'   : 'atHA'   ,
 'HA1'  : 'atHA1'  ,
 'HA2'  : 'atHA2'  ,
@@ -115,7 +228,10 @@ atom={
 'HH32' : 'atHH32' ,    # opls.gro
 '3HH3' : 'atHH33' ,
 'HH33' : 'atHH33' ,    # opls.gro
-'HNT'  : 'atHT'    ,    # ACEMD (NME Terminal)
+'HS'   : 'atHS'   ,   # lipid POPC
+'HNT'  : 'atHT'   ,   # ACEMD (NME Terminal)
+'HX'   : 'atHX'   ,   # lipid POPC
+'HY'   : 'atHY'   ,   # lipid POPC
 'HY1'  : 'atHY1' ,    # ACEMD (ACE Terminal)
 'HY2'  : 'atHY2' ,    # ACEMD (ACE Terminal)
 'HY3'  : 'atHY3' ,    # ACEMD (ACE Terminal)
@@ -130,26 +246,60 @@ atom={
 'HT2'  : 'atHT2'  ,    # for terminal
 'HT3'  : 'atHT3'  ,    # for terminal
 'C'    : 'atC'    ,
-'C1'   : 'atC1'   ,    # lipid AOT
-'C2'   : 'atC2'   ,    # lipid AOT
-'C3'   : 'atC3'   ,    # lipid AOT
-'C4'   : 'atC4'   ,    # lipid AOT
-'C5'   : 'atC5'   ,    # lipid AOT
-'C6'   : 'atC6'   ,    # lipid AOT
-'C7'   : 'atC7'   ,    # lipid AOT
-'C8'   : 'atC8'   ,    # lipid AOT
-'C9'   : 'atC9'   ,    # lipid AOT
-'C10'  : 'atC10'  ,    # lipid AOT
-'C11'  : 'atC11'  ,    # lipid AOT
-'C12'  : 'atC12'  ,    # lipid AOT
-'C13'  : 'atC13'  ,    # lipid AOT
-'C14'  : 'atC14'  ,    # lipid AOT
-'C15'  : 'atC15'  ,    # lipid AOT
-'C16'  : 'atC16'  ,    # lipid AOT
-'C17'  : 'atC17'  ,    # lipid AOT
-'C18'  : 'atC18'  ,    # lipid AOT
-'C19'  : 'atC19'  ,    # lipid AOT
-'C20'  : 'atC20'  ,    # lipid AOT
+'C1'   : 'atC1'   ,    # lipid AOT, POPC, CHL1 
+'C2'   : 'atC2'   ,    # lipid AOT, POPC, CHL1 
+'C3'   : 'atC3'   ,    # lipid AOT, POPC, CHL1 
+'C4'   : 'atC4'   ,    # lipid AOT, POPC, CHL1 
+'C5'   : 'atC5'   ,    # lipid AOT, POPC, CHL1 
+'C6'   : 'atC6'   ,    # lipid AOT, POPC, CHL1 
+'C7'   : 'atC7'   ,    # lipid AOT, POPC, CHL1 
+'C8'   : 'atC8'   ,    # lipid AOT, POPC, CHL1 
+'C9'   : 'atC9'   ,    # lipid AOT, POPC, CHL1 
+'C10'  : 'atC10'  ,    # lipid AOT, POPC, CHL1 
+'C11'  : 'atC11'  ,    # lipid AOT, POPC, CHL1 
+'C12'  : 'atC12'  ,    # lipid AOT, POPC, CHL1 
+'C13'  : 'atC13'  ,    # lipid AOT, POPC, CHL1 
+'C14'  : 'atC14'  ,    # lipid AOT, POPC, CHL1 
+'C15'  : 'atC15'  ,    # lipid AOT, POPC, CHL1 
+'C16'  : 'atC16'  ,    # lipid AOT, CHL1 
+'C17'  : 'atC17'  ,    # lipid AOT, CHL1 
+'C18'  : 'atC18'  ,    # lipid AOT, CHL1 
+'C19'  : 'atC19'  ,    # lipid AOT, CHL1 
+'C20'  : 'atC20'  ,    # lipid AOT, CHL1 
+'C21'  : 'atC21'  ,    # lipid POPC, CHL1 
+'C22'  : 'atC22'  ,    # lipid POPC, CHL1 
+'C23'  : 'atC23'  ,    # lipid POPC, CHL1 
+'C24'  : 'atC24'  ,    # lipid POPC, CHL1 
+'C25'  : 'atC25'  ,    # lipid POPC, CHL1 
+'C26'  : 'atC26'  ,    # lipid POPC, CHL1 
+'C27'  : 'atC27'  ,    # lipid POPC, CHL1 
+'C28'  : 'atC28'  ,    # lipid POPC
+'C29'  : 'atC29'  ,    # lipid POPC
+'C33'  : 'atC33'  ,    # lipid POPC
+'C34'  : 'atC34'  ,    # lipid POPC
+'C35'  : 'atC35'  ,    # lipid POPC
+'C36'  : 'atC36'  ,    # lipid POPC
+'C37'  : 'atC37'  ,    # lipid POPC
+'C38'  : 'atC38'  ,    # lipid POPC
+'C39'  : 'atC39'  ,    # lipid POPC
+'C210' : 'atC210' ,    # lipid POPC
+'C211' : 'atC211' ,    # lipid POPC
+'C212' : 'atC212' ,    # lipid POPC
+'C213' : 'atC213' ,    # lipid POPC
+'C214' : 'atC214' ,    # lipid POPC
+'C215' : 'atC215' ,    # lipid POPC
+'C216' : 'atC216' ,    # lipid POPC
+'C217' : 'atC217' ,    # lipid POPC
+'C218' : 'atC218' ,    # lipid POPC
+'C310' : 'atC310' ,    # lipid POPC
+'C311' : 'atC311' ,    # lipid POPC
+'C312' : 'atC312' ,    # lipid POPC
+'C313' : 'atC313' ,    # lipid POPC
+'C314' : 'atC314' ,    # lipid POPC
+'C315' : 'atC315' ,    # lipid POPC
+'C316' : 'atC316' ,    # lipid POPC
+'C31'  : 'atC31'  ,    # lipid POPC
+'C32'  : 'atC32'  ,    # lipid POPC
 'CA'   : 'atCA'   ,
 'CAY'  : 'atCAY'  ,    # ACEMD (ACE Terminal)
 'CAT'  : 'atCAT'  ,    # ACEMD (NME Terminal)
@@ -196,11 +346,20 @@ atom={
 'OS1'  : 'atOS1'  ,    # lipid AOT  
 'OS2'  : 'atOS2'  ,    # lipid AOT 
 'OS3'  : 'atOS3'  ,    # lipid AOT 
+'O11'  : 'atO11'  ,    # lipid POPC  
+'O12'  : 'atO12'  ,    # lipid POPC 
+'O13'  : 'atO13'  ,    # lipid POPC 
+'O14'  : 'atO14'  ,    # lipid POPC  
+'O21'  : 'atO21'  ,    # lipid POPC  
+'O22'  : 'atO22'  ,    # lipid POPC 
+'O31'  : 'atO31'  ,    # lipid POPC  
+'O32'  : 'atO32'  ,    # lipid POPC 
 'OT1'  : 'atOT1'  ,    # terminal charmm.pdb
 'OT2'  : 'atOT2'  ,    # terminal charmm.pdb
 'OC1'  : 'atOT1'  ,    # terminal .pdb
 'OC2'  : 'atOT2'  ,    # terminal .pdb
 'OXT'  : 'atOXT'  ,    # terminal
+'P'    : 'atP'    ,    # lipid POPC
 'S'    : 'atS'    ,    # lipid AOT
 'SD'   : 'atSD'   ,
 'SG'   : 'atSG'   ,
@@ -265,7 +424,116 @@ atom_type={
 'atH34' : 'H'   ,
 'atH35' : 'H'   ,
 'atH36' : 'H'   ,
-'atH37' : 'H'   , 
+'atH37' : 'H'   ,
+'atH91' : 'H'   ,
+'atH101': 'H'   ,
+'atH1A' : 'H'   ,
+'atH1B' : 'H'   ,
+'atH2A' : 'H'   ,
+'atH2B' : 'H'   ,
+'atH4A' : 'H'   ,
+'atH4B' : 'H'   ,
+'atH7A' : 'H'   ,
+'atH7B' : 'H'   ,
+'atH11A': 'H'   ,
+'atH11B': 'H'   ,
+'atH12A': 'H'   ,
+'atH12B': 'H'   ,
+'atH13A': 'H'   ,
+'atH13B': 'H'   ,
+'atH13C': 'H'   ,
+'atH14A': 'H'   ,
+'atH14B': 'H'   ,
+'atH14C': 'H'   ,
+'atH15A': 'H'   ,
+'atH15B': 'H'   ,
+'atH15C': 'H'   ,
+'atH16A': 'H'   ,
+'atH16B': 'H'   ,
+'atH18A': 'H'   ,
+'atH18B': 'H'   ,
+'atH18C': 'H'   ,
+'atH19A': 'H'   ,
+'atH19B': 'H'   ,
+'atH19C': 'H'   ,
+'atH21A': 'H'   ,
+'atH21B': 'H'   ,
+'atH21C': 'H'   ,
+'atH22A': 'H'   ,
+'atH22B': 'H'   ,
+'atH23A': 'H'   ,
+'atH23B': 'H'   ,
+'atH24A': 'H'   ,
+'atH24B': 'H'   ,
+'atH26A': 'H'   ,
+'atH26B': 'H'   ,
+'atH26C': 'H'   ,
+'atH27A': 'H'   ,
+'atH27B': 'H'   ,
+'atH27C': 'H'   ,
+'atH2R' : 'H'   ,  
+'atH2S' : 'H'   ,  
+'atH2X' : 'H'   ,  
+'atH2Y' : 'H'   ,
+"atH3'" : 'H'   ,  
+'atH3R' : 'H'   ,  
+'atH3S' : 'H'   ,  
+'atH3X' : 'H'   ,  
+'atH3Y' : 'H'   ,  
+'atH4R' : 'H'   ,  
+'atH4S' : 'H'   ,  
+'atH4X' : 'H'   ,  
+'atH4Y' : 'H'   ,  
+'atH5R' : 'H'   ,  
+'atH5S' : 'H'   ,  
+'atH5X' : 'H'   ,  
+'atH5Y' : 'H'   ,  
+'atH6R' : 'H'   ,  
+'atH6S' : 'H'   ,  
+'atH6X' : 'H'   ,  
+'atH6Y' : 'H'   ,  
+'atH7R' : 'H'   ,  
+'atH7S' : 'H'   ,  
+'atH7X' : 'H'   ,  
+'atH7Y' : 'H'   ,  
+'atH8R' : 'H'   ,  
+'atH8S' : 'H'   ,  
+'atH8X' : 'H'   ,  
+'atH8Y' : 'H'   ,  
+'atH9X' : 'H'   ,  
+'atH9Y' : 'H'   ,  
+'atH10X' : 'H'   ,  
+'atH10Y' : 'H'   ,  
+'atH11X' : 'H'   ,  
+'atH11Y' : 'H'   ,  
+'atH12X' : 'H'   ,  
+'atH12Y' : 'H'   ,  
+'atH13X' : 'H'   ,  
+'atH13Y' : 'H'   ,  
+'atH14X' : 'H'   ,  
+'atH14Y' : 'H'   ,  
+'atH15X' : 'H'   ,  
+'atH15Y' : 'H'   ,  
+'atH16X' : 'H'   ,  
+'atH16Y' : 'H'   ,  
+'atH16Z' : 'H'   ,
+'atH11R' : 'H'   ,  
+'atH11S' : 'H'   ,  
+'atH12R' : 'H'   ,  
+'atH12S' : 'H'   ,  
+'atH13R' : 'H'   ,  
+'atH13S' : 'H'   ,  
+'atH14R' : 'H'   ,  
+'atH14S' : 'H'   ,  
+'atH15R' : 'H'   ,  
+'atH15S' : 'H'   ,  
+'atH16R' : 'H'   ,  
+'atH16S' : 'H'   ,  
+'atH17R' : 'H'   ,  
+'atH17S' : 'H'   ,  
+'atH18R' : 'H'   ,  
+'atH18S' : 'H'   ,  
+'atH18T' : 'H'   ,  
 'atHA'  : 'H'   , 
 'atHA1' : 'H'   , 
 'atHA2' : 'H'   , 
@@ -306,10 +574,13 @@ atom_type={
 'atHH31': 'H'   , 
 'atHH32': 'H'   , 
 'atHH33': 'H'   ,
+'atHS'  : 'H'   , 
 'atHT'  : 'H'   , 
 'atHT1' : 'H'   , 
 'atHT2' : 'H'   , 
 'atHT3' : 'H'   ,
+'atHX'  : 'H'   , 
+'atHY'  : 'H'   ,
 'atHY1' : 'H'   , 
 'atHY2' : 'H'   , 
 'atHY3' : 'H'   ,
@@ -338,6 +609,40 @@ atom_type={
 'atC18' : 'C'   , 
 'atC19' : 'C'   , 
 'atC20' : 'C'   , 
+'atC21' : 'C'   , 
+'atC22' : 'C'   , 
+'atC23' : 'C'   , 
+'atC24' : 'C'   , 
+'atC25' : 'C'   , 
+'atC26' : 'C'   , 
+'atC27' : 'C'   , 
+'atC28' : 'C'   , 
+'atC29' : 'C'   , 
+'atC33' : 'C'   , 
+'atC34' : 'C'   , 
+'atC35' : 'C'   , 
+'atC36' : 'C'   , 
+'atC37' : 'C'   , 
+'atC38' : 'C'   , 
+'atC39' : 'C'   , 
+'atC210' : 'C'   , 
+'atC211' : 'C'   , 
+'atC212' : 'C'   , 
+'atC213' : 'C'   , 
+'atC214' : 'C'   , 
+'atC215' : 'C'   , 
+'atC216' : 'C'   , 
+'atC217' : 'C'   , 
+'atC218' : 'C'   , 
+'atC310' : 'C'   , 
+'atC311' : 'C'   , 
+'atC312' : 'C'   , 
+'atC313' : 'C'   , 
+'atC314' : 'C'   , 
+'atC315' : 'C'   , 
+'atC316' : 'C'   , 
+'atC31' : 'C'   , 
+'atC32' : 'C'   , 
 'atCA'  : 'C'   ,
 'atCAT' : 'C'   ,
 'atCAY' : 'C'   ,
@@ -387,9 +692,18 @@ atom_type={
 'atOTX' : 'O'   ,
 'atOXT' : 'O'   ,
 'atOY'  : 'O'   ,
-'atS'   : 'S'   ,
-'atSD'  : 'S'   , 
-'atSG'  : 'S'   , 
+'atO11' : 'O'  ,
+'atO12' : 'O'  ,
+'atO13' : 'O'  ,
+'atO14' : 'O'  ,
+'atO21' : 'O'  ,
+'atO22' : 'O'  ,
+'atO31' : 'O'  ,
+'atO32' : 'O'  ,
+'atP'   : 'P'  ,
+'atS'   : 'S'  ,
+'atSD'  : 'S'  , 
+'atSG'  : 'S'  , 
 
 ## Water
 'atOW'  : 'O'   , 
