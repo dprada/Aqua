@@ -1,10 +1,14 @@
 ## Aux. function to load new topologies:
+import imp
 
 user_topol=[]
 
 def add_topol(self,file_topol,verbose=False):
 
-   newtop= __import__(file_topol)
+   try:
+      newtop= __import__(file_topol)
+   except:
+      newtop= imp.load_source(file_topol.replace('.py',''),file_topol)
    
    self.residue[newtop.residue_name]=newtop.residue_name
    self.residue_type[newtop.residue_name]=newtop.residue_type

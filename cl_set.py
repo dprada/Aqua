@@ -1122,6 +1122,8 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
         else:
             return min_dists, ind_atoms_min,min_image
 
+
+
     def radius_gyration(self,setA='ALL',traj=0,frame='ALL',pbc=False):
 
         setA,nlist_A,nsys_A=__read_set_opt__(self,setA)
