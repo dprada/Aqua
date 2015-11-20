@@ -712,44 +712,71 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                     self.atom[b2].covalent_bonds.append(b1)
                 aa+=bb
 
-    def write_pdb (self,filename=None,traj=0,frame=0,sel='ALL'):
+    def write (self,filename=None,traj=0,frame=0,sel='ALL'):
         
+        if len(self.traj)==0:
+            print '# Error: The system has no coordinates to export. '
+            return
+
         select,nlist,nsys=__read_set_opt__(self,sel)
 
+        select.sort()
+
         if filename==None:
+
             print 'Enter filename: '
-            print '      foo.write_pdb("foo.pdb")'
-        else:
-            if not filename.endswith('.pdb'): filename+='.pdb'
+            print '      foo.write("foo.pdb")'
+
+        elif filename.endswith('.pdb'):
+
             if path.exists(filename): 
                 print '# The file '+filename+' already exists.'
                 return
      
             fff=open(filename,'w')
      
-            a='HEADER    '+'> CREATED BY PYNORAMIX '+datetime.datetime.now().strftime("%Y-%m-%d %H:%M")+' <\n'
+            a='HEADER    '+'> FILE CREATED BY AQUALAB '+datetime.datetime.now().strftime("%Y-%m-%d %H:%M")+' <\n'
             fff.write(str(a))
      
             for ii in self.pdb_header: fff.write(str(ii))
             
             for ii in self.pdb_ss:     fff.write(str(ii))
      
+            a='CRYST1'  #1-6
+            a+="%9.3f" % float(self.traj[traj].frame[frame].cell[0,0]) #7-15
+            a+="%9.3f" % float(self.traj[traj].frame[frame].cell[1,1]) #16-24
+            a+="%9.3f" % float(self.traj[traj].frame[frame].cell[2,2]) #25-33
+            a+="%7.2f" % float(self.traj[traj].frame[frame].cell[0,1]) #34-40
+            a+="%7.2f" % float(self.traj[traj].frame[frame].cell[0,2]) #41-47
+            a+="%7.2f" % float(self.traj[traj].frame[frame].cell[1,2]) #48-54
+            a+="  "
+            a+="%-10s" % "P 1"   #56-66
+            a+="%-3s"  % "1"     #67-70
+            a+='\n' 
+            fff.write(str(a))
+
             dct_aux={'ATOM': 'ATOM  ', 'HETATM': 'HETATM'}
             
             new_index=0
             for jj in range(nlist):
                 ii=select[jj]
                 new_index+=1
-                a=dct_aux[self.atom[ii].type_pdb]              # 1-6
+                try:
+                    a=dct_aux[self.atom[ii].type_pdb]          # 1-6
+                except:
+                    a='ATOM  '                                 # 1-6
                 a+="%5d" % (new_index)                         # 7-11
                 #a+="%5d" % self.atom[ii].pdb_index            # 7-11
                 a+=' '                                         # 12
-                a+=' '+"%-3s" % self.atom[ii].name             # 13-16
+                if len(self.atom[ii].name)<4:
+                    a+=' '+"%-3s" % self.atom[ii].name             # 13-16
+                else:
+                    a+=self.atom[ii].name[3]+self.atom[ii].name[:3] # 13-16
                 a+=' '                                         # 17
-                a+="%3s" % self.atom[ii].resid.name            # 18-20
+                a+="%3s" % self.atom[ii].resid.name[:3]            # 18-20
                 a+=' '                                         # 21
                 a+="%1s" % self.atom[ii].chain.name            # 22
-                a+="%4d" % self.atom[ii].resid.pdb_index       # 23-26
+                a+="%4d" % (self.atom[ii].resid.pdb_index % 10000)       # 23-26
                 a+=' '                                         # 27
                 a+='   '                                       # 28-30
                 a+="%8.3f" % float(self.traj[traj].frame[frame].coors[ii][0])   # 31-38
@@ -759,8 +786,8 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                 a+="%6.2f" % self.atom[ii].bfactor             # 61-66
                 a+='          '                                # 67-76
                 a+="%2s" % self.atom[ii].elem_symb             # 77-78
-                a+="%2s" % self.atom[ii].charge                # 79-80
-                #a+='\n' 
+                #a+="%2s" % self.atom[ii].charge                # 79-80
+                a+='\n' 
                 fff.write(str(a))         
                 if ii<(nlist-1):
                     if self.atom[ii].type_pdb!=self.atom[ii+1].type_pdb or self.atom[ii].chain.name!=self.atom[ii+1].chain.name :
@@ -771,12 +798,53 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                         a+='  '
                         a+=' '                                         
                         a+="%3s" % self.atom[ii].resid.name            
-                        #a+='\n' 
+                        a+='\n' 
                         fff.write(str(a))
-            a='END   '#+'\n'
+            a='END   '+'\n'
             fff.write(str(a))
             fff.close()
+
+        elif filename.endswith('.gro'):
+
+            if path.exists(filename): 
+                print '# The file '+filename+' already exists.'
+                return
+     
+            fff=open(filename,'w')
+     
+            a='FILE CREATED BY AQUALAB '+datetime.datetime.now().strftime("%Y-%m-%d %H:%M")+'\n'
+            fff.write(str(a))
+     
+            a=str(nlist)+'\n'
+            fff.write(str(a))
+
+            new_index=0
+            for jj in range(nlist):
+                ii=select[jj]
+                new_index+=1
+                a="%5d" % self.atom[ii].resid.pdb_index     # 1-5
+                a+="%-5s" % self.atom[ii].resid.name        # 6-10
+                a+="%5s"  % self.atom[ii].name              # 11-15
+                a+="%5d" % new_index                         # 16-20
+                a+="%8.3f" % float(self.traj[traj].frame[frame].coors[ii][0]/10.0)   # 
+                a+="%8.3f" % float(self.traj[traj].frame[frame].coors[ii][1]/10.0)   # 
+                a+="%8.3f" % float(self.traj[traj].frame[frame].coors[ii][2]/10.0)   # 
+                a+="%8.4f" % float(0.0)   # 
+                a+="%8.4f" % float(0.0)   # 
+                a+="%8.4f" % float(0.0)   # 
+                a+='\n' 
+                fff.write(str(a))         
+                
+            a=str(float(self.traj[traj].frame[frame].box[0,0]/10.0))
+            a+=' '+str(float(self.traj[traj].frame[frame].box[1,1]/10.0))
+            a+=' '+str(float(self.traj[traj].frame[frame].box[2,2]/10.0))
+            a+='\n'
+
+            fff.write(str(a))
+            fff.close()
+
         return None
+
 
     def write_set_to_file(self,name_of_file):
         fff=open(name_of_file,'w')

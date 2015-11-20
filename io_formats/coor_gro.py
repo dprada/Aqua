@@ -31,14 +31,51 @@ def open_traj_read(file_name):
 
     return funit,io_vars,io_pos,io_err  # io_file,io_vars,io_pos,io_err
 
-def read_all(file_unit,io_vars=None,io_pos=None):
+def read_all(file_unit,io_vars=None,io_pos=None,wrap=True):
+
+    io_err=0
+    io_end=0
 
     temp=[]
-    while 1:
-        temp_frame,io_pos,io_err,io_end=read_next(file_unit,io_vars,io_pos)
-        if io_end or io_err:
+    box_pdb=[0,0,0]
+    cell_pdb=[0,0,0]
+    read_new=False
+    frame=cl_frame()
+    while True:
+        line=file_unit.readline()                                          # Header of the gro file
+        if len(line)>0: 
+            line=file_unit.readline()                         
+            frame.num_atoms=int(line)                                        # Number of atoms
+            for i in range(frame.num_atoms): 
+                line=file_unit.readline()
+                frame.coors.append(map(float,[line[20:28],line[28:36],line[36:44]]))
+
+            frame.coors=10.0*array(frame.coors,order='F')
+            line=file_unit.readline().split()                         # Reading the size of the cell
+
+            frame.box[0,0]=10.0*float(line[0])         
+            frame.box[1,1]=10.0*float(line[1])         
+            frame.box[2,2]=10.0*float(line[2])       
+            if len(line)==9:
+                frame.box[0,1]=10.0*float(line[3])
+                frame.box[0,2]=10.0*float(line[4])
+                frame.box[1,0]=10.0*float(line[5])
+                frame.box[1,2]=10.0*float(line[6])
+                frame.box[2,0]=10.0*float(line[7])
+                frame.box[2,1]=10.0*float(line[8])
+            frame.box2cell()
+            frame.coors=array(frame.coors,dtype=float,order='F')
+            if wrap:
+                frame.wrap()
+            temp.append(frame)
+            read_new=False
+            frame=cl_frame()
+            io_pos=file_unit.tell()
+        else:
+            del(frame)
             break
-        temp.append(temp_frame)
+
+    io_end=True
 
     return temp,io_err,io_end   # io_file,io_err,io_end
         
