@@ -1370,9 +1370,9 @@ DEALLOCATE(cdm,vect_aux,matrix,values)
 END SUBROUTINE PRINCIPAL_GEOMETRIC_AXIS
 
 
-SUBROUTINE DIHEDRAL_ANGLES (dih_angs,coors,box,ortho,list_angs,num_dih_angs,natom)
+SUBROUTINE DIHEDRAL_ANGLES (pbc_opt,dih_angs,coors,box,ortho,list_angs,num_dih_angs,natom)
 
-integer,intent(in)::ortho,natom,num_dih_angs
+INTEGER,INTENT(IN)::ortho,natom,num_dih_angs,pbc_opt
 INTEGER,DIMENSION(num_dih_angs,4),INTENT(IN)::list_angs
 double precision,dimension(natom,3),intent(in)::coors
 double precision,DIMENSION(3,3),INTENT(IN)::box
@@ -1386,9 +1386,11 @@ DO ii=1,num_dih_angs
    vect1=coors(list_angs(ii,2)+1,:)-coors(list_angs(ii,1)+1,:)
    vect2=coors(list_angs(ii,3)+1,:)-coors(list_angs(ii,2)+1,:)
    vect3=coors(list_angs(ii,4)+1,:)-coors(list_angs(ii,3)+1,:)
-   CALL PBC (vect1,box,ortho)
-   CALL PBC (vect2,box,ortho)
-   CALL PBC (vect3,box,ortho)
+   IF (pbc_opt==1) THEN
+      CALL PBC (vect1,box,ortho)
+      CALL PBC (vect2,box,ortho)
+      CALL PBC (vect3,box,ortho)
+   END IF
    CALL calculo_dihed (vect1,vect2,vect3,ang)
    dih_angs(ii)=ang
 END DO
@@ -1521,6 +1523,66 @@ SUBROUTINE neighbs_ranking (diff_syst,diff_set,pbc_opt,limit,list1,coors1,box1,o
   DEALLOCATE(dist_matrix,dist_aux,filter,neight_aux)
 
 END SUBROUTINE neighbs_ranking
+
+!%SUBROUTINE neighbs_dist_ns_list (diff_syst,diff_set,pbc_opt,limit,list1,coors1,box1,ortho1,list2,&
+!%                         coors2,n1,n2,natom1,natom2,contact_map,num_neighbs,dist_matrix) !before: neighb_dist,neighb_uvect
+!% 
+!%  IMPLICIT NONE
+!% 
+!%  INTEGER,INTENT(IN)::diff_syst,diff_set,pbc_opt,ortho1
+!%  DOUBLE PRECISION,INTENT(IN)::limit
+!%  integer,intent(in)::n1,n2,natom1,natom2
+!%  INTEGER,DIMENSION(n1),INTENT(IN)::list1
+!%  INTEGER,DIMENSION(n2),INTENT(IN)::list2
+!%  double precision,dimension(natom1,3),intent(in)::coors1
+!%  double precision,DIMENSION(3,3),INTENT(IN)::box1
+!%  double precision,dimension(natom2,3),intent(in)::coors2
+!%  INTEGER,dimension(n1,n2),intent(out)::contact_map
+!%  INTEGER,DIMENSION(n1),INTENT(OUT)::num_neighbs
+!%  DOUBLE PRECISION,DIMENSION(n1,n2),intent(out)::dist_matrix
+!% 
+!%  INTEGER::ii,jj,gg
+!% 
+!%  !DOUBLE PRECISION,DIMENSION(n_atoms1,limit),INTENT(OUT)::neighb_dist
+!%  !DOUBLE PRECISION,DIMENSION(n_atoms1,limit,3),INTENT(OUT)::neighb_uvect
+!% 
+!%  ! The indexes in list1 and list2 not corrected yet (because of function dist)
+!% 
+!%  CALL EXTRACT_NS_LIST_SETS(diff_set,list1,list2,n1,n2,numat_glob)
+!% 
+!% 
+!%  CALL DISTANCE (diff_syst,diff_set,pbc_opt,list1,coors1,box1,ortho1,list2,coors2,n1,n2,natom1,natom2,dist_matrix)
+!% 
+!%  contact_map=0
+!%  num_neighbs=0
+!% 
+!%  IF ((diff_syst==1) .or. (diff_set==1)) THEN
+!%     DO ii=1,n1
+!%        gg=0
+!%        DO jj=1,n2
+!%           IF (dist_matrix(ii,jj)<=limit) THEN
+!%              contact_map(ii,jj)=1
+!%              gg=gg+1
+!%           END IF
+!%        END DO
+!%        num_neighbs(ii)=gg
+!%     END DO
+!%  ELSE
+!%     DO ii=1,n1
+!%        gg=num_neighbs(ii)
+!%        DO jj=ii+1,n2
+!%           IF (dist_matrix(ii,jj)<=limit) THEN
+!%              contact_map(ii,jj)=1
+!%              contact_map(jj,ii)=1
+!%              gg=gg+1
+!%              num_neighbs(jj)=num_neighbs(jj)+1
+!%           END IF
+!%        END DO
+!%        num_neighbs(ii)=gg
+!%     END DO
+!%  END IF
+!%  
+!%END SUBROUTINE neighbs_dist_ns_list
 
 
 SUBROUTINE neighbs_dist (diff_syst,diff_set,pbc_opt,limit,list1,coors1,box1,ortho1,list2,&

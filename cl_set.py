@@ -857,22 +857,52 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
         fff.close()
         return A
 
+    def add_covalent_bonds(self,bonds=None,verbose=False):
+        a = numpy.array(bonds)
+        bad = False
+        ashape=a.shape
+        if len(ashape)==1:
+            if ashape[0]==2:
+                aa=a[0]
+                bb=a[1]
+                self.atom[aa].covalent_bonds.append(bb)
+                self.atom[bb].covalent_bonds.append(aa)
+            else:
+                bad = True
+        elif len(ashape)>1:
+            if ashape[1]==2:
+                for covab in bonds:
+                    aa=covab[0]
+                    bb=covab[1]
+                    self.atom[aa].covalent_bonds.append(bb)
+                    self.atom[bb].covalent_bonds.append(aa)
+            else:
+                bad = True
+        else:
+            bad = True
+
+        if bad:
+            print 'Error: list of atom pairs required.'
+        pass
+
     def add_donors(self,select=None,verbose=False):
-        print '# This function needs to be fixed'
-        return
-        #setdon,nlist,numsys=__read_set_opt__(self,select)
-        #self.donors=list(self.donors)
-        #for ii in setdon:
-        #    self.atom[ii].donor=True
-        #    with_h=False
-        #    for jj in self.atom.covalent_bonds:
-        #        if self.atom[jj].type=='H':
-        #            self.donors.append([ii,jj])
-        #    self.donors=numpy.array(self.donors,dtype=int,order='Fortran')
-        #    if not with_h:
-        #        print '# No H atom bonded to',self.atom[ii].info()
-        #if verbose:
-        #    print '#',nlist,'donors added.'
+        setdon,nlist,numsys=__read_set_opt__(self,select)
+        self.donors=list(self.donors)
+        num_donors_added=0
+        for ii in setdon:
+            self.atom[ii].donor=True
+            with_h=False
+            for jj in self.atom[ii].covalent_bonds:
+                if self.atom[jj].type=='H':
+                    with_h=True
+                    self.donors.append([ii,jj])
+                    num_donors_added+=1
+            if not with_h:
+                print '# No H atom bonded to',self.atom[ii].info()
+        self.donors=numpy.array(self.donors,dtype=int,order='Fortran')
+        self.donors=self.donors[numpy.lexsort(numpy.fliplr(self.donors).T)]
+        if verbose:
+            print '#',num_donors_added,'donors added.'
 
     def add_acceptors(self,select=None,verbose=False):
         setacc,nlist,numsys=__read_set_opt__(self,select)
@@ -1356,7 +1386,7 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                 else:
                     return dih_angs
 
-    def dihedral_angle(self,covalent_chain=None,traj=0,frame='ALL'):
+    def dihedral_angle(self,covalent_chain=None,traj=0,frame='ALL',pbc=True):
 
         if not covalent_chain:
             print '# Error: Check method msystem.selection_covalent_chains()'
@@ -1379,7 +1409,7 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
         jj=-1
         for iframe in __read_frame_opt__(self,traj,frame):
             jj+=1
-            dih_angs[jj,:]=faux.dihedral_angles(iframe.coors,iframe.box,iframe.orthogonal,covalent_chain,num_dih_angs,self.num_atoms)
+            dih_angs[jj,:]=faux.dihedral_angles(pbc,iframe.coors,iframe.box,iframe.orthogonal,covalent_chain,num_dih_angs,self.num_atoms)
 
         if num_frames==1:
             if num_dih_angs==1:
@@ -1530,6 +1560,23 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                 return neighbs[0]
             else:
                 return neighbs
+
+#    def fast_contact_map (self,setA=None,setB=None,dist=None,traj=0,frame=0,pbc=True,verlet_list_init=None):
+# 
+#        setA,nlist_A,nsys_A,setB,nlist_B,nsys_B,diff_syst,diff_set=__read_sets_opt__(self,setA,None,setB)
+#        num_frames=__length_frame_opt__(self,traj,frame)
+# 
+#        c_map=numpy.empty(shape=(num_frames,nlist_A,nlist_B),dtype=int,order='Fortran')
+#        num_frames=0
+#        for iframe in __read_frame_opt__(self,traj,frame):
+#            c_map[num_frames][:,:],aa,bb=faux.neighbs_dist_ns_list(diff_syst,diff_set,pbc,dist,setA,iframe.coors,iframe.box,iframe.orthogonal,setB,iframe.coors,nlist_A,nlist_B,nsys_A,nsys_B)
+#            num_frames+=1
+#            del(aa); del(bb)
+# 
+#        if num_frames==1:
+#            return c_map[0][:,:]
+#        else:
+#            return c_map
 
     def contact_map (self,setA=None,setB=None,dist=None,traj=0,frame=0,pbc=True):
      
@@ -1715,7 +1762,11 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                                            nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                            self.num_atoms)
 
-                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        if faux.hbs_vals_out.shape[0]:
+                            hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        else:
+                            hbout.append([[],[]])
+
                         gg+=1
 
                 else:
@@ -1731,7 +1782,12 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                                                         nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
                                                         nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                                         self.num_atoms)
-                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+
+                        if faux.hbs_vals_out.shape[0]:
+                            hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        else:
+                            hbout.append([[],[]])
+
                         gg+=1
 
             else:
@@ -1752,7 +1808,11 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                                            nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                            self.num_atoms)
 
-                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        if faux.hbs_vals_out.shape[0]:
+                            hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        else:
+                            hbout.append([[],[]])
+
                         gg+=1
                 else:
                     hbout=[]
@@ -1765,7 +1825,11 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                                                         nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
                                                         nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                                         self.num_atoms)
-                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        if faux.hbs_vals_out.shape[0]:
+                            hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        else:
+                            hbout.append([[],[]])
+
                         gg+=1
 
             if gg==1:
@@ -1801,7 +1865,11 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                                            nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                            self.num_atoms)
 
-                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        if faux.hbs_vals_out.shape[0]:
+                            hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        else:
+                            hbout.append([[],[]])
+
                         gg+=1
                 else:
                     hbout=[]
@@ -1814,7 +1882,11 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                                                         nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
                                                         nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                                         self.num_atoms)
-                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        if faux.hbs_vals_out.shape[0]:
+                            hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        else:
+                            hbout.append([[],[]])
+
                         gg+=1
 
             if gg==1:
@@ -1855,7 +1927,11 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                                            nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                            self.num_atoms)
 
-                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        if faux.hbs_vals_out.shape[0]:
+                            hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        else:
+                            hbout.append([[],[]])
+
                         gg+=1
                 else:
                     hbout=[]
@@ -1870,7 +1946,12 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                                                         nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
                                                         nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                                         self.num_atoms)
-                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+
+                        if faux.hbs_vals_out.shape[0]:
+                            hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        else:
+                            hbout.append([[],[]])
+
                         gg+=1
 
             else:
@@ -1892,7 +1973,11 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                                            nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                            self.num_atoms)
 
-                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        if faux.hbs_vals_out.shape[0]:
+                            hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        else:
+                            hbout.append([[],[]])
+
                         gg+=1
                 else:
                     hbout=[]
@@ -1905,7 +1990,11 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                                                         nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
                                                         nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                                         self.num_atoms)
-                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+
+                        if faux.hbs_vals_out.shape[0]:
+                            hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        else:
+                            hbout.append([[],[]])
                         gg+=1
 
             if gg==1:
@@ -1945,7 +2034,11 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                                            nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                            self.num_atoms)
 
-                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        if faux.hbs_vals_out.shape[0]:
+                            hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        else:
+                            hbout.append([[],[]])
+
                         gg+=1
                 else:
                     hbout=[]
@@ -1960,7 +2053,12 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                                                         nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
                                                         nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                                         self.num_atoms)
-                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+
+                        if faux.hbs_vals_out.shape[0]:
+                            hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        else:
+                            hbout.append([[],[]])
+
                         gg+=1
 
             else:
@@ -1982,7 +2080,11 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                                            nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                            self.num_atoms)
 
-                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        if faux.hbs_vals_out.shape[0]:
+                            hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        else:
+                            hbout.append([[],[]])
+
                         gg+=1
                 else:
                     hbout=[]
@@ -1995,7 +2097,12 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                                                         nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
                                                         nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                                         self.num_atoms)
-                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+
+                        if faux.hbs_vals_out.shape[0]:
+                            hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        else:
+                            hbout.append([[],[]])
+
                         gg+=1
 
             if gg==1:
@@ -2036,7 +2143,11 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                                            nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                            self.num_atoms)
 
-                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        if faux.hbs_vals_out.shape[0]:
+                            hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        else:
+                            hbout.append([[],[]])
+
                         gg+=1
                 else:
                     hbout=[]
@@ -2051,7 +2162,12 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                                                         nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
                                                         nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                                         self.num_atoms)
-                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+
+                        if faux.hbs_vals_out.shape[0]:
+                            hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        else:
+                            hbout.append([[],[]])
+
                         gg+=1
 
             else:
@@ -2073,7 +2189,11 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                                            nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                            self.num_atoms)
 
-                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        if faux.hbs_vals_out.shape[0]:
+                            hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        else:
+                            hbout.append([[],[]])
+
                         gg+=1
                 else:
                     hbout=[]
@@ -2086,7 +2206,12 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                                                         nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
                                                         nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                                         self.num_atoms)
-                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+
+                        if faux.hbs_vals_out.shape[0]:
+                            hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        else:
+                            hbout.append([[],[]])
+
                         gg+=1
 
             if gg==1:
@@ -2124,7 +2249,11 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                                            nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                            self.num_atoms)
 
-                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        if faux.hbs_vals_out.shape[0]:
+                            hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        else:
+                            hbout.append([[],[]])
+
                         gg+=1
                 else:
                     hbout=[]
@@ -2137,7 +2266,12 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                                                         nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
                                                         nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                                         self.num_atoms)
-                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+
+                        if faux.hbs_vals_out.shape[0]:
+                            hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        else:
+                            hbout.append([[],[]])
+
                         gg+=1
 
             if gg==1:
@@ -2175,7 +2309,11 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                                            nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                            self.num_atoms)
 
-                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        if faux.hbs_vals_out.shape[0]:
+                            hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        else:
+                            hbout.append([[],[]])
+
                         gg+=1
                 else:
                     hbout=[]
@@ -2188,7 +2326,12 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                                                         nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, \
                                                         nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H, \
                                                         self.num_atoms)
-                        hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+
+                        if faux.hbs_vals_out.shape[0]:
+                            hbout.append([ccopy.deepcopy(faux.hbs_out),ccopy.deepcopy(faux.hbs_vals_out)])
+                        else:
+                            hbout.append([[],[]])
+
                         gg+=1
 
             if gg==1:

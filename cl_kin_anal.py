@@ -341,17 +341,87 @@ class kinetic_analysis():
             traj_inp=pyn_math.standard_traj(self.traj,particles=self.particles,dimensions=self.dimensions)
             return f_kin_anal.flux_cut(traj_inp,cut,traj_inp.shape[0],traj_inp.shape[1],traj_inp.shape[2])
 
+#    def life_time(self,traj=None,state=None,segment=None,sel_dim=0,mean=False,norm=False,verbose=False):
+# 
+#        opt_mean=0
+#        opt_norm=0
+#        opt_segm=0
+#        if (mean):
+#            opt_mean=1
+#        if (norm):
+#            opt_norm=1
+#        if (segment):
+#            opt_segm=1
+# 
+#        if type(sel_dim) in [int,float]:
+#            sel_dim=[sel_dim]
+#            num_sel_dim=1
+#        elif type(sel_dim) in [list,tuple]:
+#            num_sel_dim=len(sel_dim)
+# 
+#        segments=numpy.zeros((self.dimensions,2),dtype=float,order='F')
+#        if (opt_segm):
+#            segment=numpy.array(segment)
+#            if len(segment.shape)==1:
+#                segment.resize(1,segment.shape[0])
+#            for ii in range(num_sel_dim):
+#                segments[sel_dim[ii],0]=segment[ii,0]
+#                segments[sel_dim[ii],1]=segment[ii,1]
+#            num_states=1
+#            state=[0]
+#        else:
+#            if type(state) in [int,float]:
+#                num_states=1
+#                state=[state]
+#            elif type(state) in [list,tuple]:
+#                num_states=len(state)
+# 
+#        if traj == None:
+#            if self.__tr_mode_in_file__:
+#                infile=self.file_traj
+#                infile.unit=len(pyn_math.pyn_f90units)+1
+#                pyn_math.pyn_f90units.append(infile.unit)
+#                lt_mean=f_kin_anal.life_time_dist_infile(infile.name,infile.binary,infile.unit,opt_norm,opt_segm,state,segments,\
+#                                                             sel_dim,self.particles,self.dimensions,num_states,num_sel_dim)
+#                pyn_math.pyn_f90units.remove(infile.unit)
+#                infile.unit=None
+# 
+#            else:
+#                traj_inp=pyn_math.standard_traj(self.traj,particles=self.particles,dimensions=self.dimensions)
+#                lt_mean=f_kin_anal.life_time_dist(opt_norm,opt_segm,traj_inp,state,segments,traj_inp.shape[0],traj_inp.shape[1],traj_inp.shape[2],num_states)
+# 
+#        
+#        elif traj in ['CLUSTERS','Clusters','clusters']:
+#            traj_inp=pyn_math.standard_traj(self.traj_clusters,particles=self.particles,dimensions=1)
+#            print segments
+#            lt_mean=f_kin_anal.life_time_dist(opt_norm,opt_segm,traj_inp,state,segments,traj_inp.shape[0],traj_inp.shape[1],traj_inp.shape[2],num_states)
+#        elif traj in ['NODES','Nodes','nodes']:
+#            traj_inp=pyn_math.standard_traj(self.traj_nodes,particles=self.particles,dimensions=1)
+#            lt_mean=f_kin_anal.life_time_dist(opt_norm,opt_segm,traj_inp,state,segments,traj_inp.shape[0],traj_inp.shape[1],traj_inp.shape[2],num_states)
+#        else:
+#            print '# A readable traj is needed'
+#            return
+# 
+# 
+#        lt_dist=copy.deepcopy(f_kin_anal.distrib)
+#        lt_x=copy.deepcopy(f_kin_anal.distrib_x)
+#        f_kin_anal.free_distrib()
+# 
+#        if verbose:
+#            print '# Mean life time:', lt_mean,'frames.'
+# 
+#        if mean:
+#            return lt_mean
+#        else:
+#            return lt_x, lt_dist
+
     def life_time(self,traj=None,state=None,segment=None,sel_dim=0,mean=False,norm=False,verbose=False):
 
-        opt_mean=0
-        opt_norm=0
-        opt_segm=0
-        if (mean):
-            opt_mean=1
-        if (norm):
-            opt_norm=1
-        if (segment):
-            opt_segm=1
+        opt_mean =0
+        opt_norm =0
+        opt_segm =0
+        opt_state=0
+        num_states=0
 
         if type(sel_dim) in [int,float]:
             sel_dim=[sel_dim]
@@ -359,47 +429,58 @@ class kinetic_analysis():
         elif type(sel_dim) in [list,tuple]:
             num_sel_dim=len(sel_dim)
 
-        segments=numpy.zeros((self.dimensions,2),dtype=float,order='F')
-        if (opt_segm):
+        if traj == None and not self.__tr_mode_in_file__:
+            traj_inp=self.traj
+            aux_dims=self.dimensions
+        elif traj in ['CLUSTERS','Clusters','clusters']:
+            traj_inp=self.traj_clusters
+            aux_dims=1
+        elif traj in ['NODES','Nodes','nodes']:
+            traj_inp=self.traj_nodes
+            aux_dims=1
+        else:
+            print '# A readable traj is needed'
+            return
+
+        if (mean):
+            opt_mean=1
+        if (norm):
+            opt_norm=1
+        if segment!=None:
+            opt_segm=1
             segment=numpy.array(segment)
             if len(segment.shape)==1:
                 segment.resize(1,segment.shape[0])
             for ii in range(num_sel_dim):
-                segments[sel_dim[ii],0]=segment[ii,0]
-                segments[sel_dim[ii],1]=segment[ii,1]
+                segment[sel_dim[ii],0]=segment[ii,0]
+                segment[sel_dim[ii],1]=segment[ii,1]
             num_states=1
             state=[0]
         else:
+            segment=numpy.zeros((aux_dims,2),dtype=float,order='F')
+        if state!=None:
+            opt_state=1
             if type(state) in [int,float]:
                 num_states=1
                 state=[state]
             elif type(state) in [list,tuple]:
                 num_states=len(state)
-
-        if traj == None:
-            if self.__tr_mode_in_file__:
-                infile=self.file_traj
-                infile.unit=len(pyn_math.pyn_f90units)+1
-                pyn_math.pyn_f90units.append(infile.unit)
-                lt_mean=f_kin_anal.life_time_dist_infile(infile.name,infile.binary,infile.unit,opt_norm,opt_segm,state,segments,\
-                                                             sel_dim,self.particles,self.dimensions,num_states,num_sel_dim)
-                pyn_math.pyn_f90units.remove(infile.unit)
-                infile.unit=None
-
-            else:
-                traj_inp=pyn_math.standard_traj(self.traj,particles=self.particles,dimensions=self.dimensions)
-                lt_mean=f_kin_anal.life_time_dist(opt_norm,opt_segm,traj_inp,state,segments,traj_inp.shape[0],traj_inp.shape[1],traj_inp.shape[2],num_states)
-
-        
-        elif traj in ['CLUSTERS','Clusters','clusters']:
-            traj_inp=pyn_math.standard_traj(self.traj_clusters,particles=self.particles,dimensions=1)
-            lt_mean=f_kin_anal.life_time_dist(opt_norm,opt_segm,traj_inp,state,segments,traj_inp.shape[0],traj_inp.shape[1],traj_inp.shape[2],num_states)
-        elif traj in ['NODES','Nodes','nodes']:
-            traj_inp=pyn_math.standard_traj(self.traj_nodes,particles=self.particles,dimensions=1)
-            lt_mean=f_kin_anal.life_time_dist(opt_norm,opt_segm,traj_inp,state,segments,traj_inp.shape[0],traj_inp.shape[1],traj_inp.shape[2],num_states)
         else:
-            print '# A readable traj is needed'
-            return
+            num_states=1
+            state=[0]
+
+
+        if not self.__tr_mode_in_file__:
+            traj_inp=pyn_math.standard_traj(traj_inp,particles=self.particles,dimensions=aux_dims)
+            lt_mean=f_kin_anal.life_time_dist(opt_norm,opt_segm,traj_inp,state,segment,traj_inp.shape[0],traj_inp.shape[1],traj_inp.shape[2],num_states)
+        else:
+            infile=self.file_traj
+            infile.unit=len(pyn_math.pyn_f90units)+1
+            pyn_math.pyn_f90units.append(infile.unit)
+            lt_mean=f_kin_anal.life_time_dist_infile(infile.name,infile.binary,infile.unit,opt_norm,opt_segm,state,segment,\
+                                                     sel_dim,self.particles,self.dimensions,num_states,num_sel_dim)
+            pyn_math.pyn_f90units.remove(infile.unit)
+            infile.unit=None
 
 
         lt_dist=copy.deepcopy(f_kin_anal.distrib)
@@ -413,6 +494,7 @@ class kinetic_analysis():
             return lt_mean
         else:
             return lt_x, lt_dist
+
 
     def first_passage_time (self,traj=None,from_state=None,from_segment=None,to_state=None,to_segment=None,mean=False,norm=False,verbose=False):
 
@@ -470,7 +552,7 @@ class kinetic_analysis():
         if type(from_state) in [int,float]:
             from_num_states=1
             from_state=[from_state]
-        elif type(state) in [list,tuple]:
+        elif type(from_state) in [list,tuple]:
             from_num_states=len(from_state)
 
         if type(to_state) in [int,float]:
