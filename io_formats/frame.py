@@ -12,6 +12,7 @@ class cl_frame():
         self.model=None
         self.coors=[]
         self.box=zeros(shape=(3,3),dtype=float,order='F')
+        self.invbox=zeros(shape=(3,3),dtype=float,order='F')
         self.cell=zeros(shape=(3,3),dtype=float,order='F')
         self.orthogonal=0
         self.volume=0.0
@@ -21,6 +22,9 @@ class cl_frame():
 
     def box2cell(self):
         self.cell,self.volume,self.orthogonal=libcell.box2cell(self.box)
+
+    def box2invbox(self):
+        self.invbox=libcell.box2invbox(self.box)
 
     def wrap(self):
         libcell.wrap(self.coors,self.box,self.orthogonal,self.coors.shape[0])

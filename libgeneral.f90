@@ -103,14 +103,15 @@ SUBROUTINE NORMALIZE_VECT (a)
 END SUBROUTINE NORMALIZE_VECT
 
 
-SUBROUTINE PBC(vector,box,ortho)
+SUBROUTINE PBC(vector,box,inv,ortho)
  
   IMPLICIT NONE
  
   DOUBLE PRECISION,DIMENSION(3),INTENT(INOUT)::vector
-  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box,inv
+  DOUBLE PRECISION,DIMENSION(3)::vaux,vaux2
   INTEGER,INTENT(IN)::ortho
-  INTEGER::i
+  INTEGER::i,j,k
   DOUBLE PRECISION::x,L,Lhalf
  
   IF (ortho==1) THEN
@@ -129,8 +130,37 @@ SUBROUTINE PBC(vector,box,ortho)
      END DO
   ELSE
  
-     print*, 'Corrections on PBC not implemented with a non-cubic box.'
- 
+     IF (.TRUE.) THEN
+        !vaux(1)=inv(1,1)*vector(1)
+        !vaux(2)=inv(2,1)*vector(1)+inv(2,2)*vector(2)
+        !vaux(3)=inv(3,1)*vector(1)+inv(3,2)*vector(2)+inv(3,3)*vector(3)
+        vaux(1)=inv(1,1)*vector(1)+inv(2,1)*vector(2)+inv(3,1)*vector(3)
+        vaux(2)=                   inv(2,2)*vector(2)+inv(3,2)*vector(3)
+        vaux(3)=                                      inv(3,3)*vector(3)
+        vaux(1)=vaux(1)-NINT(vaux(1))*1.0
+        vaux(2)=vaux(2)-NINT(vaux(2))*1.0
+        vaux(3)=vaux(3)-NINT(vaux(3))*1.0
+        vector(1)=box(1,1)*vaux(1)+box(2,1)*vaux(2)+box(3,1)*vaux(3)
+        vector(2)=                 box(2,2)*vaux(2)+box(3,2)*vaux(3)
+        vector(3)=                                  box(3,3)*vaux(3)
+     ELSE
+        L=1000000.0d0
+        vaux2=0.0d0
+        DO i=-1,1,1
+           DO j=-1,1,1
+              DO k=-1,1,1
+                 vaux(:)=vector(:)+i*box(1,:)+j*box(2,:)+k*box(3,:)
+                 x=(vaux(1)*vaux(1)+vaux(2)*vaux(2)+vaux(3)*vaux(3))
+                 IF (L>x) THEN
+                    vaux2=vaux
+                    L=x
+                 END IF
+              END DO
+           END DO
+        END DO
+        vector(:)=vaux2(:)
+     END IF
+
   END IF
   
 END SUBROUTINE PBC
@@ -575,7 +605,7 @@ SUBROUTINE GRID_NS_LIST (coors,box,natom)
 
 END SUBROUTINE GRID_NS_LIST
 
-SUBROUTINE MAKE_VERLET_LIST_GRID_NS (r_ic,r_oc,pbc_opt,coors,box,vol,ortho,natom)
+SUBROUTINE MAKE_VERLET_LIST_GRID_NS (r_ic,r_oc,pbc_opt,coors,box,inv,vol,ortho,natom)
 
   IMPLICIT NONE
   DOUBLE PRECISION,INTENT(IN)::r_ic,r_oc
@@ -583,7 +613,7 @@ SUBROUTINE MAKE_VERLET_LIST_GRID_NS (r_ic,r_oc,pbc_opt,coors,box,vol,ortho,natom
   INTEGER,INTENT(IN)::natom
   DOUBLE PRECISION,INTENT(IN)::vol
   DOUBLE PRECISION,DIMENSION(natom,3),intent(in)::coors
-  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box,inv
 
   DOUBLE PRECISION::r_ic2,r_oc2
   DOUBLE PRECISION,DIMENSION(3)::vect,vect_aux
@@ -633,7 +663,7 @@ SUBROUTINE MAKE_VERLET_LIST_GRID_NS (r_ic,r_oc,pbc_opt,coors,box,vol,ortho,natom
               IF (kk==0) EXIT
               IF (kk>ii) THEN
                  vect=(coors(kk,:)-vect_aux)
-                 IF (filter) CALL PBC (vect,box,ortho)
+                 IF (filter) CALL PBC (vect,box,inv,ortho)
                  val_aux=dot_product(vect,vect)
                  IF (val_aux<=r_oc2) THEN
                     gg_oc=gg_oc+1
@@ -691,7 +721,7 @@ END SUBROUTINE MAKE_VERLET_LIST_GRID_NS
 
 
 
-SUBROUTINE UPDATE_VERLET_LIST_GRID_NS (r_ic,r_oc,pbc_opt,coors,box,vol,ortho,natom)
+SUBROUTINE UPDATE_VERLET_LIST_GRID_NS (r_ic,r_oc,pbc_opt,coors,box,inv,vol,ortho,natom)
 
   IMPLICIT NONE
   DOUBLE PRECISION,INTENT(IN)::r_ic,r_oc
@@ -699,7 +729,7 @@ SUBROUTINE UPDATE_VERLET_LIST_GRID_NS (r_ic,r_oc,pbc_opt,coors,box,vol,ortho,nat
   INTEGER,INTENT(IN)::natom
   DOUBLE PRECISION,INTENT(IN)::vol
   DOUBLE PRECISION,DIMENSION(natom,3),intent(in)::coors
-  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box,inv
 
   LOGICAL::update,filter
   INTEGER::ii,jj,kk,icell,ncell
@@ -719,7 +749,7 @@ SUBROUTINE UPDATE_VERLET_LIST_GRID_NS (r_ic,r_oc,pbc_opt,coors,box,vol,ortho,nat
 
   DO ii=1,natom
      vect=pos_ant(ii,:)-coors(ii,:)
-     CALL PBC (vect,box,ortho)
+     CALL PBC (vect,box,inv,ortho)
      val_aux=dot_product(vect,vect)
      IF (val_aux > drneimax) THEN
         drneimax2=drneimax
@@ -756,7 +786,7 @@ SUBROUTINE UPDATE_VERLET_LIST_GRID_NS (r_ic,r_oc,pbc_opt,coors,box,vol,ortho,nat
                  IF (kk==0) EXIT
                  IF (kk>ii) THEN
                     vect=(coors(kk,:)-vect_aux)
-                    IF (filter) CALL PBC (vect,box,ortho)
+                    IF (filter) CALL PBC (vect,box,inv,ortho)
                     val_aux=dot_product(vect,vect)
                     IF (val_aux<=r_oc2) THEN
                        gg_oc=gg_oc+1
@@ -821,7 +851,7 @@ SUBROUTINE UPDATE_VERLET_LIST_GRID_NS (r_ic,r_oc,pbc_opt,coors,box,vol,ortho,nat
               kk=ver_oc_ind(ii,jj)
               IF (kk>ii) THEN
                  vect=(coors(kk,:)-vect_aux)
-                 CALL PBC (vect,box,ortho)
+                 CALL PBC (vect,box,inv,ortho)
                  val_aux=dot_product(vect,vect)
                  IF (val_aux<=r_ic2) THEN
                     gg_ic=gg_ic+1
@@ -929,7 +959,7 @@ SUBROUTINE EXTRACT_NS_LIST_SETS(diff_sets,list1,list2,n1,n2,numat_glob)
 
 END SUBROUTINE EXTRACT_NS_LIST_SETS
 
-SUBROUTINE DISTANCE (diff_syst,diff_set,pbc_opt,list1,coors1,box1,ortho1,list2,coors2,n1,n2,natom1,natom2,matrix)
+SUBROUTINE DISTANCE (diff_syst,diff_set,pbc_opt,list1,coors1,box1,inv1,ortho1,list2,coors2,n1,n2,natom1,natom2,matrix)
 
 IMPLICIT NONE
 
@@ -938,7 +968,7 @@ integer,intent(in)::n1,n2,natom1,natom2
 INTEGER,DIMENSION(n1),INTENT(IN)::list1
 INTEGER,DIMENSION(n2),INTENT(IN)::list2
 double precision,dimension(natom1,3),intent(in)::coors1
-double precision,DIMENSION(3,3),INTENT(IN)::box1
+double precision,DIMENSION(3,3),INTENT(IN)::box1,inv1
 double precision,dimension(natom2,3),intent(in)::coors2
 double precision,dimension(n1,n2),intent(out)::matrix
 integer::i,j,ai,aj
@@ -961,7 +991,7 @@ IF ((diff_syst==1) .or. (diff_set==1)) THEN
          do j=1,n2
             aj=llist2(j)
             vect=(coors2(aj,:)-vect_aux)
-            CALL PBC (vect,box1,ortho1)
+            CALL PBC (vect,box1,inv1,ortho1)
             val_aux=sqrt(dot_product(vect,vect))
             matrix(i,j)=val_aux
          end do
@@ -986,7 +1016,7 @@ ELSE
          do j=i+1,n2
             aj=llist2(j)
             vect=(coors1(aj,:)-vect_aux)
-            CALL PBC (vect,box1,ortho1)
+            CALL PBC (vect,box1,inv1,ortho1)
             val_aux=sqrt(dot_product(vect,vect))
             matrix(i,j)=val_aux
             matrix(j,i)=val_aux
@@ -1012,7 +1042,7 @@ DEALLOCATE(llist1,llist2)
 
 END SUBROUTINE DISTANCE
 
-SUBROUTINE DISTANCE_P (pbc_opt,list1,coors1,box1,ortho1,points,n1,num_points,natom1,matrix)
+SUBROUTINE DISTANCE_P (pbc_opt,list1,coors1,box1,inv1,ortho1,points,n1,num_points,natom1,matrix)
 
 IMPLICIT NONE
 
@@ -1020,7 +1050,7 @@ INTEGER,INTENT(IN)::pbc_opt,ortho1
 integer,intent(in)::n1,natom1,num_points
 INTEGER,DIMENSION(n1),INTENT(IN)::list1
 double precision,dimension(natom1,3),intent(in)::coors1
-double precision,DIMENSION(3,3),INTENT(IN)::box1
+double precision,DIMENSION(3,3),INTENT(IN)::box1,inv1
 double precision,dimension(num_points,3),intent(in)::points
 double precision,dimension(n1,num_points),intent(out)::matrix
 integer::i,j,ai,aj
@@ -1040,7 +1070,7 @@ IF (pbc_opt==1) THEN
       vect_aux=coors1(ai,:)
       do j=1,num_points
          vect=(points(aj,:)-vect_aux)
-         CALL PBC (vect,box1,ortho1)
+         CALL PBC (vect,box1,inv1,ortho1)
          val_aux=sqrt(dot_product(vect,vect))
          matrix(i,j)=val_aux
       end do
@@ -1181,7 +1211,7 @@ DEALLOCATE(llist1,llist2)
 END SUBROUTINE DISTANCE_IMAGES
 
 
-SUBROUTINE RADIUS_GYRATION (pbc_opt,list1,coors1,box1,ortho1,n1,natom1,val_Rg)
+SUBROUTINE RADIUS_GYRATION (pbc_opt,list1,coors1,box1,inv1,ortho1,n1,natom1,val_Rg)
 
 IMPLICIT NONE
 
@@ -1189,7 +1219,7 @@ INTEGER,INTENT(IN)::ortho1,pbc_opt
 integer,intent(in)::n1,natom1
 INTEGER,DIMENSION(n1),INTENT(IN)::list1
 double precision,dimension(natom1,3),intent(in)::coors1
-double precision,DIMENSION(3,3),INTENT(IN)::box1
+double precision,DIMENSION(3,3),INTENT(IN)::box1,inv1
 double precision,INTENT(OUT)::val_Rg
 
 integer::ii,ai
@@ -1215,7 +1245,7 @@ ELSE
    DO ii=1,n1
       ai=list1(ii)+1
       vect_aux=(coors1(ai,:)-cdm)
-      CALL PBC(vect_aux,box1,ortho1)
+      CALL PBC(vect_aux,box1,inv1,ortho1)
       val_Rg=val_Rg+dot_product(vect_aux,vect_aux)
    END DO
 
@@ -1370,12 +1400,12 @@ DEALLOCATE(cdm,vect_aux,matrix,values)
 END SUBROUTINE PRINCIPAL_GEOMETRIC_AXIS
 
 
-SUBROUTINE DIHEDRAL_ANGLES (pbc_opt,dih_angs,coors,box,ortho,list_angs,num_dih_angs,natom)
+SUBROUTINE DIHEDRAL_ANGLES (pbc_opt,dih_angs,coors,box,inv,ortho,list_angs,num_dih_angs,natom)
 
 INTEGER,INTENT(IN)::ortho,natom,num_dih_angs,pbc_opt
 INTEGER,DIMENSION(num_dih_angs,4),INTENT(IN)::list_angs
 double precision,dimension(natom,3),intent(in)::coors
-double precision,DIMENSION(3,3),INTENT(IN)::box
+double precision,DIMENSION(3,3),INTENT(IN)::box,inv
 DOUBLE PRECISION,DIMENSION(num_dih_angs),INTENT(OUT)::dih_angs
 
 INTEGER::ii,jj
@@ -1387,9 +1417,9 @@ DO ii=1,num_dih_angs
    vect2=coors(list_angs(ii,3)+1,:)-coors(list_angs(ii,2)+1,:)
    vect3=coors(list_angs(ii,4)+1,:)-coors(list_angs(ii,3)+1,:)
    IF (pbc_opt==1) THEN
-      CALL PBC (vect1,box,ortho)
-      CALL PBC (vect2,box,ortho)
-      CALL PBC (vect3,box,ortho)
+      CALL PBC (vect1,box,inv,ortho)
+      CALL PBC (vect2,box,inv,ortho)
+      CALL PBC (vect3,box,inv,ortho)
    END IF
    CALL calculo_dihed (vect1,vect2,vect3,ang)
    dih_angs(ii)=ang
@@ -1458,7 +1488,7 @@ END SUBROUTINE calculo_dihed
 
 
 
-SUBROUTINE neighbs_ranking (diff_syst,diff_set,pbc_opt,limit,list1,coors1,box1,ortho1,list2,coors2,&
+SUBROUTINE neighbs_ranking (diff_syst,diff_set,pbc_opt,limit,list1,coors1,box1,inv1,ortho1,list2,coors2,&
                             n1,n2,natom1,natom2,neighb_list) !before: neighb_dist,neighb_uvect
 
   IMPLICIT NONE
@@ -1469,7 +1499,7 @@ SUBROUTINE neighbs_ranking (diff_syst,diff_set,pbc_opt,limit,list1,coors1,box1,o
   INTEGER,DIMENSION(n1),INTENT(IN)::list1
   INTEGER,DIMENSION(n2),INTENT(IN)::list2
   double precision,dimension(natom1,3),intent(in)::coors1
-  double precision,DIMENSION(3,3),INTENT(IN)::box1
+  double precision,DIMENSION(3,3),INTENT(IN)::box1,inv1
   double precision,dimension(natom2,3),intent(in)::coors2
   INTEGER,dimension(n1,limit),intent(out)::neighb_list
 
@@ -1486,7 +1516,7 @@ SUBROUTINE neighbs_ranking (diff_syst,diff_set,pbc_opt,limit,list1,coors1,box1,o
 
   ALLOCATE(dist_matrix(n1,n2),dist_aux(n2),filter(n2),neight_aux(limit))
   filter=.TRUE.
-  CALL distance (diff_syst,diff_set,pbc_opt,list1,coors1,box1,ortho1,list2,coors2,n1,n2,natom1,natom2,dist_matrix)
+  CALL distance (diff_syst,diff_set,pbc_opt,list1,coors1,box1,inv1,ortho1,list2,coors2,n1,n2,natom1,natom2,dist_matrix)
 
   IF ((diff_syst==1) .or. (diff_set==1)) THEN
      DO ii=1,n1
@@ -1585,7 +1615,7 @@ END SUBROUTINE neighbs_ranking
 !%END SUBROUTINE neighbs_dist_ns_list
 
 
-SUBROUTINE neighbs_dist (diff_syst,diff_set,pbc_opt,limit,list1,coors1,box1,ortho1,list2,&
+SUBROUTINE neighbs_dist (diff_syst,diff_set,pbc_opt,limit,list1,coors1,box1,inv1,ortho1,list2,&
                          coors2,n1,n2,natom1,natom2,contact_map,num_neighbs,dist_matrix) !before: neighb_dist,neighb_uvect
 
   IMPLICIT NONE
@@ -1596,7 +1626,7 @@ SUBROUTINE neighbs_dist (diff_syst,diff_set,pbc_opt,limit,list1,coors1,box1,orth
   INTEGER,DIMENSION(n1),INTENT(IN)::list1
   INTEGER,DIMENSION(n2),INTENT(IN)::list2
   double precision,dimension(natom1,3),intent(in)::coors1
-  double precision,DIMENSION(3,3),INTENT(IN)::box1
+  double precision,DIMENSION(3,3),INTENT(IN)::box1,inv1
   double precision,dimension(natom2,3),intent(in)::coors2
   INTEGER,dimension(n1,n2),intent(out)::contact_map
   INTEGER,DIMENSION(n1),INTENT(OUT)::num_neighbs
@@ -1608,7 +1638,7 @@ SUBROUTINE neighbs_dist (diff_syst,diff_set,pbc_opt,limit,list1,coors1,box1,orth
   !DOUBLE PRECISION,DIMENSION(n_atoms1,limit,3),INTENT(OUT)::neighb_uvect
 
   ! The indexes in list1 and list2 not corrected yet (because of function dist)
-  CALL DISTANCE (diff_syst,diff_set,pbc_opt,list1,coors1,box1,ortho1,list2,coors2,n1,n2,natom1,natom2,dist_matrix)
+  CALL DISTANCE (diff_syst,diff_set,pbc_opt,list1,coors1,box1,inv1,ortho1,list2,coors2,n1,n2,natom1,natom2,dist_matrix)
 
   contact_map=0
   num_neighbs=0
@@ -1736,7 +1766,7 @@ END SUBROUTINE within
 
 
 
-SUBROUTINE water_bisector (opt_pbc,list_atoms,coors,box,ortho,nlist,natom,bisectors)
+SUBROUTINE water_bisector (opt_pbc,list_atoms,coors,box,inv,ortho,nlist,natom,bisectors)
 
   IMPLICIT NONE
   
@@ -1744,7 +1774,7 @@ SUBROUTINE water_bisector (opt_pbc,list_atoms,coors,box,ortho,nlist,natom,bisect
   integer,intent(in)::nlist,natom
   INTEGER,DIMENSION(nlist,3),INTENT(IN)::list_atoms
   double precision,dimension(natom,3),intent(in)::coors
-  double precision,DIMENSION(3,3),INTENT(IN)::box
+  double precision,DIMENSION(3,3),INTENT(IN)::box,inv
   double precision,DIMENSION(nlist,3),INTENT(OUT)::bisectors
 
   INTEGER::ii,jj,ind_o,ind_h1,ind_h2
@@ -1763,8 +1793,8 @@ SUBROUTINE water_bisector (opt_pbc,list_atoms,coors,box,ortho,nlist,natom,bisect
         ind_h2=list_atoms(ii,3)+1
         vect_oh1=coors(ind_h1,:)-coors(ind_o,:)
         vect_oh2=coors(ind_h2,:)-coors(ind_o,:)
-        CALL PBC (vect_oh1,box,ortho)
-        CALL PBC (vect_oh2,box,ortho)
+        CALL PBC (vect_oh1,box,inv,ortho)
+        CALL PBC (vect_oh2,box,inv,ortho)
         vect_aux=vect_oh1+vect_oh2
         val_aux=sqrt(dot_product(vect_aux,vect_aux))
         vect_aux=vect_aux/val_aux
@@ -1791,7 +1821,7 @@ SUBROUTINE water_bisector (opt_pbc,list_atoms,coors,box,ortho,nlist,natom,bisect
 
 END SUBROUTINE WATER_BISECTOR
 
-SUBROUTINE WATER_ANGLE_BISECTOR_ATOM (opt_pbc,list_atoms,list_wats,coors,box,ortho,nwats,nlist,natoms,angles)
+SUBROUTINE WATER_ANGLE_BISECTOR_ATOM (opt_pbc,list_atoms,list_wats,coors,box,inv,ortho,nwats,nlist,natoms,angles)
  
   IMPLICIT NONE
   
@@ -1800,7 +1830,7 @@ SUBROUTINE WATER_ANGLE_BISECTOR_ATOM (opt_pbc,list_atoms,list_wats,coors,box,ort
   INTEGER,DIMENSION(nlist),INTENT(IN)::list_atoms
   INTEGER,DIMENSION(nwats,3),INTENT(IN)::list_wats
   double precision,dimension(natoms,3),intent(in)::coors
-  double precision,DIMENSION(3,3),INTENT(IN)::box
+  double precision,DIMENSION(3,3),INTENT(IN)::box,inv
   double precision,DIMENSION(nwats,nlist),INTENT(OUT)::angles
  
   INTEGER::ii,jj,kk,ind_o,ind_h1,ind_h2
@@ -1823,13 +1853,13 @@ SUBROUTINE WATER_ANGLE_BISECTOR_ATOM (opt_pbc,list_atoms,list_wats,coors,box,ort
            ind_h2=list_wats(ii,3)+1
            vect_oh1=coors(ind_h1,:)-coors(ind_o,:)
            vect_oh2=coors(ind_h2,:)-coors(ind_o,:)
-           CALL PBC (vect_oh1,box,ortho)
-           CALL PBC (vect_oh2,box,ortho)
+           CALL PBC (vect_oh1,box,inv,ortho)
+           CALL PBC (vect_oh2,box,inv,ortho)
            vect_aux=vect_oh1+vect_oh2
            val_aux=sqrt(dot_product(vect_aux,vect_aux))
            vect_aux=vect_aux/val_aux
            vect_atomo=coors(ind_o,:)-pos_atom(:)
-           CALL PBC (vect_atomo,box,ortho)
+           CALL PBC (vect_atomo,box,inv,ortho)
            val_aux=sqrt(dot_product(vect_atomo,vect_atomo))
            vect_atomo=vect_atomo/val_aux
            cosang=dot_product(vect_atomo,vect_aux)
@@ -1871,7 +1901,7 @@ SUBROUTINE WATER_ANGLE_BISECTOR_ATOM (opt_pbc,list_atoms,list_wats,coors,box,ort
 END SUBROUTINE WATER_ANGLE_BISECTOR_ATOM
 
 
-SUBROUTINE RELATIVE_WATER_POSITION (diff_syst,diff_set,pbc_opt,pairs,coors,box,ortho,numpairs,natom,cars)
+SUBROUTINE RELATIVE_WATER_POSITION (diff_syst,diff_set,pbc_opt,pairs,coors,box,inv,ortho,numpairs,natom,cars)
 
 IMPLICIT NONE
 
@@ -1879,7 +1909,7 @@ INTEGER,INTENT(IN)::diff_syst,diff_set,pbc_opt,ortho
 integer,intent(in)::numpairs,natom
 INTEGER,DIMENSION(numpairs,6),INTENT(IN)::pairs
 double precision,dimension(natom,3),intent(in)::coors
-double precision,DIMENSION(3,3),INTENT(IN)::box
+double precision,DIMENSION(3,3),INTENT(IN)::box,inv
 double precision,dimension(numpairs,6),intent(out)::cars
 
 INTEGER::ii
@@ -1900,16 +1930,16 @@ DO ii=1,numpairs
    H22=pairs(ii,6)+1 
 
    vo1o2=coors(O2,:)-coors(O1,:)
-   CALL PBC (vo1o2,box,ortho)
+   CALL PBC (vo1o2,box,inv,ortho)
    voh1=coors(H11,:)-coors(O1,:)
    voh2=coors(H12,:)-coors(O1,:)
-   CALL PBC (voh1,box,ortho)
-   CALL PBC (voh2,box,ortho)
+   CALL PBC (voh1,box,inv,ortho)
+   CALL PBC (voh2,box,inv,ortho)
    D1=(voh1+voh2)/2.0
    voh1=coors(H21,:)-coors(O2,:)
    voh2=coors(H22,:)-coors(O2,:)
-   CALL PBC (voh1,box,ortho)
-   CALL PBC (voh2,box,ortho)
+   CALL PBC (voh1,box,inv,ortho)
+   CALL PBC (voh2,box,inv,ortho)
    D2=(voh1+voh2)/2.0
    vhs1=coors(H12,:)-coors(H11,:)
    vhs2=coors(H22,:)-coors(H21,:)
@@ -2738,7 +2768,7 @@ SUBROUTINE GET_HBONDS (effic,diff_syst,diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,d
 END SUBROUTINE GET_HBONDS
 
 
-SUBROUTINE GET_HBONDS_ROO_ANGOOH_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,ortho, &
+SUBROUTINE GET_HBONDS_ROO_ANGOOH_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,inv,ortho, &
      acc_B,acc_sH_B,acc_H_B,don_B,don_sH_B,don_H_B,nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, &
      nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H,numat_glob)
 
@@ -2765,7 +2795,7 @@ SUBROUTINE GET_HBONDS_ROO_ANGOOH_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_
   INTEGER,DIMENSION(nA_don_H),INTENT(IN)  ::don_H_A
   INTEGER,DIMENSION(nB_don_H),INTENT(IN)  ::don_H_B
   DOUBLE PRECISION,DIMENSION(numat_glob,3),intent(in)::coors
-  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box,inv
 
 
   TYPE(iarray_pointer),DIMENSION(:),POINTER::hbs_a_ind,hbs_b_ind 
@@ -2813,14 +2843,14 @@ SUBROUTINE GET_HBONDS_ROO_ANGOOH_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_
      DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)
         don_h=don_H_A(hh)+1
         vect_don_h=coors(don_h,:)-pos_don
-        IF (pbc_opt==1) CALL PBC(vect_don_h,box,ortho)
+        IF (pbc_opt==1) CALL PBC(vect_don_h,box,inv,ortho)
         dist2_don_h=dot_product(vect_don_h,vect_don_h)
         gg=0
         DO jj=1,ver_ic_dim(don)
            IF (filt_sets_ns_ind(don,jj)) THEN
               acc=ver_ic_ind(don,jj)
               vect_don_acc=coors(acc,:)-pos_don(:)
-              IF (pbc_opt==1) CALL PBC(vect_don_acc,box,ortho)
+              IF (pbc_opt==1) CALL PBC(vect_don_acc,box,inv,ortho)
               dist2_don_acc=dot_product(vect_don_acc,vect_don_acc)
               aux_cos=dot_product(vect_don_h,vect_don_acc)/(sqrt(dist2_don_acc*dist2_don_h))
               IF (aux_cos>cos_angooh_param) THEN
@@ -2867,14 +2897,14 @@ SUBROUTINE GET_HBONDS_ROO_ANGOOH_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_
         DO hh=don_sH_B(ii)+1,don_sH_B(ii+1)
            don_h=don_H_B(hh)+1
            vect_don_h=coors(don_h,:)-pos_don
-           IF (pbc_opt==1) CALL PBC(vect_don_h,box,ortho)
+           IF (pbc_opt==1) CALL PBC(vect_don_h,box,inv,ortho)
            dist2_don_h=dot_product(vect_don_h,vect_don_h)
            gg=0
            DO jj=1,ver_ic_dim(don)
               IF (filt_sets_ns_ind(don,jj)) THEN
                  acc=ver_ic_ind(don,jj)
                  vect_don_acc=coors(acc,:)-pos_don(:)
-                 IF (pbc_opt==1) CALL PBC(vect_don_acc,box,ortho)
+                 IF (pbc_opt==1) CALL PBC(vect_don_acc,box,inv,ortho)
                  dist2_don_acc=dot_product(vect_don_acc,vect_don_acc)
                  aux_cos=dot_product(vect_don_h,vect_don_acc)/(sqrt(dist2_don_acc*dist2_don_h))
                  IF (aux_cos>cos_angooh_param) THEN
@@ -2976,7 +3006,7 @@ SUBROUTINE GET_HBONDS_ROO_ANGOOH_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_
 END SUBROUTINE GET_HBONDS_ROO_ANGOOH_NS_LIST
 
 
-SUBROUTINE GET_HBONDS_ROO_ANGOOH (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,ortho, &
+SUBROUTINE GET_HBONDS_ROO_ANGOOH (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,inv,ortho, &
      acc_B,acc_sH_B,acc_H_B,don_B,don_sH_B,don_H_B,nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, &
      nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H,numat_glob)
 
@@ -3003,7 +3033,7 @@ SUBROUTINE GET_HBONDS_ROO_ANGOOH (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,
   INTEGER,DIMENSION(nA_don_H),INTENT(IN)  ::don_H_A
   INTEGER,DIMENSION(nB_don_H),INTENT(IN)  ::don_H_B
   DOUBLE PRECISION,DIMENSION(numat_glob,3),intent(in)::coors
-  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box,inv
 
 
   TYPE(iarray_pointer),DIMENSION(:),POINTER::hbs_a_ind,hbs_b_ind 
@@ -3048,14 +3078,14 @@ SUBROUTINE GET_HBONDS_ROO_ANGOOH (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,
      DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)
         don_h=don_H_A(hh)+1
         vect_don_h=coors(don_h,:)-pos_don
-        IF (pbc_opt==1) CALL PBC(vect_don_h,box,ortho)
+        IF (pbc_opt==1) CALL PBC(vect_don_h,box,inv,ortho)
         dist2_don_h=dot_product(vect_don_h,vect_don_h)
         gg=0
         DO jj=1,nB_acc
            acc=acc_B(jj)+1
            IF (acc/=don) THEN
               vect_don_acc=coors(acc,:)-pos_don(:)
-              IF (pbc_opt==1) CALL PBC(vect_don_acc,box,ortho)
+              IF (pbc_opt==1) CALL PBC(vect_don_acc,box,inv,ortho)
               dist2_don_acc=dot_product(vect_don_acc,vect_don_acc)
               IF (dist2_don_acc<roo2_param) THEN
                  aux_cos=dot_product(vect_don_h,vect_don_acc)/(sqrt(dist2_don_acc*dist2_don_h))
@@ -3101,13 +3131,13 @@ SUBROUTINE GET_HBONDS_ROO_ANGOOH (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,
         DO hh=don_sH_B(ii)+1,don_sH_B(ii+1)
            don_h=don_H_B(hh)+1
            vect_don_h=coors(don_h,:)-pos_don
-           IF (pbc_opt==1) CALL PBC(vect_don_h,box,ortho)
+           IF (pbc_opt==1) CALL PBC(vect_don_h,box,inv,ortho)
            dist2_don_h=dot_product(vect_don_h,vect_don_h)
            gg=0
            DO jj=1,nA_acc
               acc=acc_A(jj)+1
               vect_don_acc=coors(acc,:)-pos_don(:)
-              IF (pbc_opt==1) CALL PBC(vect_don_acc,box,ortho)
+              IF (pbc_opt==1) CALL PBC(vect_don_acc,box,inv,ortho)
               dist2_don_acc=dot_product(vect_don_acc,vect_don_acc)
               IF (dist2_don_acc<roo2_param) THEN
                  aux_cos=dot_product(vect_don_h,vect_don_acc)/(sqrt(dist2_don_acc*dist2_don_h))
@@ -3208,7 +3238,7 @@ SUBROUTINE GET_HBONDS_ROO_ANGOOH (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,
 
 END SUBROUTINE GET_HBONDS_ROO_ANGOOH
 
-SUBROUTINE GET_HBONDS_ROO_ANGOHO_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,ortho, &
+SUBROUTINE GET_HBONDS_ROO_ANGOHO_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,inv,ortho, &
      acc_B,acc_sH_B,acc_H_B,don_B,don_sH_B,don_H_B,nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, &
      nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H,numat_glob)
 
@@ -3235,7 +3265,7 @@ SUBROUTINE GET_HBONDS_ROO_ANGOHO_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_
   INTEGER,DIMENSION(nA_don_H),INTENT(IN)  ::don_H_A
   INTEGER,DIMENSION(nB_don_H),INTENT(IN)  ::don_H_B
   DOUBLE PRECISION,DIMENSION(numat_glob,3),intent(in)::coors
-  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box,inv
 
 
   TYPE(iarray_pointer),DIMENSION(:),POINTER::hbs_a_ind,hbs_b_ind 
@@ -3283,14 +3313,14 @@ SUBROUTINE GET_HBONDS_ROO_ANGOHO_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_
      DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)
         don_h=don_H_A(hh)+1
         vect_don_h=coors(don_h,:)-pos_don
-        IF (pbc_opt==1) CALL PBC(vect_don_h,box,ortho)
+        IF (pbc_opt==1) CALL PBC(vect_don_h,box,inv,ortho)
         dist2_don_h=dot_product(vect_don_h,vect_don_h)
         gg=0
         DO jj=1,ver_ic_dim(don)
            IF (filt_sets_ns_ind(don,jj)) THEN
               acc=ver_ic_ind(don,jj)
               vect_h_acc=coors(acc,:)-coors(don_h,:) !!
-              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho) !!
+              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,inv,ortho) !!
               dist2_h_acc=dot_product(vect_h_acc,vect_h_acc) !!
               aux_cos=dot_product(vect_don_h,vect_h_acc)/(sqrt(dist2_h_acc*dist2_don_h)) !!
               IF (aux_cos>cos_angoho_param) THEN
@@ -3337,14 +3367,14 @@ SUBROUTINE GET_HBONDS_ROO_ANGOHO_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_
         DO hh=don_sH_B(ii)+1,don_sH_B(ii+1)
            don_h=don_H_B(hh)+1
            vect_don_h=coors(don_h,:)-pos_don
-           IF (pbc_opt==1) CALL PBC(vect_don_h,box,ortho)
+           IF (pbc_opt==1) CALL PBC(vect_don_h,box,inv,ortho)
            dist2_don_h=dot_product(vect_don_h,vect_don_h)
            gg=0
            DO jj=1,ver_ic_dim(don)
               IF (filt_sets_ns_ind(don,jj)) THEN
                  acc=ver_ic_ind(don,jj)
                  vect_h_acc=coors(acc,:)-coors(don_h,:) !!
-                 IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho) !!
+                 IF (pbc_opt==1) CALL PBC(vect_h_acc,box,inv,ortho) !!
                  dist2_h_acc=dot_product(vect_h_acc,vect_h_acc) !!
                  aux_cos=dot_product(vect_don_h,vect_h_acc)/(sqrt(dist2_h_acc*dist2_don_h)) !!
                  IF (aux_cos>cos_angoho_param) THEN
@@ -3446,7 +3476,7 @@ SUBROUTINE GET_HBONDS_ROO_ANGOHO_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_
 END SUBROUTINE GET_HBONDS_ROO_ANGOHO_NS_LIST
 
 
-SUBROUTINE GET_HBONDS_ROO_ANGOHO (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,ortho, &
+SUBROUTINE GET_HBONDS_ROO_ANGOHO (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,inv,ortho, &
      acc_B,acc_sH_B,acc_H_B,don_B,don_sH_B,don_H_B,nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, &
      nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H,numat_glob)
 
@@ -3473,7 +3503,7 @@ SUBROUTINE GET_HBONDS_ROO_ANGOHO (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,
   INTEGER,DIMENSION(nA_don_H),INTENT(IN)  ::don_H_A
   INTEGER,DIMENSION(nB_don_H),INTENT(IN)  ::don_H_B
   DOUBLE PRECISION,DIMENSION(numat_glob,3),intent(in)::coors
-  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box,inv
 
 
   TYPE(iarray_pointer),DIMENSION(:),POINTER::hbs_a_ind,hbs_b_ind 
@@ -3518,17 +3548,17 @@ SUBROUTINE GET_HBONDS_ROO_ANGOHO (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,
      DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)
         don_h=don_H_A(hh)+1
         vect_don_h=coors(don_h,:)-pos_don
-        IF (pbc_opt==1) CALL PBC(vect_don_h,box,ortho)
+        IF (pbc_opt==1) CALL PBC(vect_don_h,box,inv,ortho)
         dist2_don_h=dot_product(vect_don_h,vect_don_h)
         gg=0
         DO jj=1,nB_acc
            acc=acc_B(jj)+1
            IF (acc/=don) THEN
               vect_h_acc=coors(acc,:)-coors(don_h,:) !!
-              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho) !!
+              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,inv,ortho) !!
               dist2_h_acc=dot_product(vect_h_acc,vect_h_acc) !!
               vect_don_acc=coors(acc,:)-pos_don(:) !!
-              IF (pbc_opt==1) CALL PBC(vect_don_acc,box,ortho) !!
+              IF (pbc_opt==1) CALL PBC(vect_don_acc,box,inv,ortho) !!
               dist2_don_acc=dot_product(vect_don_acc,vect_don_acc) !!
               IF (dist2_don_acc<roo2_param) THEN !!
                  aux_cos=dot_product(vect_don_h,vect_h_acc)/(sqrt(dist2_h_acc*dist2_don_h)) !!
@@ -3574,16 +3604,16 @@ SUBROUTINE GET_HBONDS_ROO_ANGOHO (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,
         DO hh=don_sH_B(ii)+1,don_sH_B(ii+1)
            don_h=don_H_B(hh)+1
            vect_don_h=coors(don_h,:)-pos_don
-           IF (pbc_opt==1) CALL PBC(vect_don_h,box,ortho)
+           IF (pbc_opt==1) CALL PBC(vect_don_h,box,inv,ortho)
            dist2_don_h=dot_product(vect_don_h,vect_don_h)
            gg=0
            DO jj=1,nA_acc
               acc=acc_A(jj)+1
               vect_h_acc=coors(acc,:)-coors(don_h,:) !!
-              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho) !!
+              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,inv,ortho) !!
               dist2_h_acc=dot_product(vect_h_acc,vect_h_acc) !!
               vect_don_acc=coors(acc,:)-pos_don(:) !!
-              IF (pbc_opt==1) CALL PBC(vect_don_acc,box,ortho) !!
+              IF (pbc_opt==1) CALL PBC(vect_don_acc,box,inv,ortho) !!
               dist2_don_acc=dot_product(vect_don_acc,vect_don_acc) !!
               IF (dist2_don_acc<roo2_param) THEN !!
                  aux_cos=dot_product(vect_don_h,vect_h_acc)/(sqrt(dist2_h_acc*dist2_don_h)) !!
@@ -3684,7 +3714,7 @@ SUBROUTINE GET_HBONDS_ROO_ANGOHO (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,
 
 END SUBROUTINE GET_HBONDS_ROO_ANGOHO
 
-SUBROUTINE GET_HBONDS_ROH_ANGOHO_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,ortho, &
+SUBROUTINE GET_HBONDS_ROH_ANGOHO_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,inv,ortho, &
      acc_B,acc_sH_B,acc_H_B,don_B,don_sH_B,don_H_B,nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, &
      nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H,numat_glob)
 
@@ -3711,7 +3741,7 @@ SUBROUTINE GET_HBONDS_ROH_ANGOHO_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_
   INTEGER,DIMENSION(nA_don_H),INTENT(IN)  ::don_H_A
   INTEGER,DIMENSION(nB_don_H),INTENT(IN)  ::don_H_B
   DOUBLE PRECISION,DIMENSION(numat_glob,3),intent(in)::coors
-  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box,inv
 
 
   TYPE(iarray_pointer),DIMENSION(:),POINTER::hbs_a_ind,hbs_b_ind 
@@ -3759,14 +3789,14 @@ SUBROUTINE GET_HBONDS_ROH_ANGOHO_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_
      DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)
         don_h=don_H_A(hh)+1
         vect_don_h=coors(don_h,:)-pos_don
-        IF (pbc_opt==1) CALL PBC(vect_don_h,box,ortho)
+        IF (pbc_opt==1) CALL PBC(vect_don_h,box,inv,ortho)
         dist2_don_h=dot_product(vect_don_h,vect_don_h)
         gg=0
         DO jj=1,ver_ic_dim(don)
            IF (filt_sets_ns_ind(don,jj)) THEN
               acc=ver_ic_ind(don,jj)
               vect_h_acc=coors(acc,:)-coors(don_h,:) !!
-              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho) !!
+              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,inv,ortho) !!
               dist2_h_acc=dot_product(vect_h_acc,vect_h_acc) !!
               aux_cos=dot_product(vect_don_h,vect_h_acc)/(sqrt(dist2_h_acc*dist2_don_h)) !!
               IF (aux_cos>cos_angoho_param) THEN
@@ -3813,14 +3843,14 @@ SUBROUTINE GET_HBONDS_ROH_ANGOHO_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_
         DO hh=don_sH_B(ii)+1,don_sH_B(ii+1)
            don_h=don_H_B(hh)+1
            vect_don_h=coors(don_h,:)-pos_don
-           IF (pbc_opt==1) CALL PBC(vect_don_h,box,ortho)
+           IF (pbc_opt==1) CALL PBC(vect_don_h,box,inv,ortho)
            dist2_don_h=dot_product(vect_don_h,vect_don_h)
            gg=0
            DO jj=1,ver_ic_dim(don)
               IF (filt_sets_ns_ind(don,jj)) THEN
                  acc=ver_ic_ind(don,jj)
                  vect_h_acc=coors(acc,:)-coors(don_h,:) !!
-                 IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho) !!
+                 IF (pbc_opt==1) CALL PBC(vect_h_acc,box,inv,ortho) !!
                  dist2_h_acc=dot_product(vect_h_acc,vect_h_acc) !!
                  aux_cos=dot_product(vect_don_h,vect_h_acc)/(sqrt(dist2_h_acc*dist2_don_h)) !!
                  IF (aux_cos>cos_angoho_param) THEN
@@ -3922,7 +3952,7 @@ SUBROUTINE GET_HBONDS_ROH_ANGOHO_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_
 END SUBROUTINE GET_HBONDS_ROH_ANGOHO_NS_LIST
 
 
-SUBROUTINE GET_HBONDS_ROH_ANGOHO (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,ortho, &
+SUBROUTINE GET_HBONDS_ROH_ANGOHO (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,inv,ortho, &
      acc_B,acc_sH_B,acc_H_B,don_B,don_sH_B,don_H_B,nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, &
      nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H,numat_glob)
 
@@ -3949,7 +3979,7 @@ SUBROUTINE GET_HBONDS_ROH_ANGOHO (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,
   INTEGER,DIMENSION(nA_don_H),INTENT(IN)  ::don_H_A
   INTEGER,DIMENSION(nB_don_H),INTENT(IN)  ::don_H_B
   DOUBLE PRECISION,DIMENSION(numat_glob,3),intent(in)::coors
-  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box,inv
 
 
   TYPE(iarray_pointer),DIMENSION(:),POINTER::hbs_a_ind,hbs_b_ind 
@@ -3994,14 +4024,14 @@ SUBROUTINE GET_HBONDS_ROH_ANGOHO (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,
      DO hh=don_sH_A(ii)+1,don_sH_A(ii+1)
         don_h=don_H_A(hh)+1
         vect_don_h=coors(don_h,:)-pos_don
-        IF (pbc_opt==1) CALL PBC(vect_don_h,box,ortho)
+        IF (pbc_opt==1) CALL PBC(vect_don_h,box,inv,ortho)
         dist2_don_h=dot_product(vect_don_h,vect_don_h)
         gg=0
         DO jj=1,nB_acc
            acc=acc_B(jj)+1
            IF (acc/=don) THEN
               vect_h_acc=coors(acc,:)-coors(don_h,:) !!
-              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho) !!
+              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,inv,ortho) !!
               dist2_h_acc=dot_product(vect_h_acc,vect_h_acc) !!
               IF (dist2_h_acc<roh2_param) THEN !!
                  aux_cos=dot_product(vect_don_h,vect_h_acc)/(sqrt(dist2_h_acc*dist2_don_h)) !!
@@ -4047,13 +4077,13 @@ SUBROUTINE GET_HBONDS_ROH_ANGOHO (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,
         DO hh=don_sH_B(ii)+1,don_sH_B(ii+1)
            don_h=don_H_B(hh)+1
            vect_don_h=coors(don_h,:)-pos_don
-           IF (pbc_opt==1) CALL PBC(vect_don_h,box,ortho)
+           IF (pbc_opt==1) CALL PBC(vect_don_h,box,inv,ortho)
            dist2_don_h=dot_product(vect_don_h,vect_don_h)
            gg=0
            DO jj=1,nA_acc
               acc=acc_A(jj)+1
               vect_h_acc=coors(acc,:)-coors(don_h,:) !!
-              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho) !!
+              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,inv,ortho) !!
               dist2_h_acc=dot_product(vect_h_acc,vect_h_acc) !!
               IF (dist2_h_acc<roh2_param) THEN !!
                  aux_cos=dot_product(vect_don_h,vect_h_acc)/(sqrt(dist2_h_acc*dist2_don_h)) !!
@@ -4156,7 +4186,7 @@ END SUBROUTINE GET_HBONDS_ROH_ANGOHO
 
 
 
-SUBROUTINE GET_HBONDS_SKINNER (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,ortho, &
+SUBROUTINE GET_HBONDS_SKINNER (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,inv,ortho, &
      acc_B,acc_sH_B,acc_H_B,don_B,don_sH_B,don_H_B,nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, &
      nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H,numat_glob)
 
@@ -4183,7 +4213,7 @@ SUBROUTINE GET_HBONDS_SKINNER (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don
   INTEGER,DIMENSION(nA_don_H),INTENT(IN)  ::don_H_A
   INTEGER,DIMENSION(nB_don_H),INTENT(IN)  ::don_H_B
   DOUBLE PRECISION,DIMENSION(numat_glob,3),intent(in)::coors
-  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box,inv
 
 
   TYPE(iarray_pointer),DIMENSION(:),POINTER::hbs_a_ind,hbs_b_ind 
@@ -4235,8 +4265,8 @@ SUBROUTINE GET_HBONDS_SKINNER (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don
      pos_acc=coors(acc,:)
      aux_vect_1=coors(acc_H1,:)-pos_acc(:)
      aux_vect_2=coors(acc_H2,:)-pos_acc(:)
-     IF (pbc_opt==1) CALL PBC(aux_vect_1,box,ortho)
-     IF (pbc_opt==1) CALL PBC(aux_vect_2,box,ortho)
+     IF (pbc_opt==1) CALL PBC(aux_vect_1,box,inv,ortho)
+     IF (pbc_opt==1) CALL PBC(aux_vect_2,box,inv,ortho)
      CALL PERPENDICULAR_NORMED_VECT (aux_vect_1,aux_vect_2,aux_vect_3)
      vect_perp(ii,:)=aux_vect_3
   END DO
@@ -4251,7 +4281,7 @@ SUBROUTINE GET_HBONDS_SKINNER (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don
            acc=acc_B(jj)+1
            IF (don/=acc) THEN
               vect_h_acc=pos_h(:)-coors(acc,:)
-              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho)
+              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,inv,ortho)
               dist2_h_acc=dot_product(vect_h_acc,vect_h_acc)
               IF (dist2_h_acc<cutdist2hacc) THEN
                  dist_h_acc=sqrt(dist2_h_acc)
@@ -4316,8 +4346,8 @@ SUBROUTINE GET_HBONDS_SKINNER (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don
         pos_acc=coors(acc,:)
         aux_vect_1=coors(acc_H1,:)-pos_acc(:)
         aux_vect_2=coors(acc_H2,:)-pos_acc(:)
-        IF (pbc_opt==1) CALL PBC(aux_vect_1,box,ortho)
-        IF (pbc_opt==1) CALL PBC(aux_vect_2,box,ortho)
+        IF (pbc_opt==1) CALL PBC(aux_vect_1,box,inv,ortho)
+        IF (pbc_opt==1) CALL PBC(aux_vect_2,box,inv,ortho)
         CALL PERPENDICULAR_NORMED_VECT (aux_vect_1,aux_vect_2,aux_vect_3)
         vect_perp(ii,:)=aux_vect_3
      END DO
@@ -4330,7 +4360,7 @@ SUBROUTINE GET_HBONDS_SKINNER (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don
            DO jj=1,nA_acc
               acc=acc_A(jj)+1
               vect_h_acc=pos_h(:)-coors(acc,:)
-              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho)
+              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,inv,ortho)
               dist2_h_acc=dot_product(vect_h_acc,vect_h_acc)
               IF (dist2_h_acc<cutdist2hacc) THEN
                  dist_h_acc=sqrt(dist2_h_acc)
@@ -4447,7 +4477,7 @@ SUBROUTINE GET_HBONDS_SKINNER (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don
 END SUBROUTINE GET_HBONDS_SKINNER
 
 
-SUBROUTINE GET_HBONDS_SKINNER_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,ortho, &
+SUBROUTINE GET_HBONDS_SKINNER_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,inv,ortho, &
      acc_B,acc_sH_B,acc_H_B,don_B,don_sH_B,don_H_B,nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, &
      nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H,numat_glob)
 
@@ -4474,7 +4504,7 @@ SUBROUTINE GET_HBONDS_SKINNER_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,d
   INTEGER,DIMENSION(nA_don_H),INTENT(IN)  ::don_H_A
   INTEGER,DIMENSION(nB_don_H),INTENT(IN)  ::don_H_B
   DOUBLE PRECISION,DIMENSION(numat_glob,3),intent(in)::coors
-  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box,inv
 
 
   TYPE(iarray_pointer),DIMENSION(:),POINTER::hbs_a_ind,hbs_b_ind 
@@ -4531,8 +4561,8 @@ SUBROUTINE GET_HBONDS_SKINNER_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,d
      pos_acc=coors(acc,:)
      aux_vect_1=coors(acc_H1,:)-pos_acc(:)
      aux_vect_2=coors(acc_H2,:)-pos_acc(:)
-     IF (pbc_opt==1) CALL PBC(aux_vect_1,box,ortho)
-     IF (pbc_opt==1) CALL PBC(aux_vect_2,box,ortho)
+     IF (pbc_opt==1) CALL PBC(aux_vect_1,box,inv,ortho)
+     IF (pbc_opt==1) CALL PBC(aux_vect_2,box,inv,ortho)
      CALL PERPENDICULAR_NORMED_VECT (aux_vect_1,aux_vect_2,aux_vect_3)
      vect_perp(ii,:)=aux_vect_3
   END DO
@@ -4549,7 +4579,7 @@ SUBROUTINE GET_HBONDS_SKINNER_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,d
               acc=ver_ic_ind(don_h,jj)
               IF (don/=acc) THEN
                  vect_h_acc=pos_h(:)-coors(acc,:)
-                 IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho)
+                 IF (pbc_opt==1) CALL PBC(vect_h_acc,box,inv,ortho)
                  dist2_h_acc=dot_product(vect_h_acc,vect_h_acc)
                  IF (dist2_h_acc<cutdist2hacc) THEN
                     dist_h_acc=sqrt(dist2_h_acc)
@@ -4618,8 +4648,8 @@ SUBROUTINE GET_HBONDS_SKINNER_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,d
         pos_acc=coors(acc,:)
         aux_vect_1=coors(acc_H1,:)-pos_acc(:)
         aux_vect_2=coors(acc_H2,:)-pos_acc(:)
-        IF (pbc_opt==1) CALL PBC(aux_vect_1,box,ortho)
-        IF (pbc_opt==1) CALL PBC(aux_vect_2,box,ortho)
+        IF (pbc_opt==1) CALL PBC(aux_vect_1,box,inv,ortho)
+        IF (pbc_opt==1) CALL PBC(aux_vect_2,box,inv,ortho)
         CALL PERPENDICULAR_NORMED_VECT (aux_vect_1,aux_vect_2,aux_vect_3)
         vect_perp(ii,:)=aux_vect_3
      END DO
@@ -4633,7 +4663,7 @@ SUBROUTINE GET_HBONDS_SKINNER_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,d
               IF (filt_sets_ns_ind(don,jj)) THEN
                  acc=ver_ic_ind(don,jj)
                  vect_h_acc=pos_h(:)-coors(acc,:)
-                 IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho)
+                 IF (pbc_opt==1) CALL PBC(vect_h_acc,box,inv,ortho)
                  dist2_h_acc=dot_product(vect_h_acc,vect_h_acc)
                  IF (dist2_h_acc<cutdist2hacc) THEN
                     dist_h_acc=sqrt(dist2_h_acc)
@@ -4752,7 +4782,7 @@ SUBROUTINE GET_HBONDS_SKINNER_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,d
 END SUBROUTINE GET_HBONDS_SKINNER_NS_LIST
 
 
-SUBROUTINE GET_HBONDS_ROH_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,ortho, &
+SUBROUTINE GET_HBONDS_ROH_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,inv,ortho, &
      acc_B,acc_sH_B,acc_H_B,don_B,don_sH_B,don_H_B,nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, &
      nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H,numat_glob)
 
@@ -4779,7 +4809,7 @@ SUBROUTINE GET_HBONDS_ROH_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A
   INTEGER,DIMENSION(nA_don_H),INTENT(IN)  ::don_H_A
   INTEGER,DIMENSION(nB_don_H),INTENT(IN)  ::don_H_B
   DOUBLE PRECISION,DIMENSION(numat_glob,3),intent(in)::coors
-  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box,inv
 
 
   TYPE(iarray_pointer),DIMENSION(:),POINTER::hbs_a_ind,hbs_b_ind 
@@ -4833,7 +4863,7 @@ SUBROUTINE GET_HBONDS_ROH_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A
               acc=ver_ic_ind(don_h,jj)
               IF (don/=acc) THEN
                  vect_h_acc=coors(acc,:)-pos_h(:)
-                 IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho)
+                 IF (pbc_opt==1) CALL PBC(vect_h_acc,box,inv,ortho)
                  dist2_h_acc=dot_product(vect_h_acc,vect_h_acc)
                  IF (dist2_h_acc<roh2_param) THEN
                     gg=gg+1
@@ -4883,7 +4913,7 @@ SUBROUTINE GET_HBONDS_ROH_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A
               IF (filt_sets_ns_ind(don_h,jj)) THEN
                  acc=ver_ic_ind(don_h,jj)
                  vect_h_acc=coors(acc,:)-pos_h(:)
-                 IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho)
+                 IF (pbc_opt==1) CALL PBC(vect_h_acc,box,inv,ortho)
                  dist2_h_acc=dot_product(vect_h_acc,vect_h_acc)
                  IF (dist2_h_acc<roh2_param) THEN
                     gg=gg+1
@@ -4984,7 +5014,7 @@ SUBROUTINE GET_HBONDS_ROH_NS_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A
 END SUBROUTINE GET_HBONDS_ROH_NS_LIST
 
 
-SUBROUTINE GET_HBONDS_ROH (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,ortho, &
+SUBROUTINE GET_HBONDS_ROH (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,inv,ortho, &
      acc_B,acc_sH_B,acc_H_B,don_B,don_sH_B,don_H_B,nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, &
      nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H,numat_glob)
 
@@ -5011,7 +5041,7 @@ SUBROUTINE GET_HBONDS_ROH (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_
   INTEGER,DIMENSION(nA_don_H),INTENT(IN)  ::don_H_A
   INTEGER,DIMENSION(nB_don_H),INTENT(IN)  ::don_H_B
   DOUBLE PRECISION,DIMENSION(numat_glob,3),intent(in)::coors
-  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box,inv
 
 
   TYPE(iarray_pointer),DIMENSION(:),POINTER::hbs_a_ind,hbs_b_ind 
@@ -5060,7 +5090,7 @@ SUBROUTINE GET_HBONDS_ROH (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_
            acc=acc_B(jj)+1
            IF (acc/=don) THEN
               vect_h_acc=coors(acc,:)-pos_h(:)
-              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho)
+              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,inv,ortho)
               dist2_h_acc=dot_product(vect_h_acc,vect_h_acc)
               IF (dist2_h_acc<roh2_param) THEN
                  gg=gg+1
@@ -5105,7 +5135,7 @@ SUBROUTINE GET_HBONDS_ROH (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_
            DO jj=1,nA_acc
               acc=acc_A(jj)+1
               vect_h_acc=coors(acc,:)-pos_h(:)
-              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho)
+              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,inv,ortho)
               dist2_h_acc=dot_product(vect_h_acc,vect_h_acc)
               IF (dist2_h_acc<roh2_param) THEN
                  gg=gg+1
@@ -5205,7 +5235,7 @@ END SUBROUTINE GET_HBONDS_ROH
 
 
 
-SUBROUTINE GET_HBONDS_DON_ACC_NUM (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,ortho, &
+SUBROUTINE GET_HBONDS_DON_ACC_NUM (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,inv,ortho, &
      acc_B,acc_sH_B,acc_H_B,don_B,don_sH_B,don_H_B,nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, &
      nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H,numat_glob)
 
@@ -5232,7 +5262,7 @@ SUBROUTINE GET_HBONDS_DON_ACC_NUM (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A
   INTEGER,DIMENSION(nA_don_H),INTENT(IN)  ::don_H_A
   INTEGER,DIMENSION(nB_don_H),INTENT(IN)  ::don_H_B
   DOUBLE PRECISION,DIMENSION(numat_glob,3),intent(in)::coors
-  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box,inv
 
 
   INTEGER,DIMENSION(:),POINTER::hbs_a_ind,hbs_b_ind 
@@ -5291,7 +5321,7 @@ SUBROUTINE GET_HBONDS_DON_ACC_NUM (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A
            acc=acc_B(jj)+1
            IF (acc/=don) THEN
               vect_h_acc=coors(acc,:)-pos_h(:)
-              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho)
+              IF (pbc_opt==1) CALL PBC(vect_h_acc,box,inv,ortho)
               dist2_h_acc=dot_product(vect_h_acc,vect_h_acc)
               IF (dist2_h_acc<dist_max) THEN
                  hbs_a_ind(hh)= jj
@@ -5338,7 +5368,7 @@ SUBROUTINE GET_HBONDS_DON_ACC_NUM (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A
               acc=acc_A(jj)+1
               IF (acc/=don) THEN
                  vect_h_acc=coors(acc,:)-pos_h(:)
-                 IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho)
+                 IF (pbc_opt==1) CALL PBC(vect_h_acc,box,inv,ortho)
                  dist2_h_acc=dot_product(vect_h_acc,vect_h_acc)
                  IF (dist2_h_acc<dist_max) THEN
                     hbs_b_ind(hh)= jj
@@ -5425,7 +5455,7 @@ END SUBROUTINE GET_HBONDS_DON_ACC_NUM
 
 
 
-SUBROUTINE GET_HBONDS_DON_ACC_NUM_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,ortho, &
+SUBROUTINE GET_HBONDS_DON_ACC_NUM_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,don_A,don_sH_A,don_H_A,coors,box,inv,ortho, &
      acc_B,acc_sH_B,acc_H_B,don_B,don_sH_B,don_H_B,nA_acc,nA_acc_sH,nA_acc_H,nA_don,nA_don_sH,nA_don_H, &
      nB_acc,nB_acc_sH,nB_acc_H,nB_don,nB_don_sH,nB_don_H,numat_glob)
 
@@ -5452,7 +5482,7 @@ SUBROUTINE GET_HBONDS_DON_ACC_NUM_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,
   INTEGER,DIMENSION(nA_don_H),INTENT(IN)  ::don_H_A
   INTEGER,DIMENSION(nB_don_H),INTENT(IN)  ::don_H_B
   DOUBLE PRECISION,DIMENSION(numat_glob,3),intent(in)::coors
-  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box,inv
 
 
   INTEGER,DIMENSION(:),POINTER::hbs_a_ind,hbs_b_ind 
@@ -5514,7 +5544,7 @@ SUBROUTINE GET_HBONDS_DON_ACC_NUM_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,
               acc=ver_ic_ind(don_h,jj)
               IF (don/=acc) THEN
                  vect_h_acc=coors(acc,:)-pos_h(:)
-                 IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho)
+                 IF (pbc_opt==1) CALL PBC(vect_h_acc,box,inv,ortho)
                  dist2_h_acc=dot_product(vect_h_acc,vect_h_acc)
                  IF (dist2_h_acc<dist_max) THEN
                     hbs_a_ind(hh)= acc
@@ -5563,7 +5593,7 @@ SUBROUTINE GET_HBONDS_DON_ACC_NUM_LIST (diff_set,pbc_opt,acc_A,acc_sH_A,acc_H_A,
               IF (filt_sets_ns_ind(don_h,jj)) THEN
                  acc=ver_ic_ind(don_h,jj)
                  vect_h_acc=coors(acc,:)-pos_h(:)
-                 IF (pbc_opt==1) CALL PBC(vect_h_acc,box,ortho)
+                 IF (pbc_opt==1) CALL PBC(vect_h_acc,box,inv,ortho)
                  dist2_h_acc=dot_product(vect_h_acc,vect_h_acc)
                  IF (dist2_h_acc<dist_max) THEN
                     hbs_b_ind(hh)= acc

@@ -64,6 +64,7 @@ def read_all(file_unit,io_vars=None,io_pos=None,wrap=True):
                 frame.box[2,0]=10.0*float(line[7])
                 frame.box[2,1]=10.0*float(line[8])
             frame.box2cell()
+            frame.box2invbox()
             frame.coors=array(frame.coors,dtype=float,order='F')
             if wrap:
                 frame.wrap()
@@ -122,6 +123,7 @@ def read_aux(file_unit,io_vars=None,io_pos=None):
             temp_frame.box[2,0]=10.0*float(line[7])
             temp_frame.box[2,1]=10.0*float(line[8])
         temp_frame.box2cell()
+        temp_frame.box2invbox()
         temp_frame.coors=array(temp_frame.coors,dtype=float,order='F')
         temp_frame.wrap()
         io_pos=file_unit.tell()

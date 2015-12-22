@@ -90,6 +90,7 @@ def read_next (file_unit,io_vars=None,io_pos=None,wrap=True):
         temp_frame.coors=array(10.0*temp_frame.coors,dtype=float,order='F')
         temp_frame.box=array(10.0*temp_frame.box,dtype=float,order='F')
         temp_frame.box2cell()
+        temp_frame.box2invbox()
         if wrap: 
             temp_frame.wrap()
 

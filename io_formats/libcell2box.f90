@@ -1,4 +1,37 @@
 !! This function is not used by gro, xtc and trr
+
+!! box(1,1) = v1_x, box(1,2) = v1_y, box(1,3) = v1_z
+!! box(2,1) = v2_x, box(2,2) = v2_y, box(2,3) = v2_z
+!! box(3,1) = v3_x, box(3,2) = v3_y, box(3,3) = v3_z
+
+!! Para gromacs:
+!!
+!! box(1,1) = v1_x, box(1,2) = 0,    box(1,3) = 0
+!! box(2,1) = v2_x, box(2,2) = v2_y, box(2,3) = 0
+!! box(3,1) = v3_x, box(3,2) = v3_y, box(3,3) = v3_z
+!!
+!! cell(1,1)= v1_x, cell(1,2)= alpha cell(1,3)= beta
+!! cell(2,1)= 0,    cell(2,2)= v2_y, cell(2,3)= gamma
+!! cell(3,1)= 0,    cell(3,2)= 0,    cell(3,3)= v3_z
+
+SUBROUTINE BOX2INVBOX (box,invbox)
+
+  IMPLICIT NONE
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(OUT)::invbox
+
+  invbox=0.0d0
+
+  invbox(1,1)=1.0d0/box(1,1)
+  invbox(2,2)=1.0d0/box(2,2)
+  invbox(3,3)=1.0d0/box(3,3)
+
+  invbox(2,1)=-box(2,1)/(box(1,1)*box(2,2))
+  invbox(3,1)=(box(2,1)*box(3,2)-box(3,1)*box(2,2))/(box(1,1)*box(2,2)*box(3,3))
+  invbox(3,2)=-box(3,2)/(box(2,2)*box(3,3))
+
+END SUBROUTINE BOX2INVBOX
+
 SUBROUTINE CELL2BOX (cell,box,volume,ortho)
 
   IMPLICIT NONE

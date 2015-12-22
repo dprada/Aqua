@@ -92,6 +92,7 @@ def read_next (file_unit,io_vars=None,io_pos=None,wrap=True):
         temp_frame.box=array(temp_frame.box,order='Fortran')
         temp_frame.box=10.0*temp_frame.box
         temp_frame.box2cell()
+        temp_frame.box2invbox()
         if wrap:
             temp_frame.wrap()
 

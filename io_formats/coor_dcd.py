@@ -79,6 +79,7 @@ def read_next(file_unit,io_vars=None,io_pos=None,wrap=True):
 
     io_pos,temp_frame.cell,temp_frame.coors,io_err,io_end=libdcd.read(file_unit,io_vars[0],io_vars[20],io_pos)
     temp_frame.cell2box()
+    temp_frame.box2invbox()
     if wrap:
         temp_frame.wrap()
     return temp_frame,io_pos,io_err,io_end  # frame,io_pos,io_err,io_end
@@ -89,6 +90,7 @@ def read_frame(file_unit,frame,io_vars=None,io_pos=None,wrap=True):
     io_pos=io_vars[2]+frame*io_vars[3]
     io_pos,temp_frame.cell,temp_frame.coors,io_err,io_end=libdcd.read(file_unit,io_vars[0],io_vars[20],io_pos)
     temp_frame.cell2box()
+    temp_frame.box2invbox()
     if wrap:
         temp_frame.wrap()
     #temp_frame.time=

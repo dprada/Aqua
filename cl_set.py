@@ -1156,10 +1156,10 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
     def distance(self,sel1='ALL',sel2=None,points=None,traj=0,frame='ALL',legend=False,pbc=True):
         
         if pbc:
-            check_cell=self.traj[traj].frame[0].cell
-            if check_cell[0,1]!=90 or check_cell[0,2]!=90 or check_cell[1,2]!=90:
-                print '# PBC not implemented for not orthorhombic boxes'
-                return
+            #check_cell=self.traj[traj].frame[0].cell
+            #if check_cell[0,1]!=90 or check_cell[0,2]!=90 or check_cell[1,2]!=90:
+            #    print '# PBC not implemented for not orthorhombic boxes'
+            #    return
             pbc=1
 
         num_frames=__length_frame_opt__(self,traj,frame)
@@ -1200,7 +1200,7 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
             
             num_frames=0
             for iframe in __read_frame_opt__(self,traj,frame):
-                dists[num_frames,:,:]=faux.distance(diff_syst,diff_set,pbc,setA,iframe.coors,iframe.box,iframe.orthogonal,setB,iframe.coors,nlist_A,nlist_B,nsys_A,nsys_B)
+                dists[num_frames,:,:]=faux.distance(diff_syst,diff_set,pbc,setA,iframe.coors,iframe.box,iframe.invbox,iframe.orthogonal,setB,iframe.coors,nlist_A,nlist_B,nsys_A,nsys_B)
                 num_frames+=1
 
             if legend:
@@ -1409,7 +1409,7 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
         jj=-1
         for iframe in __read_frame_opt__(self,traj,frame):
             jj+=1
-            dih_angs[jj,:]=faux.dihedral_angles(pbc,iframe.coors,iframe.box,iframe.orthogonal,covalent_chain,num_dih_angs,self.num_atoms)
+            dih_angs[jj,:]=faux.dihedral_angles(pbc,iframe.coors,iframe.box,iframe.invbox,iframe.orthogonal,covalent_chain,num_dih_angs,self.num_atoms)
 
         if num_frames==1:
             if num_dih_angs==1:
