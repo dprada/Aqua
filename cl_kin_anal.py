@@ -303,7 +303,7 @@ class kinetic_analysis():
         if traj=='nodes':
             f_kin_anal.trajnodes2file(filename,opt_binary,begin,end,self.traj_nodes,self.frames,self.particles,1)
 
-    def histogram(self,dimension=None,node=None,cluster=None,bins=20,segment=None,delta=None,select_dim=0,norm=False,cumul=False):
+    def histogram(self,dimension=None,node=None,cluster=None,bins=None,segment=None,delta=None,select_dim=0,norm=False,cumul=False):
 
         if cluster==None and node==None:
             if self.__tr_mode_in_file__:
@@ -324,6 +324,31 @@ class kinetic_analysis():
             return pyn_math.histogram_mask(self.traj,bins=bins,segment=segment,delta=delta,select_dim=select_dim,\
                                               traj_mask=self.traj_nodes,select_mask=node,offset_mask=self.__offset__,\
                                               norm=norm,cumul=cumul)
+
+
+    def histogram2D(self,dimension=None,node=None,cluster=None,bins=None,segment=None,delta=None,norm=False):
+
+        prec=None
+
+        if cluster==None and node==None:
+            if self.__tr_mode_in_file__:
+                return pyn_math.histogram2D(self.traj,bins=bins,segment=segment,delta=delta,prec=prec,norm=norm)
+            else:
+                return pyn_math.histogram2D(self.traj,bins=bins,segment=segment,delta=delta,prec=prec,norm=norm)
+
+        if cluster!=None:
+
+            print 'Not implemented yet'
+            #return pyn_math.histogram_mask(self.traj,bins=bins,segment=segment,delta=delta,select_dim=select_dim,\
+            #                                  traj_mask=self.traj_clusters,select_mask=cluster,offset_mask=self.__offset__,\
+            #                                  norm=norm,cumul=cumul)
+
+        if node!=None:
+
+            print 'Not implemented yet'
+            #return pyn_math.histogram_mask(self.traj,bins=bins,segment=segment,delta=delta,select_dim=select_dim,\
+            #                                  traj_mask=self.traj_nodes,select_mask=node,offset_mask=self.__offset__,\
+            #                                  norm=norm,cumul=cumul)
 
 
     def flux_cut(self,traj=None,cut=None,verbose=False):

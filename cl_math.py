@@ -214,9 +214,11 @@ def histogram_mask(traj,bins=20,segment=None,delta=None,select_dim=0,traj_mask=N
     return h_x,h_y
 
 
-def histogram2D(traj,bins=[20,20],segment=None,delta_x=None,prec=None,norm=False,plot=False):
+def histogram2D(traj,bins=None,segment=None,delta=None,prec=None,norm=False):
 
     leng=len(traj)
+
+    traj=standard_traj(traj)
 
     if norm==False:
         opt_norm=0
@@ -231,10 +233,10 @@ def histogram2D(traj,bins=[20,20],segment=None,delta_x=None,prec=None,norm=False
 
     if segment==None:
         opt_range=0
-        mmx0=max(traj[:,0])
-        mmx1=max(traj[:,1])
-        mmn0=min(traj[:,0])
-        mmn1=min(traj[:,1])
+        mmx0=traj[:,:,0].max()
+        mmx1=traj[:,:,1].max()
+        mmn0=traj[:,:,0].min()
+        mmn1=traj[:,:,1].min()
     else:
         opt_range=1
         mmn0=segment[0][0]
@@ -242,20 +244,21 @@ def histogram2D(traj,bins=[20,20],segment=None,delta_x=None,prec=None,norm=False
         mmx0=segment[0][1]
         mmx1=segment[1][1]
 
-    if delta_x!=None:
-        opt=1
+    if delta!=None:
+        opt_delta=1
     else:
-        delta_x=[1.0,1.0]
-        opt=2
+        delta=[1.0,1.0]
+        opt_delta=0
 
-    libmath.histograma_2d(opt_norm,opt_prec,opt_range,opt,traj,bins,[mmn0,mmn1],[mmx0,mmx1],delta_x,prec,leng)
+    if bins==None:
+        bins=[1,1]
+
+    libmath.histogram2d(opt_norm,opt_range,opt_delta,traj,bins,[mmn0,mmn1],[mmx0,mmx1],delta,traj.shape[0],traj.shape[1],traj.shape[2])
 
     h_x=copy.deepcopy(libmath.histo_x)
     h_y=copy.deepcopy(libmath.histo_y)
     h_z=copy.deepcopy(libmath.histo_z)
     libmath.free_mem()
-    if plot and wpylab:
-        pylab.plot(h_x,h_y,'ro-')
 
     return h_x,h_y,h_z
 

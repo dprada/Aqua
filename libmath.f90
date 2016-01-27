@@ -266,69 +266,47 @@ CONTAINS
 
   END SUBROUTINE histogram1d_mask
   
-
-
-  SUBROUTINE histogram2d (opt_norm,opt_prec,opt_range,opt,idatos,ibins,imin_x,imax_x,idelta_x,iprec,l)
+  SUBROUTINE histogram2d (opt_norm,opt_range,opt_delta,traj,ibins,imin,imax,idelta,frames,parts,dims)
     
     implicit none
-    INTEGER,INTENT(IN)::opt_norm,opt_prec,opt_range,opt,l
+    INTEGER,INTENT(IN)::opt_norm,opt_range,opt_delta,frames,parts,dims
     INTEGER,DIMENSION(2),INTENT(IN)::ibins
-    DOUBLE PRECISION,DIMENSION(l,2),INTENT(IN)::idatos
-    DOUBLE PRECISION,DIMENSION(2),INTENT(IN)::idelta_x,imax_x,imin_x
-    DOUBLE PRECISION,INTENT(IN)::iprec
+    DOUBLE PRECISION,DIMENSION(frames,parts,dims),INTENT(IN)::traj
+    DOUBLE PRECISION,DIMENSION(2),INTENT(IN)::idelta
+    DOUBLE PRECISION,DIMENSION(2),INTENT(IN)::imin,imax
 
     INTEGER::tt,qq
     DOUBLE PRECISION,DIMENSION(2)::max,min
     DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE::frecuencias
-    INTEGER::i,j,k,prec,aux
+    INTEGER::i,j,k,aux
     INTEGER,DIMENSION(2)::bins
-    DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE::datos
-    DOUBLE PRECISION::omax(2),omin(2),delta_x(2)
+    DOUBLE PRECISION::omax(2),omin(2),delta(2)
     DOUBLE PRECISION::total,sobra
     
     bins=ibins
+    omax=imax
+    omin=imin
+    delta=idelta
 
-    ALLOCATE(datos(l,2))
-    datos=0.0d0
-
-    !! Por un problema que hay con python 2.6 corrijo la precision
-    IF (opt_prec==1) THEN
-       prec=nint(1.0/iprec)
-       datos=0.0d0
-       DO i=1,l
-          aux=nint(idatos(i,1)*prec)
-          datos(i,1)=(aux*1.0d0)/(prec*1.0d0)
-          aux=nint(idatos(i,2)*prec)
-          datos(i,2)=(aux*1.0d0)/(prec*1.0d0)
-       END DO
-       omax=(nint(imax_x*prec)*1.0d0)/(prec*1.0d0)
-       omin=(nint(imin_x*prec)*1.0d0)/(prec*1.0d0)
-       delta_x=idelta_x
-    ELSE
-       datos=idatos
-       omax=imax_x
-       omin=imin_x
-       delta_x=idelta_x
-    END IF
     
     IF (opt_range==0) THEN
-       IF (opt==1) THEN
+       IF (opt_delta==1) THEN
           DO i=1,2
-             bins(i)=CEILING((omax(i)-omin(i))/delta_x(i))
+             bins(i)=CEILING((omax(i)-omin(i))/delta(i))
           END DO
        ELSE
           DO i=1,2
-             delta_x(i)=(omax(i)-omin(i))/(bins(i)*1.0d0)
+             delta(i)=(omax(i)-omin(i))/(bins(i)*1.0d0)
           END DO
        END IF
     ELSE
-       IF (opt==1) THEN
+       IF (opt_delta==1) THEN
           DO i=1,2
-             bins(i)=CEILING((omax(i)-omin(i))/delta_x(i))
+             bins(i)=CEILING((omax(i)-omin(i))/delta(i))
           END DO
        ELSE
           DO i=1,2
-             delta_x(i)=(omax(i)-omin(i))/(bins(i)*1.0d0)
+             delta(i)=(omax(i)-omin(i))/(bins(i)*1.0d0)
           END DO
        END IF
     END IF
@@ -336,16 +314,16 @@ CONTAINS
     ALLOCATE(frecuencias(bins(1),bins(2)))
     frecuencias=0.0d0
     
-    DO k=1,l
-       tt=FLOOR((datos(k,1)-omin(1))/delta_x(1)) 
-       qq=FLOOR((datos(k,2)-omin(2))/delta_x(2))
+    DO k=1,frames
+       tt=FLOOR((traj(k,1,1)-omin(1))/delta(1)) 
+       qq=FLOOR((traj(k,1,2)-omin(2))/delta(2))
        IF (tt==0) tt=1
        IF (qq==0) qq=1
        frecuencias(tt,qq)=frecuencias(tt,qq)+1
     END DO
     
     IF (opt_norm==1) THEN
-       frecuencias=frecuencias/(l*delta_x(1)*delta_x(2))
+       frecuencias=frecuencias/(frames*delta(1)*delta(2))
     END IF
         
     !! Output
@@ -353,13 +331,13 @@ CONTAINS
     ALLOCATE(histo_x(bins(1)),histo_y(bins(2)),histo_z(bins(1),bins(2)))
     histo_z=frecuencias
     DO i=1,bins(1)
-       histo_x(i)=omin(1)+(i*1.0d0-0.50d0)*delta_x(1)
+       histo_x(i)=omin(1)+(i*1.0d0-0.50d0)*delta(1)
     END DO
     DO i=1,bins(2)
-       histo_y(i)=omin(2)+(i*1.0d0-0.50d0)*delta_x(2)
+       histo_y(i)=omin(2)+(i*1.0d0-0.50d0)*delta(2)
     END DO
     
-    DEALLOCATE(datos,frecuencias)
+    DEALLOCATE(frecuencias)
 
   END SUBROUTINE histogram2d
 
