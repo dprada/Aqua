@@ -224,7 +224,9 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
 
         # > Instantation options:
         self.file_topol=input_file       # input file name
-        self.file_topol_type=input_file.split('.')[-1] # pdb,gro,psf
+        self.file_topol=None
+        if self.file_topol:
+            self.file_topol_type=input_file.split('.')[-1] # pdb,gro,psf
         self.file_hbonds=''             # still not useful -do not remove-
         self.file_mss=''                # still not useful -do not remove-
         self.file_shell=''              # still not useful -do not remove-
@@ -3193,6 +3195,7 @@ def selection(system=None,condition=None,traj=0,frame='ALL',pbc=True):
     icondition=icondition.replace(' in ',' ')
     icondition=icondition.replace(' In ',' ')
     icondition=icondition.replace(' IN ',' ')
+    icondition=icondition.replace(' : ',':')
     ### Second block.
     icondition=icondition.replace(' chain.',' atom.chain.')
     icondition=icondition.replace(' resid.',' atom.resid.')
@@ -3209,6 +3212,7 @@ def selection(system=None,condition=None,traj=0,frame='ALL',pbc=True):
             aux_cond[ii]=False
         if icondition[ii].startswith('atom'):
             aux_cond[ii]=False
+
     aux_cond.append(False)
 
     for ii in range(len(icondition)):
@@ -3232,11 +3236,23 @@ def selection(system=None,condition=None,traj=0,frame='ALL',pbc=True):
                         break
                     else:
                         part2=icondition[jj]
-                        try:
-                            kk=float(part2)
-                            ocondition.append(part2+',')
-                        except:
-                            ocondition.append("'"+part2+"',")
+                        if ':' in part2:
+                            cc=part2.split(':')
+                            from_cc=int(cc[0])
+                            to_cc  =int(cc[1])
+                            try:
+                                inc_cc=int(cc[2])
+                            except:
+                                inc_cc=1
+                            part2=str(range(from_cc,to_cc,inc_cc)).replace('[','')
+                            part2=part2.replace(']','')
+                            ocondition.append(part2)
+                        else:
+                            try:
+                                kk=float(part2)
+                                ocondition.append(part2+',')
+                            except:
+                                ocondition.append("'"+part2+"',")
                         aux_cond[jj]=False
         else:
             if aux_cond[ii]:
