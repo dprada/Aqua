@@ -192,6 +192,7 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
     
     def __init__(self,input_file=None,download=None,coors=False,with_bonds=True,missing_atoms=True,wrap=True,cg=False,verbose=False):
 
+
         # Load topology coarse-grained if this is the case
         if cg:
             tp=tp_cg
@@ -224,7 +225,6 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
 
         # > Instantation options:
         self.file_topol=input_file       # input file name
-        self.file_topol=None
         if self.file_topol:
             self.file_topol_type=input_file.split('.')[-1] # pdb,gro,psf
         self.file_hbonds=''             # still not useful -do not remove-
@@ -318,12 +318,18 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                     temp_residue.chain.name=atom.chain.name
                     temp_residue.chain.index=kk
                     temp_residue.__int_dict_atoms__={}
-                    temp_residue.type=tp.residue_type[temp_residue.name]
+                    try:
+                        temp_residue.type=tp.residue_type[temp_residue.name]
+                    except:
+                        print temp_residue.name, 'without residue.type'
                     self.resid.append(temp_residue)
                 ii+=1                                      #### Atom
                 atom.index=ii                   
                 atom.resid.index=jj
-                atom.resid.type=self.resid[jj].type
+                try:
+                    atom.resid.type=self.resid[jj].type
+                except:
+                    pass
                 atom.chain.index=kk
                 atom.hbonds=[]
                 self.resid[jj].list_atoms.append(ii)
