@@ -15,7 +15,7 @@ import sys
 workdir=path.dirname(path.abspath(__file__))
 sys.path.append(workdir+'/top_par/')
 sys.path.append(workdir+'/io_formats/')
-
+sys.path.append(workdir+'/MDTranslators/')
 ##############################
 ######## Internal modules:
 
@@ -27,6 +27,7 @@ import libgeneral as f
 from cl_anal_trajs import *
 from cl_kin_anal import *
 import cl_optim as popt
+import MDTranslators
 
 # Utils:
 
