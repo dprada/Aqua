@@ -3,6 +3,17 @@ import MyLab_geometry as geometry
 import MyLab_math as math
 #from MyLab_clases import *
 
+class box():
+    def __init__(self,frame=None):
+        self.box=None
+        self.inv=None
+        self.ortho=None
+        self.__dna__=True
+        if frame:
+            self.box=frame.box
+            self.inv=frame.invbox
+            self.ortho=frame.orthogonal
+
 def typename(atype):
 
     #if not isinstance(atype, type):
