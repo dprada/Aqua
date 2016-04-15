@@ -224,7 +224,9 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
         # From labels_set: .name, .index, .pdb_index, .num_atoms, .list_atoms
 
         # > Instantation options:
+        self.name=None
         self.file_topol=input_file       # input file name
+        self.file_topol_type='' 
         if self.file_topol:
             self.file_topol_type=input_file.split('.')[-1] # pdb,gro,psf
         self.file_hbonds=''             # still not useful -do not remove-
@@ -1053,7 +1055,50 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
         return [numpy.array(acc,order='F'),numpy.array(acc_start_H,order='F'),numpy.array(acc_H,order='F'), \
                 numpy.array(don,order='F'),numpy.array(don_start_H,order='F'),numpy.array(don_H,order='F'),all_wat]
 
-#    def extract_subsystem(self,select=None,verbose=True):
+    def extract(self,select=None,verbose=False):
+
+        if type(select) not in [list,tuple]:
+            select=self.selection(select) 
+
+        tmp_msystem=msystem()
+
+        tmp_msystem.ff=self.ff
+        tmp_msystem.file_topol=self.file_topol
+        tmp_msystem.file_topol_type=self.file_topol_type
+        tmp_msystem.parent=self
+        tmp_msystem.parent_selection=select
+
+        for ii in select:
+            tmp_msystem.atom.append(ccopy.deepcopy(self.atom[ii]))
+
+        # Global attributes
+       
+        tmp_msystem.name=self.name       # file=FOO.N.pdb -> name=FOO.N
+        tmp_msystem.num_atoms=len(tmp_msystem.atom)
+        tmp_msystem.dimensionality=tmp_msystem.num_atoms*3
+        tmp_msystem.num_residues=len(tmp_msystem.resid)
+        tmp_msystem.num_waters=len(tmp_msystem.water)
+        tmp_msystem.num_chains=len(tmp_msystem.chains)
+        tmp_msystem.num_ions=len(tmp_msystem.ion)
+        tmp_msystem.num_proteins=len(tmp_msystem.protein)
+        tmp_msystem.num_lipids=len(tmp_msystem.lipid)
+        tmp_msystem.num_molecules=len(tmp_msystem.molecule)
+        tmp_msystem.num_ligands=len(tmp_msystem.ligand)
+        tmp_msystem.list_atoms=[ii for ii in range(tmp_msystem.num_atoms)]
+
+        # Coordinates
+
+        tmp_msystem.traj=ccopy.deepcopy(self.traj)
+        for traj_id in range(len(tmp_msystem.traj)):
+            for frame_id in range(len(self.traj[traj_id].frame)):
+                tmp_msystem.traj[traj_id].frame[frame_id].coors=self.traj[traj_id].frame[frame_id].coors[select,:]
+
+        if verbose:
+            tmp_msystem.info()
+            if tmp_msystem.traj:
+                tmp_msystem.traj[0].info(index=0)
+
+        return tmp_msystem 
 
     def rebuild_chains(self, list_atoms=None, names=None, pdb_names=None, types=None, verbose=False):
 
