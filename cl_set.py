@@ -1493,10 +1493,13 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
 
     def least_rmsd(self,msystem_ref=None,selection_ref=None,traj_ref=None,frame_ref=None,selection=None,traj=None,frame='ALL'):
 
-       '''output should be the least rmsd and in addition and optionally, the translation and rotation.'''
+        '''output should be the least rmsd and in addition and optionally, the translation and rotation.'''
 
-       
-        
+        if msystem_ref=None:
+            msystem_ref=self
+
+        setA,n_A,natoms_A,setB,n_B,natoms_B,diff_system,diff_set=__read_sets_opt__(self,selection_ref,None,selection)
+
 
     def least_rmsd_fit(self,msystem_ref=None,selection_ref=None,traj_ref=None,frame_ref=None,selection=None,traj=None,frame='ALL',new=False):
 
@@ -2937,50 +2940,25 @@ def __read_sets_opt__(systA=None,setA=None,systB=None,setB=None):
         print '# SetA needed.'
         pass
 
+    setA,nlist_a,nsys_a=__read_set_opt__(systA,setA)
+
     diff_syst=1
     diff_set=1
 
+
     if systB==None:
 
+        systB=systA
         diff_syst=0
-        nsys_a=systA.num_atoms
-        nsys_b=systA.num_atoms
-
-        if setA in ['ALL','All','all']:
-            setA=[ii for ii in range(systA.num_atoms)]
-            nlist_a=systA.num_atoms
-        elif type(setA) in [numpy.int32,numpy.int64,int]:
-            setA=[setA]
-            nlist_a=1
-        elif type(setA) in [list,tuple]:
-            nlist_a=len(setA)
-        else:
-            setA=systA.selection(setA)
-            nlist_a=len(setA)
 
         if setB in [None]:
             setB=setA
-            nlist_b=nlist_a
             diff_set=0
-        elif setB in ['ALL','All','all']:
-            setB=[ii for ii in range(systA.num_atoms)]
-            nlist_b=systA.num_atoms
-        elif type(setB) in [numpy.int64,numpy.int32,int]:
-            setB=[setB]
-            nlist_b=1
-        elif type(setB) in [list,tuple]:
-            nlist_b=len(setB)
-        else:
-            setB=systA.selection(setB)
-            nlist_b=len(setB)
 
-        if (setA==setB): diff_set=0
+    setB,nlist_b,nsys_b=__read_set_opt__(systB,setB)
 
-        return setA,nlist_a,nsys_a,setB,nlist_b,nsys_b,diff_syst,diff_set
+    return setA,nlist_a,nsys_a,setB,nlist_b,nsys_b,diff_syst,diff_set
 
-    else:
-        print 'Different systems: Not implemented yet'
-        pass
           
 def __read_set_opt__(systA=None,setA=None):
 
