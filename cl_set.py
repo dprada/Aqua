@@ -1149,6 +1149,10 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
 
         pass
 
+    def rotation(self,select='ALL',rotor=None,wrap=True):
+
+        pass
+
     def center_of_mass(self,select='ALL',mass_weighted=False,traj=0,frame=0,pbc=False):
 
         pbc_opt=0
@@ -1201,9 +1205,7 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
             
         pass
 
-    def rotation(self,select='ALL',rotor=None,wrap=True):
-
-        pass
+    
 
 
     def distance(self,sel1='ALL',sel2=None,points=None,traj=0,frame='ALL',legend=False,pbc=True):
@@ -1491,15 +1493,56 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
 
          return rmsd_vals
 
-    def least_rmsd(self,msystem_ref=None,selection_ref=None,traj_ref=None,frame_ref=None,selection=None,traj=None,frame='ALL'):
+    def least_rmsd(self,msystem_ref=None,selection_ref='ALL',traj_ref=None,frame_ref=None,selection='ALL',traj=None,frame='ALL'):
 
         '''output should be the least rmsd and in addition and optionally, the translation and rotation.'''
 
-        if msystem_ref=None:
+        if msystem_ref==None:
             msystem_ref=self
+            setA,n_A,natoms_A,setB,n_B,natoms_B,diff_system,diff_set=__read_sets_opt__(self,selection_ref,None,selection)
+        else:
+            setA,n_A,natoms_A,setB,n_B,natoms_B,diff_system,diff_set=__read_sets_opt__(msystem_ref,selection_ref,self,selection)
 
-        setA,n_A,natoms_A,setB,n_B,natoms_B,diff_system,diff_set=__read_sets_opt__(self,selection_ref,None,selection)
+        # A is the ref, B is self
 
+        if n_A!=n_B :
+            print '# Error: Different number of atoms'
+            return
+
+        num_frames=__length_frame_opt__(self,traj,frame)
+        rmsd_traj=numpy.zeros((num_frames),dtype=float)
+        center_ref_traj=numpy.zeros((num_frames,3),dtype=float)
+        center_orig_traj=numpy.zeros((num_frames,3),dtype=float)
+        rot_traj=numpy.zeros((num_frames,3,3),dtype=float,order='F')
+
+        if traj_ref==None:
+            if len(msystem_ref.traj)==1:
+                traj_ref=0
+            else:
+                print '# Error: traj_ref needed'
+                return
+
+        if frame_ref==None:
+            if len(msystem_ref.traj[traj_ref].frame)==1:
+                frame_ref=0 
+            else:
+                print '# Error: frame_ref needed'
+                return
+
+        coors_reference=self.traj[traj_ref].frame[frame_ref].coors
+
+        jj=0
+        for iframe in __read_frame_opt__(self,traj,frame):
+            rot,center_ref,center_orig,rmsd,g=faux.min_rmsd(coors_reference,iframe.coors,setA,setB,n_A,natoms_A,n_B,natoms_B)
+            rmsd_traj[jj]=rmsd
+            center_ref[jj,:]=center_ref
+            center_orig[jj,:]=center_orig
+            rot_traj[jj,:,:]=rot
+
+        if num_frames==1:
+            return rmsd, center_orig, center_ref, rot
+        else:
+            return rmsd_traj, center_orig_traj, center_ref_traj, rot_traj
 
     def least_rmsd_fit(self,msystem_ref=None,selection_ref=None,traj_ref=None,frame_ref=None,selection=None,traj=None,frame='ALL',new=False):
 
