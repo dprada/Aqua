@@ -1491,8 +1491,15 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
 
          return rmsd_vals
 
-    def lrmsd_fit(self,selection_ref=None,traj_ref=None,frame_ref=None,selection=None,traj=None,frame='ALL',new=False):
-     
+    def least_rmsd(self,msystem_ref=None,selection_ref=None,traj_ref=None,frame_ref=None,selection=None,traj=None,frame='ALL'):
+
+       '''output should be the least rmsd and in addition and optionally, the translation and rotation.'''
+
+       
+        
+
+    def least_rmsd_fit(self,msystem_ref=None,selection_ref=None,traj_ref=None,frame_ref=None,selection=None,traj=None,frame='ALL',new=False):
+
         setA,n_A,natoms_A,setB,n_B,natoms_B,diff_system,diff_set=__read_sets_opt__(self,selection_ref,None,selection)
 
         if n_A!=n_B :
