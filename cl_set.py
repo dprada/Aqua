@@ -1144,15 +1144,6 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
 ###############################################################
 ###############################################################
     # To handle the set
-
-    def translation(self,select='ALL',vector=None,wrap=True):
-
-        pass
-
-    def rotation(self,select='ALL',rotor=None,wrap=True):
-
-        pass
-
     def center_of_mass(self,select='ALL',mass_weighted=False,traj=0,frame=0,pbc=False):
 
         pbc_opt=0
@@ -1200,6 +1191,7 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
         setmov,nlist_setmov,numsys=__read_set_opt__(self,select)
 
         for iframe in __read_frame_opt__(self,traj,frame):
+            iframe.coors=numpy.array(iframe.coors,order='Fotran')
             faux.center(pbc_opt,wrap_opt,setcom,setmov,iframe.coors,iframe.box,iframe.orthogonal,\
                                  nlist_setcom,nlist_setmov,numsys)
             
@@ -1477,7 +1469,7 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
             else:
                 return dih_angs
 
-    def rmsd(self,selection=None,traj_ref=None,frame_ref=None,traj=None,frame='ALL'):
+    def rmsd(self,selection=None,traj_ref=None,frame_ref=None,traj=0,frame='ALL'):
 
          setA,n_A,natoms_A=__read_set_opt__(self,selection)
 
@@ -1493,7 +1485,7 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
 
          return rmsd_vals
 
-    def least_rmsd(self,msystem_ref=None,selection_ref='ALL',traj_ref=None,frame_ref=None,selection='ALL',traj=None,frame='ALL'):
+    def least_rmsd(self,msystem_ref=None,selection_ref='ALL',traj_ref=None,frame_ref=None,selection='ALL',traj=0,frame='ALL',pbc=False):
 
         '''output should be the least rmsd and in addition and optionally, the translation and rotation.'''
 
@@ -1503,17 +1495,9 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
         else:
             setA,n_A,natoms_A,setB,n_B,natoms_B,diff_system,diff_set=__read_sets_opt__(msystem_ref,selection_ref,self,selection)
 
-        # A is the ref, B is self
-
         if n_A!=n_B :
             print '# Error: Different number of atoms'
             return
-
-        num_frames=__length_frame_opt__(self,traj,frame)
-        rmsd_traj=numpy.zeros((num_frames),dtype=float)
-        center_ref_traj=numpy.zeros((num_frames,3),dtype=float)
-        center_orig_traj=numpy.zeros((num_frames,3),dtype=float)
-        rot_traj=numpy.zeros((num_frames,3,3),dtype=float,order='F')
 
         if traj_ref==None:
             if len(msystem_ref.traj)==1:
@@ -1529,14 +1513,26 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                 print '# Error: frame_ref needed'
                 return
 
-        coors_reference=self.traj[traj_ref].frame[frame_ref].coors
+        coors_reference=msystem_ref.traj[traj_ref].frame[frame_ref].coors
+        
+        num_frames=__length_frame_opt__(self,traj,frame)
+        rmsd_traj=numpy.zeros((num_frames),dtype=float)
+        center_ref_traj=numpy.zeros((num_frames,3),dtype=float)
+        center_orig_traj=numpy.zeros((num_frames,3),dtype=float)
+        rot_traj=numpy.zeros((num_frames,3,3),dtype=float,order='F')
 
+        # Tal y como esta aqui... coors_reference no cambian en frame a frame (este no es el caso general, pero bueno)
+        # Asi que deberia hacer un unwrap ya desde el principio.
+
+
+
+        # A is the ref, B is self
         jj=0
         for iframe in __read_frame_opt__(self,traj,frame):
             rot,center_ref,center_orig,rmsd,g=faux.min_rmsd(coors_reference,iframe.coors,setA,setB,n_A,natoms_A,n_B,natoms_B)
             rmsd_traj[jj]=rmsd
-            center_ref[jj,:]=center_ref
-            center_orig[jj,:]=center_orig
+            center_ref_traj[jj,:]=center_ref
+            center_orig_traj[jj,:]=center_orig
             rot_traj[jj,:,:]=rot
 
         if num_frames==1:
@@ -1544,47 +1540,86 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
         else:
             return rmsd_traj, center_orig_traj, center_ref_traj, rot_traj
 
-    def least_rmsd_fit(self,msystem_ref=None,selection_ref=None,traj_ref=None,frame_ref=None,selection=None,traj=None,frame='ALL',new=False):
+    def unwrap(self, selection=NONE, traj=0,frame='ALL',new=False):
+        
+        if selection in ['ALL','All','all']:
+           print('Not implemented yet')
+           print('deberia hacerlo mirando a las covalent chains, se podria hacer...')
+           pass
+        else:
+            print('deberia hacerlo mirando los covalent chains.. para mas adelante oye. estas covalent chains se deberian hacer al principio')
+            setA,n_A,natoms_A=__read_set_opt__(self,selection)
+            for iframe in __read_frame_opt__(self,traj,frame):
+                if not numpy.isFortran(iframe.coors):
+                    iframe.coors=numpy.asfortranarray(iframe.coors)
+                faux.unwrap(iframe.coors,setA,n_A,natoms_A)
+        pass
 
-        setA,n_A,natoms_A,setB,n_B,natoms_B,diff_system,diff_set=__read_sets_opt__(self,selection_ref,None,selection)
+    
+    def wrap(self, selection='ALL', traj=0,frame='ALL',new=False):
 
-        if n_A!=n_B :
-            print '# Error: Different number of atoms'
+        if selection in ['ALL','All','all']:
+            for iframe in __read_frame_opt__(self,traj,frame):
+                iframe.wrap()
+        else:
+            setA,n_A,natoms_A=__read_set_opt__(self,selection)
+            for iframe in __read_frame_opt__(self,traj,frame):
+                if not numpy.isFortran(iframe.coors):
+                    iframe.coors=numpy.asfortranarray(iframe.coors)
+                faux.wrap(iframe.coors,iframe.box,iframe.orthogonal,setA,n_A,natoms_A)
+        pass
+
+    def translation(self,translation=None,selection='ALL',traj=0,frame='ALL',new=False,wrap=False):
+
+        # Esto deberia de ser sustituido por una funcion que sea como parse_set_arguments o algo asi
+        # y lo mismo para el frame deberia ser...
+
+        if new:
+            print'Not implemented yet'
             return
 
-        num_frames=__length_frame_opt__(self,traj,frame)
-        coors_reference=self.traj[traj_ref].frame[frame_ref].coors
-        rmsd_traj=numpy.zeros((num_frames),dtype=float,order='F')
+        setA,n_A,natoms_A=__read_set_opt__(self,selection)
+        for iframe in __read_frame_opt__(self,traj,frame):  ## Esto habria que hacerlo con mask... y ademas habria que hacerlo con una funcion sobre traj o frame o coors...
+            coors_out=iframe.coors[setA,:]+translation
+            iframe.coors[setA,:]=coors_out 
 
-        jj=0
-        if new:
-            fitted_traj=traj()
-        for iframe in __read_frame_opt__(self,traj,frame):
-            rot,center_ref,center_orig,rmsd,g=faux.min_rmsd(coors_reference,iframe.coors,setA,setB,n_A,natoms_A,n_B,natoms_B)
-            coors_new=faux.rot_trans(iframe.coors,rot,center_orig,center_ref,natoms_B)
-            rmsd_traj[jj]=rmsd
-            jj+=1
-            if new:
-                pass
-            else:
-                iframe.coors=coors_new.copy()
+        pass
+
+    def rotation(self,rotation_point=None,rotation_matrix=None,selection='ALL',traj=0,frame='ALL',new=False,wrap=False):
+
+         # Esto deberia de ser sustituido por una funcion que sea como parse_set_arguments o algo asi
+        # y lo mismo para el frame deberia ser...
 
         if new:
-            #fitted_set=copy.deepcopy(self)
-            #fitted_set.frame[0].coors=coors_new
-            #fitted_set.pdb_header="Mensaje del fitteo"
-            #fitted_set.rmsd=rmsd
-            return 'To be implemented.'
-        else:
-            #self.frame[0].coors=copy.deepcopy(coors_new)
-            #self.rmsd=rmsd
-            return rmsd_traj
+            print'Not implemented yet'
+            return
+        #todo esto se puede economizar mucho mucho con operaciones definidas sobre coors... o sobre frame con una seleccion con lista de enteros y listo
+        #ademas mucho mas rapido si uso transformaciones como:
+        #http://www.lfd.uci.edu/~gohlke/code/transformations.py.html
+        #https://github.com/ahojnnes/numpy-snippets/blob/master/transformations.py
+        setA,n_A,natoms_A=__read_set_opt__(self,selection)
+        for iframe in __read_frame_opt__(self,traj,frame):  ## Esto habria que hacerlo con mask... y ademas habria que hacerlo con una funcion sobre traj o frame o coors...
+            centered_coors=iframe.coors[setA,:]-rotation_point
+            coors_out=numpy.zeros(centered_coors.shape,dtype=float)
+            for ii in xrange(centered_coors.shape[0]):
+                coors_out[ii,:]=numpy.matmul(rotation_matrix,centered_coors[ii,:].T)
+            iframe.coors[setA,:]=coors_out+rotation_point ## comparar que es mas eficiente, esto o trabajar con masks 
 
-        #print '# RMSD fitting:',rmsd
-            # Use coors_new
-     
+        pass
 
 
+    def least_rmsd_fit(self,msystem_ref=None,selection_ref='ALL',traj_ref=None,frame_ref=None,selection='ALL',traj=0,frame='ALL',new=False,wrap=False):
+
+        if new:
+            print'not implemented yet'
+            return
+
+
+        #si las operaciones estuvieran definidas directamente sobre coors o frame... osea, sobre frame seguramente sea lo mejor, pues esto se podria economizar
+        rmsd_traj, center_orig_traj, center_ref_traj, rot_traj=self.least_rmsd(msystem_ref,selection_ref,traj_ref,frame_ref,selection,traj,frame)
+        self.rotation(center_orig_traj,rot_traj,selection,traj,frame,new,wrap=False)
+        self.translation((center_ref_traj-center_orig_traj),selection,traj,frame,new,wrap=False)
+        return rmsd_traj, center_orig_traj, center_ref_traj, rot_traj
 
 #def min_distance(system,set_a,set_b=None,pbc=True,type_b='atoms'):
 # 
