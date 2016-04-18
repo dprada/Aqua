@@ -729,7 +729,7 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
             return
 
         select,nlist,nsys=__read_set_opt__(self,sel)
-
+        
         select.sort()
 
         if filename==None:
@@ -799,17 +799,17 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                 #a+="%2s" % self.atom[ii].charge                # 79-80
                 a+='\n' 
                 fff.write(str(a))         
-                if ii<(nlist-1):
-                    if self.atom[ii].type_pdb!=self.atom[ii+1].type_pdb or self.atom[ii].chain.name!=self.atom[ii+1].chain.name :
-                        new_index+=1
-                        a="TER   "
-                        a+="%5d" % (new_index)
-                        a+=' '
-                        a+='  '
-                        a+=' '                                         
-                        a+="%3s" % self.atom[ii].resid.name            
-                        a+='\n' 
-                        fff.write(str(a))
+                # if ii<(nlist-1):
+                #     if self.atom[ii].type_pdb!=self.atom[ii+1].type_pdb or self.atom[ii].chain.name!=self.atom[ii+1].chain.name :
+                #         new_index+=1
+                #         a="TER   "
+                #         a+="%5d" % (new_index)
+                #         a+=' '
+                #         a+='  '
+                #         a+=' '                                         
+                #         a+="%3s" % self.atom[ii].resid.name            
+                #         a+='\n' 
+                #         fff.write(str(a))
             a='END   '+'\n'
             fff.write(str(a))
             fff.close()
@@ -1638,6 +1638,9 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
          # Esto deberia de ser sustituido por una funcion que sea como parse_set_arguments o algo asi
         # y lo mismo para el frame deberia ser...
 
+        if wrap:
+            print'wrapping after rotation is risky... use it known the box has to rotate also, an it is not the case here'
+
         if new:
             print'Not implemented yet'
             return
@@ -1658,6 +1661,9 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
 
     def least_rmsd_fit(self,msystem_ref=None,selection_ref='ALL',traj_ref=None,frame_ref=None,selection='ALL',traj=0,frame='ALL',selection2move='ALL',new=False,wrap=True):
 
+        wrap=False
+        # wrap after rotation makes no sense, it is not posible. The box show rotate also, but the box' axis have to be parallel to XYZ to be efficient.
+
         if new:
             print'not implemented yet'
             return
@@ -1667,9 +1673,6 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
         rmsd_traj, center_orig_traj, center_ref_traj, rot_traj=self.least_rmsd(msystem_ref,selection_ref,traj_ref,frame_ref,selection,traj,frame)
         self.rotation(center_orig_traj,rot_traj,selection2move,traj,frame,new,wrap=False)
         self.translation((center_ref_traj-center_orig_traj),selection2move,traj,frame,new,wrap=False)
-        if wrap:
-            self.wrap()
-
         return rmsd_traj, center_orig_traj, center_ref_traj, rot_traj
 
 #def min_distance(system,set_a,set_b=None,pbc=True,type_b='atoms'):
