@@ -314,6 +314,114 @@ SUBROUTINE CENTER_OF_MASS (pbc_opt,list_com,coors,box,ortho,numat_com,numat_glob
 
 END SUBROUTINE CENTER_OF_MASS
 
+SUBROUTINE ISUNWRAP (coors,box,ortho,list,numat_list,numat_glob,itis)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::numat_list,numat_glob,ortho
+  DOUBLE PRECISION,DIMENSION(numat_glob,3),INTENT(INOUT)::coors
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box
+  INTEGER,DIMENSION(numat_list),INTENT(IN)::list
+  INTEGER,INTENT(OUT)::itis
+
+  INTEGER::ii,jj,nn
+  DOUBLE PRECISION::Lx2,Ly2,Lz2
+  DOUBLE PRECISION,DIMENSION(3)::com
+
+  Lx2=box(1,1)/2.0d0
+  Ly2=box(2,2)/2.0d0
+  Lz2=box(3,3)/2.0d0
+  com=0.0d0
+  itis=1
+
+  IF (ortho==1) THEN
+
+     DO jj=1,numat_list
+        ii=list(jj)+1
+        com(:)=com(:)+coors(ii,:)
+     END DO
+     com=com/(numat_list*1.0)
+
+     DO jj=1,numat_list
+        ii=list(jj)+1
+        IF (ABS(coors(ii,1)-com(1))>Lx2) THEN
+           itis=0
+        END IF
+        IF (ABS(coors(ii,2)-com(2))>Ly2) THEN
+           itis=0
+        END IF
+        IF (ABS(coors(ii,3)-com(3))>Lz2) THEN
+           itis=0
+        END IF
+        IF (itis==0) THEN
+           EXIT
+        END IF
+     END DO
+     
+  ELSE
+
+     print*,'ISUNWRAP function not implemented for not orthorhombic unit cells.'
+
+  END IF
+
+END SUBROUTINE ISUNWRAP
+
+
+SUBROUTINE ISWRAP (coors,box,ortho,list,numat_list,numat_glob,itis)
+
+  IMPLICIT NONE
+
+  INTEGER,INTENT(IN)::numat_list,numat_glob,ortho
+  DOUBLE PRECISION,DIMENSION(numat_glob,3),INTENT(INOUT)::coors
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box
+  INTEGER,DIMENSION(numat_list),INTENT(IN)::list
+  INTEGER,INTENT(OUT)::itis
+
+  INTEGER::ii,jj,nn
+  DOUBLE PRECISION::x,y,z,Lx,Ly,Lz
+
+  Lx=box(1,1)
+  Ly=box(2,2)
+  Lz=box(3,3)
+
+  itis=1
+
+  IF (ortho==1) THEN
+
+     DO jj=1,numat_list
+        ii=list(jj)+1
+        x=coors(ii,1)
+        y=coors(ii,2)
+        z=coors(ii,3)
+        IF (x<0.0d0) THEN
+           itis=0
+        ELSE IF (x>=Lx) THEN
+           itis=0
+        END IF
+        IF (y<0.0d0) THEN
+           itis=0
+        ELSE IF (y>=Ly) THEN
+           itis=0
+        END IF
+        IF (z<0.0d0) THEN
+           itis=0
+        ELSE IF (z>=Lz) THEN
+           itis=0
+        END IF
+        IF (itis==0) THEN
+           EXIT
+        END IF
+     END DO
+     
+  ELSE
+
+     print*,'ISWRAP function not implemented for not orthorhombic unit cells.'
+
+  END IF
+
+END SUBROUTINE ISWRAP
+
+
 SUBROUTINE WRAP (coors,box,ortho,list,numat_list,numat_glob)
 
   IMPLICIT NONE
