@@ -265,10 +265,7 @@ class network():
 
         if verbose:
 
-            print '# Network:'
-            print '#', self.num_nodes, 'nodes'
-            print '#', self.k_total, 'links out'
-            print '#', self.weight, 'total weight nodes'
+            print 'Network:', self.num_nodes, 'nodes', self.k_total, 'links out', self.weight, 'total weight nodes'
 
         pass
 
@@ -1101,6 +1098,14 @@ class network():
             return temp
         else:
             pass
+
+    def coors_from_labels(net):
+        for node in net.node:
+            strcoors=node.label[1:-1]
+            node.coors=[]
+            for substr in strcoors.split(']')[:-1]:
+                node.coors.append((substr.split('[')[-1]).split())
+            node.coors=numpy.array(node.coors,dtype=float)
 
     def gradient_clusters_2(self,dim=1,verbose=True):
 
