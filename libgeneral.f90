@@ -166,6 +166,25 @@ SUBROUTINE PBC(vector,box,inv,ortho)
 END SUBROUTINE PBC
 
 
+SUBROUTINE MIN_IMAGE_POINT(point,point_ref,box,inv,ortho,mim_point)
+
+  INTEGER,INTENT(IN)::ortho
+  DOUBLE PRECISION,DIMENSION(3),INTENT(IN)::point,point_ref
+  DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box,inv
+  DOUBLE PRECISION,DIMENSION(3),INTENT(OUT)::mim_point
+  DOUBLE PRECISION,DIMENSION(3)::vector
+
+  mim_point=0.0d0
+  vector=point-point_ref
+
+  CALL PBC(vector,box,inv,ortho)
+
+  mim_point(:)=point_ref(:)+vector(:)
+
+END SUBROUTINE MIN_IMAGE_POINT
+
+
+
 SUBROUTINE CENTER_OF_MASS (pbc_opt,list_com,coors,box,ortho,numat_com,numat_glob,com)
 
   IMPLICIT NONE

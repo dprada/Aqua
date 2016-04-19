@@ -1485,7 +1485,7 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
 
          return rmsd_vals
 
-    def least_rmsd(self,msystem_ref=None,selection_ref='ALL',traj_ref=None,frame_ref=None,selection='ALL',traj=0,frame='ALL',pbc=False):
+    def least_rmsd(self,msystem_ref=None,selection_ref='ALL',traj_ref=0,frame_ref=0,selection='ALL',traj=0,frame='ALL',pbc=False):
 
         '''output should be the least rmsd and in addition and optionally, the translation and rotation.'''
 
@@ -1499,19 +1499,7 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
             print '# Error: Different number of atoms'
             return
 
-        if traj_ref==None:
-            if len(msystem_ref.traj)==1:
-                traj_ref=0
-            else:
-                print '# Error: traj_ref needed'
-                return
 
-        if frame_ref==None:
-            if len(msystem_ref.traj[traj_ref].frame)==1:
-                frame_ref=0 
-            else:
-                print '# Error: frame_ref needed'
-                return
 
         msystem_ref.unwrap(selection=setA,traj=traj_ref,frame=frame_ref)
         coors_reference=msystem_ref.traj[traj_ref].frame[frame_ref].coors
@@ -1544,8 +1532,16 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
         else:
             return rmsd_traj, center_orig_traj, center_ref_traj, rot_traj
 
-    def unwrap(self, selection=None, traj=0,frame='ALL',new=False):
-        
+    def unwrap(self, selection=None,min_image_system=None,min_image_selection=None, traj=0,frame='ALL',new=False):
+
+        min_image_switch=False
+        if (min_image_system or min_image_selection)!=None :
+            min_image_switch=True
+            if not min_image_system:
+               min_image_system=self
+            if not min_image_selection:
+                min_image_selection='ALL'
+
         if selection in ['ALL','All','all']:
            print('Not implemented yet')
            pass
@@ -1553,9 +1549,19 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
             # deberia hacerlo mirando los covalent chains.. para mas adelante oye. estas covalent chains se deberian hacer al principio
             setA,n_A,natoms_A=__read_set_opt__(self,selection)
             for iframe in __read_frame_opt__(self,traj,frame):
-                # if not numpy.isfortran(iframe.coors):
-                #     iframe.coors=numpy.asfortranarray(iframe.coors)
+                if not numpy.isfortran(iframe.coors):
+                    iframe.coors=numpy.asfortranarray(iframe.coors)
                 faux.unwrap(iframe.coors,iframe.box,iframe.orthogonal,setA,n_A,natoms_A)
+                if min_image_switch:
+                    center_ref=min_image_system.center_of_mass(select=min_image_selection)
+                    center_unw=self.center_of_mass(select=selection)
+                    center_min=faux.min_image_point(center_unw,center_ref,iframe.box,iframe.invbox,iframe.orthogonal)
+                    trans_vect=center_min-center_unw
+                    if numpy.dot(trans_vect,trans_vect)>0.001: # Esto necesita ser corregido definiendo algo como frame.box.min_image_distance que se calcule al inicializar
+                        print 'ENTRA'
+                        coors_out=iframe.coors[setA,:]+trans_vect
+                        iframe.coors[setA,:]=coors_out
+
         pass
 
     def iswrap(self, selection=None, traj=0,frame='ALL'):
@@ -1590,8 +1596,8 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
             setA,n_A,natoms_A=__read_set_opt__(self,selection)
             itis_frame=[]
             for iframe in __read_frame_opt__(self,traj,frame):
-                # if not numpy.isfortran(iframe.coors):
-                #     iframe.coors=numpy.asfortranarray(iframe.coors)
+                if not numpy.isfortran(iframe.coors):
+                    iframe.coors=numpy.asfortranarray(iframe.coors)
                 itis=faux.isunwrap(iframe.coors,iframe.box,iframe.orthogonal,setA,n_A,natoms_A)
                 if itis==1:
                     itis_frame.append(True)
