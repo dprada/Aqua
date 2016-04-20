@@ -338,7 +338,7 @@ SUBROUTINE ISUNWRAP (coors,box,ortho,list,numat_list,numat_glob,itis)
   IMPLICIT NONE
 
   INTEGER,INTENT(IN)::numat_list,numat_glob,ortho
-  DOUBLE PRECISION,DIMENSION(numat_glob,3),INTENT(INOUT)::coors
+  DOUBLE PRECISION,DIMENSION(numat_glob,3),INTENT(IN)::coors
   DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box
   INTEGER,DIMENSION(numat_list),INTENT(IN)::list
   INTEGER,INTENT(OUT)::itis
@@ -352,15 +352,11 @@ SUBROUTINE ISUNWRAP (coors,box,ortho,list,numat_list,numat_glob,itis)
   Lz2=box(3,3)/2.0d0
   com=0.0d0
   itis=1
-
+!!! ESTO HABRIA QUE HACERLO DE OTRA MANERA, ESTO ES MUY CARO. MIRANDO QUIZA A LOS ENLACES COVALENTES.
   IF (ortho==1) THEN
-
-     DO jj=1,numat_list
-        ii=list(jj)+1
-        com(:)=com(:)+coors(ii,:)
-     END DO
-     com=com/(numat_list*1.0)
-
+    
+     CALL CENTER_OF_MASS (1,list,coors,box,ortho,numat_list,numat_glob,com)
+     ! Si calculo el centro de masas como sum(pos)/num_ats hay problemas, hazme caso. piensa en una rotura simetrica y veras.
      DO jj=1,numat_list
         ii=list(jj)+1
         IF (ABS(coors(ii,1)-com(1))>Lx2) THEN
@@ -383,6 +379,7 @@ SUBROUTINE ISUNWRAP (coors,box,ortho,list,numat_list,numat_glob,itis)
 
   END IF
 
+
 END SUBROUTINE ISUNWRAP
 
 
@@ -391,7 +388,7 @@ SUBROUTINE ISWRAP (coors,box,ortho,list,numat_list,numat_glob,itis)
   IMPLICIT NONE
 
   INTEGER,INTENT(IN)::numat_list,numat_glob,ortho
-  DOUBLE PRECISION,DIMENSION(numat_glob,3),INTENT(INOUT)::coors
+  DOUBLE PRECISION,DIMENSION(numat_glob,3),INTENT(IN)::coors
   DOUBLE PRECISION,DIMENSION(3,3),INTENT(IN)::box
   INTEGER,DIMENSION(numat_list),INTENT(IN)::list
   INTEGER,INTENT(OUT)::itis

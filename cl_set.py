@@ -1488,7 +1488,8 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
     def least_rmsd(self,msystem_ref=None,selection_ref='ALL',traj_ref=0,frame_ref=0,selection='ALL',traj=0,frame='ALL',pbc=False):
 
         '''output should be the least rmsd and in addition and optionally, the translation and rotation.'''
-
+        # Esto de wrap un wrap, es correcto pero se puede economizar mucho poniendolo como opcion de frame.
+        # Para poder hacer iframe.wrap(select,new) y se solucionaria el tema.. y  no este lio
         if msystem_ref==None:
             msystem_ref=self
             setA,n_A,natoms_A,setB,n_B,natoms_B,diff_system,diff_set=__read_sets_opt__(self,selection_ref,None,selection)
@@ -1499,9 +1500,15 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
             print '# Error: Different number of atoms'
             return
 
+        selfisunwrap=self.isunwrap(setB)
+        refisunwrap =msystem_ref.isunwrap(setA)
+        
+        if not refisunwrap:
+            msystem_ref.unwrap(selection=setA,traj=traj_ref,frame=frame_ref)
+        
+        if not selfisunwrap:
+            self.unwrap(selection=setB,traj=traj,frame=frame)
 
-
-        msystem_ref.unwrap(selection=setA,traj=traj_ref,frame=frame_ref)
         coors_reference=msystem_ref.traj[traj_ref].frame[frame_ref].coors
         
         num_frames=__length_frame_opt__(self,traj,frame)
@@ -1514,25 +1521,28 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
         # Asi que deberia hacer un unwrap ya desde el principio.
 
         # A is the ref, B is self
-        self.unwrap(selection=setB,traj=traj,frame=frame)
+        
+
         jj=0
         for iframe in __read_frame_opt__(self,traj,frame):
-            print self.iswrap(setB,traj,frame), self.isunwrap(setB,traj,frame)
             rot,center_ref,center_orig,rmsd,g=faux.min_rmsd(coors_reference,iframe.coors,setA,setB,n_A,natoms_A,n_B,natoms_B)
             rmsd_traj[jj]=rmsd
             center_ref_traj[jj,:]=center_ref
             center_orig_traj[jj,:]=center_orig
             rot_traj[jj,:,:]=rot
 
-        self.wrap(selection=setB,traj=traj,frame=frame)
-        msystem_ref.wrap(selection=setA,traj=traj_ref,frame=frame_ref)
+        if not selfisunwrap:
+            self.wrap(selection=setB,traj=traj,frame=frame)
+
+        if not refisunwrap:
+            msystem_ref.wrap(selection=setA,traj=traj_ref,frame=frame_ref)
         
         if num_frames==1:
             return rmsd, center_orig, center_ref, rot
         else:
             return rmsd_traj, center_orig_traj, center_ref_traj, rot_traj
 
-    def unwrap(self, selection=None,min_image_system=None,min_image_selection=None, traj=0,frame='ALL',new=False):
+    def unwrap(self, selection='ALL',min_image_system=None,min_image_selection=None, traj=0,frame=0,new=False):
 
         min_image_switch=False
         if (min_image_system or min_image_selection)!=None :
@@ -1542,67 +1552,57 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
             if not min_image_selection:
                 min_image_selection='ALL'
 
-        if selection in ['ALL','All','all']:
-           print('Not implemented yet')
-           pass
-        else:
-            # deberia hacerlo mirando los covalent chains.. para mas adelante oye. estas covalent chains se deberian hacer al principio
-            setA,n_A,natoms_A=__read_set_opt__(self,selection)
-            for iframe in __read_frame_opt__(self,traj,frame):
-                if not numpy.isfortran(iframe.coors):
-                    iframe.coors=numpy.asfortranarray(iframe.coors)
-                faux.unwrap(iframe.coors,iframe.box,iframe.orthogonal,setA,n_A,natoms_A)
-                if min_image_switch:
-                    center_ref=min_image_system.center_of_mass(select=min_image_selection)
-                    center_unw=self.center_of_mass(select=selection)
-                    center_min=faux.min_image_point(center_unw,center_ref,iframe.box,iframe.invbox,iframe.orthogonal)
-                    trans_vect=center_min-center_unw
-                    if numpy.dot(trans_vect,trans_vect)>0.001: # Esto necesita ser corregido definiendo algo como frame.box.min_image_distance que se calcule al inicializar
-                        print 'ENTRA'
-                        coors_out=iframe.coors[setA,:]+trans_vect
-                        iframe.coors[setA,:]=coors_out
+        # deberia hacerlo mirando los covalent chains.. para mas adelante oye. estas covalent chains se deberian hacer al principio
+        setA,n_A,natoms_A=__read_set_opt__(self,selection)
+        for iframe in __read_frame_opt__(self,traj,frame):
+            if not numpy.isfortran(iframe.coors):
+                iframe.coors=numpy.asfortranarray(iframe.coors)
+            faux.unwrap(iframe.coors,iframe.box,iframe.orthogonal,setA,n_A,natoms_A)
+            if min_image_switch:
+                center_ref=min_image_system.center_of_mass(select=min_image_selection)
+                center_unw=self.center_of_mass(select=selection)
+                center_min=faux.min_image_point(center_unw,center_ref,iframe.box,iframe.invbox,iframe.orthogonal)
+                trans_vect=center_min-center_unw
+                if numpy.dot(trans_vect,trans_vect)>0.001: # Esto necesita ser corregido definiendo algo como frame.box.min_image_distance que se calcule al inicializar
+                    print 'ENTRA'
+                    coors_out=iframe.coors[setA,:]+trans_vect
+                    iframe.coors[setA,:]=coors_out
 
         pass
 
-    def iswrap(self, selection=None, traj=0,frame='ALL'):
+    def iswrap(self, selection='ALL', traj=0,frame=0):
         
-        if selection in ['ALL','All','all']:
-           print('Not implemented yet')
-           pass
-        else:
-            # deberia hacerlo mirando los covalent chains.. para mas adelante oye. estas covalent chains se deberian hacer al principio
-            setA,n_A,natoms_A=__read_set_opt__(self,selection)
-            itis_frame=[]
-            for iframe in __read_frame_opt__(self,traj,frame):
-                # if not numpy.isfortran(iframe.coors):
-                #     iframe.coors=numpy.asfortranarray(iframe.coors)
-                itis=faux.iswrap(iframe.coors,iframe.box,iframe.orthogonal,setA,n_A,natoms_A)
-                if itis==1:
-                    itis_frame.append(True)
-                else:
-                    itis_frame.append(False)
+        # deberia hacerlo mirando los covalent chains.. para mas adelante oye. estas covalent chains se deberian hacer al principio
+        setA,n_A,natoms_A=__read_set_opt__(self,selection)
+        itis_frame=[]
+        for iframe in __read_frame_opt__(self,traj,frame):
+            # if not numpy.isfortran(iframe.coors):
+            #     iframe.coors=numpy.asfortranarray(iframe.coors)
+            itis=faux.iswrap(iframe.coors,iframe.box,iframe.orthogonal,setA,n_A,natoms_A)
+            if itis==1:
+                itis_frame.append(True)
+            else:
+                itis_frame.append(False)
+
         if len(itis_frame)==1:
             return itis_frame[0]
         else:
             return itis_frame
 
-    def isunwrap(self, selection=None, traj=0,frame='ALL'):
+    def isunwrap(self, selection='ALL', traj=0,frame=0):
         
-        if selection in ['ALL','All','all']:
-           print('Not implemented yet')
-           pass
-        else:
-            # deberia hacerlo mirando los covalent chains.. para mas adelante oye. estas covalent chains se deberian hacer al principio
-            setA,n_A,natoms_A=__read_set_opt__(self,selection)
-            itis_frame=[]
-            for iframe in __read_frame_opt__(self,traj,frame):
-                if not numpy.isfortran(iframe.coors):
-                    iframe.coors=numpy.asfortranarray(iframe.coors)
-                itis=faux.isunwrap(iframe.coors,iframe.box,iframe.orthogonal,setA,n_A,natoms_A)
-                if itis==1:
-                    itis_frame.append(True)
-                else:
-                    itis_frame.append(False)
+        # deberia hacerlo mirando los covalent chains.. para mas adelante oye. estas covalent chains se deberian hacer al principio
+        setA,n_A,natoms_A=__read_set_opt__(self,selection)
+        itis_frame=[]
+        for iframe in __read_frame_opt__(self,traj,frame):
+            # if not numpy.isfortran(iframe.coors):
+            #     iframe.coors=numpy.asfortranarray(iframe.coors)
+            itis=faux.isunwrap(iframe.coors,iframe.box,iframe.orthogonal,setA,n_A,natoms_A)
+            if itis==1:
+                itis_frame.append(True)
+            else:
+                itis_frame.append(False)
+
         if len(itis_frame)==1:
             return itis_frame[0]
         else:
@@ -1645,7 +1645,7 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
         # y lo mismo para el frame deberia ser...
 
         if wrap:
-            print'wrapping after rotation is risky... use it known the box has to rotate also, an it is not the case here'
+            print'wrapping after rotation is risky... the box has to rotate also, an it is not the case here'
 
         if new:
             print'Not implemented yet'
@@ -1659,13 +1659,13 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
             centered_coors=iframe.coors[setA,:]-rotation_point
             coors_out=numpy.zeros(centered_coors.shape,dtype=float)
             for ii in xrange(centered_coors.shape[0]):
-                coors_out[ii,:]=numpy.matmul(rotation_matrix,centered_coors[ii,:].T)
+                coors_out[ii,:]=numpy.matmul(rotation_matrix.T,centered_coors[ii,:]) # Funciona bien asi por como sale la matriz de giro de fortran... pero no se si vale para caso general
             iframe.coors[setA,:]=coors_out+rotation_point ## comparar que es mas eficiente, esto o trabajar con masks 
 
         pass
 
 
-    def least_rmsd_fit(self,msystem_ref=None,selection_ref='ALL',traj_ref=None,frame_ref=None,selection='ALL',traj=0,frame='ALL',selection2move='ALL',new=False,wrap=True):
+    def least_rmsd_fit(self,msystem_ref=None,selection_ref='ALL',traj_ref=0,frame_ref=0,selection='ALL',traj=0,frame='ALL',selection2move='ALL',new=False,wrap=True):
 
         wrap=False
         # wrap after rotation makes no sense, it is not posible. The box show rotate also, but the box' axis have to be parallel to XYZ to be efficient.
@@ -1673,7 +1673,6 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
         if new:
             print'not implemented yet'
             return
-
 
         #si las operaciones estuvieran definidas directamente sobre coors o frame... osea, sobre frame seguramente sea lo mejor, pues esto se podria economizar
         rmsd_traj, center_orig_traj, center_ref_traj, rot_traj=self.least_rmsd(msystem_ref,selection_ref,traj_ref,frame_ref,selection,traj,frame)
