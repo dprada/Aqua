@@ -1485,7 +1485,7 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
 
          return rmsd_vals
 
-    def least_rmsd(self,msystem_ref=None,selection_ref='ALL',traj_ref=0,frame_ref=0,selection='ALL',traj=0,frame='ALL',pbc=False):
+    def least_rmsd(self,msystem_ref=None,selection_ref='ALL',traj_ref=0,frame_ref=0,selection='ALL',traj=0,frame='ALL',pbc=True):
 
         '''output should be the least rmsd and in addition and optionally, the translation and rotation.'''
         # Esto de wrap un wrap, es correcto pero se puede economizar mucho poniendolo como opcion de frame.
@@ -1500,14 +1500,13 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
             print '# Error: Different number of atoms'
             return
 
-        selfisunwrap=self.isunwrap(setB)
-        refisunwrap =msystem_ref.isunwrap(setA)
-        
-        if not refisunwrap:
-            msystem_ref.unwrap(selection=setA,traj=traj_ref,frame=frame_ref)
-        
-        if not selfisunwrap:
-            self.unwrap(selection=setB,traj=traj,frame=frame)
+        if pbc:
+            selfisunwrap=self.isunwrap(setB)
+            refisunwrap =msystem_ref.isunwrap(setA)
+            if not refisunwrap:
+                msystem_ref.unwrap(selection=setA,traj=traj_ref,frame=frame_ref)
+            if not selfisunwrap:
+                self.unwrap(selection=setB,traj=traj,frame=frame)
 
         coors_reference=msystem_ref.traj[traj_ref].frame[frame_ref].coors
         
@@ -1531,11 +1530,11 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
             center_orig_traj[jj,:]=center_orig
             rot_traj[jj,:,:]=rot
 
-        if not selfisunwrap:
-            self.wrap(selection=setB,traj=traj,frame=frame)
-
-        if not refisunwrap:
-            msystem_ref.wrap(selection=setA,traj=traj_ref,frame=frame_ref)
+        if pbc:
+            if not selfisunwrap:
+                self.wrap(selection=setB,traj=traj,frame=frame)
+            if not refisunwrap:
+                msystem_ref.wrap(selection=setA,traj=traj_ref,frame=frame_ref)
         
         if num_frames==1:
             return rmsd, center_orig, center_ref, rot
@@ -1564,7 +1563,6 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
                 center_min=faux.min_image_point(center_unw,center_ref,iframe.box,iframe.invbox,iframe.orthogonal)
                 trans_vect=center_min-center_unw
                 if numpy.dot(trans_vect,trans_vect)>0.001: # Esto necesita ser corregido definiendo algo como frame.box.min_image_distance que se calcule al inicializar
-                    print 'ENTRA'
                     coors_out=iframe.coors[setA,:]+trans_vect
                     iframe.coors[setA,:]=coors_out
 
@@ -1639,13 +1637,13 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
 
         pass
 
-    def rotation(self,rotation_point=None,rotation_matrix=None,selection='ALL',traj=0,frame='ALL',new=False,wrap=False):
+    def rotation(self,rotation_point=None,rotation_matrix=None,selection='ALL',traj=0,frame='ALL',new=False):
 
-         # Esto deberia de ser sustituido por una funcion que sea como parse_set_arguments o algo asi
+        # Esto deberia de ser sustituido por una funcion que sea como parse_set_arguments o algo asi
         # y lo mismo para el frame deberia ser...
 
-        if wrap:
-            print'wrapping after rotation is risky... the box has to rotate also, an it is not the case here'
+        # if wrap:
+        #     print'wrapping after rotation is risky... the box has to rotate also, an it is not the case here'
 
         if new:
             print'Not implemented yet'
@@ -1665,18 +1663,16 @@ class msystem(labels_set):               # The supra-estructure: System (waters+
         pass
 
 
-    def least_rmsd_fit(self,msystem_ref=None,selection_ref='ALL',traj_ref=0,frame_ref=0,selection='ALL',traj=0,frame='ALL',selection2move='ALL',new=False,wrap=True):
+    def least_rmsd_fit(self,msystem_ref=None,selection_ref='ALL',traj_ref=0,frame_ref=0,selection='ALL',traj=0,frame='ALL',selection2move='ALL',new=False,pbc=True):
 
-        wrap=False
         # wrap after rotation makes no sense, it is not posible. The box show rotate also, but the box' axis have to be parallel to XYZ to be efficient.
-
         if new:
             print'not implemented yet'
             return
 
         #si las operaciones estuvieran definidas directamente sobre coors o frame... osea, sobre frame seguramente sea lo mejor, pues esto se podria economizar
-        rmsd_traj, center_orig_traj, center_ref_traj, rot_traj=self.least_rmsd(msystem_ref,selection_ref,traj_ref,frame_ref,selection,traj,frame)
-        self.rotation(center_orig_traj,rot_traj,selection2move,traj,frame,new,wrap=False)
+        rmsd_traj, center_orig_traj, center_ref_traj, rot_traj=self.least_rmsd(msystem_ref,selection_ref,traj_ref,frame_ref,selection,traj,frame,pbc)
+        self.rotation(center_orig_traj,rot_traj,selection2move,traj,frame,new)
         self.translation((center_ref_traj-center_orig_traj),selection2move,traj,frame,new,wrap=False)
         return rmsd_traj, center_orig_traj, center_ref_traj, rot_traj
 
