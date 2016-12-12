@@ -247,13 +247,16 @@ extracted from the trajectory:
 
 .. sourcecode:: ipython
 
-   In [14]: fpt_0_x,fpt_0_y = test.first_passage_time(traj='clusters',to_state=0,norm=False,verbose=True)
+   In [14]: fpt_0_x,fpt_0_y = test.first_passage_time(traj='clusters',to_state=0,\
+      ....:   norm=False,verbose=True)
    # Mean first passage time: 2344.27167283 frames.
 
-   In [15]: fpt_10_x,fpt_10_y = test.first_passage_time(traj='clusters',from_state=1,to_state=0,norm=False,verbose=True)
+   In [15]: fpt_10_x,fpt_10_y = test.first_passage_time(traj='clusters',from_state=1,\
+      ....:   to_state=0,norm=False,verbose=True)
    # Mean first passage time: 1092.77053998 frames.
 
-   In [16]: fpt_20_x,fpt_20_y = test.first_passage_time(traj='clusters',from_state=2,to_state=0,norm=False,verbose=True)
+   In [16]: fpt_20_x,fpt_20_y = test.first_passage_time(traj='clusters',from_state=2,\
+      ....:   to_state=0,norm=False,verbose=True)
    # Mean first passage time: 4258.04559256 frames.
 
 
